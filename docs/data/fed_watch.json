@@ -5,66 +5,80 @@
       "date": "2026-09-16",
       "days_until": 38,
       "probabilities": {
-        "hold": 60,
-        "hike_25": 40,
-        "cut_25": 0
+        "hold": 6,
+        "cut_25": 88,
+        "cut_50": 6
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish"
     },
     {
       "date": "2026-10-28",
       "days_until": 80,
       "probabilities": {
-        "hold": 55,
-        "hike_25": 25,
-        "cut_25": 20
+        "hold": 22,
+        "cut_25": 58,
+        "cut_50": 20
       },
-      "most_likely": "hold",
-      "consensus_direction": "neutral"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish"
     },
     {
-      "date": "2026-12-09",
-      "days_until": 122,
+      "date": "2026-12-16",
+      "days_until": 129,
       "probabilities": {
-        "hold": 45,
-        "hike_25": 15,
-        "cut_25": 35,
-        "cut_50": 5
+        "hold": 15,
+        "cut_25": 55,
+        "cut_50": 30
       },
-      "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 171,
+      "probabilities": {
+        "hold": 25,
+        "cut_25": 55,
+        "cut_50": 20
+      },
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish"
     }
   ],
-  "implied_terminal_rate": "3.50-3.75",
-  "implied_terminal_date": "2026-Q4",
-  "data_snapshot_date": "2026-08-07",
-  "recent_event_impact": "8/7 NFP -23K (vs consensus +100K) + flat AHE → 9月加息概率从 ~62% 骤降至 ~40%; hold 从 45% 涨到 60%; 首次显现年末降息押注",
-  "commentary": "7/29 FOMC 维持 3.50-3.75%。8/7 弱就业报告（NFP -23K，工资 0.0%）颠覆了 8 月初的加息叙事——CME 隐含 9 月 hold 概率一夜从 45% 跳至 60%，加息概率跌破 45%；市场重新定价年末转向宽松。8/12 CPI 出台前 confidence 只能给 medium。",
+  "implied_terminal_rate": "2.75-3.00",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-08-08",
+  "recent_event_impact": "8/7 July NFP: -23K jobs (vs +80K expected, huge miss), 失业率 4.1%, 时薪 3.2% yoy (5年新低) → Sep 降息概率从 Aug 4 的 ~62% (hold偏向) 大幅跳升至 Aug 8 的 93.6% (25bp cut); 50bp cut尾部概率首次出现, Standard Chartered 直接call 50bp Sep",
+  "commentary": "数据快照 2026-08-08 (Aug 7 NFP 后一天). 市场因 7月非农负增长 (-23K vs +80K预期) 大幅重定价, Sep 会议已从 hold-lean 反转为 near-certain 25bp cut (93.6%), 且 50bp 尾部风险开始定价. Oct/Dec 数据为基于 Sep 后 3.25-3.50 起点的推算 (非直接观测), 隐含 2026 年底 3.00-3.25 / 2027 Q2 探底 2.75-3.00. 需持续跟踪 8/13 CPI 是否验证 disinflation 以确认 dovish repricing.",
   "sources": [
     {
-      "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
-      "type": "cme_fedwatch"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
-      "type": "nfp_report"
+      "url": "https://growbeansprout.com/tools/fedwatch",
+      "type": "cme_fedwatch_mirror"
     },
     {
       "url": "https://centralbank.watch/federal-reserve/",
-      "type": "cme_fedwatch"
+      "type": "fedwatch_aggregator"
     },
     {
-      "url": "https://www.forbes.com/sites/eriksherman/2026/08/07/july-jobs-loss-fed-interest-rate-expectations/",
-      "type": "commentary"
+      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
+      "type": "nfp_release"
+    },
+    {
+      "url": "https://www.fxstreet.com/news/us-we-now-expect-a-50bps-fed-cut-in-september-standard-chartered-202509051641",
+      "type": "analyst_forecast"
+    },
+    {
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch_official"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-09T03:51:38+00:00",
+  "fetched_at": "2026-08-09T11:53:35+00:00",
   "_meta": {
-    "cached_at": "2026-08-09T12:51:38.159375",
-    "age_sec": 22284,
+    "cached_at": "2026-08-09T20:53:35.653848",
+    "age_sec": 568,
     "stale": false,
     "refreshing": false
   }
