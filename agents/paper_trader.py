@@ -730,7 +730,7 @@ def _load_ai_target_safe(ticker: str) -> dict | None:
 
 # ---------- Claude vs Rules 冲突 alert（A 方案：不下单，只提示）----------
 
-CLAUDE_CONFLICT_LOG = SCRIPT_DIR / "signals" / "claude_conflict.jsonl"
+CLAUDE_CONFLICT_LOG = Path(__file__).parent / "signals" / "claude_conflict.jsonl"
 _CONFLICT_DEDUP_KEY = "_claude_conflict_dedup"   # in trader_state
 
 
