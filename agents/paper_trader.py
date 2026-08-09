@@ -728,6 +728,70 @@ def _load_ai_target_safe(ticker: str) -> dict | None:
         return None
 
 
+# ---------- Claude vs Rules 冲突 alert（A 方案：不下单，只提示）----------
+
+CLAUDE_CONFLICT_LOG = SCRIPT_DIR / "signals" / "claude_conflict.jsonl"
+_CONFLICT_DEDUP_KEY = "_claude_conflict_dedup"   # in trader_state
+
+
+def _notify_claude_rules_conflict(ticker: str, rule_action: str, ai_t: dict,
+                                    entry: float | None, stop: float | None,
+                                    cur_price: float, window_key: str) -> None:
+    """规则说 HOLD/CAUTION，但 Claude ai_target 说 buy/watch_buy → 打 Discord alert。
+
+    Dedup: 同一 ticker+window 一天只推 1 次（避免每 5 min cycle 刷屏）。
+    """
+    # Dedup 检查
+    state = _state_load()
+    dedup = state.get(_CONFLICT_DEDUP_KEY, {})
+    today = datetime.now(timezone.utc).date().isoformat()
+    dedup_key = f"{today}:{ticker}:{window_key}"
+    if dedup.get(dedup_key):
+        return  # 今天该 window 已推过
+    # 清理旧日期 dedup entries (保留 3 天)
+    keep = {k: v for k, v in dedup.items() if k.split(":")[0] >= today}
+
+    ai_action = ai_t.get("action", "?")
+    ai_notes = ai_t.get("notes", "")[:200]
+    entry_str = f"${entry:.2f}" if entry else "—"
+    stop_str  = f"${stop:.2f}"  if stop  else "—"
+    stop_pct  = f" ({(stop-cur_price)/cur_price*100:+.1f}%)" if (stop and cur_price) else ""
+    msg = (
+        f"⚡ {ticker} Claude vs 规则冲突\n"
+        f"规则: {rule_action} · Claude: {ai_action}\n"
+        f"Claude 建议: 入场 {entry_str} · 止损 {stop_str}{stop_pct} · 现价 ${cur_price:.2f}\n"
+        f"理由: {ai_notes}"
+    )
+    try:
+        from notifications import send_alert
+        send_alert(msg, level="warning")
+    except Exception:
+        pass
+
+    # 记录到 jsonl 供长期追踪 hit rate（Claude 建议 vs 后续实际走势）
+    try:
+        CLAUDE_CONFLICT_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with open(CLAUDE_CONFLICT_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "ts":          datetime.now(timezone.utc).isoformat(),
+                "ticker":      ticker,
+                "rule_action": rule_action,
+                "ai_action":   ai_action,
+                "entry_ref":   entry,
+                "stop_ref":    stop,
+                "target_ref":  ai_t.get("target_ref"),
+                "cur_price":   cur_price,
+                "notes":       ai_notes,
+            }, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+    keep[dedup_key] = True
+    state[_CONFLICT_DEDUP_KEY] = keep
+    _state_save(state)
+    logger.info(f"[trader] Claude/rules conflict alerted: {ticker} rule={rule_action} claude={ai_action}")
+
+
 # ---------- Position query ----------
 
 def _position_qty(code: str) -> int:
@@ -1029,6 +1093,16 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
     # From here down are signal-driven orders. Discipline exits above must not
     # depend on action membership, confidence, loss pause, or universe sizing.
     if action not in ORDER_ACTIONS:
+        # Claude autonomy A方案: rules 说 HOLD/CAUTION 但 Claude ai_target 说 buy/watch_buy
+        # → 打 Discord alert，不自动执行，让用户决定
+        try:
+            ai_t = _load_ai_target_safe(ticker)
+            if ai_t and ai_t.get("action") in ("watch_buy", "buy"):
+                entry = ai_t.get("entry_ref")
+                stop  = ai_t.get("stop_ref")
+                _notify_claude_rules_conflict(ticker, action, ai_t, entry, stop, cur_price, window_key)
+        except Exception:
+            pass
         return
 
     # 门槛按 /10 量程定义；实际 conf 可能是 /5（TECH_ONLY）→ 等比缩放
