@@ -27,12 +27,15 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 BASE_DIR   = Path(__file__).parent
 REPO_ROOT  = BASE_DIR.parent
 DOCS_DIR   = REPO_ROOT / "docs"
 DATA_DIR   = DOCS_DIR / "data"
 DASH_HTML  = BASE_DIR / "dashboard.html"
+LAST_RUN_FILE = BASE_DIR / ".snapshot_last_run"
+OFF_HOURS_INTERVAL_SEC = 2 * 3600 - 300   # 2h - 5min buffer, 防 cron 抖动错过
 
 WEBUI_HOST = "127.0.0.1"
 WEBUI_PORT = 8080
@@ -72,6 +75,48 @@ PRIVATE_ENDPOINTS = {
     "/api/nav", "/api/positions", "/api/trades", "/api/log",
     "/api/benchmark", "/api/trump_verify",
 }
+
+
+def _market_open_now() -> tuple[bool, str]:
+    """任一市场活跃时段？(US regular + pre/post ext, JP regular)。返 (open, label)."""
+    now_et  = datetime.now(ZoneInfo("America/New_York"))
+    now_jst = datetime.now(ZoneInfo("Asia/Tokyo"))
+    # US 扩展交易时段 04:00-20:00 ET Mon-Fri (盘前 4-9:30, regular 9:30-16, 盘后 16-20)
+    us_open = now_et.weekday() < 5 and 4 <= now_et.hour < 20
+    # JP 常规时段 09:00-15:00 JST Mon-Fri (含午休)
+    jp_open = now_jst.weekday() < 5 and 9 <= now_jst.hour < 15
+    if us_open and jp_open:
+        return True, f"US+JP both open (ET {now_et.strftime('%H:%M')} / JST {now_jst.strftime('%H:%M')})"
+    if us_open:
+        return True, f"US open (ET {now_et.strftime('%H:%M')})"
+    if jp_open:
+        return True, f"JP open (JST {now_jst.strftime('%H:%M')})"
+    return False, f"both closed (ET {now_et.strftime('%H:%M')} weekday={now_et.weekday()})"
+
+
+def _should_run_now(force: bool = False) -> tuple[bool, str]:
+    """自适应决策：市场开 → 每次 30min 都跑；两个都关 → 距上次跑 ≥2h 才跑."""
+    if force:
+        return True, "force flag"
+    market_open, mkt_label = _market_open_now()
+    if market_open:
+        return True, f"market open [{mkt_label}]"
+    # 盘外：查上次跑时间
+    try:
+        last = float(LAST_RUN_FILE.read_text().strip())
+        elapsed = time.time() - last
+        if elapsed >= OFF_HOURS_INTERVAL_SEC:
+            return True, f"off-hours 2h elapsed ({elapsed/60:.0f}min since last)"
+        return False, f"off-hours skip ({elapsed/60:.0f}min < 2h) [{mkt_label}]"
+    except Exception:
+        return True, f"off-hours first-run [{mkt_label}]"
+
+
+def _mark_run_completed() -> None:
+    try:
+        LAST_RUN_FILE.write_text(str(time.time()))
+    except Exception:
+        pass
 
 
 def _fetch(url: str, timeout: int = 60) -> dict | None:
@@ -272,9 +317,16 @@ def main():
     p.add_argument("--only", type=str, default=None, help="仅快照包含此关键字的 endpoint")
     p.add_argument("--skip-tickers", action="store_true", help="只跑 global endpoints，不迭代 tickers")
     p.add_argument("--no-html", action="store_true", help="只生成 data JSON，不重建 index.html")
+    p.add_argument("--force", action="store_true", help="强制运行，不管市场时段/上次时间")
     args = p.parse_args()
 
-    print(f"== snapshot start {datetime.now().isoformat(timespec='seconds')} ==")
+    # 自适应频率：市场开 → 每 30 min；两个都关 → ≥2h 才跑
+    should, reason = _should_run_now(force=args.force)
+    if not should:
+        print(f"== snapshot SKIP {datetime.now().isoformat(timespec='seconds')} — {reason} ==")
+        return
+
+    print(f"== snapshot start {datetime.now().isoformat(timespec='seconds')} — {reason} ==")
     meta = snapshot_all(only=args.only, skip_tickers=args.skip_tickers)
     print(f"data: ok={meta['endpoints_ok']} fail={meta['endpoints_fail']} elapsed={meta['elapsed_sec']}s")
 
@@ -284,6 +336,7 @@ def main():
         write_readme()
         write_nojekyll()
 
+    _mark_run_completed()
     print(f"== done. docs at {DOCS_DIR} ==")
 
 
