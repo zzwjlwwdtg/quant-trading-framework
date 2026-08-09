@@ -1,12 +1,12 @@
 {
-  "ts": "2026-08-07T13:18:12.962667+00:00",
+  "ts": "2026-08-09T03:47:18.227370+00:00",
   "factors": [
     {
-      "arrow": "▼",
+      "arrow": "▲",
       "name": "WTI 油价",
-      "direction": "bearish",
-      "weight": 1,
-      "value": "$76.65 (20d +7.3%)",
+      "direction": "bullish",
+      "weight": 2,
+      "value": "$78.18 (20d +9.5%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,15 +14,15 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$5.07 (Brent $81.72 - WTI $76.65)",
+      "value": "$5.37 (Brent $83.55 - WTI $78.18)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
-      "arrow": "▲",
+      "arrow": "·",
       "name": "XLE 能源板块",
-      "direction": "bullish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "XLE +6.1% vs SPY +2.2% (差 +3.8pp)",
+      "value": "XLE +4.4% vs SPY +2.4% (差 +2.0pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "99.49 (5d -0.3%)",
+      "value": "99.6 (5d -0.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -46,22 +46,23 @@
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "57.34 · 极高（>45），市场恐慌",
+      "value": "55.8 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     }
   ],
-  "direction": "neutral",
-  "score": 0,
+  "direction": "bullish",
+  "score": 2,
   "notes": [
+    "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股",
     "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
   ],
-  "price": 76.65,
-  "pct_5d": -9.47,
-  "pct_20d": 7.34,
+  "price": 78.18,
+  "pct_5d": -7.67,
+  "pct_20d": 9.48,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-07T22:18:14.903067",
-    "age_sec": 163,
+    "cached_at": "2026-08-09T12:47:20.053230",
+    "age_sec": 288,
     "stale": false,
     "refreshing": false
   }

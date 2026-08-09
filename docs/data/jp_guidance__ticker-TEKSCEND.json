@@ -1,28 +1,33 @@
 {
   "ticker": "TEKSCEND",
   "source_stock": "429A.T",
-  "direction": "上修",
-  "revision_type": "upward",
-  "magnitude": "中",
+  "direction": "据え置き",
+  "revision_type": "maintained",
+  "magnitude": "不明",
   "last_update": "2026-08-06",
-  "next_earnings": "2026-11-05",
-  "guidance_note": "FY2026/3 通期業績予想を上方修正：売上・営業利益・親会社株主純利益いずれも従来予想を上回る見通し、EPS も従来予想比大幅増、FY2027/3 予想 EPS 248.06円・年間配当70円",
-  "revision_reason": "先端品受注が堅調に推移＋デリバティブ評価益が想定を上回ったことにより、年間配当予想も 54.39円 → 56.00円 へ引き上げ（+2.96%）",
+  "next_earnings": "2026-11-06",
+  "guidance_note": "27年3月期通期 連結純利益予想 237億円（据え置き）；EPS予想 248.06円、年間配当 70円（中間35+期末35）",
+  "revision_reason": "1Q(4-6月)最終利益 53億円（-3.2% YoY）、通期237億円に対する進捗率 22.4%（前年同期21.9%とほぼ同水準）で計画線通り、通期予想は据え置き",
   "market_reaction": "不明",
   "confidence": "medium",
   "source_verified": true,
   "source_status": "claude_websearch",
-  "generated_at": "2026-08-06T23:57:23.850666+00:00",
+  "generated_at": "2026-08-08T23:59:27.652131+00:00",
   "sources": [
+    {
+      "url": "https://s.kabutan.jp/news/k202608060221/",
+      "type": "news",
+      "title": "テクセンド、4-6月期(1Q)最終は3％減益で着地 - 株探"
+    },
+    {
+      "url": "https://minkabu.jp/news/4511017",
+      "type": "IR",
+      "title": "2026年3月期通期決算説明会資料 投稿日時： 2026/05/13 15:30[適時開示]"
+    },
     {
       "url": "https://minkabu.jp/stock/429A/settlement",
       "type": "news",
       "title": "テクセンドフォトマスク (429A) : 決算情報・業績 - みんかぶ"
-    },
-    {
-      "url": "https://minkabu.jp/stock/429A/settlement_summary",
-      "type": "news",
-      "title": "テクセンドフォトマスク (429A) : 企業情報・決算短信AI要約 - みんかぶ"
     }
   ],
   "source_via": "claude_cli_websearch",
@@ -30,22 +35,22 @@
     "n_analysts": 5,
     "recommendation": "buy",
     "forward_eps": null,
-    "trailing_eps": 256.84,
+    "trailing_eps": 256.9,
     "eps_growth_pct": null,
     "forward_pe": null,
-    "trailing_pe": 16.72,
-    "target_mean": 4960.0,
-    "target_high": 5300.0,
+    "trailing_pe": 14.29,
+    "target_mean": 5040.0,
+    "target_high": 5700.0,
     "target_low": 4400.0,
-    "target_upside_pct": 15.5,
-    "revenue_growth_pct": 16.4,
-    "earnings_growth_pct": null,
+    "target_upside_pct": 37.3,
+    "revenue_growth_pct": 14.8,
+    "earnings_growth_pct": -9.0,
     "next_earnings": "2026-08-06",
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-07T08:58:11.542030",
-    "age_sec": 48167,
+    "cached_at": "2026-08-09T09:00:05.754304",
+    "age_sec": 13923,
     "stale": false,
     "refreshing": false
   }

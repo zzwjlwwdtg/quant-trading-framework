@@ -1,23 +1,25 @@
 {
   "exists": true,
   "tickers": {
-    "AAPL": "- 综合: 信号弱空 conf=1/5 RSI=36.4 超卖，call wall $327.5 强、put wall $300 弱，Put/Call OI=0.2 倍显示看跌保护极少，机构未防守；CROIC 72%+Piotroski 8/9 顶级质量但趋势从 81→72 略降。\n- 攻防: 上方 $327.5 距 spot +4.77% 是强 pin，下方无护盘裸奔至 $300（-4.03%），反弹卖压重、跌破加速。\n- 警示: Put OI 极低=市场不认为需要对冲，若破 $310 无护盘可能急杀",
-    "AMAT": "- 综合: 信号偏空 conf=1/5 多1空3，put wall $510 强 vs call wall $555 中，Put/Call OI=3.5 倍且 ATM 附近堆积=真恐慌不是廉价保险；CROIC 4 年 29→48→43→29 明显退坡，Piotroski 6/9 中等。\n- 攻防: 下方 $510 距 spot -4.64% 是硬防守位可介入，上方 $555 +3.77% 弱阻力易破但缺量比支持（0.52）。\n- 警示: 空头真金押注下方 $510，跌破即加速",
-    "DRAM": "(MU)\n- 综合: 信号偏空 conf=1/5 但 C/P 成交=2.3 看多情绪，$50 put OI 60464 极端堆积=ATM 真恐慌不是保险，CROIC 4 年 6.53→-12.85→0.24→2.98 极不稳定 Piotroski 6/9。\n- 攻防: 下方 $50.0 -4.29% 是巨型防守墙（60k OI 罕见），上方 $55 弱只 3961 OI，$50 破位=灾难级 gamma 崩塌。\n- 警示: Put/Call OI=15.3 倍史诗级失衡，$50 是生死线",
-    "GOOGL": "- 综合: 持仓观望 conf=2/5 多空均势 但期权 [high]gamma_up 挤压+C/P=1.82，call wall $365 强突破即加速，Put/Call=0.3 倍上方磁吸；CROIC 4 年 24→25→23→17 连续下滑警惕。\n- 攻防: 上方 $365 距 spot 仅+1.24% 一触即发，突破进入 gamma 加速带；下方 $350 -2.92% 中等支撑可作止损参考。\n- 警示: CROIC 三年趋势向下与股价背离，属基本面 divergence",
-    "MSFT": "- 综合: 持仓观望 conf=4/5 RSI=82.4 极度超买 但 C/P=7.15 看多情绪炽热，call wall $510 强为磁吸位；CROIC 4 年 32→27→24→20 逐年退坡 Piotroski 5/9 偏弱，需警惕。\n- 攻防: 上方 $510 +2.78% 是强 pin 短期磁吸目标，下方护盘远在 $450（-9.31%）等于裸奔，任何回调无缓冲。\n- 警示: RSI 82 极端超买+基本面 CROIC 连续 4 年下滑，追高风险高",
-    "MULL": "(MU)\n- 综合: 信号偏空 conf=1/5 多1空3 但 C/P=1.96 且 [medium]max_pain_gravity 挤压向 $900 pin，call/put wall 双强对峙；CROIC 4 年 6.53→-12.85→0.24→2.98 极不稳。\n- 攻防: 上方 $900 距 spot 仅+0.15% 是紧贴 pin 位=横盘概率高，下方 $850 -5.41% 是强防守区可作止损。\n- 警示: max_pain 引力锁定 $900 附近震荡，方向性交易性价比低",
-    "NBIS": "- 综合: 减仓 conf=1/5 多1空4 regime=危机防御 但 [high]gamma_up 挤压+C/P=2.2 短线看多情绪，call/put wall 双 2000+ OI 对峙；CROIC -72.99% 深度负值+借款 41 亿=基本面雷。\n- 攻防: 上方 $215 仅+0.57% 一破即 gamma 加速，下方 $210 -1.77% 强护盘，$210-$215 极窄 gamma 战场。\n- 警示: regime 危机防御信号+CROIC 崩塌，短线 gamma 冲高即减仓机会",
-    "NVDA": "- 综合: 持仓观望 conf=4/5 多3空2 [high]gamma_up 挤压+C/P=2.74 期权强共振做多，call wall $222.5 强突破即加速；CROIC 76→62 首次回落但仍 62% 顶级，Piotroski 4/9 偏弱。\n- 攻防: 上方 $222.5 距 spot +1.34% 是 gamma 突破位一触即发目标 $230+，下方护盘远在 $200 -8.91% 缺缓冲。\n- 警示: Piotroski 仅 4/9+CROIC 首次退坡，与股价强势 divergence 需警惕",
-    "SOXL": "(SOXX)\n- 综合: 信号偏空 conf=1/5 多1空2 put wall $500 强 vs call wall $560 中，Put/Call OI=4.2 倍偏 OTM 远端=部分廉价保险性质但仍显防御姿态；基本面借用 NVDA 参考意义有限。\n- 攻防: 下方 $500 距 spot -7.3% 是强防守缓冲带较宽，上方 $560 +3.82% 中等阻力突破需量比配合（当前 0.74 偏弱）。\n- 警示: 半导体板块 ETF 现防御姿态与个股 NVDA 强势背离",
-    "TQQQ": "(QQQ)\n- 综合: 持仓观望 conf=2/5 多3空2 [high]put_break 挤压警报！C/P=2.53 看多但 put wall $715 距 spot 仅 0.27% 已贴脸，一旦跌破加速下跌。\n- 攻防: 上方 $730 +1.82% 是磁吸目标，下方 $715 -0.27% 是死守生死线破位即 gamma 崩塌，防守空间极窄。\n- 警示: put_break 挤压 high+ put wall 贴脸=极高短线破位风险，需严设止损",
-    "TSLA": "- 综合: 信号弱空 conf=1/5 RSI=27.8 深度超卖 但期权 call wall $327.5 强 pin 制约反弹，C/P=1.34 均衡无方向共振；CROIC 4 年 23→8→5→8 深度退坡后企稳，Piotroski 5/9 中等。\n- 攻防: 上方 $327.5 +2.11% 是强 pin 反弹上限，下方 $300 -6.46% 中等防守，超卖反弹空间仅 2% 性价比低。\n- 警示: RSI 27.8 深度超卖 vs call wall 压制，短线反弹空间受限"
+    "AAPL": "- 综合: 警示信号+C/P成交2.88偏多但RSI36.9超卖，情绪与技术背离；CROIC 72%下滑趋势Piotroski 8/9基本面仍强，借款$986亿高位需盯\n- 攻防: Call wall $325(距+3.72%)强度强=上方pin磁吸；Put wall $300(距-4.25%)强度强，防守清晰可 $300 下方止损\n- 警示: gamma_band_up 中挤压但 conf 仅1/5，多空信号背离，短线不追",
+    "AMAT": "- 综合: 关注买入 conf=2/5 + C/P 2.88看多情绪共振，量比0.36偏低需放量确认；CROIC 28.88%连续两年下滑Piotroski 6/9基本面走弱\n- 攻防: Call wall $570(距+5.72%)为上方目标；Put wall $500(距-7.26%)防守偏远，回撤空间大不利短线\n- 警示: CCC 165天现金周期恶化，需盯营运资金",
+    "DRAM": "- 综合: 警示 conf=1/5 空信号占优 + C/P 1.58均衡但Put OI/Call OI=11.9倍严重失衡=空头押跌非对冲；MU基本面 CROIC 仅2.98%Piotroski 6/9偏弱\n- 攻防: Put wall $50(距-1.19%)紧贴spot且强度强+put_break高挤压=一旦破位加速下跌；Call wall $55强度弱无上攻动能\n- 警示: put_break 高挤压 + ATM 附近巨量 Put=真恐慌，破 $50 果断离场",
+    "GOOGL": "- 综合: 持仓观望 conf=2/5 多信号+C/P 3.15看多共振，gamma_band_up 中挤压支撑上行；CROIC 16.99%连续下滑Piotroski 6/9走弱需警惕\n- 攻防: Call wall $365(距+3.02%)强度强为近端目标；Put wall $340(距-4.04%)防守清晰可作止损位\n- 警示: CROIC 三年从24%降至17%，长线基本面弱化",
+    "KLAC": "- 综合: 信号缺失但 C/P 20.3极度看多 + Put OI/Call OI=0.2倍显示上方无压力；CROIC 44%Piotroski 8/9基本面顶级\n- 攻防: Call wall $200(距+0.95%)与spot几乎贴合=pin磁吸位；Put wall $197.5(距-0.31%)极近但强度中偏弱防守不实\n- 警示: OI 数值极小(仅个位数)统计不可靠，谨慎参考",
+    "MSFT": "- 综合: 持仓观望 conf=3/5 + C/P 2.28看多共振但RSI 82.4严重超买+put_break高挤压=顶背离风险；CROIC 20.09%连续下滑Piotroski 5/9走弱\n- 攻防: Call wall $510(距+2.0%)近端阻力；Put wall $495(距-1.0%)紧贴spot强度中，破位即触发put_break加速下跌\n- 警示: RSI 82.4极端超买 + put_break 高挤压=短线回调风险高，不追",
+    "MULL": "- 综合: 警示 conf=1/5 空信号占优 + MU基本面 CROIC 2.98%Piotroski 6/9偏弱；C/P 1.51均衡无方向\n- 攻防: Call wall $900(距+2.56%)强度强=上方pin；Put wall $800(距-8.84%)防守偏远\n- 警示: 空信号 3 个 + 借款$115亿激增，短线不参与",
+    "NBIS": "- 综合: 警示 conf=1/5 空信号占优 + C/P 1.35均衡无方向；CROIC -72.99%连续两年重负Piotroski 6/9基本面极差\n- 攻防: Call wall $200(距+6.4%)与 Put wall $180(距-4.24%)均强度强=箱体震荡；上下攻防都不实\n- 警示: CROIC -73% + CCC -1880天基本面异常，纯题材博弈风险高",
+    "NVDA": "- 综合: 持仓观望 conf=4/5 强信号 + C/P 2.29看多 + gamma_up 高挤压=突破 call wall 加速上涨条件齐；CROIC 62%但去年从77%回落Piotroski 4/9偏弱\n- 攻防: Call wall $225(距+0.46%)OI 3.8万极强pin，突破即触发 gamma_up 加速；Put wall $212.5(距-5.12%)防守偏远\n- 警示: Piotroski 4/9 偏弱与技术强势背离，长线需盯基本面拐点",
+    "SOXL": "- 综合: 警示 conf=1/5 + C/P 0.43看空极端 + Put OI/Call OI=24.4倍严重失衡=真恐慌+空头押跌双重压力；SOXX 期权代理\n- 攻防: Call wall $555(距+2.16%)强度弱无上攻；Put wall $500(距-7.96%)强度强为最后防守\n- 警示: 期权情绪极度看空+多空信号背离，杠杆ETF不宜逆势抄底",
+    "TQQQ": "- 综合: 持仓观望 conf=3/5 多信号 + gamma_up 高挤压有上冲动能，但 C/P 0.52偏空均衡=情绪与技术分歧\n- 攻防: Call wall $730(距+0.96%)近端阻力破位即加速；Put wall $665(距-8.03%)防守偏远\n- 警示: QQQ 期权 C/P 0.52 与多信号背离，突破 $730 是关键触发",
+    "TSLA": "- 综合: 持仓观望 conf=3/5 + C/P 3.86看多共振，gamma_band_up 中挤压但 RSI 31.2超卖=底部反弹条件；CROIC 8.35%低位Piotroski 5/9偏弱\n- 攻防: Call wall $350(距+6.52%)上方目标；Put wall $310(距-5.65%)防守清晰可作止损\n- 警示: RSI 31.2超卖 + 期权情绪偏多=反弹机会，但基本面弱需控仓"
   },
   "sources": {
     "AAPL": "live",
     "AMAT": "live",
     "DRAM": "live",
     "GOOGL": "live",
+    "KLAC": "live",
     "MSFT": "live",
     "MULL": "live",
     "NBIS": "live",
@@ -27,7 +29,7 @@
     "TSLA": "live"
   },
   "live_state": "cached",
-  "live_generated": "2026-08-07T12:35:02.573566+00:00",
-  "snapshot_path": "ai_analysis_snapshot_20260806_222724.md",
-  "snapshot_mtime": "2026-08-06T22:27:24.548428"
+  "live_generated": "2026-08-08T19:01:10.814208+00:00",
+  "snapshot_path": "ai_analysis_snapshot_20260807_222823.md",
+  "snapshot_mtime": "2026-08-07T22:28:23.402546"
 }

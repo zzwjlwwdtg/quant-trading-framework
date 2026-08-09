@@ -3,80 +3,68 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 40,
+      "days_until": 38,
       "probabilities": {
-        "hold": 36,
-        "hike_25": 62,
-        "hike_50": 2,
+        "hold": 60,
+        "hike_25": 40,
         "cut_25": 0
       },
-      "most_likely": "hike_25",
+      "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 82,
+      "days_until": 80,
       "probabilities": {
-        "hold": 52,
-        "hike_25": 43,
-        "hike_50": 3,
-        "cut_25": 2
-      },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-12-09",
-      "days_until": 124,
-      "probabilities": {
-        "hold": 58,
-        "hike_25": 37,
-        "hike_50": 2,
-        "cut_25": 3
-      },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 173,
-      "probabilities": {
-        "hold": 62,
-        "hike_25": 28,
-        "hike_50": 2,
-        "cut_25": 8
+        "hold": 55,
+        "hike_25": 25,
+        "cut_25": 20
       },
       "most_likely": "hold",
       "consensus_direction": "neutral"
+    },
+    {
+      "date": "2026-12-09",
+      "days_until": 122,
+      "probabilities": {
+        "hold": 45,
+        "hike_25": 15,
+        "cut_25": 35,
+        "cut_50": 5
+      },
+      "most_likely": "hold",
+      "consensus_direction": "dovish_lean"
     }
   ],
-  "implied_terminal_rate": "3.75-4.00",
-  "implied_terminal_date": "2027-Q1",
-  "commentary": "市场从 2025 年的降息叙事转为 2026 hawkish 加息定价——CME 显示 9 月 FOMC 61.9% 概率加息 25bp，Fed funds 曲线定价路径 2026-10 到 mid-2027 稳定在 ~4.00% 区域后小幅回落。只有 9 月会议为 CME 直取数据，10/12/2027-01 概率基于曲线路径外推，中度置信度。",
+  "implied_terminal_rate": "3.50-3.75",
+  "implied_terminal_date": "2026-Q4",
+  "data_snapshot_date": "2026-08-07",
+  "recent_event_impact": "8/7 NFP -23K (vs consensus +100K) + flat AHE → 9月加息概率从 ~62% 骤降至 ~40%; hold 从 45% 涨到 60%; 首次显现年末降息押注",
+  "commentary": "7/29 FOMC 维持 3.50-3.75%。8/7 弱就业报告（NFP -23K，工资 0.0%）颠覆了 8 月初的加息叙事——CME 隐含 9 月 hold 概率一夜从 45% 跳至 60%，加息概率跌破 45%；市场重新定价年末转向宽松。8/12 CPI 出台前 confidence 只能给 medium。",
   "sources": [
     {
-      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
       "type": "cme_fedwatch"
     },
     {
+      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
+      "type": "nfp_report"
+    },
+    {
       "url": "https://centralbank.watch/federal-reserve/",
-      "type": "centralbank_watch_mirror"
+      "type": "cme_fedwatch"
     },
     {
-      "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "fedwatch_aggregator"
-    },
-    {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_calendar"
+      "url": "https://www.forbes.com/sites/eriksherman/2026/08/07/july-jobs-loss-fed-interest-rate-expectations/",
+      "type": "commentary"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-07T12:49:46+00:00",
+  "fetched_at": "2026-08-09T03:51:38+00:00",
   "_meta": {
-    "cached_at": "2026-08-07T21:49:46.796891",
-    "age_sec": 1871,
+    "cached_at": "2026-08-09T12:51:38.159375",
+    "age_sec": 30,
     "stale": false,
     "refreshing": false
   }

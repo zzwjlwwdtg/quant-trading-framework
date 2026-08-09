@@ -25,21 +25,27 @@ def _fetch_fed_watch_via_claude() -> Optional[dict]:
     except Exception:
         return None
 
+    today_str = datetime.now().strftime("%Y-%m-%d")
     prompt = f"""你是宏观金融数据抓取员。任务：从 CME FedWatch Tool 提取市场对未来 3-4 次 FOMC 会议的联邦基金利率行动概率。
+
+**今天日期: {today_str}**（数据必须在此日期或最近 1 交易日之内，否则视为 stale）。
 
 数据源:
   官方: {CME_FEDWATCH_URL}
   备选: fedfundfutures.com / bloomberg.com/quote/fedfundfutures / cnbc.com/quotes/@FF.1 的最新报告
 
 要求：
-1. 使用 WebFetch 或 WebSearch 拉最新数据（今日或最近 1 交易日）
-2. 提取未来 3-4 次 FOMC meeting 日期 + 每种 rate action 的市场隐含概率
-3. Actions 用简化标签：
+1. 使用 WebFetch 或 WebSearch 拉最新数据 —— **必须**明确写出数据 snapshot 日期
+2. **鉴别关键近期事件是否已反映**：查最近 7 天内是否有 NFP / CPI / PPI / FOMC / Powell 讲话，若有则数据必须在该事件**之后**发布
+3. 若能证明数据 >2 天旧且期间发生过就业/通胀数据 → 返 confidence="low" 并在 commentary 里明确 "数据滞后" 警告
+4. 提取未来 3-4 次 FOMC meeting 日期 + 每种 rate action 的市场隐含概率
+5. Actions 用简化标签：
    · "hike_25" (加 25bps) / "hike_50" (加 50bps)
    · "hold" (维持)
    · "cut_25" (降 25bps) / "cut_50" (降 50bps)
-4. 概率总和每个 meeting 应该 ≈100%
-5. 附带隐含终点利率（terminal rate）如果能找到
+6. 概率总和每个 meeting 应该 ≈100%
+7. 附带隐含终点利率（terminal rate）如果能找到
+8. commentary 里必须写出 data snapshot 的实际日期 + 若有近期事件（NFP/CPI）说明其对预期的影响
 
 严格 JSON 输出（无 markdown 围栏）：
 {{
@@ -59,7 +65,9 @@ def _fetch_fed_watch_via_claude() -> Optional[dict]:
   ],
   "implied_terminal_rate": "3.25-3.50",
   "implied_terminal_date": "2027-Q1",
-  "commentary": "1-2 sentence 市场预期总结（如：'市场定价 2026 年内 1 次降息 + 2027 上半年 2 次'）",
+  "data_snapshot_date": "2026-08-08",
+  "recent_event_impact": "8/7 NFP +73K (低于预期 100K) → 降息预期 +8pp",
+  "commentary": "1-2 sentence 市场预期总结，**必须**引用最近 NFP/CPI/PPI 数据对预期的影响",
   "sources": [
     {{"url": "...", "type": "cme_fedwatch"}}
   ],

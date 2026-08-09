@@ -1,14 +1,14 @@
 {
-  "asof": "2026-08-07T22:09",
+  "asof": "2026-08-09T12:38",
   "yields": {
     "10y": {
-      "value": 0.461,
-      "chg_1d_bps": -0.6,
-      "chg_5d_bps": -1.3,
-      "chg_20d_bps": 0.4,
-      "z_score_20d": -1.32,
+      "value": 0.466,
+      "chg_1d_bps": -0.1,
+      "chg_5d_bps": -0.9,
+      "chg_20d_bps": 0.9,
+      "z_score_20d": -0.24,
       "history": [
-        0.461,
+        0.466,
         0.467,
         0.462,
         0.463,
@@ -34,13 +34,13 @@
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 0.432,
-      "chg_1d_bps": -0.7,
-      "chg_5d_bps": -1.4,
-      "chg_20d_bps": 0.1,
-      "z_score_20d": -1.48,
+      "value": 0.436,
+      "chg_1d_bps": -0.3,
+      "chg_5d_bps": -1.0,
+      "chg_20d_bps": 0.5,
+      "z_score_20d": -0.57,
       "history": [
-        0.432,
+        0.436,
         0.439,
         0.432,
         0.433,
@@ -66,13 +66,13 @@
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 0.518,
-      "chg_1d_bps": -0.4,
-      "chg_5d_bps": -1.0,
-      "chg_20d_bps": 1.0,
-      "z_score_20d": -0.99,
+      "value": 0.521,
+      "chg_1d_bps": -0.0,
+      "chg_5d_bps": -0.6,
+      "chg_20d_bps": 1.4,
+      "z_score_20d": -0.06,
       "history": [
-        0.518,
+        0.521,
         0.521,
         0.517,
         0.519,
@@ -98,13 +98,13 @@
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.703,
-      "chg_1d_bps": -2.9,
-      "chg_5d_bps": 2.1,
-      "chg_20d_bps": 0.8,
-      "z_score_20d": -0.89,
+      "value": 3.71,
+      "chg_1d_bps": -2.2,
+      "chg_5d_bps": 2.8,
+      "chg_20d_bps": 1.5,
+      "z_score_20d": -0.68,
       "history": [
-        3.703,
+        3.71,
         3.732,
         3.725,
         3.73,
@@ -130,12 +130,13 @@
       "source": "yfinance ^IRX"
     },
     "2y": {
-      "value": 4.18,
-      "chg_1d_bps": -2.0,
-      "chg_5d_bps": -4.0,
-      "chg_20d_bps": -3.0,
-      "z_score_20d": -0.44,
+      "value": 4.25,
+      "chg_1d_bps": 7.0,
+      "chg_5d_bps": 2.0,
+      "chg_20d_bps": 9.0,
+      "z_score_20d": 1.49,
       "history": [
+        4.25,
         4.18,
         4.2,
         4.25,
@@ -154,20 +155,20 @@
         4.13,
         4.18,
         4.26,
-        4.21,
-        4.16
+        4.21
       ],
-      "asof": "2026-08-05",
+      "asof": "2026-08-06",
       "name": "2Y 国债",
       "source": "FRED DGS2"
     },
     "tips_10y": {
-      "value": 2.41,
-      "chg_1d_bps": 1.0,
-      "chg_5d_bps": 0.0,
-      "chg_20d_bps": 10.0,
-      "z_score_20d": 0.34,
+      "value": 2.43,
+      "chg_1d_bps": 2.0,
+      "chg_5d_bps": 2.0,
+      "chg_20d_bps": 12.0,
+      "z_score_20d": 0.67,
       "history": [
+        2.43,
         2.41,
         2.4,
         2.43,
@@ -186,32 +187,31 @@
         2.32,
         2.33,
         2.36,
-        2.32,
-        2.31
+        2.32
       ],
-      "asof": "2026-08-05",
+      "asof": "2026-08-06",
       "name": "10Y TIPS 实际利率",
       "source": "FRED DFII10"
     }
   },
   "spreads": {
     "2s10s": {
-      "value": 0.44,
-      "chg_20d_bps": 9.0,
+      "value": 0.46,
+      "chg_20d_bps": 10.0,
       "regime": "正常",
-      "asof": "2026-08-06"
+      "asof": "2026-08-07"
     }
   },
   "gld_correlation": {
-    "vs_10y": 0.479,
-    "vs_tips_10y": -0.052,
+    "vs_10y": -0.213,
+    "vs_tips_10y": -0.004,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.052，对冲关系变弱"
+    "reason": "相关性 -0.004，对冲关系变弱"
   },
   "anomalies": [],
   "_meta": {
-    "cached_at": "2026-08-07T22:09:44.452138",
-    "age_sec": 674,
+    "cached_at": "2026-08-09T12:38:20.144442",
+    "age_sec": 828,
     "stale": false,
     "refreshing": false
   }
