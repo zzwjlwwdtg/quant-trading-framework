@@ -1,0 +1,133 @@
+{
+  "ticker": "AAPL",
+  "sector": "消费电子/智能硬件",
+  "business": "设计与销售 iPhone、Mac、iPad、可穿戴设备及相关软件与服务",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "A 系列/M 系列 SoC 独家 3nm/5nm 代工",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "三星显示",
+      "ticker": "005930.KS",
+      "note": "iPhone OLED 面板主力供应商",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "鸿海精密（富士康）",
+      "ticker": "2317.TW",
+      "note": "iPhone/Mac 主力整机组装代工",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "SK 海力士",
+      "ticker": "000660.KS",
+      "note": "NAND/DRAM/LPDDR 存储芯片",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "索尼",
+      "ticker": "6758.T",
+      "note": "iPhone CMOS 图像传感器独家供应",
+      "weight": 55,
+      "confidence": "high"
+    },
+    {
+      "name": "高通",
+      "ticker": "QCOM",
+      "note": "iPhone 5G 基带芯片（过渡期供应）",
+      "weight": 50,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "终端消费者（零售/Apple Store）",
+      "ticker": null,
+      "note": "iPhone/Mac/可穿戴直销与官网销售",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "百思买",
+      "ticker": "BBY",
+      "note": "美国主要线下零售分销渠道",
+      "weight": 40,
+      "confidence": "medium"
+    },
+    {
+      "name": "沃尔玛",
+      "ticker": "WMT",
+      "note": "大众零售渠道分销 iPhone/配件",
+      "weight": 35,
+      "confidence": "medium"
+    },
+    {
+      "name": "AT&T",
+      "ticker": "T",
+      "note": "美国运营商渠道捆绑销售 iPhone",
+      "weight": 50,
+      "confidence": "high"
+    },
+    {
+      "name": "Verizon",
+      "ticker": "VZ",
+      "note": "美国运营商渠道 iPhone 合约销售",
+      "weight": 50,
+      "confidence": "high"
+    },
+    {
+      "name": "京东",
+      "ticker": "JD",
+      "note": "中国大陆线上零售分销主力",
+      "weight": 40,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": "005930.KS",
+      "note": "高端智能手机与可穿戴直接竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "小米",
+      "ticker": "1810.HK",
+      "note": "智能手机与 IoT 生态竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "华为",
+      "ticker": null,
+      "note": "高端手机与穿戴（中国市场主要对手）",
+      "confidence": "high"
+    },
+    {
+      "name": "谷歌",
+      "ticker": "GOOGL",
+      "note": "Pixel 手机与 Android 生态竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "戴尔",
+      "ticker": "DELL",
+      "note": "PC/笔电市场竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-07-30T05:34:24.666156+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-07-30T14:34:24.667165",
+    "age_sec": 862118,
+    "stale": false,
+    "refreshing": false
+  }
+}

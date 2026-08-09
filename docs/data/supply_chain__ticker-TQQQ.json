@@ -1,0 +1,133 @@
+{
+  "ticker": "TQQQ",
+  "sector": "杠杆ETF/纳斯达克100科技",
+  "business": "3倍做多纳斯达克100指数（QQQ）的杠杆ETF，主要暴露于大型科技股",
+  "upstream": [
+    {
+      "name": "ProShares",
+      "ticker": null,
+      "note": "ETF发行方与管理人",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "Nasdaq",
+      "ticker": "NDAQ",
+      "note": "提供NDX指数授权",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "Société Générale",
+      "ticker": "GLE.PA",
+      "note": "提供总收益互换（swap）对手方",
+      "weight": 65,
+      "confidence": "high"
+    },
+    {
+      "name": "高盛",
+      "ticker": "GS",
+      "note": "swap/期货对手方",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "摩根大通",
+      "ticker": "JPM",
+      "note": "swap对手方与托管",
+      "weight": 55,
+      "confidence": "high"
+    },
+    {
+      "name": "BNY Mellon",
+      "ticker": "BK",
+      "note": "ETF托管与行政管理",
+      "weight": 50,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "NDX第一大权重成分（AI芯片）",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "NDX核心权重成分",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "NDX核心权重成分（云与AI）",
+      "weight": 88,
+      "confidence": "high"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "NDX核心权重成分（云与电商）",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "Meta",
+      "ticker": "META",
+      "note": "NDX权重成分（广告与AI）",
+      "weight": 65,
+      "confidence": "high"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "NDX权重成分（AI ASIC/网络芯片）",
+      "weight": 60,
+      "confidence": "high"
+    }
+  ],
+  "peers": [
+    {
+      "name": "QLD",
+      "ticker": "QLD",
+      "note": "2倍做多QQQ，同族低杠杆版",
+      "confidence": "high"
+    },
+    {
+      "name": "SQQQ",
+      "ticker": "SQQQ",
+      "note": "3倍做空QQQ，反向对手产品",
+      "confidence": "high"
+    },
+    {
+      "name": "TECL",
+      "ticker": "TECL",
+      "note": "3倍做多科技板块XLK",
+      "confidence": "high"
+    },
+    {
+      "name": "SOXL",
+      "ticker": "SOXL",
+      "note": "3倍做多半导体，重叠NVDA/AVGO",
+      "confidence": "high"
+    },
+    {
+      "name": "UPRO",
+      "ticker": "UPRO",
+      "note": "3倍做多标普500，宽基替代",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-07-29T08:49:21.299664+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-07-29T17:49:21.302186",
+    "age_sec": 936821,
+    "stale": false,
+    "refreshing": false
+  }
+}
