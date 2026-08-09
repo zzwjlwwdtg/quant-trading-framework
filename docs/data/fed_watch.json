@@ -3,82 +3,75 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 38,
+      "days_until": 37,
       "probabilities": {
-        "hold": 6,
-        "cut_25": 88,
-        "cut_50": 6
+        "hold": 58,
+        "hike_25": 40,
+        "cut_25": 2
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean_weakened"
     },
     {
       "date": "2026-10-28",
-      "days_until": 80,
+      "days_until": 79,
       "probabilities": {
-        "hold": 22,
-        "cut_25": 58,
-        "cut_50": 20
+        "hold": 50,
+        "hike_25": 30,
+        "cut_25": 18,
+        "hike_50": 1,
+        "cut_50": 1
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "two_sided"
     },
     {
-      "date": "2026-12-16",
-      "days_until": 129,
+      "date": "2026-12-09",
+      "days_until": 121,
       "probabilities": {
-        "hold": 15,
-        "cut_25": 55,
-        "cut_50": 30
+        "hold": 42,
+        "hike_25": 22,
+        "cut_25": 30,
+        "cut_50": 4,
+        "hike_50": 2
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 171,
-      "probabilities": {
-        "hold": 25,
-        "cut_25": 55,
-        "cut_50": 20
-      },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "mild_dovish_lean"
     }
   ],
-  "implied_terminal_rate": "2.75-3.00",
-  "implied_terminal_date": "2027-Q2",
+  "implied_terminal_rate": "3.50-3.75",
+  "implied_terminal_date": "2026-Q4",
   "data_snapshot_date": "2026-08-08",
-  "recent_event_impact": "8/7 July NFP: -23K jobs (vs +80K expected, huge miss), 失业率 4.1%, 时薪 3.2% yoy (5年新低) → Sep 降息概率从 Aug 4 的 ~62% (hold偏向) 大幅跳升至 Aug 8 的 93.6% (25bp cut); 50bp cut尾部概率首次出现, Standard Chartered 直接call 50bp Sep",
-  "commentary": "数据快照 2026-08-08 (Aug 7 NFP 后一天). 市场因 7月非农负增长 (-23K vs +80K预期) 大幅重定价, Sep 会议已从 hold-lean 反转为 near-certain 25bp cut (93.6%), 且 50bp 尾部风险开始定价. Oct/Dec 数据为基于 Sep 后 3.25-3.50 起点的推算 (非直接观测), 隐含 2026 年底 3.00-3.25 / 2027 Q2 探底 2.75-3.00. 需持续跟踪 8/13 CPI 是否验证 disinflation 以确认 dovish repricing.",
+  "recent_event_impact": "2026-08-07 July NFP -23K vs +80K expected (unemployment 4.1%, wages +3.2% YoY miss) → September hike odds collapsed from 58% to ~40%, hold became modal outcome; pre-report market was pricing hikes as base case",
+  "commentary": "Market flipped from hawkish (Aug 4 CME showed 62% hike-25 at Sept) to hold-biased after Aug 7 weak July NFP (-23K, first negative print). Sept meeting now most likely hold but hike tail remains meaningful (~40%) — CPI on Aug 12 is the decisive next print; a hot CPI could snap the hike bid back, a cool print would push Sept toward first cut discussion.",
   "sources": [
     {
-      "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "cme_fedwatch_mirror"
-    },
-    {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "fedwatch_aggregator"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
-      "type": "nfp_release"
-    },
-    {
-      "url": "https://www.fxstreet.com/news/us-we-now-expect-a-50bps-fed-cut-in-september-standard-chartered-202509051641",
-      "type": "analyst_forecast"
+      "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
+      "type": "post_nfp_fedwatch"
     },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch_official"
+      "type": "cme_fedwatch"
+    },
+    {
+      "url": "https://centralbank.watch/federal-reserve/",
+      "type": "aggregator"
+    },
+    {
+      "url": "https://en.macromicro.me/charts/127852/probability-fed-rate-hike",
+      "type": "aggregator"
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/files/fomc-blackout-period-calendar.pdf",
+      "type": "fomc_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-09T11:53:35+00:00",
+  "fetched_at": "2026-08-09T19:55:33+00:00",
   "_meta": {
-    "cached_at": "2026-08-09T20:53:35.653848",
-    "age_sec": 22167,
+    "cached_at": "2026-08-10T04:55:33.548445",
+    "age_sec": 449,
     "stale": false,
     "refreshing": false
   }
