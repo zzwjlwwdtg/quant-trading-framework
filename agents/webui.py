@@ -1014,7 +1014,8 @@ def api_supply_chain(ticker: str) -> dict:
     if not ticker or len(ticker) > 8 or not ticker.replace(".", "").replace("-", "").isalnum():
         return {"error": "invalid ticker"}
     # 14 天 TTL —— 供应链变动慢，无必要频繁调 Claude（用户 quota 保护）
-    return _cached(f"supply_chain_{ticker}", ttl_sec=14 * 24 * 3600,
+    # 30 天 TTL —— 供应链结构变化极慢（并购/剥离/新产线才变），Claude 成本敏感
+    return _cached(f"supply_chain_{ticker}", ttl_sec=30 * 24 * 3600,
                     compute_fn=lambda: _compute_supply_chain(ticker))
 
 
@@ -1777,7 +1778,9 @@ def api_jp_guidance(ticker: str) -> dict:
         "source_verified": False,
         "source_status": "computing",
     }
-    return _cached(f"jp_guidance_v2_{tk}", ttl_sec=24 * 3600,
+    # 72h TTL —— 業績予想 除财报当天基本不变，且 Claude+WebSearch 单次 ~$0.20 成本敏感
+    # 财报日附近如需强制刷 → 手动 rm .webui_cache/jp_guidance_v2_<TK>.json
+    return _cached(f"jp_guidance_v2_{tk}", ttl_sec=72 * 3600,
                     compute_fn=lambda: _compute_jp_guidance(tk, stock),
                     first_call_async=True,
                     first_call_placeholder=placeholder)
@@ -2091,7 +2094,8 @@ def api_fed_watch() -> dict:
             return get_fed_watch()
         except Exception as e:
             return {"error": str(e)[:200]}
-    return _cached("fed_watch", ttl_sec=2 * 3600,
+    # 8h TTL —— 加息预期几小时内基本不变，除 Powell 讲话/CPI 当天。省 Claude 成本。
+    return _cached("fed_watch", ttl_sec=8 * 3600,
                    compute_fn=_compute,
                    first_call_async=True,
                    first_call_placeholder=placeholder)
