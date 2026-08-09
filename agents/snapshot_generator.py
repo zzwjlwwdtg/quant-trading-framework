@@ -77,21 +77,79 @@ PRIVATE_ENDPOINTS = {
 }
 
 
+# JP TSE 假日硬编码（moomoo JP 需付费订阅，用 overnight_jp_live 那份 list 保持一致）
+_JP_HOLIDAYS_2026 = {
+    "2026-01-01", "2026-01-02", "2026-01-03",  # 三が日
+    "2026-01-12",  # 成人の日
+    "2026-02-11",  # 建国記念の日
+    "2026-02-23",  # 天皇誕生日
+    "2026-03-20",  # 春分の日
+    "2026-04-29",  # 昭和の日
+    "2026-05-04", "2026-05-05", "2026-05-06",  # みどり/こどもの日/振替
+    "2026-07-20",  # 海の日
+    "2026-08-11",  # 山の日
+    "2026-09-21",  # 敬老の日
+    "2026-09-23",  # 秋分の日
+    "2026-10-12",  # スポーツの日
+    "2026-11-03",  # 文化の日
+    "2026-11-23",  # 勤労感謝の日
+    "2026-12-31",  # 大晦日 (TSE 休市)
+}
+# US 假日通过 moomoo API 查（免费 tier 支持）；假期缓存 6h
+_US_HOLIDAY_CACHE: dict[str, tuple[float, bool]] = {}
+_HOLIDAY_CACHE_TTL_SEC = 6 * 3600
+
+
+def _is_us_trading_day(date_str: str) -> bool:
+    """查 moomoo request_trading_days，len>0 即 trading day. 6h cache."""
+    now = time.time()
+    cached = _US_HOLIDAY_CACHE.get(date_str)
+    if cached and (now - cached[0]) < _HOLIDAY_CACHE_TTL_SEC:
+        return cached[1]
+    try:
+        from moomoo_pool import get_quote_ctx
+        from moomoo import RET_OK, TrdMarket
+        ctx = get_quote_ctx()
+        ret, days = ctx.request_trading_days(market=TrdMarket.US, start=date_str, end=date_str)
+        is_td = ret == RET_OK and hasattr(days, "__len__") and len(days) > 0
+        _US_HOLIDAY_CACHE[date_str] = (now, is_td)
+        return is_td
+    except Exception:
+        return True   # moomoo 挂了 → 保守 fall through to hour check
+
+
+def _is_jp_trading_day(date_str: str) -> bool:
+    """JP 用硬编码假日 (moomoo JP 需付费)。周末在上层 weekday check 里已排除。"""
+    return date_str not in _JP_HOLIDAYS_2026
+
+
 def _market_open_now() -> tuple[bool, str]:
-    """任一市场活跃时段？(US regular + pre/post ext, JP regular)。返 (open, label)."""
+    """任一市场活跃时段？(US regular + pre/post ext, JP regular)。返 (open, label).
+
+    过滤：weekend + market holidays (US via moomoo, JP via hardcoded)。
+    """
     now_et  = datetime.now(ZoneInfo("America/New_York"))
     now_jst = datetime.now(ZoneInfo("Asia/Tokyo"))
+    us_date = now_et.strftime("%Y-%m-%d")
+    jp_date = now_jst.strftime("%Y-%m-%d")
     # US 扩展交易时段 04:00-20:00 ET Mon-Fri (盘前 4-9:30, regular 9:30-16, 盘后 16-20)
-    us_open = now_et.weekday() < 5 and 4 <= now_et.hour < 20
+    us_open = (now_et.weekday() < 5
+               and 4 <= now_et.hour < 20
+               and _is_us_trading_day(us_date))
     # JP 常规时段 09:00-15:00 JST Mon-Fri (含午休)
-    jp_open = now_jst.weekday() < 5 and 9 <= now_jst.hour < 15
+    jp_open = (now_jst.weekday() < 5
+               and 9 <= now_jst.hour < 15
+               and _is_jp_trading_day(jp_date))
     if us_open and jp_open:
         return True, f"US+JP both open (ET {now_et.strftime('%H:%M')} / JST {now_jst.strftime('%H:%M')})"
     if us_open:
         return True, f"US open (ET {now_et.strftime('%H:%M')})"
     if jp_open:
         return True, f"JP open (JST {now_jst.strftime('%H:%M')})"
-    return False, f"both closed (ET {now_et.strftime('%H:%M')} weekday={now_et.weekday()})"
+    # Label 里区分 weekend vs holiday
+    us_reason = "weekend" if now_et.weekday() >= 5 else ("holiday" if not _is_us_trading_day(us_date) else "off-hours")
+    jp_reason = "weekend" if now_jst.weekday() >= 5 else ("holiday" if not _is_jp_trading_day(jp_date) else "off-hours")
+    return False, f"both closed (US {us_reason} · JP {jp_reason})"
 
 
 def _should_run_now(force: bool = False) -> tuple[bool, str]:
