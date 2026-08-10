@@ -225,7 +225,7 @@ def _trump_summary_recent3(items: list) -> dict:
         def _bg():
             _refresh_flag[f"trump_summary_{key}"] = True
             try:
-                from ai_prompt import query_claude_cli
+                from ai_prompt import query_ai_cli
                 previews = "\n".join(
                     f"{i+1}. [{it.get('event_type','')}] {(it.get('preview','') or '')[:200]}"
                     for i, it in enumerate(top3)
@@ -235,7 +235,7 @@ def _trump_summary_recent3(items: list) -> dict:
                     "只输出概括，不要前后解释，不要 markdown。\n\n"
                     f"推文：\n{previews}\n"
                 )
-                out, status = query_claude_cli(prompt, timeout=60)
+                out, status, _, _ = query_ai_cli(prompt, timeout=60)
                 if out and out.strip():
                     cache_path.write_text(out.strip(), encoding="utf-8")
             except Exception:
@@ -1022,7 +1022,7 @@ def api_supply_chain(ticker: str) -> dict:
 def _compute_supply_chain(ticker: str) -> dict:
     """调 Claude 生成结构化供应链 JSON，可选 FMP 交叉验证 peers。"""
     try:
-        from ai_prompt import query_claude_cli
+        from ai_prompt import query_ai_cli
     except Exception as e:
         return {"error": f"ai_prompt import: {e}", "ticker": ticker}
 
@@ -1060,9 +1060,9 @@ def _compute_supply_chain(ticker: str) -> dict:
         "6. 若是 ETF 或杠杆产品，视为其追踪的标的（TQQQ→QQQ 前十大 / SOXL→半导体链）\n"
         "7. 严格只输出 JSON 对象，不要 ``` 围栏\n"
     )
-    out, status = query_claude_cli(prompt, timeout=90)
+    out, status, provider, _ = query_ai_cli(prompt, timeout=90)
     if not out:
-        return {"error": f"claude {status}", "ticker": ticker}
+        return {"error": f"{provider.lower()} {status}", "ticker": ticker}
     # 去除潜在的 markdown 围栏
     import re
     txt = out.strip()
@@ -1081,7 +1081,7 @@ def _compute_supply_chain(ticker: str) -> dict:
         "downstream": data.get("downstream", []) or [],
         "peers":      data.get("peers", []) or [],
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "source":     "claude",
+        "source":     provider.lower(),
     }
 
     # 可选：FMP 交叉验证 peers（免费 250 calls/day）
@@ -2049,7 +2049,7 @@ def _fetch_jp_guidance_via_claude(tk: str, stock: str, name_zh: str, name_en: st
     找不到 or URL 全部不可信 → 返 None（调用方保留 待核验 占位）。
     """
     try:
-        from ai_prompt import query_claude_cli, query_codex_cli, _is_claude_quota_status
+        from ai_prompt import query_ai_cli
     except Exception:
         return None
 
@@ -2090,12 +2090,8 @@ Target:
 }}
 """
     to = int(os.environ.get("JP_GUIDANCE_TIMEOUT", "240"))
-    provider = "claude"
-    out, status = query_claude_cli(prompt, timeout=to)
-    # Claude quota 用尽 → 回退 Codex CLI（Codex 无 WebSearch，Prompt 里的 URL 要求会导致返 待核验；但至少不阻塞）
-    if not out and _is_claude_quota_status(status):
-        provider = "codex"
-        out, status = query_codex_cli(prompt, timeout=to)
+    out, status, provider, _ = query_ai_cli(prompt, timeout=to)
+    provider = provider.lower()
     if not out:
         return {"_error": f"{provider}_{status[:120]}"}
     import re as _re
@@ -2464,7 +2460,7 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
         def _bg():
             _refresh_flag[flag_key] = True
             try:
-                from ai_prompt import query_claude_cli
+                from ai_prompt import query_ai_cli
                 lines = []
                 for tk, s, o, fd in tk_list:
                     lines.append(f"--- {tk} ---")
@@ -2522,7 +2518,7 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                     "标的数据：\n"
                     + "\n".join(lines)
                 )
-                out, status = query_claude_cli(prompt, timeout=120)
+                out, status, provider, _ = query_ai_cli(prompt, timeout=120)
                 if out and out.strip():
                     import re
                     parts = re.split(r"^###\s+([A-Z]{2,6})\b", out, flags=re.MULTILINE)
@@ -2537,6 +2533,7 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                         result = {
                             "tickers": tickers,
                             "generated_at": datetime.now(timezone.utc).isoformat(),
+                            "provider": provider,
                         }
                         cache_path.write_text(
                             json.dumps(result, ensure_ascii=False), encoding="utf-8"

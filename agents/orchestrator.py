@@ -110,7 +110,7 @@ def _release_lock() -> None:
 # （2026-08-01 execute() UnboundLocalError 就是这么被隐藏 15 天没触发买单）
 _CRITICAL_SOURCE_FILES = (
     "orchestrator.py", "paper_trader.py", "decision_agent.py",
-    "trading_contracts.py", "claude_gate.py",
+    "trading_contracts.py", "claude_gate.py", "ai_prompt.py",
     "config.py",   # TRACKED_TICKERS / TICKERS 变了要重启 orchestrator
 )
 _STARTUP_MTIMES: dict[str, float] = {}

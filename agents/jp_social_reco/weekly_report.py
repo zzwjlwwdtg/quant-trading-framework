@@ -166,11 +166,11 @@ JSON:
 
 def _call_claude_summary(payload: dict[str, Any], timeout: int = 420) -> tuple[str | None, str]:
     try:
-        from ai_prompt import query_claude_cli
+        from ai_prompt import query_ai_cli
     except Exception as exc:
         return None, f"claude_import_error: {exc}"
     prompt = _build_claude_prompt(payload)
-    out, status = query_claude_cli(prompt, timeout=timeout)
+    out, status, _, _ = query_ai_cli(prompt, timeout=timeout)
     if out:
         return _clean_llm_markdown(out), status
     return None, status

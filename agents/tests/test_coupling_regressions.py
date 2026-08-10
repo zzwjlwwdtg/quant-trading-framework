@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 import types
@@ -19,6 +20,7 @@ if str(AGENTS_DIR) not in sys.path:
     sys.path.insert(0, str(AGENTS_DIR))
 
 import atomic_io
+import ai_prompt
 import backtest_engine
 import claude_gate
 import config
@@ -174,16 +176,18 @@ class ClaudeGateTests(unittest.TestCase):
     @staticmethod
     def _fake_ai_prompt() -> types.ModuleType:
         module = types.ModuleType("ai_prompt")
-        module._is_claude_quota_status = lambda status: False
-        module.query_codex_cli = lambda prompt, timeout: (None, "unused")
-        module.query_claude_cli = lambda prompt, timeout: (
-            json.dumps({
-                "verdict": "APPROVE",
-                "confidence": 5,
-                "reason": "contract test",
-                "risk_flags": [],
-            }),
+        module.query_ai_cli = lambda prompt, timeout: (
+            json.dumps(
+                {
+                    "verdict": "APPROVE",
+                    "confidence": 5,
+                    "reason": "contract test",
+                    "risk_flags": [],
+                }
+            ),
             "ok",
+            "Claude",
+            "",
         )
         return module
 
@@ -199,6 +203,32 @@ class ClaudeGateTests(unittest.TestCase):
             )
         self.assertEqual(result["action"], "WATCH_BUY_PROBE")
         self.assertEqual(result["claude_gate"]["verdict"], "APPROVE")
+
+    def test_quota_fallback_provider_is_recorded_in_gate_audit(self):
+        module = types.ModuleType("ai_prompt")
+        module.query_ai_cli = lambda prompt, timeout: (
+            json.dumps(
+                {
+                    "verdict": "APPROVE",
+                    "confidence": 5,
+                    "reason": "codex fallback",
+                    "risk_flags": [],
+                }
+            ),
+            "ok",
+            "Codex",
+            "error: You've hit your limit",
+        )
+        decision = {"action": "BUY", "confidence": 5, "reason": "test"}
+        with tempfile.TemporaryDirectory() as tmp_dir, \
+             patch.dict(os.environ, {"CLAUDE_DECISION_GATE": "1"}), \
+             patch.object(claude_gate, "SIGNALS_DIR", tmp_dir), \
+             patch.object(claude_gate, "_current_conf_scale", return_value=5), \
+             patch.dict(sys.modules, {"ai_prompt": module}):
+            result = claude_gate.apply_claude_gate(
+                "US.SHY", {"price": 80}, {}, decision, {}, "post-open"
+            )
+        self.assertEqual(result["claude_gate"]["provider"], "Codex")
 
     def test_sim_active_converts_ai_veto_to_stopped_probe(self):
         audit = {
@@ -230,6 +260,79 @@ class ClaudeGateTests(unittest.TestCase):
                 {"action": "WATCH_BUY", "stop_ref": 75}, {"price": 100}, audit
             ))
 
+
+class CliFallbackTests(unittest.TestCase):
+    def test_quota_error_routes_to_codex(self):
+        with patch.object(
+            ai_prompt,
+            "query_claude_cli",
+            return_value=(None, "error: You've hit your limit; resets 12am"),
+        ), patch.object(
+            ai_prompt, "query_codex_cli", return_value=("fallback answer", "ok")
+        ) as codex:
+            output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
+        self.assertEqual((output, status, provider), ("fallback answer", "ok", "Codex"))
+        self.assertIn("hit your limit", reason)
+        codex.assert_called_once_with("prompt", timeout=7)
+
+    def test_non_quota_error_does_not_route_to_codex(self):
+        with patch.object(
+            ai_prompt, "query_claude_cli", return_value=(None, "timeout")
+        ), patch.object(ai_prompt, "query_codex_cli") as codex:
+            output, status, provider, reason = ai_prompt.query_ai_cli("prompt")
+        self.assertIsNone(output)
+        self.assertEqual((status, provider, reason), ("timeout", "Claude", ""))
+        codex.assert_not_called()
+
+    def test_codex_environment_removes_credentials(self):
+        env = {
+            "PATH": "safe-path",
+            "OPENAI_" + "API_KEY": "placeholder-value",
+            "CODEX_ACCESS_" + "TOKEN": "placeholder-value",
+            "SERVICE_PASSWORD": "sensitive-value",
+            "NORMAL_SETTING": "kept",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            safe = ai_prompt._codex_safe_env()
+        self.assertEqual(safe, {"PATH": "safe-path"})
+
+    def test_cli_status_redacts_credential_values(self):
+        fake_key = "sk-" + ("x" * 20)
+        raw = f"{'OPENAI_' + 'API_KEY'}=placeholder-value provider={fake_key}"
+        redacted = ai_prompt._redact_cli_text(raw)
+        self.assertNotIn("placeholder-value", redacted)
+        self.assertNotIn(fake_key, redacted)
+        self.assertEqual(redacted.count("[REDACTED]"), 2)
+
+    def test_codex_runs_ephemeral_read_only_outside_repo(self):
+        completed = types.SimpleNamespace(returncode=0, stdout="answer", stderr="")
+        with patch.object(ai_prompt, "_find_codex_cli", return_value="codex.exe"), \
+             patch.object(ai_prompt, "_is_ja_mode", return_value=False), \
+             patch.object(ai_prompt.subprocess, "run", return_value=completed) as run:
+            output, status = ai_prompt.query_codex_cli("prompt", timeout=9)
+        self.assertEqual((output, status), ("answer", "ok"))
+        args = run.call_args.args[0]
+        kwargs = run.call_args.kwargs
+        self.assertIn("--ephemeral", args)
+        self.assertIn("--ignore-user-config", args)
+        self.assertIn("--ignore-rules", args)
+        self.assertEqual(args[args.index("--sandbox") + 1], "read-only")
+        self.assertNotEqual(Path(kwargs["cwd"]).resolve(), Path(ai_prompt.BASE_DIR).resolve())
+        self.assertFalse(any("KEY" in name.upper() for name in kwargs["env"]))
+        self.assertFalse(any("TOKEN" in name.upper() for name in kwargs["env"]))
+
+    def test_all_production_callers_use_the_central_router(self):
+        direct_call = re.compile(r"\bquery_(?:claude|codex)_cli\s*\(")
+        offenders = []
+        for path in AGENTS_DIR.rglob("*.py"):
+            if path.name == "ai_prompt.py" or "tests" in path.parts:
+                continue
+            if direct_call.search(path.read_text(encoding="utf-8")):
+                offenders.append(str(path.relative_to(AGENTS_DIR)))
+        self.assertEqual(offenders, [])
+
+    def test_orchestrator_restarts_when_cli_router_changes(self):
+        self.assertIn("ai_prompt.py", orchestrator._CRITICAL_SOURCE_FILES)
 
 class SimActiveProfileTests(unittest.TestCase):
     def test_active_flag_is_hard_limited_to_simulation_account(self):

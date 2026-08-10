@@ -236,13 +236,10 @@ def llm_extract(items: list[ContentItem], *, timeout: int = 90) -> tuple[list[Ex
     ]
     prompt = _PROMPT.format(payload=json.dumps(compact, ensure_ascii=False, indent=2))
     try:
-        from ai_prompt import query_claude_cli, query_codex_cli, _is_claude_quota_status
-        out, status = query_claude_cli(prompt, timeout=timeout)
-        provider = "Claude"
-        if not out and (_is_claude_quota_status(status) or status in {"not_installed", "claude_not_installed"}):
-            out, codex_status = query_codex_cli(prompt, timeout=timeout)
-            provider = "Codex" if out else ""
-            status = "ok" if out else f"claude_unavailable; codex={codex_status}"
+        from ai_prompt import query_ai_cli
+        out, status, provider, _ = query_ai_cli(
+            prompt, timeout=timeout, fallback_on_unavailable=True
+        )
     except Exception as exc:
         return [], f"llm_error: {exc}"
     if not out:

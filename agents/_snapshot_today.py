@@ -128,10 +128,8 @@ def _run_ai_analysis() -> None:
 
     try:
         from ai_prompt import (
-            _is_claude_quota_status,
             print_analysis,
-            query_claude_cli,
-            query_codex_cli,
+            query_ai_cli,
         )
     except Exception as exc:
         p(f"[snapshot-ai] AI 模块不可用: {exc}")
@@ -141,17 +139,9 @@ def _run_ai_analysis() -> None:
     prompt_path = out_dir / f"ai_prompt_snapshot_{stamp}.md"
     prompt_path.write_text(prompt, encoding="utf-8")
 
-    provider = "Claude"
-    output, status = query_claude_cli(prompt, timeout=AI_TIMEOUT_SEC)
-    fallback_reason = ""
-    if not output and _is_claude_quota_status(status):
-        fallback_reason = status
-        output, codex_status = query_codex_cli(prompt, timeout=AI_TIMEOUT_SEC)
-        if output:
-            status = "ok"
-            provider = "Codex"
-        else:
-            status = f"claude_quota: {fallback_reason}; {codex_status}"
+    output, status, provider, fallback_reason = query_ai_cli(
+        prompt, timeout=AI_TIMEOUT_SEC
+    )
 
     if not output:
         p(f"[snapshot-ai] 调用失败: {status}")

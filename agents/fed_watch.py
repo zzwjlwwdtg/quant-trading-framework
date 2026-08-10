@@ -21,7 +21,7 @@ CME_FEDWATCH_URL = "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch
 def _fetch_fed_watch_via_claude() -> Optional[dict]:
     """Claude CLI + WebFetch 抓 CME FedWatch, 解析成结构化 JSON."""
     try:
-        from ai_prompt import query_claude_cli, query_codex_cli, _is_claude_quota_status
+        from ai_prompt import query_ai_cli
     except Exception:
         return None
 
@@ -77,11 +77,8 @@ def _fetch_fed_watch_via_claude() -> Optional[dict]:
 如果找不到最新数据，返 {{"error": "no_recent_data", "confidence": "low"}}
 """
     to = int(os.environ.get("FED_WATCH_TIMEOUT", "180"))
-    provider = "claude"
-    out, status = query_claude_cli(prompt, timeout=to)
-    if not out and _is_claude_quota_status(status):
-        provider = "codex"
-        out, status = query_codex_cli(prompt, timeout=to)
+    out, status, provider, _ = query_ai_cli(prompt, timeout=to)
+    provider = provider.lower()
     if not out:
         return {"error": f"{provider}_{status[:120]}"}
 

@@ -16,6 +16,7 @@ AI Prompt Builder — 把今日 log 包成一份完整提问稿，给 Claude.ai/
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -1085,12 +1086,12 @@ def query_claude_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
         )
         if result.returncode == 0:
             return result.stdout.strip(), "ok"
-        err = (result.stderr or result.stdout or "").strip()
+        err = _redact_cli_text((result.stderr or result.stdout or "").strip())
         return None, f"error: exit={result.returncode} stderr={err[:500]}"
     except subprocess.TimeoutExpired:
         return None, "timeout"
     except Exception as e:
-        return None, f"error: {e}"
+        return None, f"error: {_redact_cli_text(str(e))}"
 
 
 def _is_claude_quota_status(status: str) -> bool:
@@ -1117,62 +1118,127 @@ def _is_claude_quota_status(status: str) -> bool:
     return any(kw in s for kw in quota_kw)
 
 
+_SECRET_TEXT_PATTERNS = (
+    re.compile(r"\bsk-(?:ant-)?[A-Za-z0-9_-]{12,}\b", re.I),
+    re.compile(
+        r"\b(OPENAI_API_KEY|CODEX_API_KEY|CODEX_ACCESS_TOKEN|ANTHROPIC_API_KEY)\s*=\s*([^\s;]+)",
+        re.I,
+    ),
+)
+_CODEX_ENV_ALLOWLIST = {
+    "ALLUSERSPROFILE", "APPDATA", "CODEX_HOME", "COMSPEC", "HOME",
+    "HOMEDRIVE", "HOMEPATH", "LANG", "LC_ALL", "LOCALAPPDATA",
+    "NO_COLOR", "PATH", "PATHEXT", "PROGRAMDATA", "PROGRAMFILES",
+    "PROGRAMFILES(X86)", "PROGRAMW6432", "PYTHONIOENCODING", "PYTHONUTF8",
+    "SSL_CERT_DIR", "SSL_CERT_FILE", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP",
+    "TERM", "TMP", "TMPDIR", "USERPROFILE", "WINDIR", "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+}
+
+
+def _redact_cli_text(value: str) -> str:
+    """Keep provider errors useful without ever persisting credential values."""
+    text = str(value or "")
+    text = _SECRET_TEXT_PATTERNS[0].sub("[REDACTED]", text)
+    text = _SECRET_TEXT_PATTERNS[1].sub(lambda m: f"{m.group(1)}=[REDACTED]", text)
+    return text
+
+
+def _codex_safe_env() -> dict[str, str]:
+    """Build a minimal environment for saved CLI auth with no application secrets."""
+    return {
+        name: value
+        for name, value in os.environ.items()
+        if name.upper() in _CODEX_ENV_ALLOWLIST
+    }
+
+
 def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
     """
     用 Codex CLI 非交互模式跑一次查询，作为 Claude 额度耗尽时的 fallback。
+
+    安全边界：在空临时目录、只读 sandbox、ephemeral session 中运行；不继承
+    API key/token/secret/password 类环境变量，只复用本机 Codex CLI 已保存登录。
     """
     cli_path = _find_codex_cli()
     if not cli_path:
         return None, "codex_not_installed"
 
-    fd, out_path = tempfile.mkstemp(prefix="codex_ai_analysis_", suffix=".txt")
     try:
-        import os
-        os.close(fd)
-        prefix = (
-            "以下の投資分析依頼に直接回答してください。ファイル変更やコマンド実行は不要です。"
-            "最終分析本文だけを出力してください。"
-            if _is_ja_mode()
-            else "请直接回答下面的投资分析请求。不要修改文件，不要运行命令，只输出最终分析正文。"
-        )
-        codex_prompt = f"{prefix}\n\n{prompt}"
-        result = subprocess.run(
-            [
-                cli_path,
-                "exec",
-                "--skip-git-repo-check",
-                "--sandbox", "read-only",
-                "--cd", str(BASE_DIR),
-                "--output-last-message", out_path,
-                "-",
-            ],
-            input=codex_prompt,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=timeout,
-        )
-        output = ""
-        try:
-            output = Path(out_path).read_text(encoding="utf-8", errors="replace").strip()
-        except Exception:
+        with tempfile.TemporaryDirectory(prefix="codex_ai_fallback_") as run_dir:
+            out_path = Path(run_dir) / "last_message.txt"
+            prefix = (
+                "以下の投資分析依頼に直接回答してください。ファイル変更やコマンド実行は不要です。"
+                "最終分析本文だけを出力してください。"
+                if _is_ja_mode()
+                else "请直接回答下面的投资分析请求。不要修改文件，不要运行命令，只输出最终分析正文。"
+            )
+            codex_prompt = f"{prefix}\n\n{prompt}"
+            result = subprocess.run(
+                [
+                    cli_path,
+                    "exec",
+                    "--ephemeral",
+                    "--ignore-user-config",
+                    "--ignore-rules",
+                    "--skip-git-repo-check",
+                    "--sandbox", "read-only",
+                    "--cd", run_dir,
+                    "--output-last-message", str(out_path),
+                    "-",
+                ],
+                input=codex_prompt,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout,
+                cwd=run_dir,
+                env=_codex_safe_env(),
+            )
             output = ""
-        if result.returncode == 0 and output:
-            return output, "ok"
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip(), "ok"
-        err = (result.stderr or result.stdout or "").strip()
-        return None, f"codex_error: exit={result.returncode} stderr={err[:500]}"
+            try:
+                output = out_path.read_text(encoding="utf-8", errors="replace").strip()
+            except Exception:
+                output = ""
+            if result.returncode == 0 and output:
+                return output, "ok"
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip(), "ok"
+            err = _redact_cli_text((result.stderr or result.stdout or "").strip())
+            return None, f"codex_error: exit={result.returncode} stderr={err[:500]}"
     except subprocess.TimeoutExpired:
         return None, "codex_timeout"
     except Exception as e:
-        return None, f"codex_error: {e}"
-    finally:
-        try:
-            Path(out_path).unlink(missing_ok=True)
-        except Exception:
-            pass
+        return None, f"codex_error: {_redact_cli_text(str(e))}"
+
+
+def query_ai_cli(
+    prompt: str,
+    timeout: int = 300,
+    *,
+    fallback_on_unavailable: bool = False,
+) -> tuple[str | None, str, str, str]:
+    """Query Claude first, then Codex only for quota/rate-limit exhaustion.
+
+    Returns ``(output, status, provider, fallback_reason)``. Callers that can
+    operate without Claude installed may opt into the same Codex fallback with
+    ``fallback_on_unavailable=True``.
+    """
+    output, status = query_claude_cli(prompt, timeout=timeout)
+    if output:
+        return output, status, "Claude", ""
+
+    unavailable = status in {"not_installed", "claude_not_installed"}
+    if not _is_claude_quota_status(status) and not (fallback_on_unavailable and unavailable):
+        return None, status, "Claude", ""
+
+    fallback_reason = _redact_cli_text(status)
+    output, codex_status = query_codex_cli(prompt, timeout=timeout)
+    if output:
+        return output, codex_status, "Codex", fallback_reason
+    combined = f"claude_unavailable: {fallback_reason}; codex={codex_status}"
+    return None, _redact_cli_text(combined), "Codex", fallback_reason
 
 
 def auto_analyze(mode: str = "review") -> dict:
@@ -1185,18 +1251,7 @@ def auto_analyze(mode: str = "review") -> dict:
         return {"status": "no_log"}
 
     prompt = prompt_path.read_text(encoding="utf-8")
-    output, status = query_claude_cli(prompt)
-    provider = "Claude"
-    fallback_reason = ""
-
-    if not output and _is_claude_quota_status(status):
-        fallback_reason = status
-        output, codex_status = query_codex_cli(prompt)
-        if output:
-            status = "ok"
-            provider = "Codex"
-        else:
-            status = f"claude_quota: {fallback_reason}; {codex_status}"
+    output, status, provider, fallback_reason = query_ai_cli(prompt)
 
     today = datetime.now().strftime("%Y-%m-%d")
     analysis_path = Path(SIGNALS_DIR) / f"ai_analysis_{mode}_{today}.md"

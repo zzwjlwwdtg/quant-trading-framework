@@ -253,16 +253,8 @@ def analyze_rss_items(rss_items: list, *, source: str = "RSS",
                             tickers=tickers_str, rss_items_json=rss_json)
 
     # 调用本地 Claude CLI；额度满时切 Codex CLI
-    from ai_prompt import query_claude_cli, query_codex_cli, _is_claude_quota_status
-    out, status = query_claude_cli(prompt, timeout=cli_timeout)
-    provider = "Claude"
-    if not out and _is_claude_quota_status(status):
-        out, codex_status = query_codex_cli(prompt, timeout=cli_timeout)
-        if out:
-            provider = "Codex"
-            status = "ok"
-        else:
-            status = f"claude_quota; codex={codex_status}"
+    from ai_prompt import query_ai_cli
+    out, status, provider, _ = query_ai_cli(prompt, timeout=cli_timeout)
 
     if not out:
         return {"items": [], "fallback": True, "source": source,

@@ -37,10 +37,6 @@ def _fail_closed() -> bool:
     return os.environ.get("CLAUDE_DECISION_FAIL_CLOSED", "1") != "0"
 
 
-def _fallback_codex() -> bool:
-    return os.environ.get("CLAUDE_DECISION_FALLBACK_CODEX", "0") == "1"
-
-
 def _current_conf_scale() -> int:
     try:
         from decision_agent import _conf_scale
@@ -219,9 +215,14 @@ def _sim_active_probe(decision: dict, market: dict | None, audit: dict) -> dict 
     return out
 
 
-def _fail_decision(decision: dict, status: str, prompt_path: str | None = None) -> dict:
+def _fail_decision(
+    decision: dict,
+    status: str,
+    prompt_path: str | None = None,
+    provider: str = "Claude",
+) -> dict:
     audit = _audit(
-        "Claude",
+        provider,
         "HOLD",
         status,
         "Claude gate unavailable; fail-closed to no-order.",
@@ -266,20 +267,16 @@ def apply_claude_gate(
     prompt_path.write_text(prompt_text, encoding="utf-8")
 
     try:
-        from ai_prompt import _is_claude_quota_status, query_claude_cli, query_codex_cli
+        from ai_prompt import query_ai_cli
     except Exception as exc:
         logger.error(f"[claude-gate] import failed for {ticker}: {exc}")
         return _fail_decision(decision, f"import_error: {exc}", str(prompt_path))
 
-    provider = "Claude"
-    output, status = query_claude_cli(prompt_text, timeout=_timeout_sec())
-    if not output and _fallback_codex() and _is_claude_quota_status(status):
-        provider = "Codex"
-        output, status = query_codex_cli(prompt_text, timeout=_timeout_sec())
+    output, status, provider, _ = query_ai_cli(prompt_text, timeout=_timeout_sec())
 
     if not output:
         logger.warning(f"[claude-gate] {ticker} unavailable: {status}")
-        return _fail_decision(decision, status, str(prompt_path))
+        return _fail_decision(decision, status, str(prompt_path), provider)
 
     raw_path.write_text(output + "\n", encoding="utf-8")
     parsed = _extract_json(output)

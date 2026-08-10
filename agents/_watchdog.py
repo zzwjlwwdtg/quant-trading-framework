@@ -36,7 +36,6 @@ ORCH_ENV = {
     "CLAUDE_DECISION_MODE":          "gate",
     "CLAUDE_DECISION_TIMEOUT_SEC":   "180",
     "CLAUDE_DECISION_FAIL_CLOSED":   "1",
-    "CLAUDE_DECISION_FALLBACK_CODEX":"0",
     "TECHNICAL_ONLY":                "1",
     "TRADER_LIVE_FRACTION":          "1.0",
     "TRADER_SIM_ACTIVE":             "1",
