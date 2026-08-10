@@ -35,7 +35,13 @@ from moomoo import (
     TrdSide, OrderType, ModifyOrderOp, RET_OK,
 )
 
-from config import OPEND_HOST, OPEND_PORT, MOOMOO_ACC_ID
+from config import (
+    OPEND_HOST,
+    OPEND_PORT,
+    MOOMOO_ACC_ID,
+    TRADING_ACCOUNT_MODE,
+    is_sim_active_trading,
+)
 from notifier import logger
 from atomic_io import atomic_write_json
 from trading_contracts import (
@@ -53,6 +59,8 @@ from trading_contracts import (
 
 ACC_ID  = MOOMOO_ACC_ID
 TRD_ENV = TrdEnv.SIMULATE
+if TRADING_ACCOUNT_MODE != "SIMULATE":
+    raise RuntimeError("paper_trader currently supports SIMULATE accounts only")
 
 # 每个窗口的下单参数（成熟系统标准）：盘前严门槛 + 大 buffer + 允许 RTH 外撮合
 # pre-market buffer 故意大（2.5%）因为日内 daily K 价和实时价可能有大 gap
@@ -176,7 +184,9 @@ def _drawdown_multiplier() -> float:
     if dd > -0.10: return 0.7
     if dd > -0.15: return 0.4
     if dd > -0.20: return 0.2
-    return 0.0
+    # 模拟仓积极模式的目的包含持续产生可复盘样本。深回撤时仍只给 25% 风险预算，
+    # 而不是完全冻结；非模拟积极模式继续严格归零。
+    return 0.25 if is_sim_active_trading() else 0.0
 
 
 def _kelly_mult(ticker: str, min_trades: int = 10) -> float:
@@ -676,7 +686,11 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
     target_vol = TARGET_PORT_VOL.get(regime, 0.12)
 
     # WATCH_BUY_PROBE 例外：crisis 下允许极小 probe 仓位（1/2 normal probe）
-    is_probe = (action in PROBE_ONLY_ACTIONS)
+    # 模拟仓积极模式下 WATCH_BUY 统一按小试探仓处理；明确 BUY 仍按正常仓位。
+    is_probe = (
+        action in PROBE_ONLY_ACTIONS
+        or (is_sim_active_trading() and action == "WATCH_BUY")
+    )
     if target_vol <= 0:
         if is_probe:
             target_vol = CRISIS_PROBE_TARGET_VOL
@@ -690,6 +704,9 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
     # 3) 乘数
     vix_mult  = _vix_multiplier()
     dd_mult   = _drawdown_multiplier()
+    if is_probe and is_sim_active_trading() and vix_mult <= 0:
+        # 极端 VIX 仍允许极小模拟试探仓，便于验证危机反弹规则；真实/普通模式不变。
+        vix_mult = 0.10
     # conf → mult：低信心 = 试探仓 (probe)，高信心 = 满仓 + boost
     # PROBE_ONLY_ACTIONS: 强制 0.30 (30% 常规仓)，无视 conf
     try:
@@ -1119,9 +1136,15 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
     # ── 连续亏损暂停（P4.2）：BUY 全部跳过；SELL / REDUCE / 风控仍允许 ─────
     if action in BUY_ACTIONS:
         paused, p_reason = _is_loss_streak_paused(state)
-        if paused:
+        active_probe = (
+            is_sim_active_trading()
+            and (action in PROBE_ONLY_ACTIONS or action == "WATCH_BUY")
+        )
+        if paused and not active_probe:
             logger.info(f"[trader] {ticker} {action} 跳过：连续亏损暂停 ({p_reason})")
             return
+        if paused and active_probe:
+            logger.info(f"[trader] {ticker} 连亏暂停中，但 SIM_ACTIVE 允许小试探仓 ({p_reason})")
 
     size_usd = 0.0
     if action in BUY_ACTIONS:

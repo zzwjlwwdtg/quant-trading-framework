@@ -24,7 +24,7 @@ import os
 from openai import OpenAI
 
 from config import (OPENAI_API_KEY, DECISION_MODEL, RSI_OVERBOUGHT, RSI_OVERSOLD,
-                    LEVERAGE_FACTORS)
+                    LEVERAGE_FACTORS, is_sim_active_trading)
 from trading_contracts import BULLISH_SIGNAL_ACTIONS, BUY_ACTIONS, confidence_min
 
 
@@ -807,6 +807,11 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
     if sector_regime in ("sector_bear", "sector_crisis", "sector_weak"):
         bull_thresh += 1
         caution_thresh = max(1, caution_thresh - 1)
+
+    # 模拟仓积极模式：抵消 HMM + sector 的重复收紧，让 2 个以上多头共振先产生
+    # WATCH_BUY 小试探信号。事件/财报 guard 仍在 get_decision() 末尾执行。
+    if is_sim_active_trading() and regime != "crisis":
+        bull_thresh = max(2, bull_thresh - 2)
 
     if bear >= reduce_thresh:
         # 修复 #1: bull_trending 下 REDUCE 信号回测 14-25% 胜率（反指标）。

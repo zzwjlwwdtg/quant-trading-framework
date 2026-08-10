@@ -21,6 +21,7 @@ from pca_sox import (
     fetch_returns, compute_spectrum,
     compute_residual_momentum, compute_factors, run_factor_regression,
 )
+from config import is_sim_active_trading
 
 # ── 入选门槛（3b 调整版：α-t 放宽到 1.5，避免单只 picks）──────────────────
 MIN_ABS_Z       = 2.0    # |residual momentum z| 下限
@@ -63,10 +64,12 @@ def _direction_for_regime(z: float, regime: str) -> Optional[str]:
     if regime == "overheated":
         return "BUY" if z <= -MIN_ABS_Z else None  # 反弹候选
     if regime == "recession_risk":
-        if z <= -2.5:
+        if z <= (-2.0 if is_sim_active_trading() else -2.5):
             return "BUY"   # 极端超卖反转
         return None
     # neutral
+    if is_sim_active_trading():
+        return "BUY" if z >= 1.5 else None
     if abs(z) >= 3.0:
         return "BUY" if z > 0 else None  # 中性 regime 也只追多
     return None
@@ -154,12 +157,19 @@ def pick_today_universe(regime: Optional[str] = None) -> dict:
                     skip.append({**c, "reason": "; ".join(reason)})
         return qual, skip
 
-    # 严格模式：双重显著
-    qualified, skipped = _filter(MIN_ABS_Z, MIN_ABS_ALPHA_T)
+    # 严格模式：双重显著。模拟积极模式降低候选门槛，但仍要求正向残差动量。
+    min_z = 1.5 if is_sim_active_trading() else MIN_ABS_Z
+    min_alpha_t = 1.0 if is_sim_active_trading() else MIN_ABS_ALPHA_T
+    out["selection_thresholds"] = {
+        "min_abs_z": min_z,
+        "min_abs_alpha_t": min_alpha_t,
+        "sim_active": is_sim_active_trading(),
+    }
+    qualified, skipped = _filter(min_z, min_alpha_t)
     pick_mode = "strict"
     # B (自适应)：严格 0 picks → 降级到纯动量（只看 |z|，不要求 α-t 显著）
     if not qualified:
-        qualified, skipped = _filter(MIN_ABS_Z, 0.0)
+        qualified, skipped = _filter(min_z, 0.0)
         pick_mode = "fallback-z-only"
     out["pick_mode"] = pick_mode
 
@@ -205,9 +215,12 @@ def format_picks_report(out: dict) -> list[str]:
         return lines
     picks = out.get("picks", [])
     mode  = out.get("pick_mode", "strict")
+    thresholds = out.get("selection_thresholds") or {}
+    min_z = thresholds.get("min_abs_z", MIN_ABS_Z)
+    min_alpha_t = thresholds.get("min_abs_alpha_t", MIN_ABS_ALPHA_T)
     mode_label = {
-        "strict":          f"严格 (|z|>={MIN_ABS_Z} 且 |α-t|>={MIN_ABS_ALPHA_T})",
-        "fallback-z-only": f"降级 (|z|>={MIN_ABS_Z}, α-t 不要求) — 严格模式 0 picks 触发",
+        "strict":          f"严格 (|z|>={min_z} 且 |α-t|>={min_alpha_t})",
+        "fallback-z-only": f"降级 (|z|>={min_z}, α-t 不要求) — 严格模式 0 picks 触发",
     }.get(mode, mode)
     lines.append(f"  全市场: {out['n_universe']} 只SOX成分股 "
                  f"→ 入选 {len(picks)} / 上限 {MAX_PICKS}  [模式: {mode_label}]")

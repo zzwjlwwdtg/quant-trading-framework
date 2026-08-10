@@ -48,19 +48,31 @@ _LOCK_PATH = Path(__file__).parent / ".orchestrator.lock"
 
 def _check_lock_or_exit() -> None:
     """启动时检查锁文件：已有活进程在跑就拒绝启动；否则写入自己 PID。"""
-    if _LOCK_PATH.exists():
+    while True:
         try:
-            old_pid = int(_LOCK_PATH.read_text().strip())
-        except (ValueError, OSError):
-            old_pid = None
-        if old_pid and _pid_alive(old_pid):
-            print(f"[orchestrator] 已有进程在跑 (PID={old_pid})，本次启动取消。")
-            print(f"  如确认那个进程已死，删除 {_LOCK_PATH} 后重试。")
-            sys.exit(2)
-        # 锁文件是孤儿（进程不在了），清掉
-        try: _LOCK_PATH.unlink()
-        except OSError: pass
-    _LOCK_PATH.write_text(str(os.getpid()), encoding="utf-8")
+            fd = os.open(_LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            try:
+                old_pid = int(_LOCK_PATH.read_text().strip())
+            except (ValueError, OSError):
+                old_pid = None
+            if old_pid and _pid_alive(old_pid):
+                print(f"[orchestrator] 已有进程在跑 (PID={old_pid})，本次启动取消。")
+                print(f"  如确认那个进程已死，删除 {_LOCK_PATH} 后重试。")
+                sys.exit(2)
+            try:
+                _LOCK_PATH.unlink()
+            except FileNotFoundError:
+                pass
+            except OSError:
+                sys.exit(2)
+            continue
+        try:
+            os.write(fd, str(os.getpid()).encode("utf-8"))
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        break
     atexit.register(_release_lock)
 
 
@@ -936,6 +948,12 @@ def main() -> None:
                   f"  60分足  : 売買シグナル時に自動でエントリー参考付加"))
     # 决策模式
     from decision_agent import _is_technical_only
+    from config import is_sim_active_trading
+    logger.info(
+        "  模拟仓模式 : "
+        + ("[SIM_ACTIVE] 主动试探仓已启用" if is_sim_active_trading()
+           else "标准风控")
+    )
     if _is_technical_only():
         logger.info(t(
             "  决策模式 : [TECHNICAL_ONLY] 消息面（Trump/事件/breaking）仅作参考，不进决策",

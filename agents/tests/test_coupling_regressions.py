@@ -21,11 +21,14 @@ if str(AGENTS_DIR) not in sys.path:
 import atomic_io
 import backtest_engine
 import claude_gate
+import config
 import daily_review
 import decision_agent
 import orchestrator
 import paper_trader
 import trading_contracts
+import universe_picker
+import _watchdog as watchdog
 
 
 class ActionContractTests(unittest.TestCase):
@@ -145,6 +148,113 @@ class ClaudeGateTests(unittest.TestCase):
             )
         self.assertEqual(result["action"], "WATCH_BUY_PROBE")
         self.assertEqual(result["claude_gate"]["verdict"], "APPROVE")
+
+    def test_sim_active_converts_ai_veto_to_stopped_probe(self):
+        audit = {
+            "verdict": "HOLD",
+            "status": "ok",
+            "reason": "wait for more confirmation",
+        }
+        decision = {
+            "action": "WATCH_BUY",
+            "confidence": 4,
+            "stop_ref": 92,
+        }
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            result = claude_gate._sim_active_probe(decision, {"price": 100}, audit)
+        self.assertEqual(result["action"], "WATCH_BUY_PROBE")
+        self.assertEqual(
+            result["claude_gate"]["execution_override"],
+            "SIM_ACTIVE_PROBE",
+        )
+        self.assertEqual(result["claude_gate"]["stop_distance_pct"], 8.0)
+
+    def test_sim_active_never_overrides_invalid_or_wide_stop(self):
+        audit = {"verdict": "HOLD", "status": "ok", "reason": "bad stop"}
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            self.assertIsNone(claude_gate._sim_active_probe(
+                {"action": "WATCH_BUY", "stop_ref": 101}, {"price": 100}, audit
+            ))
+            self.assertIsNone(claude_gate._sim_active_probe(
+                {"action": "WATCH_BUY", "stop_ref": 75}, {"price": 100}, audit
+            ))
+
+
+class SimActiveProfileTests(unittest.TestCase):
+    def test_active_flag_is_hard_limited_to_simulation_account(self):
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}), \
+             patch.object(config, "TRADING_ACCOUNT_MODE", "SIMULATE"):
+            self.assertTrue(config.is_sim_active_trading())
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}), \
+             patch.object(config, "TRADING_ACCOUNT_MODE", "REAL"):
+            self.assertFalse(config.is_sim_active_trading())
+
+    def test_deep_drawdown_keeps_quarter_budget_only_in_sim_active(self):
+        state = {"__nav_peak": {"peak_nav": 100, "current_nav": 70}}
+        with patch.object(paper_trader, "_state_load", return_value=state), \
+             patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "0"}):
+            self.assertEqual(paper_trader._drawdown_multiplier(), 0.0)
+        with patch.object(paper_trader, "_state_load", return_value=state), \
+             patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            self.assertEqual(paper_trader._drawdown_multiplier(), 0.25)
+
+    def test_watch_buy_uses_probe_sizing_in_sim_active(self):
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}), \
+             patch.object(paper_trader, "_get_account_power", return_value=100_000), \
+             patch.object(paper_trader, "_annual_vol", return_value=0.5), \
+             patch.object(paper_trader, "_vix_multiplier", return_value=1.0), \
+             patch.object(paper_trader, "_drawdown_multiplier", return_value=1.0), \
+             patch.object(paper_trader, "_kelly_mult", return_value=1.0), \
+             patch.object(paper_trader, "_group_cap_usd", return_value=(None, None)), \
+             patch.object(paper_trader, "confidence_multiplier", wraps=trading_contracts.confidence_multiplier) as multiplier:
+            size = paper_trader._position_size_usd("US.TQQQ", conf=4, action="WATCH_BUY")
+        self.assertGreater(size, 0)
+        self.assertTrue(multiplier.call_args.kwargs["probe"])
+
+    def test_active_neutral_universe_accepts_moderate_positive_z(self):
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "0"}):
+            self.assertIsNone(universe_picker._direction_for_regime(1.7, "neutral"))
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            self.assertEqual(
+                universe_picker._direction_for_regime(1.7, "neutral"), "BUY"
+            )
+
+    def test_active_profile_offsets_duplicate_hmm_and_sector_tightening(self):
+        market = {
+            "ticker": "US.TQQQ",
+            "price": 100,
+            "rsi_14": 55,
+            "vol_ratio": 1.0,
+            "trend": "up",
+            "ma_stack": "bull",
+            "pct_chg": 1.0,
+            "prev_pct": 0.0,
+            "cum_5d_pct": 2.0,
+            "bb_zone": "normal",
+        }
+        confluence = {
+            "bull_count": 3,
+            "bear_count": 0,
+            "bull_weighted": 3.0,
+            "bear_weighted": 0.0,
+            "calibrated": False,
+        }
+        with patch.object(decision_agent, "_get_hmm_meta_state", return_value="bear_or_correction"), \
+             patch.object(decision_agent, "_get_sector_regime", return_value="sector_weak"), \
+             patch.object(decision_agent, "_is_technical_only", return_value=True), \
+             patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "0"}):
+            conservative = decision_agent._etf_rules(
+                market, {}, {}, regime="neutral", confluence=confluence, quant={}
+            )
+        with patch.object(decision_agent, "_get_hmm_meta_state", return_value="bear_or_correction"), \
+             patch.object(decision_agent, "_get_sector_regime", return_value="sector_weak"), \
+             patch.object(decision_agent, "_is_technical_only", return_value=True), \
+             patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            active = decision_agent._etf_rules(
+                market, {}, {}, regime="neutral", confluence=confluence, quant={}
+            )
+        self.assertEqual(conservative["action"], "HOLD")
+        self.assertEqual(active["action"], "WATCH_BUY")
 
 
 class PaperTraderControlFlowTests(unittest.TestCase):
@@ -445,6 +555,30 @@ class LauncherContractTests(unittest.TestCase):
             with self.subTest(name=name):
                 text = (AGENTS_DIR / name).read_text(encoding="utf-8")
                 self.assertIn(expected, text)
+
+    def test_all_orchestrator_launchers_enable_sim_active(self):
+        expected = 'set "TRADER_SIM_ACTIVE=1"'
+        for name in ("run.bat", "run_ja.bat"):
+            with self.subTest(name=name):
+                text = (AGENTS_DIR / name).read_text(encoding="utf-8")
+                self.assertIn(expected, text)
+        self.assertEqual(watchdog.ORCH_ENV["TRADER_SIM_ACTIVE"], "1")
+
+
+class SingleInstanceLockTests(unittest.TestCase):
+    def test_lock_creation_is_exclusive_and_released_by_owner(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            lock_path = Path(tmp_dir) / ".orchestrator.lock"
+            with patch.object(orchestrator, "_LOCK_PATH", lock_path), \
+                 patch.object(orchestrator.atexit, "register"), \
+                 patch("builtins.print"):
+                orchestrator._check_lock_or_exit()
+                self.assertEqual(lock_path.read_text(encoding="utf-8"), str(os.getpid()))
+                with patch.object(orchestrator, "_pid_alive", return_value=True):
+                    with self.assertRaises(SystemExit):
+                        orchestrator._check_lock_or_exit()
+                orchestrator._release_lock()
+                self.assertFalse(lock_path.exists())
 
 
 class SchedulerCommitTests(unittest.TestCase):

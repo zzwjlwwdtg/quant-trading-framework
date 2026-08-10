@@ -39,6 +39,7 @@ ORCH_ENV = {
     "CLAUDE_DECISION_FALLBACK_CODEX":"0",
     "TECHNICAL_ONLY":                "1",
     "TRADER_LIVE_FRACTION":          "1.0",
+    "TRADER_SIM_ACTIVE":             "1",
     "CRISIS_VBOUNCE_ENABLED":        "1",    # 2026-07-31 backtest 5d hit 80% avg +6% → 开启（probe 30%）
 }
 

@@ -26,6 +26,20 @@ def _cfg(key: str, default=""):
     return _SECRETS.get(key, default)
 
 
+# --- Trading account safety profile ---
+# 本项目当前只支持 moomoo SIMULATE。积极交易模式必须同时满足这个硬编码账户
+# 类型和显式环境变量，避免将来接入 REAL 账户时意外继承放宽后的模拟仓参数。
+TRADING_ACCOUNT_MODE = "SIMULATE"
+
+
+def is_sim_active_trading() -> bool:
+    """Whether the simulation-only active trading profile is enabled."""
+    return (
+        TRADING_ACCOUNT_MODE == "SIMULATE"
+        and os.environ.get("TRADER_SIM_ACTIVE", "0") == "1"
+    )
+
+
 # --- Tickers ---
 # DRAM/存储板块（2026-06-17/18 加）：
 #   US.DRAM = Roundhill Memory ETF（存储芯片板块 ETF，1x）

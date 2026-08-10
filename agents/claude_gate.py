@@ -14,9 +14,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from config import SIGNALS_DIR
+from config import SIGNALS_DIR, is_sim_active_trading
 from notifier import logger
-from trading_contracts import ORDER_ACTIONS, TRADE_WINDOWS, confidence_min
+from trading_contracts import BUY_ACTIONS, ORDER_ACTIONS, TRADE_WINDOWS, confidence_min
 
 
 ALLOWED_VERDICTS = {"APPROVE", "HOLD", "CAUTION"}
@@ -179,6 +179,46 @@ def _demote(decision: dict, verdict: str, audit: dict) -> dict:
     return out
 
 
+def _sim_active_probe(decision: dict, market: dict | None, audit: dict) -> dict | None:
+    """Convert an AI-vetoed simulated BUY into a bounded probe when safe enough.
+
+    This never creates a new direction: the deterministic rule engine must already
+    have proposed a BUY action. A valid broker stop below the current price is
+    mandatory, so stale/miswired stop data remains fail-closed.
+    """
+    if not is_sim_active_trading() or (decision or {}).get("action") not in BUY_ACTIONS:
+        return None
+    try:
+        price = float((market or {}).get("price") or 0)
+        stop = float((decision or {}).get("stop_ref") or 0)
+    except (TypeError, ValueError):
+        return None
+    if price <= 0 or stop <= 0 or stop >= price:
+        return None
+    stop_distance = (price - stop) / price
+    if stop_distance > 0.18:
+        return None
+
+    out = deepcopy(decision)
+    original_action = out.get("action")
+    out["action"] = "WATCH_BUY_PROBE"
+    out["demoted_from"] = original_action
+    out["reason"] = (
+        "sim_active_probe_after_claude_veto: "
+        f"{audit.get('reason') or audit.get('status')}"
+    )
+    out["claude_gate"] = audit | {
+        "demoted_from": original_action,
+        "execution_override": "SIM_ACTIVE_PROBE",
+        "stop_distance_pct": round(stop_distance * 100, 2),
+    }
+    logger.info(
+        f"[claude-gate] SIM_ACTIVE {out.get('action')} {original_action}→probe "
+        f"stop={stop:.2f} risk={stop_distance*100:.1f}%"
+    )
+    return out
+
+
 def _fail_decision(decision: dict, status: str, prompt_path: str | None = None) -> dict:
     audit = _audit(
         "Claude",
@@ -270,4 +310,5 @@ def apply_claude_gate(
         return approved
 
     logger.info(f"[claude-gate] {ticker} {verdict}: {audit['reason']}")
-    return _demote(decision, verdict, audit)
+    active_probe = _sim_active_probe(decision, market, audit)
+    return active_probe if active_probe is not None else _demote(decision, verdict, audit)
