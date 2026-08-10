@@ -850,9 +850,33 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
         }
       }
 
+      // 量价关系判读 (今日) —— 4 象限分类
+      // 高门槛用 1.5×/-1.5% (显著) · 低门槛用 0.8×/1.0% (触发条件)
+      const today = days[0];
+      const tRatio = today.day_ratio || 0;
+      const tChg = today.day_chg_pct;
+      let volPriceLabel = '', volPriceIcon = '', volPriceHint = '', volPriceCls = 'muted';
+      if (tRatio >= 1.5 && tChg >= 1.0) {
+        volPriceIcon = '⚡📈'; volPriceLabel = '放量上涨 · 强多确认'; volPriceCls = 'ok';
+        volPriceHint = '机构追买 + 价升有量支撑 → 后续短期看涨';
+      } else if (tRatio >= 1.5 && tChg <= -1.0) {
+        volPriceIcon = '⚡📉'; volPriceLabel = '放量下跌 · 强空/恐慌'; volPriceCls = 'bad';
+        volPriceHint = '机构出货或强制平仓 → 后续短期看跌';
+      } else if (tRatio <= 0.8 && tChg >= 1.0) {
+        volPriceIcon = '🔇📈'; volPriceLabel = '缩量上涨 · 弱多警惕反转'; volPriceCls = 'warn';
+        volPriceHint = '无机构接盘 · 靠散户推动 → 后市易回吐，等放量确认再动';
+      } else if (tRatio <= 0.8 && tChg <= -1.0) {
+        volPriceIcon = '🔇📉'; volPriceLabel = '缩量下跌 · 弱空可能筑底'; volPriceCls = 'warn';
+        volPriceHint = '无恐慌抛售 · 阴跌整理 → 常见反弹前兆，等放量向上再动';
+      } else {
+        volPriceIcon = '➡'; volPriceLabel = '量价平衡'; volPriceCls = 'muted';
+        volPriceHint = `day_ratio ${tRatio}× · chg ${tChg}% · 无明确量价信号`;
+      }
+
       const lines = [];
       const chgCls = parseFloat(cumChg) > 0 ? 'ok' : (parseFloat(cumChg) < 0 ? 'bad' : 'muted');
       lines.push(`<b>📊 ${days.length} 日累计 <span class="${chgCls}">${cumChg >= 0 ? '+' : ''}${cumChg}%</span></b> · 净向 <b class="${biasCls}">${biasWord}</b> (买${buyCnt}天/卖${sellCnt}天)`);
+      lines.push(`<b class="${volPriceCls}">${volPriceIcon} 今日量价: ${volPriceLabel}</b> <span style="color:var(--muted); font-size:9px" title="${volPriceHint}">(day_ratio ${tRatio}× · ${tChg >= 0 ? '+' : ''}${tChg}%)</span>`);
       if (biggestSlice) {
         const cls = biggestSlice.direction === 'buy' ? 'ok' : (biggestSlice.direction === 'sell' ? 'bad' : 'muted');
         const label = biggestSlice.direction === 'buy' ? '机构建仓' : '机构派发';
