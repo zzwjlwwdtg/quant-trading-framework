@@ -800,7 +800,7 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
     }] : []);
 
     // 汇总近 N 日：几天有异动 / 主导方向
-    const anomDays  = days.filter(d => (d.peak_bars||[]).length >= 1);
+    const anomDays  = days.filter(d => (d.peak_bars||[]).length >= 1 || (d.slices||[]).length >= 1);
     const buyDays   = days.filter(d => d.net_bias === 'buy');
     const sellDays  = days.filter(d => d.net_bias === 'sell');
     const thr = anom.thresholds || { ratio_min: 5.0, value_oku_min: 1.0 };
@@ -810,6 +810,71 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
       ${buyDays.length > 0 ? ` · <span class="ok">📈 ${buyDays.length} 日买主导</span>` : ''}
       ${sellDays.length > 0 ? ` · <span class="bad">📉 ${sellDays.length} 日卖主导</span>` : ''}
     </div>`;
+
+    // 🤖 AI 综合读 (rule-based narrative from raw data — 让 dashboard 直接告诉用户"这周发生了什么")
+    const summarizeFlow = (days, highlights) => {
+      if (!days.length) return '';
+      // 5 日累计涨跌 (最新日 close vs 最老日 open)
+      const oldestOpen = days[days.length - 1].day_open;
+      const latestClose = days[0].day_close;
+      const cumChg = oldestOpen ? ((latestClose / oldestOpen - 1) * 100).toFixed(1) : 0;
+
+      // 找最大 slice 全 5 日
+      let biggestSlice = null;
+      for (const d of days) {
+        for (const s of (d.slices || [])) {
+          if (!biggestSlice || s.total_value_oku > biggestSlice.total_value_oku) {
+            biggestSlice = { ...s, date: d.date_short };
+          }
+        }
+      }
+      // 找最活跃日 (slice + peak 数最多)
+      const busiest = [...days].sort((a, b) =>
+        ((b.slices || []).length + (b.peak_bars || []).length) - ((a.slices || []).length + (a.peak_bars || []).length)
+      )[0];
+      // 净方向判读
+      const buyCnt = days.filter(d => d.net_bias === 'buy' || d.full_bias === 'buy').length;
+      const sellCnt = days.filter(d => d.net_bias === 'sell' || d.full_bias === 'sell').length;
+      let biasWord = '换手激烈';
+      let biasCls = 'muted';
+      if (buyCnt >= sellCnt + 2) { biasWord = '买主导'; biasCls = 'ok'; }
+      else if (sellCnt >= buyCnt + 2) { biasWord = '卖主导'; biasCls = 'bad'; }
+      else if (parseFloat(cumChg) > 3) { biasWord = '缓慢上行'; biasCls = 'ok'; }
+      else if (parseFloat(cumChg) < -3) { biasWord = '缓慢下行'; biasCls = 'bad'; }
+      // Reversal 检测：跌日之后 2 天内翻涨 >5%
+      let reversal = null;
+      for (let i = days.length - 1; i >= 1; i--) {
+        if (days[i].day_chg_pct < -3 && days[i-1].day_chg_pct > 5) {
+          reversal = { down: days[i], up: days[i-1] };
+          break;
+        }
+      }
+
+      const lines = [];
+      const chgCls = parseFloat(cumChg) > 0 ? 'ok' : (parseFloat(cumChg) < 0 ? 'bad' : 'muted');
+      lines.push(`<b>📊 ${days.length} 日累计 <span class="${chgCls}">${cumChg >= 0 ? '+' : ''}${cumChg}%</span></b> · 净向 <b class="${biasCls}">${biasWord}</b> (买${buyCnt}天/卖${sellCnt}天)`);
+      if (biggestSlice) {
+        const cls = biggestSlice.direction === 'buy' ? 'ok' : (biggestSlice.direction === 'sell' ? 'bad' : 'muted');
+        const label = biggestSlice.direction === 'buy' ? '机构建仓' : '机构派发';
+        lines.push(`🔁 <b>最大拆单</b>: ${biggestSlice.date} ${biggestSlice.start}-${biggestSlice.end} <span class="${cls}">${label} ¥${biggestSlice.total_value_oku}億</span> (${biggestSlice.n_bars}段拆) @¥${biggestSlice.avg_price}`);
+      }
+      if (highlights && highlights[0]) {
+        const h = highlights[0];
+        const cls = h.direction === 'buy' ? 'ok' : (h.direction === 'sell' ? 'bad' : 'muted');
+        lines.push(`⚡ <b>最大单笔</b>: ${h.date_short} ${h.time} <span class="${cls}">${h.direction === 'buy' ? '买' : (h.direction === 'sell' ? '卖' : '换手')} ¥${h.value_oku}億</span> (${h.ratio.toFixed(1)}×均量, ${h.chg_pct >= 0 ? '+' : ''}${h.chg_pct}%)`);
+      }
+      if (busiest && ((busiest.slices || []).length + (busiest.peak_bars || []).length) >= 4) {
+        lines.push(`🔥 <b>最活跃日</b>: ${busiest.date_short} ${busiest.day_chg_pct >= 0 ? '+' : ''}${busiest.day_chg_pct}% · ${(busiest.slices || []).length}拆单 + ${(busiest.peak_bars || []).length}大单`);
+      }
+      if (reversal) {
+        lines.push(`↩️ <b>反转形态</b>: ${reversal.down.date_short} <span class="bad">${reversal.down.day_chg_pct}%</span> 大跌 → ${reversal.up.date_short} <span class="ok">+${reversal.up.day_chg_pct}%</span> 反弹`);
+      }
+      return `<div style="margin:5px 0; padding:6px 8px; background:rgba(88,166,255,0.06); border-left:2px solid #58a6ff; border-radius:2px; font-size:10.5px; line-height:1.6">
+        <div style="font-size:9px; color:var(--muted); margin-bottom:3px">🤖 AI 综合读 (rule-based · 无 Claude 成本)</div>
+        ${lines.join('<br>')}
+      </div>`;
+    };
+    const flowSummary = summarizeFlow(days, anom.highlights);
 
     // 大单精选：5 日 top 3 强 bar（按 ratio × 金额综合评分）—— 一眼看到本周重点
     const highlights = anom.highlights || [];
@@ -912,7 +977,7 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
         📅 其余 ${quietDays.length} 日无大单 · 全日均衡: ${quietDays.map(d => `${d.date_short} (${d.day_chg_pct >= 0 ? '+' : ''}${d.day_chg_pct}%)`).join(' · ')}
       </div>` : '';
 
-    bodyHtml = topSummary + highlightsHtml + strongDays.map((d, i) => renderDay(d, i === 0)).join('') + quietSummary;
+    bodyHtml = flowSummary + topSummary + highlightsHtml + strongDays.map((d, i) => renderDay(d, i === 0)).join('') + quietSummary;
     bodyHtml += `<div id="tostnet-${ticker.replace(/\./g,'_')}" style="font-size:10px; color:var(--muted); margin-top:4px; border-top:1px solid var(--border); padding-top:4px">🔍 查 JPX ToSTNeT 印证…</div>`;
   }
 
