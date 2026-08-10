@@ -47,6 +47,8 @@ WATCH_ONLY_TICKERS = [
     "US.NBIS",   # Nebius AI cloud pure-play — 云端消费增长表达
     "US.SHY",    # 1-3Y Treasury ETF — 2Y 债券多仓代理
     "US.IEI",    # 3-7Y Treasury ETF — 5Y 债券多仓代理
+    # AI DC 光通信链
+    "US.LITE",   # Lumentum — 400G/800G 光模块 / laser diode, NVIDIA/Cisco 光互联供应
 ]
 
 # --- Leverage Factors ---

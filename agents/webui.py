@@ -1222,6 +1222,8 @@ TICKER_TO_FUNDAMENTAL_STOCK = {
     "NBIS": "NBIS",   # Nebius (pure-play AI cloud，有股票基本面)
     "SHY":  None,     # 债券 ETF 无股票基本面
     "IEI":  None,     # 债券 ETF 无股票基本面
+    # AI DC 光通信链
+    "LITE": "LITE",   # Lumentum — 400G/800G optical transceivers + laser diodes, NVIDIA supplier
     # 日股（东证）：仅基本面+供应链，无期权，不进 orchestrator scan
     "TDK":      "6762.T",   # TDK — 电子元器件/固态电池/HDD磁头，AAPL/NVDA 供应链
     "KIOXIA":   "285A.T",   # キオクシア — NAND 闪存全球#2（前东芝存储），2024-12 IPO
@@ -1231,6 +1233,7 @@ TICKER_TO_FUNDAMENTAL_STOCK = {
     "ARE":      "5857.T",   # ARE Holdings (旧 Asahi Holdings) — 贵金属回收（金/银/铂），半导体/urban mining 概念
     "MUFG":     "8306.T",   # 三菱 UFJ 金融集团 — 日本最大银行，日本加息受益股
     "SUMCO":    "3436.T",   # SUMCO 胜高 — 硅晶圆全球 #2（信越化学后），300mm wafer 供 TSMC/Samsung/Intel，AI 芯片上游
+    "SHINETSU": "4063.T",   # 信越化学 — 硅晶圆全球 #1 + PVC + 光罩用光刻胶，半导体材料 upstream 龙头
 }
 
 # 日股关注列表（不参与 orchestrator scan，只在 dashboard 单独展示）
@@ -1253,6 +1256,8 @@ JP_WATCH_LIST = [
      "thesis_fit": _jp_thesis_fit("MUFG")},
     {"ticker": "SUMCO",    "symbol": "3436.T", "name_zh": "胜高",     "name_en": "SUMCO",
      "thesis": "硅晶圆全球 #2（信越化学后）· 300mm wafer 供 TSMC/Samsung/Intel · AI 芯片上游原材料 · 12 吋产能瓶颈受益"},
+    {"ticker": "SHINETSU", "symbol": "4063.T", "name_zh": "信越化学", "name_en": "Shin-Etsu Chemical",
+     "thesis": "硅晶圆全球 #1 (超 SUMCO) + PVC 世界龙头 + 光罩用光刻胶 · 半导体材料 upstream 最上游 · AI 需求+日元弱势双利好"},
 ]
 
 
@@ -2431,6 +2436,7 @@ TICKER_TO_OPTION_SOURCE = {
     "NBIS": "NBIS",
     "SHY":  "SHY",   # 1-3Y Treasury ETF
     "IEI":  "IEI",   # 3-7Y Treasury ETF
+    "LITE": "LITE",  # Lumentum 有 options chain
 }
 
 

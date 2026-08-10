@@ -1,35 +1,9 @@
 {
   "exists": true,
-  "tickers": {
-    "AAPL": "- 综合: 信号弱空(多1/空2)但 C/P=4.62 看多情绪偏热, 明显分歧; CROIC 72% 高位微降、Piotroski 8/9 强、借款近千亿\n- 攻防: 上方 $325(3.72%) 强 call wall 磁吸, 下方 $300(4.25%) 强 put wall 硬撑, 空间对称适合高抛低吸\n- 警示: 技术面弱 vs 期权看多 divergence, RSI 37 偏弱, 无共振观望为主",
-    "AMAT": "- 综合: 信号温和看多(2/5)+C/P=2.88 期权共振, 挤压弱; CROIC 从 48%→29% 两年明显下滑、Piotroski 6/9 中等\n- 攻防: 上方 $570(5.72%) 强 pin、下方 $500(7.26%) 中等支撑, 距离都不近, 适合波段不适合突破追\n- 警示: CROIC 连续两年降至 28.88%, 中期资本回报动能减速",
-    "DRAM": "- 综合: 信号全空(0/3)+put_break[high] 即将跌破 $50 put wall 加速下行; MU 基本面弱 CROIC 2.98%、借款 $11.5B\n- 攻防: Put wall $50(1.19%) 极近, 一破即加速; 上方 $55(8.7%) 弱 call wall 反弹无力\n- 警示: Put OI/Call OI=11.9 倍 ATM 严重失衡真恐慌, 破位即空头加速信号明确",
-    "GOOGL": "- 综合: 信号中性偏多(2/5)+C/P=3.15 期权共振看多, gamma_band_up[medium]; CROIC 24%→17% 三年连降, Piotroski 6/9\n- 攻防: 上方 $365(3.02%) 强 pin 磁吸, 下方 $340(4.04%) 中等支撑, 突破 $365 后打开空间\n- 警示: CROIC 三连降与 2026Q3 二阶导拐点 thesis 一致, 长期资本效率走弱",
-    "KLAC": "- 综合: 期权成交极稀薄(OI 4/1)不可信, 数据无参考价值; 基本面 CROIC 44%、Piotroski 8/9 强、借款 $5.9B 稳健\n- 攻防: 期权流动性失效, 攻防位以现货技术位为准, 不用期权 wall\n- 警示: C/P=20.3、Put/Call=0.2 倍均因样本太小失真, 请忽略期权信号",
-    "MSFT": "- 综合: 信号看多(3/5)+C/P=2.28 共振但 RSI=82.4 严重超买+put_break[high]; CROIC 32%→20% 四连降、Piotroski 5/9 弱\n- 攻防: 上方 $510(2%) pin 近、下方 $495(1%) put wall 极近, put_break 一破加速跌\n- 警示: RSI 82.4 超买叠加 Piotroski 5/9 与 CROIC 四连降, 追高风险显著",
-    "MULL": "- 综合: 信号全空(0/3)但期权多空均衡缺乏共振; 期权链是 MU 与 MULL 不匹配, 参考意义有限\n- 攻防: 期权对应 MU 不是 MULL, 攻防位不适用请回归 MULL 自身技术位\n- 警示: 数据源 ticker 错配(MULL vs MU), 期权信息不可直接套用",
-    "NBIS": "- 综合: 信号明确减仓(多1/空4)+期权中性无支撑; CROIC 20%→-73% 崩塌、CCC -1880 天异常\n- 攻防: 上方 $200(6.4%) 强 pin 反弹阻力, 下方 $180(4.24%) 强 put wall 可作止损线\n- 警示: CROIC -73% + CCC 极端负值, 现金流质量严重恶化, 严控仓位",
-    "NVDA": "- 综合: conf=5/5 明确+gamma_up[high] 突破 $225 加速+C/P=2.29 共振, 明确机会; CROIC 62% 高位但 Piotroski 4/9 盈利质量分歧\n- 攻防: 上方 $225(0.46%) 一线, 突破即 gamma 挤压加速; 下方 $212.5(5.12%) 中等支撑较远\n- 警示: gamma_up[high] 突破在即, 但 Piotroski 仅 4/9 提示基本面质量与股价分歧",
-    "SOXL": "- 综合: 信号偏空(1/5)+C/P=0.43 看空极端+Put/Call=24.4 倍严重失衡; SOXX 期权对 SOXL 3 倍杠杆放大\n- 攻防: 下方 $500(7.96%) 强 put wall 防守空间大, 上方 $555(2.16%) 弱 call wall 阻力弱\n- 警示: Put/Call=24.4 倍 SOXX ATM 恐慌或机构对冲, 半导体空头压力显著",
-    "TQQQ": "- 综合: 信号偏多(3/5)但 C/P=0.92 均衡无共振+put_break[high] 破 $715 加速; NVDA 代填基本面参考有限\n- 攻防: 上方 $735(1.66%) 强 pin, 下方 $715(1.11%) 极近 put_break, 3 倍杠杆放大双向波动\n- 警示: put_break[high] 触发线 QQQ $715 是关键, 一破 TQQQ 加速回撤",
-    "TSLA": "- 综合: 信号看多(3/5)+RSI=31.7 超卖+C/P=3.86 共振, 反弹机会; CROIC 8.35% 低位微升、Piotroski 5/9 中等\n- 攻防: 上方 $350(6.52%) 强 pin 反弹空间大, 下方 $310(5.65%) 中等支撑可作止损\n- 警示: 超卖+期权看多堆积反弹信号, 但基本面 CROIC 长期从 24%→8% 未修复, 反弹不改中期趋势"
-  },
-  "sources": {
-    "AAPL": "live",
-    "AMAT": "live",
-    "DRAM": "live",
-    "GOOGL": "live",
-    "KLAC": "live",
-    "MSFT": "live",
-    "MULL": "live",
-    "NBIS": "live",
-    "NVDA": "live",
-    "SOXL": "live",
-    "TQQQ": "live",
-    "TSLA": "live"
-  },
-  "live_state": "cached",
-  "live_generated": "2026-08-09T14:32:11.904487+00:00",
+  "tickers": {},
+  "sources": {},
+  "live_state": "generating",
+  "live_generated": null,
   "snapshot_path": "ai_analysis_snapshot_20260807_222823.md",
   "snapshot_mtime": "2026-08-07T22:28:23.402546"
 }

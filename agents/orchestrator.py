@@ -99,6 +99,7 @@ def _release_lock() -> None:
 _CRITICAL_SOURCE_FILES = (
     "orchestrator.py", "paper_trader.py", "decision_agent.py",
     "trading_contracts.py", "claude_gate.py",
+    "config.py",   # WATCH_ONLY_TICKERS / TICKERS 变了要重启 orchestrator
 )
 _STARTUP_MTIMES: dict[str, float] = {}
 
