@@ -1769,7 +1769,7 @@ def api_jp_guidance(ticker: str) -> dict:
         # 官方 IR 事实优先；同时补上分析师共识供交叉核验（可能与官方指引背离，用户想看到）
         if stock and stock.endswith(".T"):
             ac = _cached(f"analyst_consensus_{tk}", ttl_sec=6 * 3600,
-                         compute_fn=lambda: _fetch_analyst_consensus(stock))
+                         compute_fn=lambda: _fetch_analyst_consensus(stock, ticker=tk))
             if ac and not ac.get("error"):
                 verified["analyst_consensus"] = ac
         return verified
@@ -1794,8 +1794,104 @@ def api_jp_guidance(ticker: str) -> dict:
                     first_call_placeholder=placeholder)
 
 
-def _fetch_analyst_consensus(stock: str) -> dict | None:
-    """yfinance 分析师聚合 → 归一化字段。失败返 {'error': ...}，无覆盖返 None。"""
+def _fetch_historical_pe_bands(stock: str) -> dict | None:
+    """5 年历史 P/E 分布：median / p25 / p75 / min / max。用 yfinance history + income_stmt.
+
+    对每个交易日，找 ≤该日的最近 EPS 报告 → 计算 P/E。
+    """
+    try:
+        import yfinance as yf
+        import statistics
+        t = yf.Ticker(stock)
+        prices = t.history(period="5y", auto_adjust=False)
+        income = t.income_stmt
+        if prices is None or prices.empty or income is None or income.empty:
+            return None
+        eps_row = None
+        for k in ("Diluted EPS", "Basic EPS", "DilutedEPS", "BasicEPS"):
+            if k in income.index:
+                eps_row = income.loc[k]
+                break
+        if eps_row is None:
+            return None
+        eps_row = eps_row.dropna()
+        if eps_row.empty:
+            return None
+        # eps_row.index = fiscal period end dates (Timestamp)
+        eps_dates_sorted = sorted(eps_row.index)
+        eps_values = {d: float(eps_row[d]) for d in eps_dates_sorted}
+        pe_list = []
+        for date_ts, price in prices["Close"].items():
+            # 找 ≤ 该交易日 的最近 EPS
+            applicable_eps = None
+            for ed in reversed(eps_dates_sorted):
+                # ed 是 pandas Timestamp, date_ts 也是；比较 .date()
+                if ed.date() <= date_ts.date():
+                    applicable_eps = eps_values[ed]
+                    break
+            if applicable_eps and applicable_eps > 0:
+                pe = float(price) / applicable_eps
+                if 3 < pe < 200:   # 剔除极端 outlier
+                    pe_list.append(pe)
+        if len(pe_list) < 100:
+            return None
+        pe_sorted = sorted(pe_list)
+        n = len(pe_sorted)
+        return {
+            "median":  round(statistics.median(pe_list), 2),
+            "p25":     round(pe_sorted[n // 4], 2),
+            "p75":     round(pe_sorted[3 * n // 4], 2),
+            "min":     round(pe_sorted[0], 2),
+            "max":     round(pe_sorted[-1], 2),
+            "n_days":  n,
+        }
+    except Exception:
+        return None
+
+
+def _fetch_peer_median_pe(ticker: str) -> dict | None:
+    """从 signals cache 里读 supply_chain peers → yfinance 拉 forward_pe → median.
+
+    ticker 是短名（TDK / NVDA / SHINETSU），对应 supply_chain_<ticker>.json 缓存文件。
+    """
+    try:
+        import statistics
+        sc_cache = _WEBUI_CACHE_DIR / f"supply_chain_{ticker}.json"
+        if not sc_cache.exists():
+            return None
+        sc = json.loads(sc_cache.read_text(encoding="utf-8"))
+        peers = sc.get("peers", []) or []
+        peer_tickers = [p.get("ticker") for p in peers if p.get("ticker")]
+        if not peer_tickers:
+            return None
+        import yfinance as yf
+        pes = []
+        for pt in peer_tickers[:6]:   # 上限 6 家避免超时
+            try:
+                info = yf.Ticker(pt).info or {}
+                pe = info.get("forwardPE") or info.get("trailingPE")
+                if pe and 3 < float(pe) < 200:
+                    pes.append({"ticker": pt, "pe": round(float(pe), 2)})
+            except Exception:
+                continue
+        if not pes:
+            return None
+        pe_vals = [p["pe"] for p in pes]
+        return {
+            "median":  round(statistics.median(pe_vals), 2),
+            "n_peers": len(pes),
+            "peers":   pes,
+        }
+    except Exception:
+        return None
+
+
+def _fetch_analyst_consensus(stock: str, ticker: str | None = None) -> dict | None:
+    """yfinance 分析师聚合 → 归一化字段。失败返 {'error': ...}，无覆盖返 None。
+
+    stock: yfinance symbol (e.g. NVDA / 6762.T)
+    ticker: 内部短名 (e.g. NVDA / TDK) —— 用于查 peer supply_chain cache
+    """
     try:
         import yfinance as yf
         t = yf.Ticker(stock)
@@ -1830,10 +1926,7 @@ def _fetch_analyst_consensus(stock: str) -> dict | None:
         if target_mean and current_price and current_price > 0:
             target_upside_pct = round((target_mean / current_price - 1) * 100, 1)
 
-        # ── 前瞻 EPS 派生估值 (implied price 3 种 PE 假设) ──
-        # 1) 现 PE 不变: forward_eps × trailing_pe (最保守, 假设 market rating 不变)
-        # 2) 分析师 forward PE 隐含: 就是 target_mean 本身 (∵ forward_pe = target/forward_eps)
-        # 3) PEG=1 fair (Peter Lynch): forward_eps × abs(eps_growth) → 只在正增长有意义
+        # ── 前瞻 EPS 派生估值 (multi-anchor PE) ──
         implied_pe_hold = None
         implied_pe_hold_upside = None
         peg_fair_price = None
@@ -1844,11 +1937,36 @@ def _fetch_analyst_consensus(stock: str) -> dict | None:
                 implied_pe_hold_upside = round(
                     (implied_pe_hold / current_price - 1) * 100, 1
                 )
-        # PEG 派生: 只在增长 >0 时有意义 (Peter Lynch: fair PE = growth rate)
         if forward_eps and eps_growth_pct and eps_growth_pct > 0:
             peg_fair_price = round(forward_eps * eps_growth_pct, 2)
         if forward_pe and eps_growth_pct and eps_growth_pct > 0:
             peg_ratio = round(forward_pe / eps_growth_pct, 2)
+
+        # 5 年历史 P/E band (median / p25 / p75) —— 主流卖方 anchor 1
+        hist_pe = _fetch_historical_pe_bands(stock)
+        implied_hist_median = None
+        implied_hist_p25 = None
+        implied_hist_p75 = None
+        implied_hist_upside = None
+        if hist_pe and forward_eps:
+            implied_hist_median = round(forward_eps * hist_pe["median"], 2)
+            implied_hist_p25    = round(forward_eps * hist_pe["p25"], 2)
+            implied_hist_p75    = round(forward_eps * hist_pe["p75"], 2)
+            if current_price and current_price > 0:
+                implied_hist_upside = round(
+                    (implied_hist_median / current_price - 1) * 100, 1
+                )
+
+        # 同行 median PE —— 主流卖方 anchor 2
+        peer_pe = _fetch_peer_median_pe(ticker) if ticker else None
+        implied_peer_median = None
+        implied_peer_upside = None
+        if peer_pe and forward_eps:
+            implied_peer_median = round(forward_eps * peer_pe["median"], 2)
+            if current_price and current_price > 0:
+                implied_peer_upside = round(
+                    (implied_peer_median / current_price - 1) * 100, 1
+                )
 
         return {
             "n_analysts":         n_analysts,
@@ -1866,11 +1984,26 @@ def _fetch_analyst_consensus(stock: str) -> dict | None:
             "revenue_growth_pct": round(revenue_growth * 100, 1) if revenue_growth is not None else None,
             "earnings_growth_pct": round(earnings_growth * 100, 1) if earnings_growth is not None else None,
             "next_earnings":      next_earn,
-            # 前瞻 EPS 派生估值
-            "implied_pe_hold":         implied_pe_hold,          # forward_eps × trailing_pe
-            "implied_pe_hold_upside":  implied_pe_hold_upside,   # vs current price
-            "peg_fair_price":          peg_fair_price,           # Peter Lynch fair
-            "peg_ratio":               peg_ratio,                 # <1 便宜 · >2 贵
+            # 前瞻 EPS 派生估值 (multi-anchor)
+            "implied_pe_hold":         implied_pe_hold,
+            "implied_pe_hold_upside":  implied_pe_hold_upside,
+            "peg_fair_price":          peg_fair_price,
+            "peg_ratio":               peg_ratio,
+            # 5y 历史 PE band
+            "hist_pe_median":          hist_pe["median"] if hist_pe else None,
+            "hist_pe_p25":             hist_pe["p25"] if hist_pe else None,
+            "hist_pe_p75":             hist_pe["p75"] if hist_pe else None,
+            "hist_pe_n_days":          hist_pe["n_days"] if hist_pe else None,
+            "implied_hist_median":     implied_hist_median,
+            "implied_hist_p25":        implied_hist_p25,
+            "implied_hist_p75":        implied_hist_p75,
+            "implied_hist_upside":     implied_hist_upside,
+            # Peer median PE (from supply_chain)
+            "peer_pe_median":          peer_pe["median"] if peer_pe else None,
+            "peer_pe_n_peers":         peer_pe["n_peers"] if peer_pe else None,
+            "peer_pe_details":         peer_pe["peers"] if peer_pe else None,
+            "implied_peer_median":     implied_peer_median,
+            "implied_peer_upside":     implied_peer_upside,
             "source":             "yfinance analyst aggregation",
         }
     except Exception as e:
@@ -2050,7 +2183,7 @@ def _compute_jp_guidance(tk: str, stock: str) -> dict:
                 result["direction"] = "待核验"
                 result["guidance_note"] = f"Claude 返回 {cg['raw_direction']} 但未附可核验来源，已拒收"
     # yfinance 分析师共识（独立于官方指引，无论 Claude 成败都附上）
-    ac = _fetch_analyst_consensus(stock)
+    ac = _fetch_analyst_consensus(stock, ticker=tk)
     if ac and not ac.get("error"):
         result["analyst_consensus"] = ac
         if not result["source_verified"]:

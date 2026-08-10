@@ -1,9 +1,37 @@
 {
   "exists": true,
-  "tickers": {},
-  "sources": {},
-  "live_state": "generating",
-  "live_generated": null,
+  "tickers": {
+    "AAPL": "- 综合: 多空1:1 conf=1 观望，C/P成交4.62偏热但OI相对均衡，CROIC 72%+Piotroski 8/9基本面极强\n- 攻防: Call wall $325 (+3.72%) 强阻力可作止盈，Put wall $300 (-4.25%) 强支撑，区间震荡\n- 警示: 暂无",
+    "AMAT": "- 综合: conf=2 多头小优，C/P成交2.88偏热但OI基数薄，CROIC从48%回落至29%趋势走弱、Piotroski 6/9中性\n- 攻防: Call wall $570 (+5.72%) 距远缺乏突破催化，Put wall $500 (-7.26%) 强度中防守偏弱\n- 警示: CROIC连续两年下滑+CCC 165天营运效率恶化，追高需谨慎",
+    "DRAM": "- 综合: 空3:0 conf=1警示，Put OI/Call OI=11.9倍严重失衡且put_break高挤压=空头押跌非对冲，MU基本面CROIC 2.98%极弱\n- 攻防: Put wall $50 仅-1.19%已贴身，跌破即加速下行；Call wall $55 (+8.7%) 强度弱无上冲力\n- 警示: put_break[high]共振失衡→空头主动砸盘信号，避免抄底",
+    "GOOGL": "- 综合: 多空1:1 conf=1观望，C/P成交3.15偏热+gamma_band_up[medium]共振偏多，CROIC从24%降至17%趋势走弱、Piotroski 6/9\n- 攻防: Call wall $365 (+3.02%) 磁吸位近可轻仓博弈，Put wall $340 (-4.04%) 强度中防守一般\n- 警示: CROIC连续三年下滑，2026Q3 thesis中的cloud long需盯capex验证",
+    "KLAC": "- 综合: 信号缺失无法判断方向，Put OI/Call OI=0.2倍call主导且Call wall贴身$200 (+0.95%)，CROIC 44%+Piotroski 8/9基本面强\n- 攻防: Call wall $200强pin磁吸+紧贴spot，短线易被吸附；Put wall $197.5 OI仅1张无实际护盘\n- 警示: 期权OI基数太薄(个位数)信号噪音大，参考价值有限",
+    "LITE": "- 综合: 多5:2 conf=5/5技术信号最强+量比1.31放量，无期权数据无法验证共振，CROIC连续为负-3.29%基本面弱与技术背离\n- 攻防: 无期权链无法给出防守/进攻位，需用技术位（RSI 59.6未超买）跟踪\n- 警示: 技术强但基本面CROIC三年下滑，追高强趋势属短线博弈非价值",
+    "MSFT": "- 综合: conf=3多头偏优但RSI=81.4极度超买，C/P成交2.28+put_break[high]共振偏多，CROIC从32%降至20%趋势走弱、Piotroski 5/9转弱\n- 攻防: Call wall $510 (+2.0%) 强阻力近可止盈，Put wall $495 (-1.0%) 强度中且贴身，一破即加速\n- 警示: RSI 81.4历史极端超买+put_break高挤压，短线回撤风险高",
+    "MULL": "- 综合: 空3:1 conf=1警示（用MU期权代理），C/P成交1.51均衡+Put wall OI略高于Call wall，MU基本面CROIC 2.98%极弱\n- 攻防: Call wall $900 (+2.56%) 强阻力，Put wall $800 (-8.84%) 距远防守空间大\n- 警示: 信号看空但OI结构未极端失衡，divergence待观察",
+    "NBIS": "- 综合: 空3:2 conf=1警示，Put OI(1705)>Call OI(922)偏对冲/看空，CROIC -72.99%+借款激增至$4127M基本面崩塌\n- 攻防: Call wall $200 (+6.4%) 强阻力，Put wall $180 (-4.24%) 强支撑但一破空间打开\n- 警示: CROIC连续两年深度负值+CCC -1880天异常，基本面高危",
+    "NVDA": "- 综合: conf=5/5多4空1+C/P成交2.29+gamma_up[high]三重共振明确机会，CROIC 62%极强但Piotroski 4/9偏弱、借款$8468M需盯\n- 攻防: Call wall $225 (+0.46%) 贴身+gamma_up高挤压=突破加速上冲，Put wall $212.5 (-5.12%) 强度中防守足够\n- 警示: gamma_up突破call wall信号明确，但Piotroski 4/9与CROIC背离，控仓",
+    "SOXL": "- 综合: 信号缺失+多3空1，C/P成交0.43看空极端且Put OI/Call OI=24.4倍严重失衡（SOXX代理），机构对冲为主\n- 攻防: Put wall $500 (-7.96%) 强支撑距远，Call wall $555 (+2.16%) 强度弱易破；短多可轻仓\n- 警示: Put OI极端失衡+regime缺失，2026Q3 thesis明确avoid semi，不建议追高",
+    "TQQQ": "- 综合: 信号缺失+多3空1，C/P成交0.92均衡+put_break[high]挤压偏空（QQQ代理），regime未定\n- 攻防: Call wall $735 (+1.66%) 强阻力近，Put wall $715 (-1.11%) 强支撑贴身，一破即加速下行\n- 警示: put_break高挤压警示回撤风险，杠杆ETF放大后果",
+    "TSLA": "- 综合: conf=3多空2:2但RSI=34.9偏超卖反弹，C/P成交3.86热+gamma_band_up[medium]偏多共振，CROIC 8.35%回升+Piotroski 5/9中性\n- 攻防: Call wall $350 (+6.52%) 距远给足空间，Put wall $310 (-5.65%) 强度中可作止损参考\n- 警示: 暂无"
+  },
+  "sources": {
+    "AAPL": "live",
+    "AMAT": "live",
+    "DRAM": "live",
+    "GOOGL": "live",
+    "KLAC": "live",
+    "LITE": "live",
+    "MSFT": "live",
+    "MULL": "live",
+    "NBIS": "live",
+    "NVDA": "live",
+    "SOXL": "live",
+    "TQQQ": "live",
+    "TSLA": "live"
+  },
+  "live_state": "cached",
+  "live_generated": "2026-08-10T07:29:43.000455+00:00",
   "snapshot_path": "ai_analysis_snapshot_20260807_222823.md",
   "snapshot_mtime": "2026-08-07T22:28:23.402546"
 }

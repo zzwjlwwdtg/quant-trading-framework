@@ -647,13 +647,32 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
         hint: `${ac.n_analysts || '?'} 家分析师目标均值 [${ac.target_low}-${ac.target_high}]`,
       });
     }
+    if (ac.implied_hist_median != null) {
+      valRows.push({
+        label: `5y 均值 PE (${ac.hist_pe_median}x)`,
+        price: ac.implied_hist_median,
+        delta: ac.implied_hist_upside,
+        hint: `5 年历史 P/E 中位数 ${ac.hist_pe_median}x [P25 ${ac.hist_pe_p25}x - P75 ${ac.hist_pe_p75}x], ${ac.hist_pe_n_days} 交易日样本. 主流卖方 anchor #1`,
+        weight: 'high',
+      });
+    }
+    if (ac.implied_peer_median != null) {
+      valRows.push({
+        label: `同行 median PE (${ac.peer_pe_median}x)`,
+        price: ac.implied_peer_median,
+        delta: ac.implied_peer_upside,
+        hint: `${ac.peer_pe_n_peers} 家同行 P/E 中位数. peers: ${(ac.peer_pe_details || []).map(p => `${p.ticker}=${p.pe}x`).join(', ')}. 主流卖方 anchor #2`,
+        weight: 'high',
+      });
+    }
     if (ac.peg_fair_price != null && ac.current_price) {
       const pegDelta = ((ac.peg_fair_price / ac.current_price - 1) * 100).toFixed(1);
       valRows.push({
-        label: 'PEG=1 fair',
+        label: `PEG=1 fair (Lynch ${ac.eps_growth_pct}x)`,
         price: ac.peg_fair_price,
         delta: parseFloat(pegDelta),
-        hint: `Peter Lynch: fair PE = 增长率${ac.eps_growth_pct}%，∴ fair price = forward_eps × ${ac.eps_growth_pct}`,
+        hint: `Peter Lynch: fair PE = 增长率${ac.eps_growth_pct}%. 仅对增长率 >15% 的成长股有意义，低增长/负增长股会给出荒谬值`,
+        weight: 'low',
       });
     }
     const pegBadge = ac.peg_ratio != null

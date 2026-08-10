@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-10T14:33:05", "endpoints_ok": 100, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-10T17:59:25", "endpoints_ok": 100, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -163,7 +163,7 @@
 <dd>系统对信号的把握程度。5 分制（TECHNICAL_ONLY 模式）。<span class="eg">1/5=弱 · 3/5=中 · 5/5=强</span></dd>
 
 <dt>WATCH_BUY / WATCH_BUY_PROBE / BUY / REDUCE / SELL / CAUTION / HOLD</dt>
-<dd>建议动作：<span class="eg">WATCH_BUY 关注买入 · WATCH_BUY_PROBE 危机反弹试探仓 · BUY 买入 · REDUCE 减仓 · SELL 卖出 · CAUTION 警示不加仓 · HOLD 观望</span></dd>
+<dd>建议动作：<span class="eg">WATCH_BUY 关注买入 · WATCH_BUY_PROBE 主动试探仓 · BUY 买入 · REDUCE 减仓 · SELL 卖出 · CAUTION 警示不加仓 · HOLD 观望</span></dd>
 
 <dt>Pyramid Layer (加仓层)</dt>
 <dd>金字塔加仓的第几层。L1=初始，L2=第一次加，L3=第二次加。最多 3 层。</dd>
@@ -655,13 +655,32 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
         hint: `${ac.n_analysts || '?'} 家分析师目标均值 [${ac.target_low}-${ac.target_high}]`,
       });
     }
+    if (ac.implied_hist_median != null) {
+      valRows.push({
+        label: `5y 均值 PE (${ac.hist_pe_median}x)`,
+        price: ac.implied_hist_median,
+        delta: ac.implied_hist_upside,
+        hint: `5 年历史 P/E 中位数 ${ac.hist_pe_median}x [P25 ${ac.hist_pe_p25}x - P75 ${ac.hist_pe_p75}x], ${ac.hist_pe_n_days} 交易日样本. 主流卖方 anchor #1`,
+        weight: 'high',
+      });
+    }
+    if (ac.implied_peer_median != null) {
+      valRows.push({
+        label: `同行 median PE (${ac.peer_pe_median}x)`,
+        price: ac.implied_peer_median,
+        delta: ac.implied_peer_upside,
+        hint: `${ac.peer_pe_n_peers} 家同行 P/E 中位数. peers: ${(ac.peer_pe_details || []).map(p => `${p.ticker}=${p.pe}x`).join(', ')}. 主流卖方 anchor #2`,
+        weight: 'high',
+      });
+    }
     if (ac.peg_fair_price != null && ac.current_price) {
       const pegDelta = ((ac.peg_fair_price / ac.current_price - 1) * 100).toFixed(1);
       valRows.push({
-        label: 'PEG=1 fair',
+        label: `PEG=1 fair (Lynch ${ac.eps_growth_pct}x)`,
         price: ac.peg_fair_price,
         delta: parseFloat(pegDelta),
-        hint: `Peter Lynch: fair PE = 增长率${ac.eps_growth_pct}%，∴ fair price = forward_eps × ${ac.eps_growth_pct}`,
+        hint: `Peter Lynch: fair PE = 增长率${ac.eps_growth_pct}%. 仅对增长率 >15% 的成长股有意义，低增长/负增长股会给出荒谬值`,
+        weight: 'low',
       });
     }
     const pegBadge = ac.peg_ratio != null
