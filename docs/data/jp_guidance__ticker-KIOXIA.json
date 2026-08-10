@@ -1,51 +1,51 @@
 {
   "ticker": "KIOXIA",
   "source_stock": "285A.T",
-  "direction": "新指引",
-  "revision_type": "initial",
-  "magnitude": "大",
-  "last_update": "2026-07-31",
-  "next_earnings": "2026-10-30",
-  "guidance_note": "第1四半期（2026年4-6月）実績：売上収益 1兆7,671億円（+415% YoY）、営業利益 1兆2,700億円、親会社帰属四半期利益 8,422億円。従来非開示だった上期業績予想を新規開示、上期最終利益は前年同期比 約36倍で 2期ぶり最高益更新見通し。通期予想は依然として非開示（需給環境変動大のため）。",
-  "revision_reason": "AI 向けデータセンター需要が想定を大幅上回り、NAND 平均販売単価（ASP）が Q1 で前四半期比大幅上昇＋出荷量増＋円安効果。前年同期の営業利益 449億円 → Q1 単四半期 1兆2,700億円へ急拡大したことを受け、従来「合理的算定困難」として非開示だった上期予想を新規開示。",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
+  "last_update": "2026-05-15",
+  "next_earnings": "2026-08-07",
+  "guidance_note": "キオクシアは NAND 市况変動が大きいため通期業績予想を非開示。2026-05-15 決算短信では四半期ベースのみ開示（1Q FY2027/3 売上予想 約1兆7,500億円）。FY2026/3 実績は売上 2兆3,376億円、営業利益 8,704億円、EPS 1,024円で会社想定レンジ上限突破。",
+  "revision_reason": "通期予想は非開示方針のため修正情報なし。参考として FY2026/3 実績は前期比大幅増収増益（営業利益 870.4B円）、AI データセンター需要による NAND ASP 上昇と出荷増が寄与。1Q FY2027/3 は売上 1.75T円ガイダンス。",
   "market_reaction": "高",
-  "confidence": "medium",
+  "confidence": "low",
   "source_verified": true,
   "source_status": "claude_websearch",
-  "generated_at": "2026-08-08T23:59:57.619834+00:00",
+  "generated_at": "2026-08-10T05:01:55.554485+00:00",
   "sources": [
     {
-      "url": "https://kabutan.jp/news/?b=k202607310237",
-      "type": "news",
-      "title": "キオクシアホールディングス【285A】、非開示だった上期最終は36倍増で2期ぶり最高益更新へ"
-    },
-    {
-      "url": "https://minkabu.jp/stock/285A/settlement",
-      "type": "news",
-      "title": "キオクシアホールディングス (285A) 決算情報・業績"
+      "url": "https://www.nikkei.com/nkd/disclosure/tdnr/20260515537803/",
+      "type": "TDnet",
+      "title": "キオクシアホールディングス[285A]：2026年３月期 決算短信〔ＩＦＲＳ〕（連結） 2026年5月15日"
     }
   ],
   "source_via": "claude_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
+    "current_price": 48560.0,
     "forward_eps": null,
     "trailing_eps": 1007.1,
     "eps_growth_pct": null,
     "forward_pe": null,
-    "trailing_pe": 47.39,
+    "trailing_pe": 48.22,
     "target_mean": 112993.75,
     "target_high": 200000.0,
     "target_low": 40000.0,
-    "target_upside_pct": 136.7,
+    "target_upside_pct": 132.7,
     "revenue_growth_pct": 415.5,
     "earnings_growth_pct": 4418.8,
     "next_earnings": "2026-10-30",
+    "implied_pe_hold": null,
+    "implied_pe_hold_upside": null,
+    "peg_fair_price": null,
+    "peg_ratio": null,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-09T09:00:56.405604",
-    "age_sec": 102727,
+    "cached_at": "2026-08-10T14:02:45.430027",
+    "age_sec": 17,
     "stale": false,
     "refreshing": false
   }

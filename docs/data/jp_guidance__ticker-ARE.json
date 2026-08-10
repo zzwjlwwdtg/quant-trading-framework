@@ -1,51 +1,61 @@
 {
   "ticker": "ARE",
   "source_stock": "5857.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
+  "direction": "新指引",
+  "revision_type": "initial",
+  "magnitude": "中",
   "last_update": "2026-05-01",
-  "next_earnings": "2026-08-04",
-  "guidance_note": "FY2026/3 通期实绩已于 2026-05-01 短信发表；FY2027/3 通期予想需以 5/1 通期短信或 8/4 Q1 短信原文核对（本次搜索未取得具体数字）",
-  "revision_reason": "最近可确认的修正为 2026-02-03 Q3 短信上方修正：純利予想 21,600 → 23,900 百万円 (+10.6%)、売上 585,000 百万円 (+13.2%)、営業利益 35,000 百万円 (+16.7%)，配当 +5 円；主因贵金属价格上涨 + 北米精炼手数料增加。此为 90 天窗口外历史事件，仅供参照。",
+  "next_earnings": "2026-08-06",
+  "guidance_note": "2027年3月期 通期予想：純利益 +19% YoY で6期ぶり最高益、年間配当 135円（前期比+10円、中間65円/期末70円）。前期(FY2026)実績は売上 5,699億円 +12.6%、上方修正後純利 239億円で着地。",
+  "revision_reason": "初回ガイダンス。貴金属リサイクル事業の地金価格上昇と、北米精錬事業の精錬料金上昇＋金銀需給変動を捉えたトレーディング益拡大を織り込み、前期の11%上方修正（純利 216→239億円）の勢いを引き継ぐ想定。",
   "market_reaction": "不明",
-  "confidence": "low",
+  "confidence": "medium",
   "source_verified": true,
   "source_status": "claude_websearch",
-  "generated_at": "2026-08-08T23:59:57.657204+00:00",
+  "generated_at": "2026-08-10T05:01:55.569108+00:00",
   "sources": [
     {
-      "url": "https://www.nikkei.com/nkd/disclosure/tdnr/20260501516555/",
-      "type": "TDnet",
-      "title": "ＡＲＥホールディングス[5857]：2026年３月期 決算短信〔ＩＦＲＳ〕（連結） 2026年5月1日"
+      "url": "https://kabutan.jp/news/?b=k202605010041",
+      "type": "news",
+      "title": "ＡＲＥホールディングス【5857】、今期最終は19％増で6期ぶり最高益、10円増配へ"
     },
     {
       "url": "https://kabutan.jp/news/?b=k202602030055",
       "type": "news",
       "title": "ＡＲＥホールディングス【5857】、今期最終を11％上方修正、配当も5円増額"
+    },
+    {
+      "url": "https://kabutan.jp/stock/finance?code=5857",
+      "type": "news",
+      "title": "ＡＲＥホールディングス（ＡＲＥＨＤ）【5857】の業績・財務推移"
     }
   ],
   "source_via": "claude_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 1,
     "recommendation": "strong_buy",
+    "current_price": 3595.0,
     "forward_eps": 178.8,
     "trailing_eps": 287.32,
     "eps_growth_pct": -37.8,
-    "forward_pe": 19.41,
-    "trailing_pe": 12.08,
+    "forward_pe": 20.11,
+    "trailing_pe": 12.51,
     "target_mean": 6400.0,
     "target_high": 6400.0,
     "target_low": 6400.0,
-    "target_upside_pct": 84.4,
+    "target_upside_pct": 78.0,
     "revenue_growth_pct": 43.8,
     "earnings_growth_pct": 131.4,
     "next_earnings": "2026-10-28",
+    "implied_pe_hold": 2237.18,
+    "implied_pe_hold_upside": -37.8,
+    "peg_fair_price": null,
+    "peg_ratio": null,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-09T09:00:55.870227",
-    "age_sec": 102727,
+    "cached_at": "2026-08-10T14:02:52.853931",
+    "age_sec": 10,
     "stale": false,
     "refreshing": false
   }
