@@ -133,19 +133,33 @@ def _fetch_jp_flow(ticker: str) -> Optional[dict]:
     daily_totals = df.groupby("date")["Volume"].sum()
     daily_avg = float(daily_totals.tail(20).mean()) if len(daily_totals) else 0
 
-    # 大单信号阈值（去噪）：
-    #   ratio ≥ 5× 均量（原 3× 太松，小盘容易触发）
-    #   value_oku ≥ 1.0 億円 (~$0.7M) 剔除小碎单
-    # 前端渲染的 "异常 bar" 全部满足此双门槛
-    RATIO_MIN = 5.0
-    VALUE_OKU_MIN = 1.0
+    # === 两级检测 ===
+    # Tier 1 · 单笔大单（peak_bars）：ratio ≥5× AND ¥1億 (小盘 spike)
+    #                            OR value ≥¥30億 (大盘绝对量，不管 ratio)
+    #                            —— catch 未拆的粗放大单，MURATA 那种 ¥150亿单笔
+    # Tier 2 · 拆单模式（slices）：连续 ≥3 根同方向 elevated bar (2×+ ¥0.2億+, 累计 ¥1.5億+)
+    #                             OR 连续 2 根同方向巨型 bar (累计 ¥30億+)
+    #                             —— catch VWAP/TWAP algo 拆单
+    RATIO_MIN           = 5.0    # 单 bar 相对倍数
+    VALUE_OKU_MIN       = 1.0    # 单 bar 最低金额
+    ABS_HUGE_OKU_MIN    = 30.0   # 绝对巨量 tier: ≥¥30億 (~$200M) 无视 ratio
+    # Slice
+    SLICE_RATIO_MIN     = 2.0
+    SLICE_VALUE_MIN_OKU = 0.2
+    SLICE_MIN_BARS      = 3
+    SLICE_TOTAL_OKU_MIN = 1.5    # 3+ bars 累计门槛
+    SLICE_2BAR_HUGE_OKU = 30.0   # 2-bar tier: 累计 ≥¥30億 也算
 
     def _analyze_one_day(day_df, date_str: str) -> dict:
         """给定一天的 5min bars → 该日的 anomaly + aggregate summary。"""
-        # 初筛：vol_ratio ≥ RATIO_MIN & 最低成交量
+        # 两 tier 初筛：(ratio ≥5× AND vol ≥10K) OR (value ≥¥30億 无视 ratio)
+        # 大盘票（MURATA/TDK）2× ratio 但 ¥100亿+ 是妥妥机构级
+        day_df = day_df.copy()
+        day_df["_value_oku"] = day_df["Volume"] * day_df["Close"] / 1e8
         raw_bars = day_df[
-            (day_df["vol_ratio"] >= RATIO_MIN) & (day_df["Volume"] >= 10_000)
-        ].sort_values("vol_ratio", ascending=False)
+            ((day_df["vol_ratio"] >= RATIO_MIN) & (day_df["Volume"] >= 10_000))
+            | (day_df["_value_oku"] >= ABS_HUGE_OKU_MIN)
+        ].sort_values("_value_oku", ascending=False)   # 按绝对规模排（不是 ratio）
 
         peak_bars = []
         for ts, row in raw_bars.head(8).iterrows():
@@ -159,9 +173,9 @@ def _fetch_jp_flow(ticker: str) -> Optional[dict]:
             else:
                 direction = "flat"
             vol = int(row["Volume"])
-            value_oku = round(vol * c / 1e8, 2)
-            # 二筛：金额 ≥ ¥1億 才算大单
-            if value_oku < VALUE_OKU_MIN:
+            value_oku = round(float(row["_value_oku"]), 2)
+            # 至少满足 VALUE_OKU_MIN (¥1亿) 或 ABS_HUGE_OKU_MIN 之一
+            if value_oku < VALUE_OKU_MIN and value_oku < ABS_HUGE_OKU_MIN:
                 continue
             peak_bars.append({
                 "time":      ts.strftime("%H:%M"),
@@ -172,7 +186,8 @@ def _fetch_jp_flow(ticker: str) -> Optional[dict]:
                 "chg_pct":   round(chg_pct, 2),
                 "direction": direction,
                 "value_oku": value_oku,
-                "date":      date_str,           # 让 highlights 反溯来源日
+                "date":      date_str,
+                "tier":      "huge_abs" if value_oku >= ABS_HUGE_OKU_MIN else "ratio_spike",
             })
 
         buy_shares  = sum(b["vol"] for b in peak_bars if b["direction"] == "buy")
@@ -184,6 +199,83 @@ def _fetch_jp_flow(ticker: str) -> Optional[dict]:
             net_bias = "buy"
         elif sell_shares >= buy_shares * 2 and sell_shares >= 20_000:
             net_bias = "sell"
+
+        # 拆单模式检测（VWAP/TWAP algo trace）：连续 N 根同方向 elevated bar
+        # 累计规模 ≥¥1.5億 才认真 —— 单笔藏得住但累积藏不住
+        slices = []
+        current_streak: list[dict] = []
+        def _finalize_streak(streak):
+            n = len(streak)
+            if n < 2:
+                return None
+            total_v = sum(b["value_oku"] for b in streak)
+            # 3+ bars: 累计 ≥¥1.5億
+            # 2 bars: 只在累计 ≥¥30億 才算（大盘级机构 VWAP 拆 2 段）
+            if n >= SLICE_MIN_BARS:
+                if total_v < SLICE_TOTAL_OKU_MIN:
+                    return None
+                tier = "multi_bar"
+            else:  # n == 2
+                if total_v < SLICE_2BAR_HUGE_OKU:
+                    return None
+                tier = "huge_2bar"
+            avg_ratio = sum(b["ratio"] for b in streak) / n
+            return {
+                "start":       streak[0]["time"],
+                "end":         streak[-1]["time"],
+                "direction":   streak[0]["direction"],
+                "n_bars":      n,
+                "total_value_oku": round(total_v, 2),
+                "total_shares":    sum(b["vol"] for b in streak),
+                "avg_ratio":       round(avg_ratio, 2),
+                "duration_min":    n * 5,
+                "avg_price":       round(sum(b["price"] * b["vol"] for b in streak) / max(sum(b["vol"] for b in streak), 1), 2),
+                "tier":            tier,
+            }
+
+        for ts, row in day_df.iterrows():
+            o = float(row["Open"])
+            c = float(row["Close"])
+            if o <= 0:
+                continue
+            chg = (c - o) / o * 100
+            direction = "buy" if chg > 0.05 else ("sell" if chg < -0.05 else None)
+            vol = int(row["Volume"])
+            value_oku = vol * c / 1e8
+            ratio = float(row["vol_ratio"]) if row["vol_ratio"] == row["vol_ratio"] else 0
+            is_elevated = ratio >= SLICE_RATIO_MIN and value_oku >= SLICE_VALUE_MIN_OKU
+
+            # Extending same-direction streak
+            if is_elevated and direction and (
+                not current_streak or current_streak[-1]["direction"] == direction
+            ):
+                current_streak.append({
+                    "time":      ts.strftime("%H:%M"),
+                    "direction": direction,
+                    "vol":       vol,
+                    "value_oku": round(value_oku, 2),
+                    "ratio":     round(ratio, 2),
+                    "price":     round(c, 2),
+                })
+            else:
+                # Streak broken → finalize
+                s = _finalize_streak(current_streak)
+                if s:
+                    slices.append(s)
+                # Start new streak if this bar itself qualifies
+                current_streak = [{
+                    "time": ts.strftime("%H:%M"),
+                    "direction": direction,
+                    "vol": vol,
+                    "value_oku": round(value_oku, 2),
+                    "ratio": round(ratio, 2),
+                    "price": round(c, 2),
+                }] if (is_elevated and direction) else []
+
+        # Finalize trailing streak
+        s = _finalize_streak(current_streak)
+        if s:
+            slices.append(s)
 
         # 该日全部 bar 的 tick-rule 净方向（不只 anomaly，用于对齐"主力流出"这种定义）
         day_up_bars   = day_df[day_df["Close"] > day_df["Open"]]
@@ -216,6 +308,7 @@ def _fetch_jp_flow(ticker: str) -> Optional[dict]:
             "trading_date":   date_str,
             "date_short":     date_short,
             "peak_bars":      peak_bars,
+            "slices":         slices,           # 拆单模式（VWAP/TWAP algo trace）
             "day_ratio":      day_ratio,
             "day_chg_pct":    day_chg_pct,
             "day_open":       round(day_open, 2),

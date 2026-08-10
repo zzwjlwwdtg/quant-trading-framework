@@ -765,6 +765,7 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
     // 每日一个小 section：最近一日展开，其余折叠
     const renderDay = (day, isTop) => {
       const peaks = day.peak_bars || [];
+      const slices = day.slices || [];
       const dayRatio = day.day_ratio;
       const dayChg = day.day_chg_pct;
       const bias = day.net_bias;
@@ -783,37 +784,63 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
         ? `<span class="badge ${dayChg > 0 ? 'ok' : (dayChg < 0 ? 'bad' : 'muted')}" style="font-size:9px">日K ${dayChg >= 0 ? '+' : ''}${dayChg}%</span>`
         : '';
 
+      // Slice pattern rows（拆单模式，橙色区分）
+      const slicesHtml = slices.length ? `
+        <div style="margin-top:4px; padding:4px 6px; background:rgba(255,140,0,0.05); border-left:2px solid #ff8c00; border-radius:2px">
+          <div style="font-size:9.5px; color:#ff8c00; margin-bottom:2px"><b>🔁 拆单 pattern</b> (机构 VWAP/TWAP algo trace)</div>
+          ${slices.map(s => `
+            <div style="font-size:10px; padding:2px 0" title="${s.tier === 'huge_2bar' ? '2 根同向 bar 累计 ≥¥30億 (大盘票机构 VWAP)' : '3+ 根同方向连续 bar 累计 ≥¥1.5億 (VWAP/TWAP)'}">
+              <span class="${dirCls[s.direction]}">${dirIcon[s.direction]}</span>
+              <b>${s.start}-${s.end}</b>
+              <span style="color:var(--muted); font-size:9px">${s.n_bars} bars / ${s.duration_min}min</span>
+              · avg <b>${s.avg_ratio}×</b>
+              · <b class="${s.direction === 'buy' ? 'ok' : (s.direction === 'sell' ? 'bad' : 'muted')}">¥${s.total_value_oku}億</b>
+              @¥${s.avg_price}
+            </div>
+          `).join('')}
+        </div>` : '';
+
+      // Peak bars 表（单笔大单，两 tier: ratio_spike 蓝 / huge_abs 紫）
       const tableRows = peaks.length ? `
-        <div style="display:grid; grid-template-columns:auto auto auto auto auto; gap:2px 8px; font-size:10px; line-height:1.4; margin-top:3px">
+        <div style="display:grid; grid-template-columns:auto auto auto auto auto auto; gap:2px 8px; font-size:10px; line-height:1.4; margin-top:3px">
           <span style="color:var(--muted); font-size:9px">时刻</span>
+          <span style="color:var(--muted); font-size:9px">tier</span>
           <span style="color:var(--muted); font-size:9px; text-align:right">倍数</span>
           <span style="color:var(--muted); font-size:9px; text-align:right">涨跌</span>
           <span style="color:var(--muted); font-size:9px; text-align:right">金额</span>
           <span style="color:var(--muted); font-size:9px">方向</span>
-          ${peaks.slice(0, 6).map(p => `
-            <span title="${day.trading_date} ${p.time}"><b>${p.time}</b></span>
-            <span style="text-align:right" class="${p.ratio >= 8 ? 'bad' : (p.ratio >= 5 ? 'warn' : 'muted')}"><b>${p.ratio.toFixed(1)}×</b></span>
-            <span style="text-align:right" class="${p.chg_pct > 0 ? 'ok' : (p.chg_pct < 0 ? 'bad' : 'muted')}">${p.chg_pct >= 0 ? '+' : ''}${p.chg_pct}%</span>
-            <span style="text-align:right"><b>¥${p.value_oku}億</b></span>
-            <span class="${dirCls[p.direction]}" title="close-open >0.1% 主动买 · <-0.1% 主动卖">${dirIcon[p.direction]}</span>
-          `).join('')}
-        </div>` : `<div style="font-size:9px; color:var(--muted); margin-top:2px">无 ≥3× 均量 bar</div>`;
+          ${peaks.slice(0, 6).map(p => {
+            const tierBadge = p.tier === 'huge_abs'
+              ? '<span title="绝对巨量 ≥¥30億" style="font-size:9px; color:#a78bfa">💰</span>'
+              : '<span title="ratio spike ≥5× & ¥1億" style="font-size:9px; color:#58a6ff">⚡</span>';
+            return `
+              <span title="${day.trading_date} ${p.time}"><b>${p.time}</b></span>
+              <span>${tierBadge}</span>
+              <span style="text-align:right" class="${p.ratio >= 8 ? 'bad' : (p.ratio >= 5 ? 'warn' : 'muted')}"><b>${p.ratio.toFixed(1)}×</b></span>
+              <span style="text-align:right" class="${p.chg_pct > 0 ? 'ok' : (p.chg_pct < 0 ? 'bad' : 'muted')}">${p.chg_pct >= 0 ? '+' : ''}${p.chg_pct}%</span>
+              <span style="text-align:right"><b>¥${p.value_oku}億</b></span>
+              <span class="${dirCls[p.direction]}" title="close-open >0.1% 主动买 · <-0.1% 主动卖">${dirIcon[p.direction]}</span>`;
+          }).join('')}
+        </div>` : (slicesHtml ? '' : `<div style="font-size:9px; color:var(--muted); margin-top:2px">无异常</div>`);
+      // 拆单块拼在表格之前展示，因为拆单信息比单笔更重要
+      const bodyDay = slicesHtml + tableRows;
 
       return `<details ${isTop ? 'open' : ''} style="border-top:1px dashed var(--border); margin-top:4px; padding-top:3px">
         <summary style="cursor:pointer; list-style:none; font-size:10px; display:flex; align-items:center; gap:4px; flex-wrap:wrap">
           <b style="color:#58a6ff">📅 ${day.trading_date}</b>
           ${dayChgBadge}
           <span style="color:var(--muted); font-size:9px">总量 ${dayRatio}×</span>
-          <span style="color:var(--muted); font-size:9px">${peaks.length} 异常 bar</span>
+          <span style="color:var(--muted); font-size:9px">${peaks.length} 大单</span>
+          ${slices.length ? `<span class="badge warn" style="font-size:9px; background:#ff8c00; color:#0d1117">🔁 ${slices.length} 拆单</span>` : ''}
           ${biasBadge}
           ${fullBiasBadge}
         </summary>
-        ${tableRows}
+        ${bodyDay}
       </details>`;
     };
 
-    // 拆强/弱两组：有 anomaly OR 有强 full_bias 才单独显示 <details> 卡；其余压缩成一行
-    const strongDays = days.filter(d => (d.peak_bars||[]).length >= 1 || (d.full_bias && d.full_bias !== 'neutral') || (d.net_bias && d.net_bias !== 'neutral'));
+    // 拆强/弱两组：有 anomaly / slice / 强 full_bias 才单独显示 <details> 卡；其余压缩成一行
+    const strongDays = days.filter(d => (d.peak_bars||[]).length >= 1 || (d.slices||[]).length >= 1 || (d.full_bias && d.full_bias !== 'neutral') || (d.net_bias && d.net_bias !== 'neutral'));
     const quietDays  = days.filter(d => !strongDays.includes(d));
     const quietSummary = quietDays.length ? `
       <div style="font-size:10px; color:var(--muted); margin-top:4px; padding:3px 6px; background:rgba(255,255,255,0.02); border-radius:2px">
