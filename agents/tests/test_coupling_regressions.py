@@ -980,6 +980,28 @@ class SchedulerCommitTests(unittest.TestCase):
             orchestrator._tick()
         self.assertEqual(orchestrator._last_window_run["post-open"], "2026-08-03")
 
+    def test_software_stop_monitor_runs_in_independent_daemon_thread(self):
+        class FakeThread:
+            def __init__(self):
+                self.started = False
+
+            def is_alive(self):
+                return self.started
+
+            def start(self):
+                self.started = True
+
+        fake = FakeThread()
+        with patch.object(orchestrator, "_software_stop_thread", None), \
+             patch.object(orchestrator.threading, "Thread", return_value=fake) as thread:
+            result = orchestrator._start_software_stop_monitor()
+        self.assertIs(result, fake)
+        self.assertTrue(fake.started)
+        kwargs = thread.call_args.kwargs
+        self.assertIs(kwargs["target"], orchestrator._software_stop_loop)
+        self.assertEqual(kwargs["name"], "software-stop-monitor")
+        self.assertTrue(kwargs["daemon"])
+
 
 class AtomicStateTests(unittest.TestCase):
     def test_atomic_write_round_trip_and_cleans_temp_file(self):

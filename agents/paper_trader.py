@@ -26,6 +26,7 @@ CLI:
 import json
 import os
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -511,6 +512,7 @@ UNIVERSE_PATH = Path(__file__).parent / "universe_state.json"
 # ---------- Trade context (lazy singleton) ----------
 
 _ctx = None
+_TRADER_LOCK = threading.RLock()
 
 def _ctx_get() -> OpenSecTradeContext:
     global _ctx
@@ -1054,6 +1056,11 @@ def _clear_protective_stop(tstate: dict) -> None:
 
 
 def monitor_software_stops() -> list[str]:
+    with _TRADER_LOCK:
+        return _monitor_software_stops_unlocked()
+
+
+def _monitor_software_stops_unlocked() -> list[str]:
     """Check fallback stops independently of decision/signal trading windows.
 
     Moomoo SIMULATE accounts can reject STOP orders. Those entries are marked as
@@ -1132,6 +1139,12 @@ def monitor_software_stops() -> list[str]:
 
 def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
             _manual: bool = False) -> None:
+    with _TRADER_LOCK:
+        return _execute_unlocked(ticker, decision, mkt, window, _manual=_manual)
+
+
+def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None,
+                      _manual: bool = False) -> None:
     """
     orchestrator 在每个 ticker 决策出来后调用。
     window:  pre-open / midday / post-open / pre-close / None
@@ -1558,6 +1571,11 @@ def _list_satellite_positions() -> list[dict]:
 
 
 def apply_universe(picks_result: dict) -> dict:
+    with _TRADER_LOCK:
+        return _apply_universe_unlocked(picks_result)
+
+
+def _apply_universe_unlocked(picks_result: dict) -> dict:
     """
     orchestrator 在 pre-open 算完 picks 后调用。
     步骤：
@@ -1661,6 +1679,11 @@ def get_active_tickers() -> list[str]:
 
 
 def refresh_nav_peak() -> None:
+    with _TRADER_LOCK:
+        return _refresh_nav_peak_unlocked()
+
+
+def _refresh_nav_peak_unlocked() -> None:
     """每个 cycle 调用一次: 查账户总值, 更新 NAV peak (用于 drawdown floor)。"""
     try:
         ctx = _ctx_get()
