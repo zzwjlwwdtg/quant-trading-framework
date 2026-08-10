@@ -1,17 +1,52 @@
 {
   "ticker": "SHINETSU",
-  "direction": "查询中",
-  "revision_type": "computing",
-  "magnitude": "-",
-  "guidance_note": "Claude 正在联网查询业绩预想，30-90 秒后刷新可见（首次冷启动）",
-  "confidence": "computing",
-  "source_verified": false,
-  "source_status": "computing",
+  "source_stock": "4063.T",
+  "direction": "新指引",
+  "revision_type": "initial",
+  "magnitude": "中",
+  "last_update": "2026-07-24",
+  "next_earnings": "2026-10-30",
+  "guidance_note": "通期(FY27/3): 売上 2.7兆円 +4.9%、営業利益 7,000億円 +10.2%、経常利益 7,700億円 +8.7%、純利益 5,250億円 +10.7%（全て過去最高益予想）、年間配当 116円 +10円",
+  "revision_reason": "前回非開示だった通期予想を初めて開示。AI関連需要でシリコンウェハー・フォトレジスト・マスクブランクスの売上が伸長、Q1営業利益 1,921億円 +5.8% を踏まえ通期で純利 5,250億円（+10.7% YoY）を新規提示",
+  "market_reaction": "低",
+  "confidence": "high",
+  "source_verified": true,
+  "source_status": "claude_websearch",
+  "generated_at": "2026-08-10T02:24:24.309749+00:00",
+  "sources": [
+    {
+      "url": "https://www.shinetsu.co.jp/wp-content/uploads/2026/07/20260724_con_J.pdf",
+      "type": "IR",
+      "title": "2027年3月期 第1四半期決算短信〔日本基準〕（連結）2026年7月24日"
+    },
+    {
+      "url": "https://kabutan.jp/news/?b=k202607240014",
+      "type": "news",
+      "title": "信越化学工業【4063】、非開示だった今期経常は9％増益、未定だった配当は10円増配"
+    }
+  ],
+  "source_via": "claude_cli_websearch",
+  "analyst_consensus": {
+    "n_analysts": 17,
+    "recommendation": "buy",
+    "forward_eps": 329.73,
+    "trailing_eps": 252.59,
+    "eps_growth_pct": 30.5,
+    "forward_pe": 19.09,
+    "trailing_pe": 24.92,
+    "target_mean": 7839.41,
+    "target_high": 9510.0,
+    "target_low": 6900.0,
+    "target_upside_pct": 24.5,
+    "revenue_growth_pct": 5.4,
+    "earnings_growth_pct": 5.7,
+    "next_earnings": "2026-10-23",
+    "source": "yfinance analyst aggregation"
+  },
   "_meta": {
-    "cached_at": null,
-    "age_sec": 0,
-    "stale": true,
-    "refreshing": true,
-    "first_call": true
+    "cached_at": "2026-08-10T11:25:20.796149",
+    "age_sec": 462,
+    "stale": false,
+    "refreshing": false
   }
 }
