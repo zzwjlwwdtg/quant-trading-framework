@@ -47,12 +47,13 @@ def is_sim_active_trading() -> bool:
 # LEVERAGED_PAIRS 配置防止 MU↔MULL 同时持仓叠杠杆（见 paper_trader.py）
 TICKERS = ["US.TQQQ", "US.SOXL", "US.DRAM", "US.MULL"]
 
-# WATCH-only：只 scan 信号 + 供 dashboard 展示，不触发 trade_execute
-# 用于关注但不打算持仓的板块风向标
+# 用户显式加入的跟踪标的。展示类型不决定交易资格：这里的每个美股/ETF
+# 都会参与 scan，并可在 SIMULATE 账户按统一信号和风控规则买入。
+# 动态 universe picks 只负责发现列表外的额外卫星票。
 #   NVDA — 半导体链条领头，看它就知道 SOXL/DRAM 方向
 #   MSFT — 云 AI 大客户 + FAANG 权重股（TQQQ 组成）
 #   AAPL — TQQQ/QQQ 最大权重股，苹果链跟踪
-WATCH_ONLY_TICKERS = [
+TRACKED_TICKERS = [
     # AI/tech 权重股
     "US.NVDA",   # 半导体链条领头
     "US.MSFT",   # 云 AI + FAANG
@@ -64,6 +65,10 @@ WATCH_ONLY_TICKERS = [
     # AI DC 光通信链
     "US.LITE",   # Lumentum — 400G/800G 光模块 / laser diode, NVIDIA/Cisco 光互联供应
 ]
+
+# 单一交易资格源：以后只需把标的加入 TICKERS 或 TRACKED_TICKERS，
+# 调度、仓位和轮换模块都会自动识别，不再维护独立白名单。
+TRADE_ELIGIBLE_TICKERS = frozenset((*TICKERS, *TRACKED_TICKERS, "US.GLD"))
 
 # --- Leverage Factors ---
 # 杠杆 ETF 单日波动是标的的 N 倍 → 各种"暴跌/暴涨"绝对阈值要按倍数缩放

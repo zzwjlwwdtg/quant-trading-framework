@@ -262,6 +262,71 @@ class SimActiveProfileTests(unittest.TestCase):
         self.assertGreater(size, 0)
         self.assertTrue(multiplier.call_args.kwargs["probe"])
 
+    def test_every_explicitly_tracked_ticker_is_trade_eligible(self):
+        expected = set(config.TICKERS) | set(config.TRACKED_TICKERS) | {"US.GLD"}
+        self.assertEqual(config.TRADE_ELIGIBLE_TICKERS, expected)
+        self.assertTrue({"US.SHY", "US.IEI"}.issubset(expected))
+
+    def test_explicitly_tracked_ticker_does_not_require_dynamic_pick(self):
+        with patch.object(
+            paper_trader,
+            "_universe_load",
+            side_effect=AssertionError("configured ticker must not consult dynamic picks"),
+        ), patch.object(paper_trader, "_get_account_power", return_value=100_000), \
+             patch.object(paper_trader, "_annual_vol", return_value=0.08), \
+             patch.object(paper_trader, "_vix_multiplier", return_value=1.0), \
+             patch.object(paper_trader, "_drawdown_multiplier", return_value=1.0), \
+             patch.object(paper_trader, "_kelly_mult", return_value=1.0), \
+             patch.object(paper_trader, "_group_cap_usd", return_value=(None, None)), \
+             patch("regime_today.get_today_regime", return_value="neutral"):
+            size = paper_trader._position_size_usd("US.SHY", conf=5, action="BUY")
+        self.assertGreater(size, 0)
+
+    def test_unconfigured_satellite_still_requires_dynamic_pick(self):
+        with patch.object(paper_trader, "_universe_load", return_value={"picks": []}):
+            size = paper_trader._position_size_usd("US.NOT_CONFIGURED", conf=5, action="BUY")
+        self.assertEqual(size, 0)
+
+    def test_active_tickers_always_include_explicitly_tracked_symbols(self):
+        with patch.object(paper_trader, "_universe_load", return_value={"picks": []}), \
+             patch.object(paper_trader, "_list_satellite_positions", return_value=[]):
+            active = set(paper_trader.get_active_tickers())
+        self.assertTrue(config.TRADE_ELIGIBLE_TICKERS.issubset(active))
+
+    def test_orchestrator_routes_tracked_ticker_to_trader(self):
+        decision = {"action": "BUY", "confidence": 5, "regime": "neutral"}
+        with patch.object(
+            orchestrator, "get_market_signal", return_value={"ticker": "US.SHY", "price": 100}
+        ), patch.object(orchestrator, "get_decision", return_value=decision.copy()), \
+             patch.object(orchestrator, "apply_claude_gate", side_effect=lambda *args: args[3]), \
+             patch.object(orchestrator, "emit"), \
+             patch.object(orchestrator, "trade_execute") as execute, \
+             patch("confluence.get_confluence", return_value={}), \
+             patch("market_watch.get_intraday_context", return_value=None), \
+             patch("market_watch.get_shortterm_context", return_value=None), \
+             patch("regime_today.get_today_regime", return_value="neutral"):
+            orchestrator._etf_cycle({}, {}, window="post-open", tickers=["US.SHY"])
+        execute.assert_called_once()
+        self.assertEqual(execute.call_args.args[0], "US.SHY")
+
+    def test_universe_rotation_never_kicks_explicitly_tracked_holding(self):
+        held = [
+            {"code": "US.SHY", "qty": 10, "nominal_price": 80},
+            *[
+                {"code": f"US.DYN{i}", "qty": 1, "nominal_price": 20}
+                for i in range(paper_trader.MAX_SATELLITE_POSITIONS)
+            ],
+        ]
+        with patch.object(paper_trader, "_universe_save"), \
+             patch.object(paper_trader, "_state_load", return_value={}), \
+             patch.object(paper_trader, "_state_save"), \
+             patch.object(paper_trader, "_list_satellite_positions", return_value=held), \
+             patch.object(paper_trader, "_place", return_value="DRY"):
+            result = paper_trader.apply_universe({"picks": [], "regime": "neutral"})
+        self.assertNotIn("US.SHY", result["kicked"])
+        self.assertIn("US.SHY", result["kept"])
+        self.assertEqual(len(result["kicked"]), 1)
+
     def test_active_neutral_universe_accepts_moderate_positive_z(self):
         with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "0"}):
             self.assertIsNone(universe_picker._direction_for_regime(1.7, "neutral"))

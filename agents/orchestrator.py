@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from config import TICKERS, DAILY_WINDOWS_ET, WATCH_ONLY_TICKERS
+from config import TICKERS, DAILY_WINDOWS_ET
 from market_watch import get_market_signal
 from futures_watch import get_futures_signal
 from events_watch import get_events_signal, get_gold_events_signal
@@ -111,7 +111,7 @@ def _release_lock() -> None:
 _CRITICAL_SOURCE_FILES = (
     "orchestrator.py", "paper_trader.py", "decision_agent.py",
     "trading_contracts.py", "claude_gate.py",
-    "config.py",   # WATCH_ONLY_TICKERS / TICKERS 变了要重启 orchestrator
+    "config.py",   # TRACKED_TICKERS / TICKERS 变了要重启 orchestrator
 )
 _STARTUP_MTIMES: dict[str, float] = {}
 
@@ -657,9 +657,8 @@ def _etf_cycle(events_signal: dict, macro: dict, window: str | None = None,
                     pass
 
             try:
-                # WATCH_ONLY 标的只出信号，不下单
-                if ticker not in WATCH_ONLY_TICKERS:
-                    trade_execute(ticker, decision, mkt, window)
+                # 展示分组不影响交易资格；paper_trader 统一执行资格与风控检查。
+                trade_execute(ticker, decision, mkt, window)
             except Exception as exc:
                 logger.error(f"[trader ETF:{ticker}] error: {exc}")
         except Exception as exc:
@@ -875,13 +874,11 @@ def run_cycle(window: str | None = None) -> None:
     _etf_cycle(equity_events, macro, window=window)
     _gold_cycle(macro, window=window)
 
-    # 卫星仓 cycle：今日 picks + 任何还在持仓的卫星老仓 + WATCH_ONLY 观察标的
+    # 卫星仓 cycle：显式加入标的 + 今日 picks + 任何还在持仓的卫星老仓
     try:
         from paper_trader import get_active_tickers, CORE_TICKERS
         actives = get_active_tickers()
         sats = [tk for tk in actives if tk not in CORE_TICKERS]
-        # WATCH_ONLY 标的（只出信号不下单，_etf_cycle 内 skip trade_execute）
-        sats = list(dict.fromkeys(sats + list(WATCH_ONLY_TICKERS)))
         if sats:
             _etf_cycle(equity_events, macro, window=window, tickers=sats)
     except Exception as exc:

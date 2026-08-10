@@ -13,9 +13,9 @@
   7) 默认 LIVE（在 SIMULATE 账户实际下单）；DRY-run 见环境变量 TRADER_DRY_RUN=1
 
 核心+卫星架构（B 方案）：
-  · 3 只核心仓 (TQQQ/SOXL/GLD)：每天都跑
-  · 至多 5 只卫星仓：每天 pre-open 由 universe_picker 从 SOX 28 只里选
-  · 总持仓上限 8 (3 + 5)；新 picks 进来 → 把不在 picks 里且持仓最久的卫星踢出
+  · 配置的核心仓与跟踪标的每天都跑，均可按信号交易
+  · 动态卫星仓每天 pre-open 由 universe_picker 从 SOX 池中额外发现
+  · 新 picks 进来时，仅轮换不在 picks 的动态卫星；绝不踢出用户显式加入标的
 
 CLI:
   python paper_trader.py status   # 看持仓 + state
@@ -39,6 +39,8 @@ from config import (
     OPEND_HOST,
     OPEND_PORT,
     MOOMOO_ACC_ID,
+    TICKERS,
+    TRADE_ELIGIBLE_TICKERS,
     TRADING_ACCOUNT_MODE,
     is_sim_active_trading,
 )
@@ -388,9 +390,9 @@ def _update_nav_peak(current_nav: float) -> None:
     except Exception:
         pass   # history is best-effort; trading must not fail because of logging
 
-CORE_TICKERS = {"US.TQQQ", "US.SOXL", "US.GLD", "US.DRAM", "US.MULL"}
+CORE_TICKERS = set(TICKERS) | {"US.GLD"}
 
-# #4 修复: 总持仓上限放宽 8 → 12 (3 核心 + 9 卫星), 允许 ~150% 总暴露 (用上 margin)
+# #4 修复: 总持仓上限放宽到 12，卫星上限 9，允许约 150% 总暴露（使用 margin）
 MAX_TOTAL_POSITIONS  = 12
 MAX_SATELLITE_POSITIONS = 9
 
@@ -671,7 +673,9 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
       raw = 0.30 / 0.60 = 0.50 (50%)
       × VIX 1.3 × DD 1.0 × conf 1.0 (conf 6) = 65% → cap 40%
     """
-    if ticker not in CORE_TICKERS:
+    # 用户显式加入的标的无需经过动态 universe picks；只有系统额外发现的
+    # 卫星票才要求当天仍在 picks，防止未知代码绕过入池规则。
+    if ticker not in TRADE_ELIGIBLE_TICKERS:
         uni = _universe_load()
         if not _picks_by_ticker(uni).get(ticker):
             return 0.0
@@ -1149,7 +1153,7 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
     size_usd = 0.0
     if action in BUY_ACTIONS:
         size_usd = _position_size_usd(ticker, conf=conf, action=action)
-        # 卫星票必须在今日 picks 里才允许 BUY；老仓 SELL/REDUCE 仍允许
+        # 未配置的动态卫星票必须在今日 picks；显式加入标的已由仓位函数放行。
         if not is_core and size_usd == 0:
             return
 
@@ -1396,15 +1400,22 @@ def apply_universe(picks_result: dict) -> dict:
 
     sat_positions = _list_satellite_positions()
     held = {p["code"]: p for p in sat_positions}
-    # 候选踢出 = 已持仓的卫星 - 今日 picks
-    kickout_candidates = [code for code in held if code not in pick_tickers]
+    # 候选踢出 = 已持仓的动态卫星 - 今日 picks。显式加入的标的是长期管理对象，
+    # 即使当天不在动态 picks 也不能被轮换器强制卖出。
+    kickout_candidates = [
+        code for code in held
+        if code not in pick_tickers and code not in TRADE_ELIGIBLE_TICKERS
+    ]
     # 按 first_entry_utc 排序，最老的优先踢
     kickout_candidates.sort(
         key=lambda c: (state.get(c, {}) or {}).get("first_entry_utc") or ""
     )
 
     new_picks_to_open = [tk for tk in pick_tickers if tk not in held]
-    keep_existing_sat = [tk for tk in held if tk in pick_tickers]
+    keep_existing_sat = [
+        tk for tk in held
+        if tk in pick_tickers or tk in TRADE_ELIGIBLE_TICKERS
+    ]
     # 不踢的话最终的卫星持仓数 = 全部现持仓 + 全部新 picks
     # （现持仓里"在 picks"的不变；现持仓里"不在 picks"的依然占位；再加新进入的）
     projected_total = len(held) + len(new_picks_to_open)
@@ -1452,11 +1463,11 @@ def apply_universe(picks_result: dict) -> dict:
 
 
 def get_active_tickers() -> list[str]:
-    """orchestrator 用：当前应该跑 cycle 的所有 ticker = 核心 + 今日 picks + 还在持仓的卫星老仓。"""
+    """orchestrator 用：显式加入标的 + 今日 picks + 还在持仓的动态卫星老仓。"""
     uni = _universe_load()
     pick_tickers = [p["ticker_full"] for p in (uni.get("picks") or [])]
     held = {p["code"] for p in _list_satellite_positions()}
-    return sorted(set(CORE_TICKERS) | set(pick_tickers) | held)
+    return sorted(set(TRADE_ELIGIBLE_TICKERS) | set(pick_tickers) | held)
 
 
 def refresh_nav_peak() -> None:
