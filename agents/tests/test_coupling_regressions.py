@@ -163,6 +163,12 @@ class ActionContractTests(unittest.TestCase):
         self.assertEqual(daily_review._HOLD_DAYS["WATCH_BUY_PROBE"], 5)
         self.assertIn("WATCH_BUY_PROBE", trading_contracts.BULLISH_SIGNAL_ACTIONS)
 
+    def test_probe_label_is_generic_for_all_active_probe_sources(self):
+        notifier_source = (AGENTS_DIR / "notifier.py").read_text(encoding="utf-8")
+        self.assertIn('"WATCH_BUY_PROBE": ("🟠 主动试探仓"', notifier_source)
+        dashboard = (AGENTS_DIR / "dashboard.html").read_text(encoding="utf-8")
+        self.assertIn("WATCH_BUY_PROBE 主动试探仓", dashboard)
+
 
 class ClaudeGateTests(unittest.TestCase):
     @staticmethod
