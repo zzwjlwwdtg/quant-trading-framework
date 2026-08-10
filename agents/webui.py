@@ -1234,6 +1234,7 @@ TICKER_TO_FUNDAMENTAL_STOCK = {
     "MUFG":     "8306.T",   # 三菱 UFJ 金融集团 — 日本最大银行，日本加息受益股
     "SUMCO":    "3436.T",   # SUMCO 胜高 — 硅晶圆全球 #2（信越化学后），300mm wafer 供 TSMC/Samsung/Intel，AI 芯片上游
     "SHINETSU": "4063.T",   # 信越化学 — 硅晶圆全球 #1 + PVC + 光罩用光刻胶，半导体材料 upstream 龙头
+    "CYAGENT":  "4751.T",   # CyberAgent サイバーエージェント — 互联网广告/游戏(Uma Musume)/Abema TV，AI 生成内容
 }
 
 # 日股关注列表（不参与 orchestrator scan，只在 dashboard 单独展示）
@@ -1258,6 +1259,8 @@ JP_WATCH_LIST = [
      "thesis": "硅晶圆全球 #2（信越化学后）· 300mm wafer 供 TSMC/Samsung/Intel · AI 芯片上游原材料 · 12 吋产能瓶颈受益"},
     {"ticker": "SHINETSU", "symbol": "4063.T", "name_zh": "信越化学", "name_en": "Shin-Etsu Chemical",
      "thesis": "硅晶圆全球 #1 (超 SUMCO) + PVC 世界龙头 + 光罩用光刻胶 · 半导体材料 upstream 最上游 · AI 需求+日元弱势双利好"},
+    {"ticker": "CYAGENT",  "symbol": "4751.T", "name_zh": "CyberAgent", "name_en": "CyberAgent Inc.",
+     "thesis": "日本最大互联网广告代理 · Uma Musume 手游长期收入台柱 · Abema TV 流媒体 · 生成 AI 内容/AI ads platform 投入加大"},
 ]
 
 
