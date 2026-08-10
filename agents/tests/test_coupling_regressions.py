@@ -70,6 +70,51 @@ class ActionContractTests(unittest.TestCase):
         self.assertEqual(guarded["action"], "HOLD")
         self.assertEqual(guarded["demoted_from"], "WATCH_BUY_PROBE")
 
+    def test_sim_active_earnings_risk_becomes_probe_before_blackout(self):
+        result = {
+            "action": "WATCH_BUY",
+            "confidence": 3,
+            "reason": "uptrend",
+            "stop_ref": 85,
+        }
+        events = {
+            "earnings_implied_move": {
+                "US.TQQQ": {
+                    "stock": "NVDA",
+                    "days_to_earnings": 16,
+                    "implied_move_pct": 8,
+                    "leverage": 3,
+                }
+            }
+        }
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            guarded = decision_agent._apply_earnings_guard(result, "US.TQQQ", events)
+        self.assertEqual(guarded["action"], "WATCH_BUY_PROBE")
+        self.assertEqual(guarded["earnings_guard"], "sim_active_probe")
+        self.assertEqual(guarded["stop_ref"], 85)
+
+    def test_sim_active_keeps_t_one_earnings_blackout(self):
+        result = {
+            "action": "WATCH_BUY",
+            "confidence": 5,
+            "reason": "uptrend",
+            "stop_ref": 85,
+        }
+        events = {
+            "earnings_implied_move": {
+                "US.TQQQ": {
+                    "stock": "NVDA",
+                    "days_to_earnings": 1,
+                    "implied_move_pct": 8,
+                    "leverage": 3,
+                }
+            }
+        }
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            guarded = decision_agent._apply_earnings_guard(result, "US.TQQQ", events)
+        self.assertEqual(guarded["action"], "HOLD")
+        self.assertIsNone(guarded["stop_ref"])
+
     def test_event_uncertainty_guard_blocks_probe_in_full_mode(self):
         result = {"action": "WATCH_BUY_PROBE", "confidence": 3, "reason": "test"}
         with patch.object(decision_agent, "_is_technical_only", return_value=False):

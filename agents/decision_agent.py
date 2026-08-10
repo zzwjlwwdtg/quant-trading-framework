@@ -557,6 +557,23 @@ def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
             "earnings_guard": True,
         }
 
+    # 模拟仓积极模式：财报 T-1/T-0 仍硬禁；更远期的高 IV 改为带止损小 probe，
+    # 用真实模拟成交积累样本，而不是提前数周完全冻结核心仓。
+    if (is_sim_active_trading()
+            and action in BUY_ACTIONS
+            and leveraged_im > 12
+            and result.get("stop_ref")):
+        return {
+            **result,
+            "action":       "WATCH_BUY_PROBE",
+            "confidence":   conf,
+            "reason":       (result.get("reason", "") +
+                             f" + sim_active_earnings_probe ({stock} T-{days}, "
+                             f"lev_IM={leveraged_im:.1f}%)").strip(),
+            "demoted_from": action,
+            "earnings_guard": "sim_active_probe",
+        }
+
     # 高隐含波动强制屏蔽
     if leveraged_im > 20:
         return {
