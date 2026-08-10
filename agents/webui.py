@@ -1829,9 +1829,31 @@ def _fetch_analyst_consensus(stock: str) -> dict | None:
         target_upside_pct = None
         if target_mean and current_price and current_price > 0:
             target_upside_pct = round((target_mean / current_price - 1) * 100, 1)
+
+        # ── 前瞻 EPS 派生估值 (implied price 3 种 PE 假设) ──
+        # 1) 现 PE 不变: forward_eps × trailing_pe (最保守, 假设 market rating 不变)
+        # 2) 分析师 forward PE 隐含: 就是 target_mean 本身 (∵ forward_pe = target/forward_eps)
+        # 3) PEG=1 fair (Peter Lynch): forward_eps × abs(eps_growth) → 只在正增长有意义
+        implied_pe_hold = None
+        implied_pe_hold_upside = None
+        peg_fair_price = None
+        peg_ratio = None
+        if forward_eps and trailing_pe:
+            implied_pe_hold = round(forward_eps * trailing_pe, 2)
+            if current_price and current_price > 0:
+                implied_pe_hold_upside = round(
+                    (implied_pe_hold / current_price - 1) * 100, 1
+                )
+        # PEG 派生: 只在增长 >0 时有意义 (Peter Lynch: fair PE = growth rate)
+        if forward_eps and eps_growth_pct and eps_growth_pct > 0:
+            peg_fair_price = round(forward_eps * eps_growth_pct, 2)
+        if forward_pe and eps_growth_pct and eps_growth_pct > 0:
+            peg_ratio = round(forward_pe / eps_growth_pct, 2)
+
         return {
             "n_analysts":         n_analysts,
             "recommendation":     rec_key,
+            "current_price":      round(current_price, 2) if current_price else None,
             "forward_eps":        round(forward_eps, 2) if forward_eps else None,
             "trailing_eps":       round(trailing_eps, 2) if trailing_eps else None,
             "eps_growth_pct":     eps_growth_pct,
@@ -1844,6 +1866,11 @@ def _fetch_analyst_consensus(stock: str) -> dict | None:
             "revenue_growth_pct": round(revenue_growth * 100, 1) if revenue_growth is not None else None,
             "earnings_growth_pct": round(earnings_growth * 100, 1) if earnings_growth is not None else None,
             "next_earnings":      next_earn,
+            # 前瞻 EPS 派生估值
+            "implied_pe_hold":         implied_pe_hold,          # forward_eps × trailing_pe
+            "implied_pe_hold_upside":  implied_pe_hold_upside,   # vs current price
+            "peg_fair_price":          peg_fair_price,           # Peter Lynch fair
+            "peg_ratio":               peg_ratio,                 # <1 便宜 · >2 贵
             "source":             "yfinance analyst aggregation",
         }
     except Exception as e:

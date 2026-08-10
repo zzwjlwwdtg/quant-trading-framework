@@ -626,21 +626,67 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
     if (claudeBull && anaBear) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="Claude 上修但分析师看空">⚠ 背离</span>';
     else if (claudeBear && anaBull) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="Claude 下修但分析师看多">⚠ 背离</span>';
     else if ((claudeBull && anaBull) || (claudeBear && anaBear)) divergenceBadge = '<span class="badge ok" style="font-size:9px" title="Claude 方向与分析师一致">✓ 一致</span>';
+    // 前瞻 EPS 派生估值行 (3 种 PE 假设隐含价 + PEG)
+    const valRows = [];
+    if (ac.current_price != null) {
+      valRows.push({ label: '现价 (spot)', price: ac.current_price, delta: null, hint: 'yfinance regularMarketPrice' });
+    }
+    if (ac.implied_pe_hold != null) {
+      valRows.push({
+        label: '前瞻EPS × 现PE',
+        price: ac.implied_pe_hold,
+        delta: ac.implied_pe_hold_upside,
+        hint: `forward_eps ${ac.forward_eps} × trailing_pe ${ac.trailing_pe} = 假设市场估值不变，EPS 变化直接反映到价`,
+      });
+    }
+    if (ac.target_mean != null) {
+      valRows.push({
+        label: '分析师目标',
+        price: ac.target_mean,
+        delta: ac.target_upside_pct,
+        hint: `${ac.n_analysts || '?'} 家分析师目标均值 [${ac.target_low}-${ac.target_high}]`,
+      });
+    }
+    if (ac.peg_fair_price != null && ac.current_price) {
+      const pegDelta = ((ac.peg_fair_price / ac.current_price - 1) * 100).toFixed(1);
+      valRows.push({
+        label: 'PEG=1 fair',
+        price: ac.peg_fair_price,
+        delta: parseFloat(pegDelta),
+        hint: `Peter Lynch: fair PE = 增长率${ac.eps_growth_pct}%，∴ fair price = forward_eps × ${ac.eps_growth_pct}`,
+      });
+    }
+    const pegBadge = ac.peg_ratio != null
+      ? `<span class="badge ${ac.peg_ratio < 1 ? 'ok' : (ac.peg_ratio < 2 ? 'muted' : 'bad')}" style="font-size:9px" title="PEG = forward_pe / EPS 增长率. <1 便宜 · 1-2 合理 · >2 贵">PEG ${ac.peg_ratio}</span>`
+      : '';
+
     analystHtml = `
     <div style="border-left:2px solid #8b5cf6; padding:4px 6px; margin-top:5px; background:rgba(139,92,246,0.06); font-size:10px; line-height:1.5">
-      <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px">
+      <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px; flex-wrap:wrap">
         <b style="color:#a78bfa">🎯 分析师共识</b>
         <span class="badge ${recCls}" style="font-size:9px">${recLbl}</span>
         <span style="color:var(--muted); font-size:9px">${ac.n_analysts || '-'} 家覆盖</span>
         ${upsideBadge}
+        ${pegBadge}
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 10px; font-size:10px; color:var(--fg)">
         <span>前瞻 EPS: <b>${fmtNum(ac.forward_eps, 2)}</b> ${ac.eps_growth_pct != null ? `<span class="${pctCls(ac.eps_growth_pct)}" style="font-size:9px">${fmtPct(ac.eps_growth_pct)}</span>` : ''}</span>
         <span>前瞻 P/E: <b>${fmtNum(ac.forward_pe, 1)}x</b> ${ac.trailing_pe != null ? `<small class="muted" style="font-size:8px">TTM ${fmtNum(ac.trailing_pe, 1)}x</small>` : ''}</span>
-        <span>目标价: <b>${fmtNum(ac.target_mean, 0)}</b> <small class="muted" style="font-size:8px">[${fmtNum(ac.target_low, 0)}–${fmtNum(ac.target_high, 0)}]</small></span>
         <span>成长: 收入 <span class="${pctCls(ac.revenue_growth_pct)}">${fmtPct(ac.revenue_growth_pct)}</span> · 利润 <span class="${pctCls(ac.earnings_growth_pct)}">${fmtPct(ac.earnings_growth_pct)}</span></span>
+        <span>下次财报: <b>${ac.next_earnings || '-'}</b></span>
       </div>
-      <div style="font-size:8px; color:var(--muted); margin-top:2px">来源: ${ac.source}</div>
+      ${valRows.length ? `
+      <div style="margin-top:4px; padding-top:3px; border-top:1px dashed rgba(139,92,246,0.3)">
+        <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📐 前瞻 EPS 派生股价 (多口径对照)</div>
+        <div style="display:grid; grid-template-columns:1fr auto auto; gap:2px 8px; font-size:10px">
+          ${valRows.map(v => `
+            <span title="${v.hint}">${v.label}</span>
+            <span style="text-align:right"><b>${typeof v.price === 'number' ? v.price.toLocaleString() : v.price}</b></span>
+            <span style="text-align:right" class="${v.delta == null ? 'muted' : pctCls(v.delta)}">${v.delta == null ? '(基准)' : fmtPct(v.delta)}</span>
+          `).join('')}
+        </div>
+      </div>` : ''}
+      <div style="font-size:8px; color:var(--muted); margin-top:3px">来源: ${ac.source} · 派生估值假设 PE 不变；实际有 rating change / one-time item 需要 discount</div>
     </div>`;
   }
 
