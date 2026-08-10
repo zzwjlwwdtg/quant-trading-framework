@@ -10,68 +10,66 @@
         "cut_25": 2
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean_weakened"
+      "consensus_direction": "hawkish_lean_weakening"
     },
     {
       "date": "2026-10-28",
       "days_until": 79,
       "probabilities": {
         "hold": 50,
-        "hike_25": 30,
-        "cut_25": 18,
-        "hike_50": 1,
-        "cut_50": 1
+        "hike_25": 35,
+        "cut_25": 13,
+        "cut_50": 2
       },
       "most_likely": "hold",
-      "consensus_direction": "two_sided"
+      "consensus_direction": "neutral"
     },
     {
       "date": "2026-12-09",
       "days_until": 121,
       "probabilities": {
-        "hold": 42,
-        "hike_25": 22,
-        "cut_25": 30,
-        "cut_50": 4,
-        "hike_50": 2
+        "hold": 60,
+        "hike_25": 15,
+        "cut_25": 22,
+        "cut_50": 3
       },
       "most_likely": "hold",
-      "consensus_direction": "mild_dovish_lean"
+      "consensus_direction": "dovish_lean"
     }
   ],
-  "implied_terminal_rate": "3.50-3.75",
-  "implied_terminal_date": "2026-Q4",
-  "data_snapshot_date": "2026-08-08",
-  "recent_event_impact": "2026-08-07 July NFP -23K vs +80K expected (unemployment 4.1%, wages +3.2% YoY miss) → September hike odds collapsed from 58% to ~40%, hold became modal outcome; pre-report market was pricing hikes as base case",
-  "commentary": "Market flipped from hawkish (Aug 4 CME showed 62% hike-25 at Sept) to hold-biased after Aug 7 weak July NFP (-23K, first negative print). Sept meeting now most likely hold but hike tail remains meaningful (~40%) — CPI on Aug 12 is the decisive next print; a hot CPI could snap the hike bid back, a cool print would push Sept toward first cut discussion.",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2026-Q4/2027-Q1",
+  "data_snapshot_date": "2026-08-07",
+  "recent_event_impact": "8/7 NFP -23K (vs +83K est, massive miss) → Sept hike odds tumbled from 57% to ~40%, hold odds jumped from 45% to ~60%; terminal rate expectation slipped from ~4.00% to ~3.90%",
+  "commentary": "Regime is HIKE-BIAS not cut-bias — new Fed Chair Kevin Warsh's hawkish price-stability framing had markets pricing 55%+ odds of at least one 2026 hike before NFP. Friday's 8/7 -23K payroll print (worst miss in cycle) partially neutralized the hike thesis, shifting Sept from majority-hike to majority-hold; terminal rate priced down ~10bp. Data is 1 trading day old — no CPI/PPI released since (next CPI ~Aug 12).",
   "sources": [
     {
       "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
-      "type": "post_nfp_fedwatch"
+      "type": "news_post_nfp"
+    },
+    {
+      "url": "https://ca.finance.yahoo.com/news/us-rate-futures-cut-chances-124656547.html",
+      "type": "news_post_nfp"
+    },
+    {
+      "url": "https://centralbank.watch/federal-reserve/",
+      "type": "aggregator_pre_nfp"
     },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "aggregator"
-    },
-    {
-      "url": "https://en.macromicro.me/charts/127852/probability-fed-rate-hike",
-      "type": "aggregator"
-    },
-    {
-      "url": "https://www.federalreserve.gov/monetarypolicy/files/fomc-blackout-period-calendar.pdf",
-      "type": "fomc_calendar"
+      "url": "https://rateprobability.com/fed",
+      "type": "fed_funds_futures_tracker"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-09T19:55:33+00:00",
+  "fetched_at": "2026-08-10T03:58:36+00:00",
   "_meta": {
-    "cached_at": "2026-08-10T04:55:33.548445",
-    "age_sec": 27532,
+    "cached_at": "2026-08-10T12:58:36.163420",
+    "age_sec": 266,
     "stale": false,
     "refreshing": false
   }
