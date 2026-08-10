@@ -20,6 +20,7 @@ API 端点：
 from __future__ import annotations
 
 import ctypes
+import hashlib
 import json
 import os
 import re
@@ -57,7 +58,7 @@ _refresh_locks: dict[str, threading.Lock] = {}
 
 
 def _cached(name: str, ttl_sec: int, compute_fn, first_call_async: bool = False,
-            first_call_placeholder: dict | None = None):
+            first_call_placeholder: dict | None = None, cache_validator=None):
     """返回缓存 JSON + 元数据 (cached_at / age_sec / stale / refreshing)。
     过期时后台线程刷新，本次请求仍返回旧值（首次无缓存时同步计算）。
 
@@ -74,7 +75,17 @@ def _cached(name: str, ttl_sec: int, compute_fn, first_call_async: bool = False,
             data = json.loads(cache_path.read_text(encoding="utf-8"))
         except Exception:
             data = None
-    stale = (data is None) or (age_sec is not None and age_sec > ttl_sec)
+    contract_valid = True
+    if data is not None and cache_validator is not None:
+        try:
+            contract_valid = bool(cache_validator(data))
+        except Exception:
+            contract_valid = False
+    stale = (
+        data is None
+        or (age_sec is not None and age_sec > ttl_sec)
+        or not contract_valid
+    )
 
     def _spawn_refresh():
         if _refresh_flag.get(name):
@@ -2602,6 +2613,34 @@ TICKER_TO_OPTION_SOURCE = {
     "LITE": "LITE",  # Lumentum 有 options chain
 }
 
+TICKER_OPTIONS_CACHE_SCHEMA = 1
+
+
+def _visible_option_sources() -> dict[str, str]:
+    return {
+        ticker: underlying
+        for ticker, underlying in TICKER_TO_OPTION_SOURCE.items()
+        if ticker_display_profile(ticker)["show_options"]
+    }
+
+
+def _ticker_options_cache_contract() -> str:
+    """Fingerprint the schema and currently visible option universe."""
+    sources = sorted(
+        (ticker, underlying)
+        for ticker, underlying in _visible_option_sources().items()
+    )
+    contract = json.dumps(
+        {"schema": TICKER_OPTIONS_CACHE_SCHEMA, "sources": sources},
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(contract.encode("utf-8")).hexdigest()[:12]
+
+
+def _ticker_options_cache_valid(data: dict) -> bool:
+    return data.get("cache_contract") == _ticker_options_cache_contract()
+
 
 def _find_wall_bands(dist: list, side: str, spot: float,
                       min_strike_notional: float = 50e6,
@@ -2798,7 +2837,14 @@ def api_ticker_options() -> dict:
     """每个 tracked ticker 的期权墙 + 攻防位 + 挤压风险。10min 后台缓存。"""
     # 24h TTL —— 期权 wall/OI 日级变化就够，无必要秒级刷（拖累 yfinance + 间接
     # 让 ticker_ai 的 Claude hash 每天最多变一次）
-    data = _cached("ticker_options", ttl_sec=24 * 3600, compute_fn=_compute_ticker_options)
+    data = _cached(
+        "ticker_options",
+        ttl_sec=24 * 3600,
+        compute_fn=_compute_ticker_options_incremental,
+        first_call_async=True,
+        first_call_placeholder={"ts": None, "tickers": {}, "data_source": "pending"},
+        cache_validator=_ticker_options_cache_valid,
+    )
     # Old cache files can still contain macro assets. Enforce the current
     # capability contract at the API boundary as well as during recomputation.
     if isinstance(data.get("tickers"), dict):
@@ -2809,7 +2855,7 @@ def api_ticker_options() -> dict:
     return data
 
 
-def _compute_ticker_options() -> dict:
+def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
     """对每个 tracked ticker 拉最近到期日期权链 + 分析。串行 ~15-30s 首次。
 
     双轨：优先 moomoo openD（更快 + JP 支持），失败降级 yfinance。
@@ -2823,11 +2869,18 @@ def _compute_ticker_options() -> dict:
         openD_ok = False
         get_option_chain_via_openD = None
 
-    out = {"ts": datetime.now(timezone.utc).isoformat(), "tickers": {}, "data_source": "yfinance"}
+    out = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "tickers": {},
+        "data_source": "yfinance",
+        "cache_schema": TICKER_OPTIONS_CACHE_SCHEMA,
+        "cache_contract": _ticker_options_cache_contract(),
+    }
     if openD_ok:
         out["data_source"] = "openD + yfinance fallback"
 
-    for tk, underlying in TICKER_TO_OPTION_SOURCE.items():
+    source_map = TICKER_TO_OPTION_SOURCE if sources is None else sources
+    for tk, underlying in source_map.items():
         if not ticker_display_profile(tk)["show_options"]:
             continue
         try:
@@ -3051,6 +3104,49 @@ def _compute_ticker_options() -> dict:
         except Exception as e:
             out["tickers"][tk] = {"underlying": underlying, "error": str(e)[:100]}
     return out
+
+
+def _compute_ticker_options_incremental() -> dict:
+    """Refresh only newly added/remapped tickers while the 24h cache is fresh."""
+    cache_path = _WEBUI_CACHE_DIR / "ticker_options.json"
+    existing: dict = {}
+    if cache_path.exists():
+        try:
+            loaded = json.loads(cache_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                existing = loaded
+        except Exception:
+            existing = {}
+
+    expected = _visible_option_sources()
+    existing_schema = int(existing.get("cache_schema", 1) or 1)
+    if existing and existing_schema == TICKER_OPTIONS_CACHE_SCHEMA:
+        old_tickers = existing.get("tickers")
+        if not isinstance(old_tickers, dict):
+            old_tickers = {}
+        needs_refresh = {
+            ticker: underlying
+            for ticker, underlying in expected.items()
+            if not isinstance(old_tickers.get(ticker), dict)
+            or old_tickers[ticker].get("underlying") != underlying
+        }
+        patch = _compute_ticker_options(needs_refresh) if needs_refresh else None
+        merged = {
+            ticker: value
+            for ticker, value in old_tickers.items()
+            if ticker in expected
+        }
+        if patch:
+            merged.update(patch.get("tickers", {}))
+        return {
+            **existing,
+            "ts": (patch or {}).get("ts") or existing.get("ts"),
+            "tickers": merged,
+            "cache_schema": TICKER_OPTIONS_CACHE_SCHEMA,
+            "cache_contract": _ticker_options_cache_contract(),
+        }
+
+    return _compute_ticker_options(expected)
 
 
 def api_option_walls_chart() -> dict:

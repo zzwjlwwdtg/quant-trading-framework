@@ -63,6 +63,46 @@ class DashboardAssetProfileTests(unittest.TestCase):
             result = webui.api_ticker_options()
         self.assertEqual(set(result["tickers"]), {"TQQQ"})
 
+    def test_option_cache_key_changes_with_visible_option_universe(self):
+        with patch.object(webui, "TICKER_TO_OPTION_SOURCE", {"TQQQ": "QQQ"}):
+            before = webui._ticker_options_cache_contract()
+        with patch.object(
+            webui,
+            "TICKER_TO_OPTION_SOURCE",
+            {"TQQQ": "QQQ", "LITE": "LITE"},
+        ):
+            after = webui._ticker_options_cache_contract()
+        self.assertNotEqual(before, after)
+        self.assertEqual(len(after), 12)
+
+    def test_option_refresh_only_computes_newly_added_ticker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cache_dir = Path(tmp)
+            (cache_dir / "ticker_options.json").write_text(
+                json.dumps({
+                    "ts": "old",
+                    "tickers": {"TQQQ": {"underlying": "QQQ", "spot": 100}},
+                    "data_source": "old",
+                }),
+                encoding="utf-8",
+            )
+            lite = {
+                "ts": "new",
+                "tickers": {"LITE": {"underlying": "LITE", "spot": 868}},
+            }
+            with patch.object(webui, "_WEBUI_CACHE_DIR", cache_dir), \
+                 patch.object(
+                     webui,
+                     "TICKER_TO_OPTION_SOURCE",
+                     {"TQQQ": "QQQ", "LITE": "LITE"},
+                 ), \
+                 patch.object(webui, "_compute_ticker_options", return_value=lite) as compute:
+                result = webui._compute_ticker_options_incremental()
+                expected_contract = webui._ticker_options_cache_contract()
+        compute.assert_called_once_with({"LITE": "LITE"})
+        self.assertEqual(set(result["tickers"]), {"TQQQ", "LITE"})
+        self.assertEqual(result["cache_contract"], expected_contract)
+
     def test_fundamentals_api_obeys_the_same_macro_capability_contract(self):
         for ticker in ("GLD", "SHY", "IEI"):
             with self.subTest(ticker=ticker):
