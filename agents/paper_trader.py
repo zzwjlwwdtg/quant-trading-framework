@@ -56,6 +56,7 @@ from trading_contracts import (
     TRADE_WINDOWS,
     confidence_min,
     confidence_multiplier,
+    extended_chase_signals,
 )
 
 
@@ -64,15 +65,15 @@ TRD_ENV = TrdEnv.SIMULATE
 if TRADING_ACCOUNT_MODE != "SIMULATE":
     raise RuntimeError("paper_trader currently supports SIMULATE accounts only")
 
-# 每个窗口的下单参数（成熟系统标准）：盘前严门槛 + 大 buffer + 允许 RTH 外撮合
-# pre-market buffer 故意大（2.5%）因为日内 daily K 价和实时价可能有大 gap
-# （如 -10% 隔夜跌），太窄 buffer 会让单子挂在书上等不到撮合
+# 盘前只给 0.5% 的成交余量。实时价明显高于日 K 参考价时直接放弃 BUY，
+# 防止把“允许盘前成交”错误实现成“无条件追涨”。
 WINDOW_CFG = {
-    "pre-market": {"buffer": 0.025, "fill_outside_rth": True},
+    "pre-market": {"buffer": 0.005, "fill_outside_rth": True},
     "post-open":  {"buffer": 0.005, "fill_outside_rth": False},
     "midday":     {"buffer": 0.005, "fill_outside_rth": False},
     "pre-close":  {"buffer": 0.005, "fill_outside_rth": False},
 }
+PREMARKET_BUY_MAX_POSITIVE_GAP_PCT = 0.02
 
 # ========== 仓位规模引擎 (Vol-Target + DD Floor + VIX Multiplier) ==========
 #
@@ -815,16 +816,48 @@ def _notify_claude_rules_conflict(ticker: str, rule_action: str, ai_t: dict,
 
 # ---------- Position query ----------
 
-def _position_qty(code: str) -> int:
+def _position_snapshot(code: str) -> dict:
+    """Read broker position facts used by sizing, cost basis and software stops."""
     ctx = _ctx_get()
     ret, pos = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID, code=code)
     if ret != RET_OK or pos is None or pos.empty:
-        return 0
+        return {
+            "position_qty": 0,
+            "can_sell_qty": 0,
+            "cost_price": 0.0,
+            "nominal_price": 0.0,
+        }
     row = pos.iloc[0]
+
+    def _number(field: str) -> float:
+        try:
+            return float(row.get(field, 0) or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    can_sell_qty = int(_number("can_sell_qty"))
+    position_qty = int(_number("qty")) or can_sell_qty
+    return {
+        "position_qty": position_qty,
+        "can_sell_qty": can_sell_qty,
+        "cost_price": _number("cost_price"),
+        "nominal_price": _number("nominal_price"),
+    }
+
+
+def _position_qty(code: str) -> int:
+    return int(_position_snapshot(code)["can_sell_qty"])
+
+
+def _position_cost_price(code: str, fallback: float) -> float:
+    """Prefer the broker's weighted fill cost; fall back to the execution reference."""
     try:
-        return int(float(row.get("can_sell_qty", 0)))
-    except Exception:
-        return 0
+        cost = float(_position_snapshot(code).get("cost_price") or 0)
+        if cost > 0:
+            return cost
+    except Exception as exc:
+        logger.warning(f"[trader] cost basis query failed for {code}: {exc}")
+    return float(fallback)
 
 
 # ---------- Order placement ----------
@@ -905,7 +938,8 @@ def _log_trade(ticker: str, side: str, qty: int, price: float,
 def _place(code: str, side, qty: int, price: float, tag: str = "",
            buffer: float = 0.005, fill_outside_rth: bool = False,
            decision: dict | None = None, mkt: dict | None = None,
-           window: str | None = None, extra: dict | None = None):
+           window: str | None = None, extra: dict | None = None,
+           resting_limit: bool = False):
     """
     返回 order_id（实盘）或 'DRY'（dry-run）或 None（失败/跳过）。
     decision/mkt/window/extra：选填，仅供 trade_log 记录（不影响下单）。
@@ -914,12 +948,29 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         logger.warning(f"[trader] SKIP {side} {code} qty={qty} price={price}")
         return None
     side_label = "BUY " if side == TrdSide.BUY else "SELL"
-    # pre-market: 用实时价覆盖 daily K 收盘 (避免 gap)
+    # 盘前普通订单以实时价为基准，但正向跳空超过上限时不追价。
+    # 明确低于市价的 AI resting limit 保留原限价，不受此门禁影响。
     ref_price = price
     if fill_outside_rth:
         rt = _get_realtime_price(code, price)
-        if abs(rt - price) / price > 0.02:  # 2% 以上 gap 才用实时价
-            logger.info(f"[trader] {code} 实时 ${rt:.2f} vs daily K ref ${price:.2f} (gap {(rt-price)/price*100:+.1f}%) → 用实时价")
+        gap_pct = (rt - price) / price
+        if (
+            side == TrdSide.BUY
+            and not resting_limit
+            and gap_pct > PREMARKET_BUY_MAX_POSITIVE_GAP_PCT
+        ):
+            logger.warning(
+                f"[trader] SKIP BUY {code}: pre-market gap {gap_pct*100:+.1f}% "
+                f"exceeds chase cap {PREMARKET_BUY_MAX_POSITIVE_GAP_PCT*100:.1f}% "
+                f"(realtime ${rt:.2f}, reference ${price:.2f})"
+            )
+            return None
+        if not resting_limit and rt > 0:
+            if rt != price:
+                logger.info(
+                    f"[trader] {code} realtime ${rt:.2f} vs reference ${price:.2f} "
+                    f"(gap {gap_pct*100:+.1f}%)"
+                )
             ref_price = rt
     if side == TrdSide.BUY:
         order_price = round(ref_price * (1 + buffer), 2)
@@ -987,6 +1038,94 @@ def _place_stop_loss(code: str, qty: int, stop_price: float):
     except Exception as e:
         logger.warning(f"[trader] STOP EXC  {code}: {e}")
     return None
+
+
+_PROTECTIVE_STOP_KEYS = (
+    "protective_stop_price",
+    "protective_stop_mode",
+    "protective_stop_order_id",
+    "protective_stop_updated_utc",
+)
+
+
+def _clear_protective_stop(tstate: dict) -> None:
+    for key in _PROTECTIVE_STOP_KEYS:
+        tstate.pop(key, None)
+
+
+def monitor_software_stops() -> list[str]:
+    """Check fallback stops independently of decision/signal trading windows.
+
+    Moomoo SIMULATE accounts can reject STOP orders. Those entries are marked as
+    software-protected and polled by the orchestrator once per minute. A failed
+    exit remains armed so the next poll retries instead of silently dropping risk.
+    """
+    state = _state_load()
+    triggered: list[str] = []
+    dirty = False
+    for ticker, tstate in list(state.items()):
+        if not isinstance(tstate, dict):
+            continue
+        if tstate.get("protective_stop_mode") != "software":
+            continue
+        try:
+            stop_price = float(tstate.get("protective_stop_price") or 0)
+        except (TypeError, ValueError):
+            stop_price = 0
+        if stop_price <= 0:
+            logger.error(f"[trader] invalid software stop for {ticker}; keeping fail-closed state")
+            continue
+
+        snapshot = _position_snapshot(ticker)
+        position_qty = int(snapshot.get("position_qty") or 0)
+        can_sell_qty = int(snapshot.get("can_sell_qty") or 0)
+        current_price = float(snapshot.get("nominal_price") or 0)
+        if position_qty <= 0:
+            _clear_protective_stop(tstate)
+            dirty = True
+            continue
+        if current_price <= 0 or current_price > stop_price:
+            continue
+        if can_sell_qty <= 0:
+            logger.error(
+                f"[trader] SOFTWARE STOP {ticker} triggered at ${current_price:.2f} "
+                "but no sellable quantity is available; will retry"
+            )
+            continue
+
+        tag = f"[SOFTWARE-STOP trigger ${stop_price:.2f} current ${current_price:.2f}]"
+        oid = _place(
+            ticker,
+            TrdSide.SELL,
+            can_sell_qty,
+            current_price,
+            tag=tag,
+            buffer=0.005,
+            fill_outside_rth=True,
+            extra={"risk_exit": "software_stop", "stop_price": stop_price},
+        )
+        if oid is None:
+            logger.error(f"[trader] SOFTWARE STOP exit failed for {ticker}; remains armed")
+            continue
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        tstate.update({
+            "last_action": "SOFTWARE_STOP",
+            "last_side": "SELL",
+            "last_qty": can_sell_qty,
+            "last_price": current_price,
+            "last_time_utc": now_iso,
+            "last_order_id": None if oid == "DRY" else oid,
+            "protective_stop_mode": "software_triggered",
+            "protective_stop_order_id": None if oid == "DRY" else oid,
+            "protective_stop_updated_utc": now_iso,
+        })
+        triggered.append(ticker)
+        dirty = True
+
+    if dirty:
+        _state_save(state)
+    return triggered
 
 
 # ---------- Main entry ----------
@@ -1067,10 +1206,12 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
                 tstate.pop("entry_price", None)
                 tstate.pop("entry_high", None)
                 tstate.pop("entry_qty", None)
+                tstate.pop("entry_basis_source", None)
                 tstate.pop("entry_conf", None)
                 tstate.pop("entry_conf_scale", None)
                 tstate.pop("pyramid_layer", None)
                 tstate.pop("tp_levels_hit", None)
+                _clear_protective_stop(tstate)
                 state[ticker] = tstate
                 _state_save(state)
                 if oid != "DRY":
@@ -1125,6 +1266,15 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
         except Exception:
             pass
         return
+
+    if action in BUY_ACTIONS:
+        chase_signals = extended_chase_signals(mkt)
+        if len(chase_signals) >= 2:
+            logger.warning(
+                f"[trader] SKIP BUY {ticker}: extended chase guard "
+                f"({', '.join(chase_signals)})"
+            )
+            return
 
     # 门槛按 /10 量程定义；实际 conf 可能是 /5（TECH_ONLY）→ 等比缩放
     try:
@@ -1306,26 +1456,47 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
         fill_outside_rth=win_cfg.get("fill_outside_rth", False),
         decision=decision, mkt=mkt, window=window,
         extra={"is_core": is_core, "size_usd": size_usd},
+        resting_limit=(
+            side == TrdSide.BUY
+            and 'ai_use_limit' in locals()
+            and ai_use_limit
+        ),
     )
     if oid is None:
         return
 
     now_iso = datetime.now(timezone.utc).isoformat()
+    is_first_entry = side == TrdSide.BUY and not tstate.get("first_entry_utc")
+    execution_basis = float(price)
+    if is_first_entry:
+        fallback_basis = float(place_price)
+        if win_cfg.get("fill_outside_rth", False):
+            fallback_basis = _get_realtime_price(ticker, fallback_basis)
+        execution_basis = (
+            _position_cost_price(ticker, fallback_basis)
+            if oid != "DRY"
+            else fallback_basis
+        )
     tstate.update({
         "is_core":         is_core,
         "last_action":     action,
         "last_side":       "BUY" if side == TrdSide.BUY else "SELL",
         "last_qty":        qty,
-        "last_price":      float(price),
+        "last_price":      execution_basis if side == TrdSide.BUY else float(price),
         "last_time_utc":   now_iso,
         "last_order_id":   None if oid == "DRY" else oid,
         "last_window_key": window_key,
     })
-    if side == TrdSide.BUY and not tstate.get("first_entry_utc"):
+    if is_first_entry:
         tstate["first_entry_utc"] = now_iso
         # 首次入场: 记 entry 数据供 TP/SL/Pyramid 用
-        tstate["entry_price"]    = float(price)
-        tstate["entry_high"]     = float(price)
+        tstate["entry_price"]    = execution_basis
+        tstate["entry_high"]     = execution_basis
+        tstate["entry_basis_source"] = (
+            "broker_cost_or_execution_reference"
+            if oid != "DRY"
+            else "execution_reference"
+        )
         tstate["entry_qty"]      = qty
         tstate["entry_conf"]     = conf
         tstate["entry_conf_scale"] = scale
@@ -1334,20 +1505,38 @@ def execute(ticker: str, decision: dict, mkt: dict, window: str | None,
     if side == TrdSide.SELL and pos_qty == qty:
         # 清仓后清掉所有 entry 元数据
         for k in ("first_entry_utc","entry_price","entry_high","entry_qty",
-                  "entry_conf","entry_conf_scale","pyramid_layer","tp_levels_hit"):
+                  "entry_basis_source","entry_conf","entry_conf_scale",
+                  "pyramid_layer","tp_levels_hit"):
             tstate.pop(k, None)
+        _clear_protective_stop(tstate)
     # 每次新动作清掉 rebuy_done 标记 (允许下次 REDUCE 后再 rebuy)
     if action == "REDUCE":
         tstate.pop("rebuy_done", None)
+
+    if side == TrdSide.BUY and stop and stop > 0:
+        stop_price = float(stop)
+        if oid == "DRY":
+            stop_oid = None
+            stop_mode = "dry_run"
+        else:
+            stop_oid = _place_stop_loss(ticker, qty, stop_price)
+            stop_mode = "broker" if stop_oid else "software"
+            if not stop_oid:
+                logger.error(
+                    f"[trader] {ticker} broker stop unavailable; armed software stop "
+                    f"at ${stop_price:.2f}"
+                )
+        tstate.update({
+            "protective_stop_price": stop_price,
+            "protective_stop_mode": stop_mode,
+            "protective_stop_order_id": stop_oid,
+            "protective_stop_updated_utc": now_iso,
+        })
     state[ticker] = tstate
     _state_save(state)
 
     if side == TrdSide.SELL and oid != "DRY":
         _apply_loss_streak_pause_after_sell()
-
-    if side == TrdSide.BUY and stop and stop > 0:
-        _place_stop_loss(ticker, qty, float(stop))
-
 
 # ---------- Universe lifecycle ----------
 
@@ -1448,6 +1637,7 @@ def apply_universe(picks_result: dict) -> dict:
                 "last_order_id":   None if oid == "DRY" else oid,
             })
             ts.pop("first_entry_utc", None)
+            _clear_protective_stop(ts)
     _state_save(state)
     if live_kickout_sell:
         _apply_loss_streak_pause_after_sell()

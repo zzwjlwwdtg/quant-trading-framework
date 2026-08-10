@@ -33,7 +33,11 @@ from data_feeds import fetch_vix, fetch_fear_greed
 from fred_feeds import fetch_fred
 from notifier import emit, logger, _toast
 from i18n import t
-from paper_trader import execute as trade_execute, refresh_nav_peak
+from paper_trader import (
+    execute as trade_execute,
+    monitor_software_stops,
+    refresh_nav_peak,
+)
 from claude_gate import apply_claude_gate
 from trading_contracts import ORDER_ACTIONS
 
@@ -927,6 +931,16 @@ def _tick() -> None:
     _mark_window_complete(window)
 
 
+def _software_stop_tick() -> None:
+    """Run risk exits independently from the five signal decision windows."""
+    try:
+        triggered = monitor_software_stops()
+        if triggered:
+            logger.warning(f"[risk-monitor] software stops submitted: {triggered}")
+    except Exception as exc:
+        logger.exception(f"[risk-monitor] software stop check failed: {exc}")
+
+
 def main() -> None:
     _check_lock_or_exit()   # 单实例保护
     _record_startup_mtimes()   # 源码自愈：记录关键文件 mtime，运行时对比检测
@@ -963,6 +977,9 @@ def main() -> None:
         ))
     logger.info("=" * 64)
 
+    # 风控先于耗时的启动扫描，避免重启期间留下未检查的模拟仓位。
+    _software_stop_tick()
+
     startup_window = _in_daily_window()
     if startup_window:
         logger.info(t(f"启动扫描：当前处于 {startup_window} 窗口，按窗口任务运行...",
@@ -975,6 +992,9 @@ def main() -> None:
         logger.info(t("启动扫描：非交易窗口，仅刷新信号，不生成开盘/收盘报告。",
                       "起動スキャン：取引ウィンドウ外のため、シグナル更新のみ。"))
         run_cycle()
+
+    # 软件止损独立于信号窗口，此后每分钟检查。
+    schedule.every(1).minutes.do(_software_stop_tick)
 
     # 之后按ET窗口定时触发（5min 精度，防止 30min 间隔与 15min 窗口错开）
     schedule.every(5).minutes.do(_tick)

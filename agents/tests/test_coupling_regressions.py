@@ -260,6 +260,29 @@ class ClaudeGateTests(unittest.TestCase):
                 {"action": "WATCH_BUY", "stop_ref": 75}, {"price": 100}, audit
             ))
 
+    def test_sim_active_respects_ai_veto_for_lite_style_extended_chase(self):
+        audit = {
+            "verdict": "HOLD",
+            "status": "ok",
+            "reason": "do not chase an extended pre-market surge",
+        }
+        market = {
+            "price": 915.28,
+            "pct_chg": 6.22,
+            "cum_5d_pct": 24.68,
+            "cci_20": 131.2,
+            "bb_pct": 0.915,
+            "dist_from_ma20_pct": 15.9,
+        }
+        decision = {
+            "action": "WATCH_BUY",
+            "confidence": 5,
+            "stop_ref": 845.66,
+        }
+        with patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
+            result = claude_gate._sim_active_probe(decision, market, audit)
+        self.assertIsNone(result)
+
 
 class CliFallbackTests(unittest.TestCase):
     def test_quota_error_routes_to_codex(self):
@@ -477,6 +500,134 @@ class SimActiveProfileTests(unittest.TestCase):
 
 
 class PaperTraderControlFlowTests(unittest.TestCase):
+    def test_execution_guard_blocks_extended_buy_even_without_ai_veto(self):
+        state = {}
+        market = {
+            "price": 915.28,
+            "pct_chg": 6.22,
+            "cum_5d_pct": 24.68,
+            "cci_20": 131.2,
+            "bb_pct": 0.915,
+            "dist_from_ma20_pct": 15.9,
+        }
+        with patch.object(paper_trader, "_position_qty", return_value=0), \
+             patch.object(paper_trader, "_state_load", return_value=state), \
+             patch.object(paper_trader, "_state_save"), \
+             patch.object(paper_trader, "_position_size_usd") as sizing, \
+             patch.object(paper_trader, "_place") as place:
+            paper_trader.execute(
+                "US.LITE",
+                {"action": "BUY", "confidence": 5, "stop_ref": 845.66},
+                market,
+                "post-open",
+            )
+        sizing.assert_not_called()
+        place.assert_not_called()
+
+    def test_premarket_buy_skips_positive_gap_instead_of_chasing(self):
+        with patch.object(paper_trader, "DRY_RUN", True), \
+             patch.object(paper_trader, "_get_realtime_price", return_value=103.0), \
+             patch.object(paper_trader, "_log_trade") as trade_log:
+            order_id = paper_trader._place(
+                "US.LITE",
+                paper_trader.TrdSide.BUY,
+                14,
+                100.0,
+                buffer=0.005,
+                fill_outside_rth=True,
+            )
+        self.assertIsNone(order_id)
+        trade_log.assert_not_called()
+
+    def test_premarket_small_gap_uses_realtime_with_half_percent_ceiling(self):
+        with patch.object(paper_trader, "DRY_RUN", True), \
+             patch.object(paper_trader, "_get_realtime_price", return_value=101.0), \
+             patch.object(paper_trader, "_log_trade") as trade_log:
+            order_id = paper_trader._place(
+                "US.LITE",
+                paper_trader.TrdSide.BUY,
+                10,
+                100.0,
+                buffer=paper_trader.WINDOW_CFG["pre-market"]["buffer"],
+                fill_outside_rth=True,
+            )
+        self.assertEqual(order_id, "DRY")
+        self.assertEqual(paper_trader.WINDOW_CFG["pre-market"]["buffer"], 0.005)
+        self.assertEqual(trade_log.call_args.args[3], 101.5)
+
+    def test_first_entry_uses_broker_cost_and_records_software_stop(self):
+        state = {}
+        with patch.object(paper_trader, "_position_qty", return_value=0), \
+             patch.object(paper_trader, "_position_size_usd", return_value=1_000), \
+             patch.object(paper_trader, "_state_load", return_value=state), \
+             patch.object(paper_trader, "_state_save"), \
+             patch.object(paper_trader, "_load_ai_target_safe", return_value=None), \
+             patch.object(paper_trader, "_place", return_value="order-1"), \
+             patch.object(paper_trader, "_position_cost_price", return_value=101.25), \
+             patch.object(paper_trader, "_place_stop_loss", return_value=None):
+            paper_trader.execute(
+                "US.TQQQ",
+                {"action": "BUY", "confidence": 5, "stop_ref": 92.0},
+                {"price": 100.0},
+                "post-open",
+            )
+        saved = state["US.TQQQ"]
+        self.assertEqual(saved["entry_price"], 101.25)
+        self.assertEqual(saved["entry_high"], 101.25)
+        self.assertEqual(saved["last_price"], 101.25)
+        self.assertEqual(saved["protective_stop_price"], 92.0)
+        self.assertEqual(saved["protective_stop_mode"], "software")
+
+    def test_software_stop_monitor_submits_sell_without_waiting_for_signal_window(self):
+        state = {
+            "US.LITE": {
+                "entry_price": 101.25,
+                "entry_high": 101.25,
+                "entry_qty": 14,
+                "protective_stop_price": 92.0,
+                "protective_stop_mode": "software",
+            }
+        }
+        snapshot = {
+            "position_qty": 14,
+            "can_sell_qty": 14,
+            "nominal_price": 91.5,
+            "cost_price": 101.25,
+        }
+        with patch.object(paper_trader, "_state_load", return_value=state), \
+             patch.object(paper_trader, "_state_save") as save, \
+             patch.object(paper_trader, "_position_snapshot", return_value=snapshot), \
+             patch.object(paper_trader, "_place", return_value="stop-order-1") as place:
+            triggered = paper_trader.monitor_software_stops()
+        self.assertEqual(triggered, ["US.LITE"])
+        self.assertEqual(place.call_args.args[1], paper_trader.TrdSide.SELL)
+        self.assertEqual(place.call_args.args[2], 14)
+        self.assertEqual(state["US.LITE"]["protective_stop_mode"], "software_triggered")
+        self.assertEqual(state["US.LITE"]["protective_stop_order_id"], "stop-order-1")
+        save.assert_called_once_with(state)
+
+    def test_failed_software_stop_exit_stays_armed_for_retry(self):
+        state = {
+            "US.LITE": {
+                "protective_stop_price": 92.0,
+                "protective_stop_mode": "software",
+            }
+        }
+        snapshot = {
+            "position_qty": 14,
+            "can_sell_qty": 14,
+            "nominal_price": 91.5,
+            "cost_price": 101.25,
+        }
+        with patch.object(paper_trader, "_state_load", return_value=state), \
+             patch.object(paper_trader, "_state_save") as save, \
+             patch.object(paper_trader, "_position_snapshot", return_value=snapshot), \
+             patch.object(paper_trader, "_place", return_value=None):
+            triggered = paper_trader.monitor_software_stops()
+        self.assertEqual(triggered, [])
+        self.assertEqual(state["US.LITE"]["protective_stop_mode"], "software")
+        save.assert_not_called()
+
     def test_trailing_stop_runs_before_signal_confidence_and_sizing(self):
         saved = []
         state = {

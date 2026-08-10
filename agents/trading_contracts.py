@@ -30,6 +30,26 @@ WINDOW_CONF_MIN_10 = {
 }
 
 
+def extended_chase_signals(market: dict | None) -> list[str]:
+    """Return independent signs that a BUY would be chasing an extended move."""
+    market = market or {}
+    checks = (
+        ("daily_surge", "pct_chg", 5.0),
+        ("five_day_extension", "cum_5d_pct", 15.0),
+        ("cci_overbought", "cci_20", 120.0),
+        ("upper_band_extension", "bb_pct", 0.90),
+        ("far_above_ma20", "dist_from_ma20_pct", 12.0),
+    )
+    triggered: list[str] = []
+    for label, field, threshold in checks:
+        try:
+            if float(market.get(field)) >= threshold:
+                triggered.append(label)
+        except (TypeError, ValueError):
+            continue
+    return triggered
+
+
 def confidence_min(window: str | None, scale: int = 10) -> float:
     """Return the window threshold converted to the active confidence scale."""
     safe_scale = scale if scale > 0 else 10

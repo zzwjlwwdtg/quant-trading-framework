@@ -16,7 +16,13 @@ from typing import Any
 
 from config import SIGNALS_DIR, is_sim_active_trading
 from notifier import logger
-from trading_contracts import BUY_ACTIONS, ORDER_ACTIONS, TRADE_WINDOWS, confidence_min
+from trading_contracts import (
+    BUY_ACTIONS,
+    ORDER_ACTIONS,
+    TRADE_WINDOWS,
+    confidence_min,
+    extended_chase_signals,
+)
 
 
 ALLOWED_VERDICTS = {"APPROVE", "HOLD", "CAUTION"}
@@ -193,6 +199,13 @@ def _sim_active_probe(decision: dict, market: dict | None, audit: dict) -> dict 
         return None
     stop_distance = (price - stop) / price
     if stop_distance > 0.18:
+        return None
+    chase_signals = extended_chase_signals(market)
+    if len(chase_signals) >= 2:
+        logger.warning(
+            "[claude-gate] SIM_ACTIVE probe blocked: extended BUY chase "
+            f"({', '.join(chase_signals)})"
+        )
         return None
 
     out = deepcopy(decision)
