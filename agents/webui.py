@@ -2707,7 +2707,7 @@ TICKER_TO_OPTION_SOURCE = {
     "LITE": "LITE",  # Lumentum 有 options chain
 }
 
-TICKER_OPTIONS_CACHE_SCHEMA = 2
+TICKER_OPTIONS_CACHE_SCHEMA = 3
 
 
 def _visible_option_sources() -> dict[str, str]:

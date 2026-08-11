@@ -25,6 +25,22 @@ def _chain(strike: float, oi: int, iv: float = 0.30) -> pd.DataFrame:
 
 
 class GammaFlipRegressionTests(unittest.TestCase):
+    def test_chain_without_open_interest_is_data_error_not_neutral_regime(self):
+        calls = _chain(105.0, 0)
+        puts = _chain(95.0, 0)
+
+        result = compute_gex(calls, puts, spot=100.0, days_to_expiry=30)
+
+        self.assertEqual(result, {"error": "insufficient_open_interest"})
+
+    def test_chain_without_usable_iv_is_data_error_not_neutral_regime(self):
+        calls = _chain(105.0, 1_000, iv=0.0)
+        puts = _chain(95.0, 1_000, iv=0.0)
+
+        result = compute_gex(calls, puts, spot=100.0, days_to_expiry=30)
+
+        self.assertEqual(result, {"error": "insufficient_gamma_inputs"})
+
     def test_flip_is_zero_crossing_of_repriced_total_gex(self):
         calls = _chain(105.0, 2_000)
         puts = _chain(95.0, 2_000)

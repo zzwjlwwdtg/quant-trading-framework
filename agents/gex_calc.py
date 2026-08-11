@@ -157,7 +157,8 @@ def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
       regime_hint,              # 一句话解释
     }
     """
-    if calls_df is None or calls_df.empty or spot <= 0 or days_to_expiry <= 0:
+    if (calls_df is None or calls_df.empty or puts_df is None
+            or puts_df.empty or spot <= 0 or days_to_expiry <= 0):
         return {"error": "insufficient_data"}
     T = days_to_expiry / 365.0
 
@@ -180,6 +181,8 @@ def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
             strikes.add(k)
 
     strikes = sorted(strikes)
+    if not strikes:
+        return {"error": "insufficient_open_interest"}
     by_strike = []
     for k in strikes:
         c_oi, c_iv = call_map.get(k, (0, 0))
@@ -213,6 +216,8 @@ def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
         })
 
     total_raw, gross_raw = _gex_at_spot(spot, strikes, call_map, put_map, T, r)
+    if gross_raw <= 0:
+        return {"error": "insufficient_gamma_inputs"}
     total = total_raw / 1e6
     gross = gross_raw / 1e6
     flip_strike = _find_repriced_gamma_flip(
