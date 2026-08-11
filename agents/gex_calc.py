@@ -6,9 +6,9 @@
 
 **GEX (Gamma Exposure) = dealer 持仓 gamma × spot^2 × 100 × OI**
 - 假设: dealer 与 retail 反向持仓 (retail 买 call/put → dealer 卖 → dealer short gamma)
-- **正 GEX** (spot > gamma_flip): dealer 卖涨买跌 → **抑波/pin 效应** → 卖 straddle/iron condor 有 edge
-- **负 GEX** (spot < gamma_flip): dealer 买涨卖跌 → **放波/加速** → 突破发动大波动
-- Flip 位是 regime 转换点，跨越即 vol regime shift
+- **正 GEX** (当前整条链净 GEX > 0): dealer 对冲流通常抑制波动
+- **负 GEX** (当前整条链净 GEX < 0): dealer 对冲流可能放大波动
+- Flip 位通过“假设标的价格变化后重新计算整条链 GEX”求零交叉；没有交叉时不伪造 flip
 
 **IV Regime**
 - IV Premium = ATM IV / 60d Realized Vol - 1
@@ -59,6 +59,82 @@ def _bs_delta_put(S: float, K: float, T: float, r: float, sigma: float) -> float
     return _bs_delta_call(S, K, T, r, sigma) - 1.0
 
 
+def _gex_at_spot(assumed_spot: float, strikes: list[float], call_map: dict,
+                 put_map: dict, T: float, r: float) -> tuple[float, float]:
+    """Return (net, gross) GEX dollars after repricing the whole chain."""
+    norm = assumed_spot * assumed_spot * 100 * 0.01
+    net = 0.0
+    gross = 0.0
+    for strike in strikes:
+        call_oi, call_iv = call_map.get(strike, (0, 0))
+        put_oi, put_iv = put_map.get(strike, (0, 0))
+        call_gex = (
+            call_oi * _bs_gamma(assumed_spot, strike, T, r, call_iv) * norm
+            if call_iv > 0 else 0.0
+        )
+        put_gex = (
+            put_oi * _bs_gamma(assumed_spot, strike, T, r, put_iv) * norm
+            if put_iv > 0 else 0.0
+        )
+        net += call_gex - put_gex
+        gross += call_gex + put_gex
+    return net, gross
+
+
+def _find_repriced_gamma_flip(strikes: list[float], call_map: dict,
+                              put_map: dict, spot: float, T: float,
+                              r: float) -> Optional[float]:
+    """Find the nearest whole-chain GEX zero crossing as spot changes.
+
+    A gamma flip is a root of total GEX *as a function of the underlying
+    price*.  Accumulating exposure from the lowest option strike instead
+    measures a strike-distribution subtotal and systematically aliases the
+    lower edge of a truncated chain as a fake flip.
+    """
+    if len(strikes) < 2:
+        return None
+    lower, upper = min(strikes), max(strikes)
+    if lower <= 0 or upper <= lower:
+        return None
+
+    # Dense price grid plus exact strikes/current spot.  The caller normally
+    # supplies the liquid +/-10% chain, so do not extrapolate beyond evidence.
+    steps = max(160, len(strikes) * 4)
+    grid = {
+        lower + (upper - lower) * index / steps
+        for index in range(steps + 1)
+    }
+    grid.update(strikes)
+    if lower <= spot <= upper:
+        grid.add(spot)
+    points = sorted(grid)
+    values = [
+        _gex_at_spot(price, strikes, call_map, put_map, T, r)[0]
+        for price in points
+    ]
+    scale = max((abs(value) for value in values), default=0.0)
+    if scale <= 0:
+        return spot if lower <= spot <= upper else None
+    zero_tol = scale * 1e-9
+
+    roots: list[float] = []
+    for index, (price, value) in enumerate(zip(points, values)):
+        if abs(value) <= zero_tol:
+            roots.append(price)
+        if index == 0:
+            continue
+        left_price, left_value = points[index - 1], values[index - 1]
+        if left_value * value < 0:
+            # Linear interpolation is stable on this dense grid and avoids
+            # reporting a nearby listed strike as though it were the root.
+            fraction = -left_value / (value - left_value)
+            roots.append(left_price + fraction * (price - left_price))
+
+    if not roots:
+        return None
+    return round(min(roots, key=lambda root: abs(root - spot)), 2)
+
+
 def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
                 r: float = RISK_FREE_RATE) -> dict:
     """全 strike GEX 分析 + gamma flip 定位.
@@ -74,7 +150,7 @@ def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
     {
       total_gex_millions,       # $M per 1% underlying move
       by_strike: [{strike, call_gex, put_gex, net_gex_m}, ...],
-      gamma_flip_strike,        # cumulative GEX 从负→正的价位
+      gamma_flip_strike,        # 整条链随假设 spot 重定价后的净 GEX 零交叉
       spot_vs_flip_pct,         # (spot - flip) / spot * 100
       regime,                   # "positive_pin" | "negative_squeeze" | "at_flip"
       regime_zh,
@@ -136,31 +212,24 @@ def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
             "net_gex_m":  round(net / 1e6, 3),
         })
 
-    total = sum(s["net_gex_m"] for s in by_strike)
+    total_raw, gross_raw = _gex_at_spot(spot, strikes, call_map, put_map, T, r)
+    total = total_raw / 1e6
+    gross = gross_raw / 1e6
+    flip_strike = _find_repriced_gamma_flip(
+        strikes, call_map, put_map, spot, T, r
+    )
+    spot_vs_flip_pct = (
+        (spot - flip_strike) / spot * 100
+        if flip_strike is not None and spot else None
+    )
 
-    # Gamma flip = cumulative net GEX 从负→正 (或反向) 的 strike
-    # 从最低 strike 累积
-    cum = 0.0
-    flip_strike = None
-    prev_cum = 0.0
-    for s in by_strike:
-        prev_cum = cum
-        cum += s["net_gex_m"]
-        if flip_strike is None and prev_cum <= 0 < cum:
-            flip_strike = s["strike"]
-        elif flip_strike is None and prev_cum >= 0 > cum:
-            flip_strike = s["strike"]
-    # fallback: 用 spot 附近最大 |cum_shift| 的 strike
-    if flip_strike is None and by_strike:
-        # 找 net_gex_m 最大 abs 的 strike 作为"效果中心"
-        flip_strike = max(by_strike, key=lambda s: abs(s["net_gex_m"]))["strike"]
-
-    spot_vs_flip_pct = ((spot - flip_strike) / spot * 100) if (flip_strike and spot) else 0
-
-    if abs(spot_vs_flip_pct) < 0.5:
+    # Sign of current whole-chain GEX defines the current regime.  A 1% net
+    # imbalance versus gross exposure is treated as neutral/transition noise.
+    net_ratio = total_raw / gross_raw if gross_raw > 0 else 0.0
+    if gross_raw <= 0 or abs(net_ratio) <= 0.01:
         regime, regime_zh = "at_flip", "临界点 (regime 转换中)"
-        regime_hint = "现价靠近 gamma flip · 突破一边就 vol 反转"
-    elif spot > flip_strike:
+        regime_hint = "整条链净 GEX 接近零 · 等待方向确认"
+    elif total_raw > 0:
         regime, regime_zh = "positive_pin", "正 GEX 抑波区"
         regime_hint = "dealer 卖涨买跌 → 短期区间震荡 · 卖 straddle/iron condor 有 edge"
     else:
@@ -169,9 +238,13 @@ def compute_gex(calls_df, puts_df, spot: float, days_to_expiry: int,
 
     return {
         "total_gex_millions":  round(total, 2),
+        "gross_gex_millions":  round(gross, 2),
+        "net_gex_ratio_pct":   round(net_ratio * 100, 2),
         "by_strike":           by_strike,
         "gamma_flip_strike":   flip_strike,
-        "spot_vs_flip_pct":    round(spot_vs_flip_pct, 2),
+        "gamma_flip_method":   "repriced_total_gex",
+        "gamma_flip_status":   "found" if flip_strike is not None else "not_found_in_chain_range",
+        "spot_vs_flip_pct":    round(spot_vs_flip_pct, 2) if spot_vs_flip_pct is not None else None,
         "regime":              regime,
         "regime_zh":           regime_zh,
         "regime_hint":         regime_hint,
@@ -291,10 +364,11 @@ def generate_verdict(gex: dict, iv: dict, skew: dict, spot: float,
 
     # === Risks ===
     if gex.get("regime") == "negative_squeeze":
-        pct = gex.get("spot_vs_flip_pct", 0)
+        flip = gex.get("gamma_flip_strike")
+        trigger = f"重新站上 flip ${flip}" if flip is not None else "净 GEX 重新转正"
         risks.append({
             "level": "high",
-            "text":  f"负 GEX 区，跌破 flip ${gex.get('gamma_flip_strike')} ({pct:+.1f}%) 加速下跌",
+            "text":  f"当前整条链净 GEX 为负 · 波动容易被放大 · 等待{trigger}",
         })
 
     if iv.get("regime") == "crush_risk":
@@ -322,16 +396,20 @@ def generate_verdict(gex: dict, iv: dict, skew: dict, spot: float,
     if gex.get("regime") == "positive_pin":
         risks_none_in_this = not any(r["level"] == "high" for r in risks)
         if risks_none_in_this:
+            flip = gex.get("gamma_flip_strike")
+            structure = f"flip ${flip} 有效" if flip is not None else "当前净 GEX 为正"
             opportunities.append({
                 "level": "medium",
-                "text":  f"正 GEX pin · flip ${gex.get('gamma_flip_strike')} 稳固 · 卖 straddle/iron condor 有 edge",
+                "text":  f"正 GEX 抑波 · {structure} · 区间策略有 edge",
             })
 
     if gex.get("regime") == "negative_squeeze":
         # Below flip: 反弹突破 flip 是关键信号
+        flip = gex.get("gamma_flip_strike")
+        trigger = f"突破 flip ${flip} 上方" if flip is not None else "净 GEX 重新转正"
         opportunities.append({
             "level": "low",
-            "text":  f"若突破 flip ${gex.get('gamma_flip_strike')} 上方 · dealer 转 long gamma 抑波 · 可轻仓追多",
+            "text":  f"若{trigger} · 波动放大风险下降 · 可重新评估轻仓追多",
         })
 
     if iv.get("regime") == "cheap":
@@ -385,27 +463,48 @@ def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
                             next_earnings_days: Optional[int] = None) -> dict:
     """Stock 持仓视角: 3 类风险 + 3 类机会 + 关键价位 (完全大白话，零期权术语)."""
     flip = gex.get("gamma_flip_strike")
-    spot_vs_flip = gex.get("spot_vs_flip_pct", 0)
+    spot_vs_flip = gex.get("spot_vs_flip_pct")
+    has_flip = isinstance(flip, (int, float)) and isinstance(spot_vs_flip, (int, float))
     gex_regime = gex.get("regime", "")
     iv_regime  = iv.get("regime", "")
     iv_premium = iv.get("iv_premium_pct", 0) or 0
     skew_pct   = skew.get("skew_pct", 0) or 0
     skew_regime = skew.get("regime", "")
 
+    put_dist = (
+        (spot - put_wall_strike) / spot * 100
+        if put_wall_strike is not None and 0 < put_wall_strike <= spot else None
+    )
+    call_dist = (
+        (call_wall_strike - spot) / spot * 100
+        if call_wall_strike is not None and call_wall_strike >= spot > 0 else None
+    )
+    near_support = put_dist is not None and put_dist <= 3.0
+    tight_support = put_dist is not None and put_dist <= 2.0
+    near_resistance = call_dist is not None and call_dist <= 1.5
+
     # === 3 类风险 (大白话版) ===
     # 风险 A: 短期跌破
     if gex_regime == "negative_squeeze":
+        recovery = (
+            f"重新站上 ${call_wall_strike} 后再确认"
+            if call_wall_strike is not None else "等待净 GEX 重新转正"
+        )
         breakdown = {"level": "high",
-                     "reason": f"现价已跌破关键位 ${flip} · 一旦继续跌，华尔街对冲盘会跟着抛售，跌得更快"}
-    elif gex_regime == "positive_pin" and spot_vs_flip < 2:
+                     "reason": f"当前整条链净 GEX 为负 · 下跌时对冲流可能放大波动 · {recovery}"}
+    elif gex_regime == "at_flip":
         breakdown = {"level": "mid",
-                     "reason": f"现价刚在关键位 ${flip} 上方 · 缓冲只有 {spot_vs_flip:.1f}%，跌破就没保护"}
+                     "reason": "当前整条链多空 GEX 接近抵消 · 处于方向转换区，等待价格与成交确认"}
+    elif tight_support:
+        breakdown = {"level": "mid",
+                     "reason": (f"现价距下方关键支撑 ${put_wall_strike} 仅 {put_dist:.1f}% · "
+                                "守住可反弹，跌破则下行风险明显增加")}
     elif skew_regime == "steep_fear" and put_wall_strike:
         breakdown = {"level": "mid",
                      "reason": f"市场恐慌情绪已定价（保险费涨了 {skew_pct:.1f}%）· 一旦跌破 ${put_wall_strike}，抛售会加剧"}
     else:
         breakdown = {"level": "low",
-                     "reason": f"现价在关键位 ${flip} 上方 · 华尔街对冲盘需要在跌的时候买入，会自动帮你托住底"}
+                     "reason": "当前整条链净 GEX 为正 · 对冲流更可能抑制短线波动，但仍需配合价格支撑"}
 
     # 风险 B: 事件风险
     if next_earnings_days is not None and next_earnings_days < 7:
@@ -422,64 +521,76 @@ def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
                       "reason": "近期无财报/大事件 · 期权保险费正常 · 不会有突发跳空"}
 
     # 风险 C: 追高
-    if spot_vs_flip > 8 and gex_regime == "positive_pin":
-        chase = {"level": "high",
-                 "reason": (f"现价已比关键位 ${flip} 高 +{spot_vs_flip:.1f}% · "
-                            f"华尔街对冲盘为了平衡持仓会主动卖股票压价，把价格拉回 ${flip} · "
-                            f"你现在追进去 = 涨的空间少 · 回落到 ${flip} 的可能大")}
-    elif spot_vs_flip > 5:
+    if near_resistance:
         chase = {"level": "mid",
-                 "reason": f"现价比关键位 ${flip} 高 +{spot_vs_flip:.1f}% · 还能涨但空间有限 · 别加满仓，留点子弹回踩再补"}
-    elif spot_vs_flip < -3:
-        chase = {"level": "low",
-                 "reason": f"现价在关键位 ${flip} 下方 · 涨回到 ${flip} 的空间还有 {abs(spot_vs_flip):.1f}% · 追多不算高位"}
+                 "reason": (f"上方关键阻力 ${call_wall_strike} 仅距现价 {call_dist:.1f}% · "
+                            "未放量突破前不宜追满仓")}
+    elif has_flip and spot_vs_flip > 8 and gex_regime == "positive_pin":
+        chase = {"level": "mid",
+                 "reason": (f"现价距模型零交叉 ${flip} 已有 +{spot_vs_flip:.1f}% · "
+                            "这表示缓冲较大，但零交叉不是回调目标；结合上方阻力决定是否追价")}
+    elif put_dist is not None and put_dist > 7:
+        chase = {"level": "mid",
+                 "reason": (f"最近确认的下方支撑 ${put_wall_strike} 距离 {put_dist:.1f}% · "
+                            "现价缺少近端保护，追入时应缩小仓位")}
     else:
         chase = {"level": "low",
-                 "reason": f"现价靠近关键位 ${flip} · 上下空间都合理 · 不算追高"}
+                 "reason": "现价没有明显远离已确认支撑，也未紧贴上方强阻力 · 暂无追高警报"}
 
     # === 3 类机会 (大白话版) ===
     # 机会 A: 短期买入时机
-    if gex_regime == "positive_pin" and iv_regime in ("cheap", "normal") and skew_regime != "steep_fear":
-        if spot_vs_flip > 5:
-            buy_now = {"level": "wait",
-                       "reason": (f"下方有华尔街对冲盘的支撑 + 期权保险便宜 · 结构友好 · "
-                                  f"但现价太高（比关键位 ${flip} 高 +{spot_vs_flip:.1f}%），等回落到 ${flip} 附近再买更安全")}
-        else:
-            buy_now = {"level": "good",
-                       "reason": f"现价接近关键位 ${flip} + 下方对冲盘会托底 + 期权保险便宜 · 买入下跌空间有限，涨的空间大"}
-    elif gex_regime == "negative_squeeze":
+    if gex_regime == "negative_squeeze":
         buy_now = {"level": "none",
-                   "reason": f"现价已跌破关键位 ${flip} · 对冲盘会追跌 · 现在买等于接刀，等价格站稳 ${flip} 再动"}
+                   "reason": "当前净 GEX 为负，价格波动容易被放大 · 等重新站上上方关键位并确认后再买"}
+    elif gex_regime == "at_flip":
+        buy_now = {"level": "wait",
+                   "reason": "当前多空 GEX 接近抵消 · 等方向确认，避免在转换区盲目接刀或追涨"}
     elif iv_regime == "crush_risk":
         buy_now = {"level": "wait",
-                   "reason": "期权保险费已涨很贵 · 意味着市场预期大波动 · 等事件（财报/CPI）过后价格回踩再买"}
+                   "reason": "期权保险费已涨很贵 · 市场预期大波动 · 等事件过后价格重新确认"}
+    elif gex_regime == "positive_pin" and iv_regime in ("cheap", "normal") and skew_regime != "steep_fear":
+        if near_support:
+            buy_now = {"level": "good",
+                       "reason": (f"当前净 GEX 为正且现价距下方支撑 ${put_wall_strike} 仅 {put_dist:.1f}% · "
+                                  "可小仓试入，并把跌破该支撑作为失效条件")}
+        elif has_flip and abs(spot_vs_flip) <= 3:
+            buy_now = {"level": "good",
+                       "reason": (f"当前净 GEX 为正且现价距模型零交叉 ${flip} 仅 {abs(spot_vs_flip):.1f}% · "
+                                  "可小仓试入，等待价格确认")}
+        elif near_resistance:
+            buy_now = {"level": "wait",
+                       "reason": f"结构偏稳，但上方 ${call_wall_strike} 阻力太近 · 等放量突破后再追"}
+        else:
+            buy_now = {"level": "wait",
+                       "reason": "净 GEX 偏正但现价不靠近明确支撑 · 等回踩 Put 墙或突破 Call 墙"}
     else:
         buy_now = {"level": "wait",
                    "reason": "结构不明确 · 没有明显的优势买点 · 等更清晰的信号"}
 
     # 机会 B: 加仓时机
-    if gex_regime == "positive_pin" and spot_vs_flip < 3 and iv_regime == "cheap":
+    if (gex_regime == "positive_pin" and tight_support
+            and iv_regime in ("cheap", "normal") and skew_regime != "steep_fear"):
         add_more = {"level": "good",
-                    "reason": f"现价接近关键位 ${flip} + 下方托底稳固 · 加仓风险有限（对冲盘会帮你护住 downside）"}
-    elif flip and spot < flip:
+                    "reason": (f"现价距下方支撑 ${put_wall_strike} 仅 {put_dist:.1f}% 且净 GEX 为正 · "
+                               "适合分批加仓，跌破支撑即停止")}
+    elif gex_regime == "negative_squeeze":
         add_more = {"level": "wait",
-                    "reason": f"现价 {abs(spot_vs_flip):.1f}% 低于关键位 ${flip} · 等价格站上 ${flip} 再加，避免抄底失败"}
+                    "reason": "当前净 GEX 为负 · 暂不加仓，等待结构转正"}
     else:
         add_more = {"level": "wait",
-                    "reason": "没有明确加仓价位 · 等价格回到关键位附近再考虑"}
+                    "reason": "尚未同时满足正 GEX 与近端支撑条件 · 等回踩支撑再考虑"}
 
     # 机会 C: 减仓时机
     if next_earnings_days is not None and next_earnings_days < 7:
         reduce = {"level": "good",
                   "reason": f"财报还有 {next_earnings_days} 天 · 建议先减 20-30% 锁利 · 财报后按结果再补仓"}
-    elif gex_regime == "positive_pin" and spot_vs_flip > 8:
-        reduce = {"level": "wait",
-                  "reason": (f"现价已比关键位 ${flip} 高 +{spot_vs_flip:.1f}% · "
-                             f"如果再涨 3-5% 就考虑减一半锁利 · "
-                             f"因为对冲盘会把价格拉回 ${flip}")}
-    elif gex_regime == "negative_squeeze" and spot < flip:
+    elif gex_regime == "negative_squeeze":
         reduce = {"level": "good",
-                  "reason": f"现价已跌破关键位 ${flip} · 对冲盘会跟着抛 · 建议减 30-50% 止损"}
+                  "reason": "当前净 GEX 为负，波动可能被放大 · 已有仓位应减小风险，等结构转正再补"}
+    elif near_resistance:
+        reduce = {"level": "wait",
+                  "reason": (f"现价接近上方阻力 ${call_wall_strike} · 暂未形成卖出信号；"
+                             "若冲高失败并转弱，再分批锁利")}
     else:
         reduce = {"level": "none",
                   "reason": "没有卖出信号 · 继续持仓"}
@@ -487,9 +598,19 @@ def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
     # === 关键价位 (大白话版) ===
     break_watch = None
     if gex_regime == "positive_pin":
-        break_watch = f"⚠ 跌破 ${flip} → 华尔街对冲盘会从「买跌」变「卖跌」，下跌会加速 · 这时候立即减仓"
+        if put_wall_strike is not None:
+            break_watch = f"⚠ 跌破下方支撑 ${put_wall_strike} → 当前正向结构失效 · 停止加仓并重新评估"
+        elif flip is not None:
+            break_watch = f"⚠ 跌破模型零交叉 ${flip} → 净 GEX 可能转负 · 重新评估仓位"
     elif gex_regime == "negative_squeeze":
-        break_watch = f"✓ 突破 ${flip} → 对冲盘会从「卖涨」变「买涨」，涨势会加速 · 这时候可以加仓"
+        if call_wall_strike is not None:
+            break_watch = f"✓ 重新站上上方关键位 ${call_wall_strike} 且净 GEX 转正 → 才考虑恢复加仓"
+        elif flip is not None:
+            break_watch = f"✓ 重新站上模型零交叉 ${flip} 且净 GEX 转正 → 再考虑恢复加仓"
+        else:
+            break_watch = "✓ 等整条链净 GEX 重新转正后再考虑恢复加仓"
+    elif gex_regime == "at_flip":
+        break_watch = "⚠ 当前处于 GEX 转换区 · 等价格突破 Call 墙或跌破 Put 墙后再跟随"
 
     key_prices = {
         "upper_resistance": call_wall_strike,
@@ -501,7 +622,10 @@ def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
     # === 综合 summary (1 line) ===
     high_risks = sum(1 for r in [breakdown, event_risk, chase] if r["level"] == "high")
     good_opps  = sum(1 for o in [buy_now, add_more, reduce] if o["level"] == "good")
-    if high_risks >= 2:
+    if gex_regime == "negative_squeeze":
+        summary = "⚠ 放波风险 · 等重新站稳/考虑减仓"
+        summary_cls = "bad"
+    elif high_risks >= 2:
         summary = "⚠ 高风险窗口 · 减仓/避免追高"
         summary_cls = "bad"
     elif high_risks == 1 and good_opps == 0:

@@ -83,6 +83,7 @@ class DashboardAssetProfileTests(unittest.TestCase):
                     "ts": "old",
                     "tickers": {"TQQQ": {"underlying": "QQQ", "spot": 100}},
                     "data_source": "old",
+                    "cache_schema": webui.TICKER_OPTIONS_CACHE_SCHEMA,
                 }),
                 encoding="utf-8",
             )
