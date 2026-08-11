@@ -13,8 +13,91 @@ moomoo_data.py — openD 期权链 + K 线双轨适配层
 """
 from __future__ import annotations
 
+import logging
+import threading
+import time
+from collections import deque
 from datetime import datetime, timedelta
 from typing import Optional
+
+
+logger = logging.getLogger(__name__)
+
+# OpenD official limit for get_option_chain: 10 requests per rolling 30s.
+# Keep this limiter process-wide because one dashboard refresh walks the whole
+# tracked universe sequentially.  The small padding avoids boundary jitter
+# between Python's monotonic clock and the OpenD server clock.
+_OPTION_CHAIN_RATE_LIMIT = 10
+_OPTION_CHAIN_WINDOW_SEC = 30.0
+_OPTION_CHAIN_RATE_PADDING_SEC = 0.25
+_option_chain_request_times: deque[float] = deque()
+_option_chain_rate_lock = threading.Lock()
+_option_chain_last_error: dict[str, dict] = {}
+_option_chain_error_lock = threading.Lock()
+
+
+def _wait_for_option_chain_slot(now_fn=time.monotonic,
+                                sleep_fn=time.sleep) -> float:
+    """Reserve one OpenD option-chain request inside the rolling quota."""
+    total_waited = 0.0
+    while True:
+        with _option_chain_rate_lock:
+            now = now_fn()
+            while (_option_chain_request_times
+                   and now - _option_chain_request_times[0] >= _OPTION_CHAIN_WINDOW_SEC):
+                _option_chain_request_times.popleft()
+            if len(_option_chain_request_times) < _OPTION_CHAIN_RATE_LIMIT:
+                _option_chain_request_times.append(now)
+                return round(total_waited, 6)
+            wait_for = (
+                _OPTION_CHAIN_WINDOW_SEC
+                - (now - _option_chain_request_times[0])
+                + _OPTION_CHAIN_RATE_PADDING_SEC
+            )
+        wait_for = max(wait_for, _OPTION_CHAIN_RATE_PADDING_SEC)
+        sleep_fn(wait_for)
+        total_waited += wait_for
+
+
+def _reset_option_chain_rate_limiter_for_tests() -> None:
+    with _option_chain_rate_lock:
+        _option_chain_request_times.clear()
+
+
+def _is_option_chain_rate_limit_error(value) -> bool:
+    text = str(value or "").lower()
+    return any(marker in text for marker in (
+        "too many requests",
+        "maximum of 10 requests",
+        "frequency limit",
+        "rate limit",
+        "频率",
+        "頻率",
+    ))
+
+
+def _set_option_chain_error(ticker: str, stage: str, detail) -> None:
+    payload = {
+        "ticker": ticker.upper(),
+        "stage": stage,
+        "detail": str(detail or "unknown")[:240],
+        "at": datetime.now().isoformat(),
+    }
+    with _option_chain_error_lock:
+        _option_chain_last_error[ticker.upper()] = payload
+    logger.warning("OpenD option chain failed for %s at %s: %s",
+                   ticker.upper(), stage, payload["detail"])
+
+
+def get_option_chain_last_error(ticker: str) -> Optional[dict]:
+    with _option_chain_error_lock:
+        value = _option_chain_last_error.get(ticker.upper())
+        return dict(value) if value else None
+
+
+def _clear_option_chain_error(ticker: str) -> None:
+    with _option_chain_error_lock:
+        _option_chain_last_error.pop(ticker.upper(), None)
 
 
 def to_openD_code(ticker: str) -> Optional[str]:
@@ -169,6 +252,7 @@ def get_option_chain_via_openD(ticker: str, expiry: str | None = None) -> Option
         # 1) 拉全部到期日 → 筛选未来 60 天
         ret_e, exp_df = ctx.get_option_expiration_date(code)
         if ret_e != RET_OK or exp_df is None or exp_df.empty:
+            _set_option_chain_error(ticker, "expiration_dates", exp_df)
             return None
         today = datetime.now().date()
         exp_df = exp_df.copy()
@@ -177,6 +261,7 @@ def get_option_chain_via_openD(ticker: str, expiry: str | None = None) -> Option
         )
         exp_df = exp_df[(exp_df["_days"] >= 0) & (exp_df["_days"] <= 60)].sort_values("_days")
         if exp_df.empty:
+            _set_option_chain_error(ticker, "expiration_window", "no expiry within 60 days")
             return None
         if expiry is None:
             # 优先选 ≥5 天到期的（跳过 0DTE/1DTE 低 OI 合约，图像意义大）
@@ -184,11 +269,28 @@ def get_option_chain_via_openD(ticker: str, expiry: str | None = None) -> Option
             expiry = good["strike_time"].iloc[0] if not good.empty else exp_df["strike_time"].iloc[0]
 
         # 2) 拉这个到期日的完整链
-        ret_c, chain = ctx.get_option_chain(
-            code=code, start=expiry, end=expiry,
-            option_cond_type=OptionCondType.ALL,
-        )
+        waited_sec = 0.0
+        ret_c, chain = None, None
+        for attempt in range(2):
+            waited_sec += _wait_for_option_chain_slot()
+            ret_c, chain = ctx.get_option_chain(
+                code=code, start=expiry, end=expiry,
+                option_cond_type=OptionCondType.ALL,
+            )
+            if ret_c == RET_OK:
+                break
+            if attempt == 0 and _is_option_chain_rate_limit_error(chain):
+                # Another process may have consumed the server-side quota.
+                # Wait one complete window, then retry once before fallback.
+                retry_wait = _OPTION_CHAIN_WINDOW_SEC + _OPTION_CHAIN_RATE_PADDING_SEC
+                logger.info("OpenD option-chain quota reached for %s; retrying in %.2fs",
+                            ticker.upper(), retry_wait)
+                time.sleep(retry_wait)
+                waited_sec += retry_wait
+                continue
+            break
         if ret_c != RET_OK or chain is None or chain.empty:
+            _set_option_chain_error(ticker, "option_chain", chain)
             return None
 
         # openD 结构: 每行含 code(期权代码)/option_type(CALL/PUT)/strike_price/name...
@@ -201,6 +303,7 @@ def get_option_chain_via_openD(ticker: str, expiry: str | None = None) -> Option
             if ret_s == RET_OK and snap is not None and not snap.empty:
                 snaps.append(snap)
         if not snaps:
+            _set_option_chain_error(ticker, "option_snapshots", "no snapshots returned")
             return None
         snap_all = pd.concat(snaps, ignore_index=True)
         # openD 期权字段是 option_open_interest / option_implied_volatility 等（前缀 option_）
@@ -231,9 +334,16 @@ def get_option_chain_via_openD(ticker: str, expiry: str | None = None) -> Option
         cols = base_cols + greek_cols
         calls = merged[merged["option_type"] == "CALL"][cols].copy()
         puts  = merged[merged["option_type"] == "PUT"][cols].copy()
-        return {"expiry": expiry, "calls": calls, "puts": puts,
-                "has_greeks": bool(greek_cols)}
-    except Exception:
+        _clear_option_chain_error(ticker)
+        return {
+            "expiry": expiry,
+            "calls": calls,
+            "puts": puts,
+            "has_greeks": bool(greek_cols),
+            "rate_limit_wait_sec": round(waited_sec, 2),
+        }
+    except Exception as exc:
+        _set_option_chain_error(ticker, "exception", exc)
         return None
 
 

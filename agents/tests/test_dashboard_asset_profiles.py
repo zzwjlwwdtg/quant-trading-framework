@@ -104,6 +104,103 @@ class DashboardAssetProfileTests(unittest.TestCase):
         self.assertEqual(set(result["tickers"]), {"TQQQ", "LITE"})
         self.assertEqual(result["cache_contract"], expected_contract)
 
+    def test_expired_same_contract_recomputes_full_option_universe(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(webui, "TICKER_TO_OPTION_SOURCE", {"TQQQ": "QQQ"}):
+            cache_dir = Path(tmp)
+            contract = webui._ticker_options_cache_contract()
+            (cache_dir / "ticker_options.json").write_text(
+                json.dumps({
+                    "ts": "old",
+                    "tickers": {"TQQQ": {"underlying": "QQQ", "spot": 100}},
+                    "cache_schema": webui.TICKER_OPTIONS_CACHE_SCHEMA,
+                    "cache_contract": contract,
+                }),
+                encoding="utf-8",
+            )
+            refreshed = {
+                "ts": "new",
+                "tickers": {"TQQQ": {"underlying": "QQQ", "spot": 101}},
+                "cache_schema": webui.TICKER_OPTIONS_CACHE_SCHEMA,
+                "cache_contract": contract,
+            }
+            with patch.object(webui, "_WEBUI_CACHE_DIR", cache_dir), \
+                 patch.object(webui, "_compute_ticker_options", return_value=refreshed) as compute:
+                result = webui._compute_ticker_options_incremental()
+
+        compute.assert_called_once_with({"TQQQ": "QQQ"})
+        self.assertEqual(result["ts"], "new")
+        self.assertEqual(result["tickers"]["TQQQ"]["spot"], 101)
+
+    def test_same_expiry_retains_last_good_gex_when_refresh_lacks_oi(self):
+        previous = {
+            "ts": "old-ts",
+            "tickers": {
+                "AAPL": {
+                    "underlying": "AAPL",
+                    "expiry": "2026-08-21",
+                    "gex_analysis": {
+                        "gex": {"total_gex_millions": 8.0},
+                        "stock_verdict": {"summary": "valid"},
+                    },
+                }
+            },
+        }
+        refreshed = {
+            "ts": "new-ts",
+            "tickers": {
+                "AAPL": {
+                    "underlying": "AAPL",
+                    "expiry": "2026-08-21",
+                    "gex_analysis": {"error": "insufficient_open_interest"},
+                }
+            },
+        }
+
+        result = webui._retain_last_known_good_gex(previous, refreshed)
+        current = result["tickers"]["AAPL"]
+
+        self.assertEqual(current["gex_analysis"]["stock_verdict"]["summary"], "valid")
+        self.assertTrue(current["gex_analysis"]["stale"])
+        self.assertEqual(current["gex_analysis"]["stale_reason"], "insufficient_open_interest")
+        self.assertEqual(current["gex_analysis"]["stale_as_of"], "old-ts")
+        self.assertEqual(
+            refreshed["tickers"]["AAPL"]["gex_analysis"],
+            {"error": "insufficient_open_interest"},
+        )
+
+    def test_changed_expiry_never_reuses_old_gex(self):
+        previous = {
+            "ts": "old-ts",
+            "tickers": {
+                "AAPL": {
+                    "underlying": "AAPL",
+                    "expiry": "2026-08-21",
+                    "gex_analysis": {
+                        "gex": {"total_gex_millions": 8.0},
+                        "stock_verdict": {"summary": "valid"},
+                    },
+                }
+            },
+        }
+        refreshed = {
+            "ts": "new-ts",
+            "tickers": {
+                "AAPL": {
+                    "underlying": "AAPL",
+                    "expiry": "2026-08-28",
+                    "gex_analysis": {"error": "insufficient_open_interest"},
+                }
+            },
+        }
+
+        result = webui._retain_last_known_good_gex(previous, refreshed)
+
+        self.assertEqual(
+            result["tickers"]["AAPL"]["gex_analysis"],
+            {"error": "insufficient_open_interest"},
+        )
+
     def test_fundamentals_api_obeys_the_same_macro_capability_contract(self):
         for ticker in ("GLD", "SHY", "IEI"):
             with self.subTest(ticker=ticker):
@@ -186,6 +283,10 @@ class DashboardMarkupContractTests(unittest.TestCase):
         self.assertIn("showAI ? renderTickerAI(t, context) : ''", self.html)
         self.assertIn("const fundamentals = showFundamentals ?", self.html)
         self.assertIn("const supplyChain = showSupplyChain ?", self.html)
+
+    def test_stale_gex_is_visibly_disclosed(self):
+        self.assertIn("GEX 为上一份有效数据", self.html)
+        self.assertIn("ga.stale_reason", self.html)
 
 
 if __name__ == "__main__":

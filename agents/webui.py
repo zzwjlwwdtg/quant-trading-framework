@@ -20,6 +20,7 @@ API 端点：
 from __future__ import annotations
 
 import ctypes
+import copy
 import hashlib
 import json
 import os
@@ -2707,7 +2708,7 @@ TICKER_TO_OPTION_SOURCE = {
     "LITE": "LITE",  # Lumentum 有 options chain
 }
 
-TICKER_OPTIONS_CACHE_SCHEMA = 3
+TICKER_OPTIONS_CACHE_SCHEMA = 4
 
 
 def _visible_option_sources() -> dict[str, str]:
@@ -2957,11 +2958,16 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
     import yfinance as yf
     # 检查 openD 可用性（每次 refresh 只查一次）
     try:
-        from moomoo_data import get_option_chain_via_openD, health_check
+        from moomoo_data import (
+            get_option_chain_last_error,
+            get_option_chain_via_openD,
+            health_check,
+        )
         openD_ok = health_check().get("available", False)
     except Exception:
         openD_ok = False
         get_option_chain_via_openD = None
+        get_option_chain_last_error = None
 
     out = {
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -2980,6 +2986,8 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
         try:
             t = yf.Ticker(underlying)
             source_used = "yfinance"
+            source_wait_sec = 0.0
+            opend_fallback_error = None
             # 优先尝试 openD
             openD_chain = None
             if openD_ok and get_option_chain_via_openD:
@@ -2989,7 +2997,10 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 calls = openD_chain["calls"].copy()
                 puts  = openD_chain["puts"].copy()
                 source_used = "openD"
+                source_wait_sec = float(openD_chain.get("rate_limit_wait_sec", 0) or 0)
             else:
+                if get_option_chain_last_error:
+                    opend_fallback_error = get_option_chain_last_error(underlying)
                 expiries = list(t.options or [])
                 if not expiries:
                     out["tickers"][tk] = {"underlying": underlying, "error": "no_option_chain"}
@@ -3238,6 +3249,8 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 "call_bands_above": call_bands_above,
                 "max_pain":         best_s,
                 "source":           source_used,
+                "source_wait_sec":  source_wait_sec,
+                "opend_fallback_error": opend_fallback_error,
                 # 期权结构综合读 (GEX + IV Regime + Skew + Verdict)
                 "gex_analysis":     gex_analysis,
                 **analysis,
@@ -3248,8 +3261,58 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
     return out
 
 
+def _has_valid_gex(ticker_payload: dict) -> bool:
+    analysis = ticker_payload.get("gex_analysis")
+    return bool(
+        isinstance(analysis, dict)
+        and not analysis.get("error")
+        and isinstance(analysis.get("gex"), dict)
+        and isinstance(analysis.get("stock_verdict"), dict)
+    )
+
+
+def _retain_last_known_good_gex(previous: dict, refreshed: dict) -> dict:
+    """Keep valid same-expiry GEX when a transient upstream refresh lacks OI.
+
+    Walls/volume and price remain fresh.  Only the GEX block is retained, and
+    it is explicitly marked stale so the UI never presents it as current.
+    """
+    result = copy.deepcopy(refreshed)
+    old_tickers = previous.get("tickers") if isinstance(previous, dict) else {}
+    new_tickers = result.get("tickers") if isinstance(result, dict) else {}
+    if not isinstance(old_tickers, dict) or not isinstance(new_tickers, dict):
+        return result
+
+    for ticker, current in new_tickers.items():
+        if not isinstance(current, dict):
+            continue
+        current_analysis = current.get("gex_analysis")
+        current_error = (
+            current_analysis.get("error")
+            if isinstance(current_analysis, dict) else None
+        )
+        if not current_error:
+            continue
+        old = old_tickers.get(ticker)
+        if not isinstance(old, dict) or not _has_valid_gex(old):
+            continue
+        if (old.get("underlying") != current.get("underlying")
+                or old.get("expiry") != current.get("expiry")):
+            continue
+
+        retained = copy.deepcopy(old["gex_analysis"])
+        retained.update({
+            "stale": True,
+            "stale_reason": current_error,
+            "stale_as_of": retained.get("stale_as_of") or previous.get("ts"),
+        })
+        current["gex_analysis"] = retained
+        current["gex_data_status"] = "stale_last_known_good"
+    return result
+
+
 def _compute_ticker_options_incremental() -> dict:
-    """Refresh only newly added/remapped tickers while the 24h cache is fresh."""
+    """Refresh new symbols incrementally; refresh the full universe on TTL."""
     cache_path = _WEBUI_CACHE_DIR / "ticker_options.json"
     existing: dict = {}
     if cache_path.exists():
@@ -3262,7 +3325,10 @@ def _compute_ticker_options_incremental() -> dict:
 
     expected = _visible_option_sources()
     existing_schema = int(existing.get("cache_schema", 1) or 1)
-    if existing and existing_schema == TICKER_OPTIONS_CACHE_SCHEMA:
+    expected_contract = _ticker_options_cache_contract()
+    contract_changed = existing.get("cache_contract") != expected_contract
+    if (existing and existing_schema == TICKER_OPTIONS_CACHE_SCHEMA
+            and contract_changed):
         old_tickers = existing.get("tickers")
         if not isinstance(old_tickers, dict):
             old_tickers = {}
@@ -3285,10 +3351,13 @@ def _compute_ticker_options_incremental() -> dict:
             "ts": (patch or {}).get("ts") or existing.get("ts"),
             "tickers": merged,
             "cache_schema": TICKER_OPTIONS_CACHE_SCHEMA,
-            "cache_contract": _ticker_options_cache_contract(),
+            "cache_contract": expected_contract,
         }
 
-    return _compute_ticker_options(expected)
+    refreshed = _compute_ticker_options(expected)
+    if existing and existing_schema == TICKER_OPTIONS_CACHE_SCHEMA:
+        refreshed = _retain_last_known_good_gex(existing, refreshed)
+    return refreshed
 
 
 def api_option_walls_chart() -> dict:

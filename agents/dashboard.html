@@ -1566,6 +1566,9 @@ function renderOptAnalysis(opt) {
     const rk = sv.risks || {};
     const op = sv.opportunities || {};
     const kp = sv.key_prices || {};
+    const staleBadge = ga.stale ? `<div class="warn" style="font-size:9px; margin-bottom:5px; padding:3px 5px; background:rgba(210,153,34,0.10); border-radius:3px" title="本次上游缺少有效 OI，暂时沿用同一到期日最后一份有效 GEX">
+      ⚠ GEX 为上一份有效数据 · ${ga.stale_as_of || '时间未知'} · 原因 ${ga.stale_reason || '上游暂缺 OI'}
+    </div>` : '';
 
     const summaryBg = { ok: 'rgba(63,185,80,0.10)', warn: 'rgba(210,153,34,0.10)', bad: 'rgba(248,81,73,0.10)', muted: 'rgba(255,255,255,0.03)' }[sv.summary_cls || 'muted'];
     const summaryBorder = { ok: '#3fb950', warn: '#d29922', bad: '#f85149', muted: '#7d8590' }[sv.summary_cls || 'muted'];
@@ -1590,6 +1593,7 @@ function renderOptAnalysis(opt) {
 
     gexBlock = `
     <div style="border-radius:4px; padding:6px 8px; margin-bottom:6px; background:${summaryBg}; border-left:3px solid ${summaryBorder}">
+      ${staleBadge}
       <div style="font-size:11px; font-weight:600; color:var(--fg); margin-bottom:5px" title="通过期权结构判断你的 stock 该怎么办 (不涉及买期权)">
         ⚡ 期权判读你的 stock: <span class="${sv.summary_cls || 'muted'}">${sv.summary || '-'}</span>
       </div>
