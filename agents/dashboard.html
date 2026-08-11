@@ -1558,73 +1558,76 @@ function renderOptAnalysis(opt) {
       ${urgIcon2} <b class="${urgCls2}">${eStock} 财报 T-${eDays}天</b> <small style="color:var(--muted)">(${eDate})${imText}${covText}</small>
     </div>`;
   }
-  // ⚡ 期权结构综合读 (GEX + IV + Skew + Verdict) —— 对小白直接给结论
+  // ⚡ 通过期权判断 stock 风险与机会 (小白友好，不涉及期权买卖)
   const ga = opt.gex_analysis;
   let gexBlock = '';
-  if (ga && !ga.error && ga.verdict) {
-    const v = ga.verdict;
-    const gex = ga.gex || {}, ivr = ga.iv || {}, sk = ga.skew || {};
-    const overallCls = v.overall_cls || 'muted';
-    const overallBg = { ok: 'rgba(63,185,80,0.10)', warn: 'rgba(210,153,34,0.10)', bad: 'rgba(248,81,73,0.10)', muted: 'rgba(255,255,255,0.03)' }[overallCls] || 'rgba(255,255,255,0.03)';
-    const overallBorder = { ok: '#3fb950', warn: '#d29922', bad: '#f85149', muted: '#7d8590' }[overallCls] || '#7d8590';
+  if (ga && !ga.error && ga.stock_verdict) {
+    const sv = ga.stock_verdict;
+    const rk = sv.risks || {};
+    const op = sv.opportunities || {};
+    const kp = sv.key_prices || {};
 
-    const riskRows = (v.risks || []).slice(0, 4).map(r => {
-      const cls = { high: 'bad', medium: 'warn', low: 'muted' }[r.level] || 'muted';
-      return `<li class="${cls}" style="line-height:1.4">${r.text}</li>`;
-    }).join('');
-    const oppRows = (v.opportunities || []).slice(0, 4).map(o => {
-      const cls = { high: 'ok', medium: 'ok', low: 'muted' }[o.level] || 'muted';
-      return `<li class="${cls}" style="line-height:1.4">${o.text}</li>`;
-    }).join('');
+    const summaryBg = { ok: 'rgba(63,185,80,0.10)', warn: 'rgba(210,153,34,0.10)', bad: 'rgba(248,81,73,0.10)', muted: 'rgba(255,255,255,0.03)' }[sv.summary_cls || 'muted'];
+    const summaryBorder = { ok: '#3fb950', warn: '#d29922', bad: '#f85149', muted: '#7d8590' }[sv.summary_cls || 'muted'];
 
-    // GEX 数据行
-    const gexRegimeCls = gex.regime === 'positive_pin' ? 'ok' :
-                         gex.regime === 'negative_squeeze' ? 'bad' : 'warn';
-    const ivRegimeCls  = ivr.regime === 'crush_risk' ? 'bad' :
-                         ivr.regime === 'elevated' ? 'warn' :
-                         ivr.regime === 'cheap' ? 'ok' : 'muted';
-    const skewCls      = sk.regime === 'steep_fear' ? 'bad' :
-                         sk.regime === 'moderate' ? 'warn' :
-                         sk.regime === 'call_skew' ? 'warn' : 'muted';
+    const levelDot = { high: '🔴', mid: '🟡', low: '🟢' };
+    const oppDot = { good: '🟢', wait: '🟡', none: '⚪' };
+    const levelCls = { high: 'bad', mid: 'warn', low: 'muted' };
+    const oppCls = { good: 'ok', wait: 'warn', none: 'muted' };
+
+    const riskRow = (key, label, r) => `
+      <tr>
+        <td style="padding:2px 4px; color:var(--muted); font-size:9.5px">${levelDot[r.level]} ${label}</td>
+        <td style="padding:2px 4px; font-size:9.5px" class="${levelCls[r.level]}"><b>${r.level === 'high' ? '高' : r.level === 'mid' ? '中' : '低'}</b></td>
+        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${r.reason}</td>
+      </tr>`;
+    const oppRow = (key, label, o) => `
+      <tr>
+        <td style="padding:2px 4px; color:var(--muted); font-size:9.5px">${oppDot[o.level]} ${label}</td>
+        <td style="padding:2px 4px; font-size:9.5px" class="${oppCls[o.level]}"><b>${o.level === 'good' ? '好' : o.level === 'wait' ? '等' : '无'}</b></td>
+        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${o.reason}</td>
+      </tr>`;
 
     gexBlock = `
-    <div style="border-radius:4px; padding:6px 8px; margin-bottom:6px; background:${overallBg}; border-left:3px solid ${overallBorder}">
-      <div style="font-size:11px; font-weight:600; color:var(--fg); margin-bottom:4px" title="综合 GEX + IV + Skew 3 层分析给出的方向性结论">
-        ⚡ <span class="${overallCls}">${v.overall || '中性'}</span>
+    <div style="border-radius:4px; padding:6px 8px; margin-bottom:6px; background:${summaryBg}; border-left:3px solid ${summaryBorder}">
+      <div style="font-size:11px; font-weight:600; color:var(--fg); margin-bottom:5px" title="通过期权结构判断你的 stock 该怎么办 (不涉及买期权)">
+        ⚡ 期权判读你的 stock: <span class="${sv.summary_cls || 'muted'}">${sv.summary || '-'}</span>
       </div>
-      ${v.structure && v.structure.length ? `<div style="font-size:9.5px; color:var(--muted); margin-bottom:5px">
-        结构: ${v.structure.join(' · ')}
-      </div>` : ''}
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:9.5px; margin-bottom:5px">
-        <div title="GEX = dealer 对冲 gamma 敞口。正=抑波/pin，负=放波/加速。Flip 是 regime 转换价位">
-          <div style="color:var(--muted)">📊 GEX</div>
-          <div><b class="${gexRegimeCls}">${gex.regime_zh || '-'}</b></div>
-          <div style="color:var(--muted); font-size:9px">总 ${gex.total_gex_millions >= 0 ? '+' : ''}${gex.total_gex_millions || 0}M · flip $${gex.gamma_flip_strike || '-'} (${gex.spot_vs_flip_pct >= 0 ? '+' : ''}${gex.spot_vs_flip_pct || 0}%)</div>
-        </div>
-        <div title="IV Premium = ATM IV / 60d 实际波动 - 1。>30% crush 风险；<-10% 便宜期">
-          <div style="color:var(--muted)">📈 IV Regime</div>
-          <div><b class="${ivRegimeCls}">${ivr.regime_zh || '-'}</b></div>
-          <div style="color:var(--muted); font-size:9px">${ivr.atm_iv_pct || 0}% vs RV ${ivr.realized_vol_60d_pct || '-'}% · premium ${ivr.iv_premium_pct >= 0 ? '+' : ''}${ivr.iv_premium_pct || 0}%</div>
-        </div>
-        <div title="Skew = OTM Put IV - OTM Call IV。>10% 恐慌 tail 已定价；<3% complacent">
-          <div style="color:var(--muted)">📉 Skew</div>
-          <div><b class="${skewCls}">${sk.regime_zh || '-'}</b></div>
-          <div style="color:var(--muted); font-size:9px">put ${sk.otm_put_iv_pct || 0}% - call ${sk.otm_call_iv_pct || 0}% = ${sk.skew_pct >= 0 ? '+' : ''}${sk.skew_pct || 0}%</div>
-        </div>
+
+      <div style="font-size:9px; color:var(--muted); margin-bottom:2px">🔴 三类风险 (高/中/低)</div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:5px">
+        ${riskRow('breakdown',  '短期跌破风险', rk.breakdown || {level:'low', reason:'-'})}
+        ${riskRow('event',      '事件/财报风险', rk.event      || {level:'low', reason:'-'})}
+        ${riskRow('chase_high', '追高风险',     rk.chase_high || {level:'low', reason:'-'})}
+      </table>
+
+      <div style="font-size:9px; color:var(--muted); margin-bottom:2px">🟢 三类机会 (好/等/无)</div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:5px">
+        ${oppRow('buy_now',  '短期买入时机', op.buy_now  || {level:'wait', reason:'-'})}
+        ${oppRow('add_more', '加仓时机',    op.add_more || {level:'wait', reason:'-'})}
+        ${oppRow('reduce',   '减仓时机',    op.reduce   || {level:'none', reason:'-'})}
+      </table>
+
+      <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📍 关键价位</div>
+      <div style="font-size:10px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.6">
+        ${kp.upper_resistance ? `<div>⬆ 上方阻力 (call wall): <b>$${kp.upper_resistance}</b> <span style="color:var(--muted); font-size:9px">— 涨到此位可能被卖压</span></div>` : ''}
+        ${kp.pin ? `<div>🎯 pin 中枢 (gamma flip): <b class="ok">$${kp.pin}</b> <span style="color:var(--muted); font-size:9px">— dealer 会把价格吸引到这</span></div>` : ''}
+        ${kp.lower_support ? `<div>⬇ 下方支撑 (put wall): <b>$${kp.lower_support}</b> <span style="color:var(--muted); font-size:9px">— 跌到此位 dealer 会买入托底</span></div>` : ''}
+        ${kp.break_watch ? `<div class="warn" style="margin-top:2px">⚠ ${kp.break_watch}</div>` : ''}
       </div>
-      ${riskRows ? `<div style="margin-top:4px"><div style="font-size:9.5px; color:#f85149; margin-bottom:2px">🔴 风险 (${(v.risks||[]).length})</div>
-        <ul style="margin:0; padding-left:16px; font-size:10px">${riskRows}</ul>
-      </div>` : ''}
-      ${oppRows ? `<div style="margin-top:4px"><div style="font-size:9.5px; color:#3fb950; margin-bottom:2px">🟢 机会 (${(v.opportunities||[]).length})</div>
-        <ul style="margin:0; padding-left:16px; font-size:10px">${oppRows}</ul>
-      </div>` : ''}
-      <details style="margin-top:4px">
-        <summary style="cursor:pointer; font-size:9px; color:var(--muted); list-style:none">📚 术语速查 (点开)</summary>
-        <div style="font-size:9.5px; color:var(--muted); margin-top:4px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.5">
-          <b>GEX (Gamma Exposure)</b>: 做市商 (dealer) 手上期权总 gamma。正 = dealer 卖高买低压波动 (pin 效应)；负 = dealer 追涨杀跌放大波动。<br>
-          <b>Gamma Flip</b>: GEX 累积从负→正的价位。跨越即 vol regime 反转。<br>
-          <b>IV vs RV</b>: 期权隐含波动 vs 过去 60 天实际波动。IV rich = 期权贵 (event 后 crush)；IV cheap = 期权便宜 (hedge 划算)。<br>
-          <b>Skew</b>: OTM put IV 减 OTM call IV。陡峭 = 市场对下跌重定价 (crash hedge 需求)。
+
+      <details style="margin-top:5px">
+        <summary style="cursor:pointer; font-size:9px; color:var(--muted); list-style:none">📊 底层数据 (GEX/IV/Skew 原始，看着学)</summary>
+        <div style="font-size:9.5px; color:var(--muted); margin-top:4px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.6">
+          <div>📊 <b>GEX</b>: ${ga.gex?.regime_zh || '-'} · 总 ${(ga.gex?.total_gex_millions || 0) >= 0 ? '+' : ''}${ga.gex?.total_gex_millions || 0}M · flip $${ga.gex?.gamma_flip_strike || '-'} (spot vs flip ${(ga.gex?.spot_vs_flip_pct || 0) >= 0 ? '+' : ''}${ga.gex?.spot_vs_flip_pct || 0}%)</div>
+          <div>📈 <b>IV</b>: ${ga.iv?.regime_zh || '-'} · ATM IV ${ga.iv?.atm_iv_pct || 0}% vs 60d RV ${ga.iv?.realized_vol_60d_pct || '-'}% · premium ${(ga.iv?.iv_premium_pct || 0) >= 0 ? '+' : ''}${ga.iv?.iv_premium_pct || 0}%</div>
+          <div>📉 <b>Skew</b>: ${ga.skew?.regime_zh || '-'} · OTM put IV ${ga.skew?.otm_put_iv_pct || 0}% - call IV ${ga.skew?.otm_call_iv_pct || 0}% = ${(ga.skew?.skew_pct || 0) >= 0 ? '+' : ''}${ga.skew?.skew_pct || 0}%</div>
+          <div style="margin-top:4px; padding-top:4px; border-top:1px dashed var(--border)">
+            <b>GEX</b>=做市商总 gamma 敞口. 正=dealer 卖涨买跌 (pin 效应, 抑波); 负=dealer 追涨杀跌 (放波).<br>
+            <b>Gamma Flip</b>=GEX 从负→正的 strike. 跨越即 vol regime 反转.<br>
+            <b>IV Premium</b>=ATM 期权隐含波动 / 60 天实际波动 - 1. 越高越贵 (event 后 crush 风险大).<br>
+            <b>Skew</b>=OTM put IV - OTM call IV. 越大市场越怕跌 (crash hedge 需求高).
+          </div>
         </div>
       </details>
     </div>`;

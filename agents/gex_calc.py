@@ -379,10 +379,163 @@ def generate_verdict(gex: dict, iv: dict, skew: dict, spot: float,
     }
 
 
+def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
+                            call_wall_strike: Optional[float] = None,
+                            put_wall_strike: Optional[float] = None,
+                            next_earnings_days: Optional[int] = None) -> dict:
+    """Stock 持仓视角: 3 类风险 + 3 类机会 + 关键价位 (小白友好，不涉及期权买卖)."""
+    flip = gex.get("gamma_flip_strike")
+    spot_vs_flip = gex.get("spot_vs_flip_pct", 0)
+    gex_regime = gex.get("regime", "")
+    iv_regime  = iv.get("regime", "")
+    iv_premium = iv.get("iv_premium_pct", 0) or 0
+    skew_pct   = skew.get("skew_pct", 0) or 0
+    skew_regime = skew.get("regime", "")
+
+    # === 3 类风险 ===
+    # 风险 A: 短期跌破 (下方支撑强度)
+    if gex_regime == "negative_squeeze":
+        breakdown = {"level": "high",
+                     "reason": f"负 GEX 区 · dealer 追跌 · 跌破 flip ${flip} 后加速下跌"}
+    elif gex_regime == "positive_pin" and spot_vs_flip < 2:
+        breakdown = {"level": "mid",
+                     "reason": f"正 GEX 但距 flip ${flip} 仅 {spot_vs_flip:.1f}% · 缓冲有限"}
+    elif skew_regime == "steep_fear" and put_wall_strike:
+        breakdown = {"level": "mid",
+                     "reason": f"skew {skew_pct:.1f}% 陡峭 · 跌破 put wall ${put_wall_strike} 杀伤大"}
+    else:
+        breakdown = {"level": "low",
+                     "reason": f"正 GEX pin @ ${flip} · dealer 会买跌托底 · 下方安全"}
+
+    # 风险 B: 事件风险 (财报/CPI)
+    if next_earnings_days is not None and next_earnings_days < 7:
+        event_risk = {"level": "high",
+                      "reason": f"财报仅 {next_earnings_days} 天 · gap 风险 · 建议减仓避险"}
+    elif iv_regime == "crush_risk":
+        event_risk = {"level": "high",
+                      "reason": f"IV rich +{iv_premium:.0f}% · 市场已定价大波 · 事件后可能急跌"}
+    elif next_earnings_days is not None and next_earnings_days < 21:
+        event_risk = {"level": "mid",
+                      "reason": f"财报 T-{next_earnings_days} · 距离尚可 · 观察 IV 是否 rising"}
+    else:
+        event_risk = {"level": "low",
+                      "reason": "无近期事件 · IV 未 rich · 事件风险可控"}
+
+    # 风险 C: 追高
+    if spot_vs_flip > 8 and gex_regime == "positive_pin":
+        chase = {"level": "high",
+                 "reason": f"spot 距 pin ${flip} 已 +{spot_vs_flip:.1f}% · dealer 会卖压 · 追高 asymmetric"}
+    elif spot_vs_flip > 5:
+        chase = {"level": "mid",
+                 "reason": f"距 pin ${flip} +{spot_vs_flip:.1f}% · 涨势有限 · 别加满仓"}
+    elif spot_vs_flip < -3:
+        chase = {"level": "low",
+                 "reason": "现价在 pin 下方 · 涨到 pin 空间大 · 追多仍 OK"}
+    else:
+        chase = {"level": "low",
+                 "reason": "现价靠近 pin · 中性区 · 不算追高"}
+
+    # === 3 类机会 ===
+    # 机会 A: 短期买入时机 (下方有支撑 · vol regime 友好)
+    if gex_regime == "positive_pin" and iv_regime in ("cheap", "normal") and skew_regime != "steep_fear":
+        if spot_vs_flip > 5:
+            buy_now = {"level": "wait",
+                       "reason": f"结构友好但现价已高 · 等回踩 ${flip} 附近再进"}
+        else:
+            buy_now = {"level": "good",
+                       "reason": f"正 GEX pin @ ${flip} + IV 便宜 · 下方 dealer 托底 · 买入 asymmetric"}
+    elif gex_regime == "negative_squeeze":
+        buy_now = {"level": "none",
+                   "reason": f"负 GEX · dealer 追跌放大波动 · 等突破 ${flip} 再动"}
+    elif iv_regime == "crush_risk":
+        buy_now = {"level": "wait",
+                   "reason": "IV rich · 等事件后 vol crush + 价格回踩再买"}
+    else:
+        buy_now = {"level": "wait",
+                   "reason": "结构中性 · 无 asymmetric edge · 等更清晰信号"}
+
+    # 机会 B: 加仓时机
+    if gex_regime == "positive_pin" and spot_vs_flip < 3 and iv_regime == "cheap":
+        add_more = {"level": "good",
+                    "reason": f"pin @ ${flip} 稳固 + 现价接近 · 加仓 downside 有限"}
+    elif flip and spot < flip:
+        add_more = {"level": "wait",
+                    "reason": f"现价 {spot_vs_flip:.1f}% 低于 flip ${flip} · 等突破 flip 再加"}
+    else:
+        add_more = {"level": "wait",
+                    "reason": "无明确加仓价位 · 观察"}
+
+    # 机会 C: 减仓时机
+    if next_earnings_days is not None and next_earnings_days < 7:
+        reduce = {"level": "good",
+                  "reason": f"财报 T-{next_earnings_days} · 减 20-30% 避 gap · 事件后再回补"}
+    elif gex_regime == "positive_pin" and spot_vs_flip > 8:
+        reduce = {"level": "wait",
+                  "reason": f"距 pin +{spot_vs_flip:.1f}% · 若再涨 3-5% 考虑减一半锁利"}
+    elif gex_regime == "negative_squeeze" and spot < flip:
+        reduce = {"level": "good",
+                  "reason": f"跌破 flip ${flip} · 负 GEX 加速下跌 · 减 30-50% 止损"}
+    else:
+        reduce = {"level": "none",
+                  "reason": "无卖压信号 · 持仓"}
+
+    # === 关键价位 ===
+    break_watch = None
+    if gex_regime == "positive_pin":
+        # 跌破 flip 就 regime shift
+        break_watch = f"跌破 ${flip} (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+    elif gex_regime == "negative_squeeze":
+        break_watch = f"突破 ${flip} (gamma flip) → 转正 GEX 抑波 · 加仓触发点"
+
+    key_prices = {
+        "upper_resistance": call_wall_strike,   # call wall 上方阻力
+        "pin":              flip,                # gamma flip
+        "lower_support":    put_wall_strike,     # put wall 下方支撑
+        "break_watch":      break_watch,
+    }
+
+    # === 综合 summary (1 line) ===
+    high_risks = sum(1 for r in [breakdown, event_risk, chase] if r["level"] == "high")
+    good_opps  = sum(1 for o in [buy_now, add_more, reduce] if o["level"] == "good")
+    if high_risks >= 2:
+        summary = "⚠ 高风险窗口 · 减仓/避免追高"
+        summary_cls = "bad"
+    elif high_risks == 1 and good_opps == 0:
+        summary = "⚠ 有明确风险 · 观望"
+        summary_cls = "warn"
+    elif good_opps >= 2:
+        summary = "✓ 结构支持 · 现价可入 or 加仓"
+        summary_cls = "ok"
+    elif good_opps == 1:
+        summary = "🟡 部分机会 · 等更明确信号"
+        summary_cls = "warn"
+    else:
+        summary = "➡ 中性区间 · 持仓观察"
+        summary_cls = "muted"
+
+    return {
+        "summary":     summary,
+        "summary_cls": summary_cls,
+        "risks": {
+            "breakdown":  breakdown,
+            "event":      event_risk,
+            "chase_high": chase,
+        },
+        "opportunities": {
+            "buy_now":  buy_now,
+            "add_more": add_more,
+            "reduce":   reduce,
+        },
+        "key_prices":    key_prices,
+    }
+
+
 def full_analysis(calls_df, puts_df, spot: float, days_to_expiry: int,
                   realized_vol_60d: Optional[float] = None,
-                  next_earnings_days: Optional[int] = None) -> dict:
-    """入口: 全 3 层 + verdict 一次算完."""
+                  next_earnings_days: Optional[int] = None,
+                  call_wall_strike: Optional[float] = None,
+                  put_wall_strike: Optional[float] = None) -> dict:
+    """入口: 全 3 层 + 2 版 verdict (options 视角 + stock 持仓视角)."""
     gex = compute_gex(calls_df, puts_df, spot, days_to_expiry)
     iv  = compute_iv_regime(calls_df, puts_df, spot, realized_vol_60d)
     sk  = compute_skew(calls_df, puts_df, spot)
@@ -392,9 +545,14 @@ def full_analysis(calls_df, puts_df, spot: float, days_to_expiry: int,
             "error": gex.get("error") or iv.get("error"),
         }
     v = generate_verdict(gex, iv, sk, spot, next_earnings_days)
+    sv = generate_stock_verdict(gex, iv, sk, spot,
+                                 call_wall_strike=call_wall_strike,
+                                 put_wall_strike=put_wall_strike,
+                                 next_earnings_days=next_earnings_days)
     return {
-        "gex":  gex,
-        "iv":   iv,
-        "skew": sk,
-        "verdict": v,
+        "gex":            gex,
+        "iv":             iv,
+        "skew":           sk,
+        "verdict":        v,      # options 视角 (原有)
+        "stock_verdict":  sv,     # stock 持仓视角 (新, 主要展示)
     }

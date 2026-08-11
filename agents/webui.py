@@ -3216,6 +3216,8 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                     calls_gex, puts_gex, spot, dte,
                     realized_vol_60d=rv,
                     next_earnings_days=earnings_meta.get("days_to_earnings"),
+                    call_wall_strike=call_wall_oi["strike"] if call_wall_oi else (call_wall["strike"] if call_wall else None),
+                    put_wall_strike=put_wall_oi["strike"] if put_wall_oi else (put_wall["strike"] if put_wall else None),
                 )
             except Exception as e:
                 gex_analysis = {"error": f"gex_calc_fail: {str(e)[:100]}"}

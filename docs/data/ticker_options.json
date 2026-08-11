@@ -1,5 +1,5 @@
 {
-  "ts": "2026-08-11T02:21:51.379988+00:00",
+  "ts": "2026-08-11T02:58:19.345541+00:00",
   "tickers": {
     "TQQQ": {
       "underlying": "QQQ",
@@ -1462,6 +1462,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $650.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "mid",
+              "reason": "财报 T-15 · 距离尚可 · 观察 IV 是否 rising"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $650.0 已 +9.8% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $650.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.8% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 730.0,
+            "pin": 650.0,
+            "lower_support": 700.0,
+            "break_watch": "跌破 $650.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -2084,6 +2122,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $480.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "mid",
+              "reason": "财报 T-15 · 距离尚可 · 观察 IV 是否 rising"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $480.0 已 +9.3% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $480.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.3% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 550.0,
+            "pin": 480.0,
+            "lower_support": 490.0,
+            "break_watch": "跌破 $480.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -2609,6 +2685,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $45.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $45.0 已 +9.3% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $45.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.3% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 53.0,
+            "pin": 45.0,
+            "lower_support": 45.0,
+            "break_watch": "跌破 $45.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -3262,6 +3376,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $775.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $775.0 已 +10.0% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $775.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +10.0% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 900.0,
+            "pin": 775.0,
+            "lower_support": 780.0,
+            "break_watch": "跌破 $775.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -3825,6 +3977,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $300.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $300.0 已 +9.3% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $300.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.3% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 350.0,
+            "pin": 300.0,
+            "lower_support": 320.0,
+            "break_watch": "跌破 $300.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -4405,6 +4595,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $174.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $174.0 已 +9.7% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $174.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.7% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 200.0,
+            "pin": 174.0,
+            "lower_support": 184.0,
+            "break_watch": "跌破 $174.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -5052,6 +5280,44 @@
               "text": "正 GEX pin · flip $470.0 稳固 · 卖 straddle/iron condor 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $470.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $470.0 已 +10.0% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $470.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +10.0% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 550.0,
+            "pin": 470.0,
+            "lower_support": 500.0,
+            "break_watch": "跌破 $470.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -5561,6 +5827,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $325.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $325.0 已 +9.1% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $325.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.1% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 375.0,
+            "pin": 325.0,
+            "lower_support": 350.0,
+            "break_watch": "跌破 $325.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -6053,6 +6357,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $197.5 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "mid",
+              "reason": "财报 T-15 · 距离尚可 · 观察 IV 是否 rising"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $197.5 已 +9.2% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $197.5 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.2% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 220.0,
+            "pin": 197.5,
+            "lower_support": 215.0,
+            "break_watch": "跌破 $197.5 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -6746,6 +7088,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $457.5 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $457.5 已 +9.6% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $457.5 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.6% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 520.0,
+            "pin": 457.5,
+            "lower_support": 500.0,
+            "break_watch": "跌破 $457.5 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -7285,6 +7665,44 @@
               "text": "IV 便宜期 · 买保护 put/上行 call 成本低 · hedge 或 lottery ticket 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $280.0 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $280.0 已 +9.2% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $280.0 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.2% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 315.0,
+            "pin": 280.0,
+            "lower_support": 305.0,
+            "break_watch": "跌破 $280.0 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -7762,6 +8180,44 @@
               "text": "正 GEX pin · flip $167.5 稳固 · 卖 straddle/iron condor 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $167.5 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $167.5 已 +9.0% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $167.5 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +9.0% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 200.0,
+            "pin": 167.5,
+            "lower_support": 180.0,
+            "break_watch": "跌破 $167.5 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -8399,6 +8855,44 @@
               "text": "正 GEX pin · flip $732.5 稳固 · 卖 straddle/iron condor 有 edge"
             }
           ]
+        },
+        "stock_verdict": {
+          "summary": "⚠ 有明确风险 · 观望",
+          "summary_cls": "warn",
+          "risks": {
+            "breakdown": {
+              "level": "low",
+              "reason": "正 GEX pin @ $732.5 · dealer 会买跌托底 · 下方安全"
+            },
+            "event": {
+              "level": "low",
+              "reason": "无近期事件 · IV 未 rich · 事件风险可控"
+            },
+            "chase_high": {
+              "level": "high",
+              "reason": "spot 距 pin $732.5 已 +10.0% · dealer 会卖压 · 追高 asymmetric"
+            }
+          },
+          "opportunities": {
+            "buy_now": {
+              "level": "wait",
+              "reason": "结构友好但现价已高 · 等回踩 $732.5 附近再进"
+            },
+            "add_more": {
+              "level": "wait",
+              "reason": "无明确加仓价位 · 观察"
+            },
+            "reduce": {
+              "level": "wait",
+              "reason": "距 pin +10.0% · 若再涨 3-5% 考虑减一半锁利"
+            }
+          },
+          "key_prices": {
+            "upper_resistance": 870.0,
+            "pin": 732.5,
+            "lower_support": 800.0,
+            "break_watch": "跌破 $732.5 (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+          }
         }
       },
       "defense": {
@@ -8436,8 +8930,8 @@
   "cache_schema": 1,
   "cache_contract": "765ac86bb240",
   "_meta": {
-    "cached_at": "2026-08-11T11:22:03.505840",
-    "age_sec": 46,
+    "cached_at": "2026-08-11T11:58:32.040682",
+    "age_sec": 56,
     "stale": false,
     "refreshing": false
   }
