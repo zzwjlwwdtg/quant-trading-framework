@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-10T18:42:15", "endpoints_ok": 104, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-11T11:09:10", "endpoints_ok": 110, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1736,21 +1736,33 @@ async function loadPositions() {
   if (!p || !p.positions || !p.positions.length) {
     $('positions').innerHTML = '<small>无持仓状态</small>'; return;
   }
-  const active = p.positions.filter(pos => ['BUY','PYRAMID','REBUY'].includes(pos.last_action));
-  if (!active.length) { $('positions').innerHTML = '<small>目前无 BUY 侧仓位</small>'; return; }
-  const rows = active.map(pos => `
-    <tr>
-      <td><b>${pos.ticker.replace('US.','')}</b> ${pos.is_core?'<small>C</small>':'<small>S</small>'}</td>
-      <td class="ok">${pos.last_action}</td>
-      <td>${pos.last_qty || '-'}</td>
-      <td>$${fmt(pos.entry_price || pos.last_price)}</td>
-      <td>${pos.pyramid_layer ? 'L'+pos.pyramid_layer : '-'}</td>
-      <td><small>${(pos.last_time_utc || '').slice(5,16).replace('T',' ')}</small></td>
-    </tr>
-  `).join('');
+  const active = p.positions.filter(pos => (pos.qty && pos.qty > 0) || ['BUY','PYRAMID','REBUY'].includes(pos.last_action));
+  if (!active.length) { $('positions').innerHTML = '<small>目前无仓位</small>'; return; }
+  const srcLabel = p.sync_source === 'moomoo_live'
+    ? '<span class="badge ok" style="font-size:9px">🟢 moomoo 实时同步 (60s cache)</span>'
+    : '<span class="badge warn" style="font-size:9px" title="moomoo 未连或不可用，只显示本地 state">⚠ state fallback (moomoo 掉线)</span>';
+  const plCls = v => v == null ? 'muted' : (v > 0 ? 'ok' : (v < 0 ? 'bad' : 'muted'));
+  const fmtSign = v => v == null ? '-' : (v >= 0 ? '+' + v.toLocaleString() : v.toLocaleString());
+  const fmtPct = v => v == null ? '-' : ((v * 100).toFixed(2) + '%');
+  const rows = active.map(pos => {
+    const src = pos.source === 'moomoo_manual' ? '<small title="moomoo 有持仓但本地 state 无 metadata (手动下单)" class="warn">手动</small>' :
+                pos.source === 'state_only_recent' ? '<small title="moomoo 已平仓，state 里最近有 action" class="muted">历史</small>' :
+                pos.is_core ? '<small>C</small>' : '<small>S</small>';
+    return `<tr>
+      <td><b>${pos.ticker.replace('US.','').replace('JP.','')}</b> ${src}</td>
+      <td>${pos.qty || pos.last_qty || 0}</td>
+      <td>$${fmt(pos.cost_price || pos.entry_price || pos.last_price)}</td>
+      <td>$${fmt(pos.current_price || '-')}</td>
+      <td>$${fmt(pos.market_val || '-')}</td>
+      <td class="${plCls(pos.pl_val)}">${fmtSign(pos.pl_val)}</td>
+      <td class="${plCls(pos.pl_val)}">${fmtPct(pos.pl_ratio)}</td>
+      <td>${pos.last_action ? `<small>${pos.last_action}${pos.pyramid_layer ? ' L'+pos.pyramid_layer : ''}</small>` : '<small class="muted">-</small>'}</td>
+    </tr>`;
+  }).join('');
   $('positions').innerHTML = `
+    <div style="margin-bottom:4px; font-size:10px">${srcLabel}</div>
     <table>
-      <thead><tr><th>Ticker</th><th>Action</th><th>Qty</th><th>Entry</th><th>Layer</th><th>Time UTC</th></tr></thead>
+      <thead><tr><th>Ticker</th><th>Qty</th><th>成本</th><th>现价</th><th>市值</th><th>盈亏 $</th><th>盈亏 %</th><th>Action</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   `;

@@ -1,20 +1,20 @@
 {
   "exists": true,
-  "path": "ai_targets_2026-08-07.json",
-  "mtime": "2026-08-07T22:28:23.405052",
+  "path": "ai_targets_2026-08-10.json",
+  "mtime": "2026-08-10T22:27:17.987360",
   "version": 1,
-  "ts": "2026-08-07T09:27",
-  "source_date": "2026-08-07",
+  "ts": "2026-08-10T09:25",
+  "source_date": "2026-08-10",
   "targets": [
     {
       "ticker": "US.TQQQ",
-      "action": "skip",
-      "entry_ref": null,
-      "stop_ref": null,
-      "target_ref": null,
-      "use_limit": false,
+      "action": "watch_buy",
+      "entry_ref": 72.0,
+      "stop_ref": 69.5,
+      "target_ref": 78.0,
+      "use_limit": true,
       "size_hint": "small",
-      "notes": "MACD 空头 + ADX 41.8 强下行，虽 NQ 期货 +0.78% 会高开但结构仍空，观望"
+      "notes": "等回踩 Max Pain $72 磁吸位，CPI 前轻仓"
     },
     {
       "ticker": "US.SOXL",
@@ -24,37 +24,37 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 深度空头 -19/-21，ADX 36.9 强下行，PCA 板块震荡无方向"
+      "notes": "昨日 +5.99% 空头反弹追高风险大，SMH proxy squeeze 风险，等 CPI"
     },
     {
       "ticker": "US.DRAM",
-      "action": "watch_buy",
-      "entry_ref": 50.5,
-      "stop_ref": 49.2,
-      "target_ref": 52.0,
-      "use_limit": true,
-      "size_hint": "small",
-      "notes": "15min RSI 22 极度超卖，等回踩 Put Wall $50 附近小仓博反弹到 Max Pain $52"
-    },
-    {
-      "ticker": "US.MULL",
-      "action": "watch_buy",
+      "action": "skip",
       "entry_ref": null,
       "stop_ref": null,
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "唯一 MACD 金叉标的 + ADX 27.6 强趋势，但 log 无现价/期权墙数据，等确认后手动小仓"
+      "notes": "MACD 空头强趋势无入场信号"
+    },
+    {
+      "ticker": "US.MULL",
+      "action": "skip",
+      "entry_ref": null,
+      "stop_ref": null,
+      "target_ref": null,
+      "use_limit": false,
+      "size_hint": "small",
+      "notes": "MACD 空头，跟 MU 走，无信号"
     },
     {
       "ticker": "US.GLD",
       "action": "watch_buy",
-      "entry_ref": 393.0,
-      "stop_ref": 387.0,
-      "target_ref": 400.0,
+      "entry_ref": 399.5,
+      "stop_ref": 394.0,
+      "target_ref": 408.0,
       "use_limit": true,
-      "size_hint": "normal",
-      "notes": "GC 期货 +3.82% 强势 + Fed 扩表 bullish，跳空高开后等回踩 $393 进，止损 Put Wall $387 下方"
+      "size_hint": "small",
+      "notes": "GC +1.28% 高开不追，回落 $399-400 进小仓（Fed 扩表 + 宏观 bullish）"
     }
   ]
 }

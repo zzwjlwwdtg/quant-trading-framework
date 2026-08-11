@@ -3,73 +3,73 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 37,
+      "days_until": 36,
       "probabilities": {
-        "hold": 58,
-        "hike_25": 40,
-        "cut_25": 2
+        "hold": 60,
+        "hike_25": 37,
+        "cut_25": 3
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean_weakening"
+      "consensus_direction": "hawkish_lean_softening"
     },
     {
       "date": "2026-10-28",
-      "days_until": 79,
+      "days_until": 78,
       "probabilities": {
-        "hold": 50,
-        "hike_25": 35,
-        "cut_25": 13,
+        "hold": 55,
+        "hike_25": 27,
+        "cut_25": 16,
         "cut_50": 2
       },
       "most_likely": "hold",
-      "consensus_direction": "neutral"
+      "consensus_direction": "two_way_uncertain"
     },
     {
       "date": "2026-12-09",
-      "days_until": 121,
+      "days_until": 120,
       "probabilities": {
-        "hold": 60,
-        "hike_25": 15,
-        "cut_25": 22,
-        "cut_50": 3
+        "hold": 45,
+        "hike_25": 20,
+        "cut_25": 28,
+        "cut_50": 7
       },
       "most_likely": "hold",
       "consensus_direction": "dovish_lean"
     }
   ],
-  "implied_terminal_rate": "3.75-4.00",
-  "implied_terminal_date": "2026-Q4/2027-Q1",
-  "data_snapshot_date": "2026-08-07",
-  "recent_event_impact": "8/7 NFP -23K (vs +83K est, massive miss) → Sept hike odds tumbled from 57% to ~40%, hold odds jumped from 45% to ~60%; terminal rate expectation slipped from ~4.00% to ~3.90%",
-  "commentary": "Regime is HIKE-BIAS not cut-bias — new Fed Chair Kevin Warsh's hawkish price-stability framing had markets pricing 55%+ odds of at least one 2026 hike before NFP. Friday's 8/7 -23K payroll print (worst miss in cycle) partially neutralized the hike thesis, shifting Sept from majority-hike to majority-hold; terminal rate priced down ~10bp. Data is 1 trading day old — no CPI/PPI released since (next CPI ~Aug 12).",
+  "implied_terminal_rate": "3.25-3.50",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-08-08",
+  "recent_event_impact": "8/1 July NFP -23K vs +83K expected (May/Jun revised down -103K combined) → Sep hike odds collapsed from ~57% to ~37%, hold jumped from ~43% to ~60%; oil +20% on Iran talks breakdown partially caps dovish repricing",
+  "commentary": "Fed held 3.50-3.75% at July 29 meeting (5th straight hold, 9-3 vote with 3 hawkish dissenters — Hammack/Kashkari/Logan wanting hike due to sticky inflation). Aug 7 NFP shock (-23K vs +83K, unemployment 4.1%) triggered sharp dovish repricing: Sep now leans hold (60%) over hike (37%), with cut probabilities building into Q4. July CPI due tomorrow (8/12) — hot print could partially reverse this shift given oil surge from collapsed US-Iran talks.",
   "sources": [
     {
       "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
-      "type": "news_post_nfp"
+      "type": "cme_fedwatch_summary"
     },
     {
-      "url": "https://ca.finance.yahoo.com/news/us-rate-futures-cut-chances-124656547.html",
-      "type": "news_post_nfp"
+      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
+      "type": "nfp_data"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/07/29/fed-rate-decision-july-2026.html",
+      "type": "fomc_decision"
     },
     {
       "url": "https://centralbank.watch/federal-reserve/",
-      "type": "aggregator_pre_nfp"
+      "type": "fedwatch_aggregator"
     },
     {
-      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch"
-    },
-    {
-      "url": "https://rateprobability.com/fed",
-      "type": "fed_funds_futures_tracker"
+      "url": "https://finance.yahoo.com/economy/policy/articles/us-rate-futures-cut-chances-124656547.html",
+      "type": "rate_futures"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-10T03:58:36+00:00",
+  "fetched_at": "2026-08-10T20:02:21+00:00",
   "_meta": {
-    "cached_at": "2026-08-10T12:58:36.163420",
-    "age_sec": 20618,
+    "cached_at": "2026-08-11T05:02:21.566129",
+    "age_sec": 21966,
     "stale": false,
     "refreshing": false
   }

@@ -350,38 +350,128 @@ def api_nav(days: int = 30) -> dict:
     }
 
 
-def api_positions() -> dict:
-    """从 trader_state.json 读缓存的 ticker state。真实 moomoo 查询太慢，不实时查。"""
-    if not STATE_PATH.exists():
-        return {"positions": [], "peak_nav": None}
+def _fetch_moomoo_live_positions() -> list[dict] | None:
+    """实时查 moomoo SIMULATE 账户全部持仓。失败返 None."""
     try:
-        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return {"positions": [], "peak_nav": None}
-    peak_meta = state.get("__nav_peak", {})
-    positions = []
-    for k, v in state.items():
-        if k.startswith("__"):
-            continue
-        if isinstance(v, dict) and v.get("last_action"):
-            positions.append({
-                "ticker":         k,
-                "last_action":    v.get("last_action"),
-                "last_side":      v.get("last_side"),
-                "last_qty":       v.get("last_qty"),
-                "last_price":     v.get("last_price"),
-                "last_time_utc":  v.get("last_time_utc"),
-                "is_core":        v.get("is_core", False),
-                "pyramid_layer":  v.get("pyramid_layer"),
-                "entry_conf":     v.get("entry_conf"),
-                "entry_price":    v.get("entry_price"),
-                "entry_high":     v.get("entry_high"),
+        from paper_trader import _ctx_get, ACC_ID, TRD_ENV
+        from moomoo import RET_OK
+        ctx = _ctx_get()
+        ret, pos = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+        if ret != RET_OK or pos is None or (hasattr(pos, "empty") and pos.empty):
+            return []
+        rows = []
+        for _, r in pos.iterrows():
+            code = str(r.get("code", ""))
+            qty  = int(r.get("qty", 0) or 0)
+            if not code or qty == 0:
+                continue
+            # moomoo pl_ratio 返回的是百分比 (e.g. 106.5 = +106.5%)，
+            # 前端 fmtPct 会 ×100，故这里 ÷100 归一到小数 (0.5 = 50%)
+            raw_pl_ratio = float(r.get("pl_ratio", 0) or 0)
+            rows.append({
+                "code":          code,
+                "qty":           qty,
+                "cost_price":    float(r.get("cost_price", 0) or 0),
+                "current_price": float(r.get("nominal_price", 0) or 0),
+                "market_val":    float(r.get("market_val", 0) or 0),
+                "pl_val":        float(r.get("pl_val", 0) or 0),
+                "pl_ratio":      raw_pl_ratio / 100.0,   # 归一到小数
             })
-    return {
-        "positions": positions,
-        "peak_nav":  peak_meta.get("peak_nav"),
-        "current_nav": peak_meta.get("current_nav"),
-    }
+        return rows
+    except Exception:
+        return None
+
+
+def api_positions() -> dict:
+    """moomoo 实时持仓 + 本地 state metadata (entry_conf/pyramid_layer 等)。
+
+    数据源优先级：
+    1. moomoo position_list_query() = 真实持仓（含手动下单）
+    2. trader_state.json = 附加 orchestrator 决策 metadata
+    3. Merge 后 dashboard 显示（含 pnl / 成本价 / 现价）
+
+    缓存 60s 避免频繁查 moomoo，同时保证 sync latency ≤1min。
+    """
+    def _compute():
+        mm_positions = _fetch_moomoo_live_positions()
+        state = {}
+        if STATE_PATH.exists():
+            try:
+                state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+            except Exception:
+                state = {}
+        peak_meta = state.get("__nav_peak", {})
+
+        positions = []
+        seen_codes: set[str] = set()
+
+        # A) moomoo 真实持仓（含手动下单）—— 权威源
+        if mm_positions is not None:
+            for mp in mm_positions:
+                code = mp["code"]
+                st = state.get(code, {}) if isinstance(state.get(code), dict) else {}
+                seen_codes.add(code)
+                positions.append({
+                    "ticker":         code,
+                    "qty":            mp["qty"],
+                    "cost_price":     round(mp["cost_price"], 2),
+                    "current_price":  round(mp["current_price"], 2),
+                    "market_val":     round(mp["market_val"], 2),
+                    "pl_val":         round(mp["pl_val"], 2),
+                    "pl_ratio":       round(mp["pl_ratio"], 4),
+                    # 本地 state 附加 metadata（可能缺失如手动下单）
+                    "last_action":    st.get("last_action"),
+                    "last_side":      st.get("last_side"),
+                    "last_qty":       st.get("last_qty"),
+                    "last_price":     st.get("last_price"),
+                    "last_time_utc":  st.get("last_time_utc"),
+                    "is_core":        st.get("is_core", False),
+                    "pyramid_layer":  st.get("pyramid_layer"),
+                    "entry_conf":     st.get("entry_conf"),
+                    "entry_price":    st.get("entry_price"),
+                    "entry_high":     st.get("entry_high"),
+                    "source":         "moomoo_live" if st else "moomoo_manual",
+                })
+
+        # B) state 里有但 moomoo 已无（例如 24h 内平仓，方便看历史动作）
+        for k, v in state.items():
+            if k.startswith("__") or k in seen_codes:
+                continue
+            if isinstance(v, dict) and v.get("last_action"):
+                try:
+                    lt = v.get("last_time_utc") or ""
+                    keep = False
+                    if lt:
+                        t = datetime.fromisoformat(lt.replace("Z", "+00:00"))
+                        keep = (datetime.now(timezone.utc) - t).total_seconds() < 86400
+                    if keep or v.get("last_action") in ("BUY", "PYRAMID", "REBUY"):
+                        positions.append({
+                            "ticker":       k,
+                            "qty":          0,
+                            "last_action":  v.get("last_action"),
+                            "last_side":    v.get("last_side"),
+                            "last_qty":     v.get("last_qty"),
+                            "last_price":   v.get("last_price"),
+                            "last_time_utc": v.get("last_time_utc"),
+                            "is_core":      v.get("is_core", False),
+                            "pyramid_layer": v.get("pyramid_layer"),
+                            "entry_conf":   v.get("entry_conf"),
+                            "entry_price":  v.get("entry_price"),
+                            "entry_high":   v.get("entry_high"),
+                            "source":       "state_only_recent",
+                        })
+                except Exception:
+                    pass
+
+        return {
+            "positions":    positions,
+            "peak_nav":     peak_meta.get("peak_nav"),
+            "current_nav":  peak_meta.get("current_nav"),
+            "sync_source":  "moomoo_live" if mm_positions is not None else "state_only_fallback",
+            "moomoo_ok":    mm_positions is not None,
+        }
+
+    return _cached("positions_live", ttl_sec=60, compute_fn=_compute)
 
 
 def api_trades(n: int = 20) -> dict:
@@ -476,7 +566,11 @@ def api_signals() -> dict:
     tickers = {}
     tk_re    = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\s+【(\w+)】"
                           r"价格:([\d.]+)\s+RSI:([\d.]+)\s+量比:([\d.]+)\s+趋势:(\w+)")
-    sig_re   = re.compile(r"信号:\s+(\S+)\s+(关注买入|买入|卖出|减仓|警示|持仓观望)\s+"
+    # 中文 action label 全集（对应 decision_agent 输出）：
+    # 关注买入=WATCH_BUY / 主动试探仓=WATCH_BUY_PROBE / 买入=BUY / 卖出=SELL
+    # 减仓=REDUCE / 警示=CAUTION / 持仓观望=HOLD
+    # 缺任何一个 → api_signals 拿不到 action_zh → dashboard 显示 "?"
+    sig_re   = re.compile(r"信号:\s+(\S+)\s+(关注买入|主动试探仓|买入|卖出|减仓|警示|持仓观望)\s+"
                           r"置信度:(\d+)/(\d+).*?行情:(\S+)")
     reson_re = re.compile(r"共振:\s+多头\((\d+)\)\s+vs\s+空头\((\d+)\)")
 
