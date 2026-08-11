@@ -30,6 +30,7 @@ class DashboardAssetProfileTests(unittest.TestCase):
                 self.assertEqual(profile["asset_class"], asset_class)
                 self.assertFalse(profile["show_options"])
                 self.assertFalse(profile["show_fundamentals"])
+                self.assertFalse(profile["show_forward_outlook"])
                 self.assertFalse(profile["show_ai_analysis"])
                 self.assertFalse(profile["show_supply_chain"])
 
@@ -39,6 +40,7 @@ class DashboardAssetProfileTests(unittest.TestCase):
         self.assertEqual(profile["asset_class"], "equity")
         self.assertTrue(profile["show_options"])
         self.assertTrue(profile["show_fundamentals"])
+        self.assertTrue(profile["show_forward_outlook"])
         self.assertTrue(profile["show_ai_analysis"])
         self.assertTrue(profile["show_supply_chain"])
 
@@ -207,6 +209,102 @@ class DashboardAssetProfileTests(unittest.TestCase):
                 result = webui.api_fundamentals(ticker)
                 self.assertEqual(result["error"], "no_fundamentals_for_this_type")
 
+    def test_forward_outlook_obeys_the_same_macro_capability_contract(self):
+        for ticker in ("GLD", "SHY", "IEI"):
+            with self.subTest(ticker=ticker):
+                result = webui.api_equity_outlook(ticker)
+                self.assertEqual(result["error"], "no_forward_outlook_for_this_type")
+
+    def test_expectation_pricing_classifies_underpriced_consensus(self):
+        consensus = {
+            "current_price": 100,
+            "trailing_eps": 5,
+            "eps_growth_pct": 20,
+            "hist_pe_median": 20,
+            "n_analysts": 12,
+            "target_mean": 125,
+            "target_upside_pct": 25,
+            "implied_pe_hold": 120,
+            "implied_pe_hold_upside": 20,
+            "implied_hist_median": 122,
+            "implied_hist_upside": 22,
+            "forward_estimates": {
+                "revision_summary": {"signal": "upward"},
+            },
+        }
+
+        pricing = webui._build_expectation_pricing(consensus)
+
+        self.assertEqual(pricing["classification"], "underpriced")
+        self.assertEqual(pricing["label"], "市场预期偏低")
+        self.assertEqual(pricing["revision_signal"], "upward")
+        self.assertEqual(pricing["anchor_count"], 3)
+
+    def test_expectation_pricing_flags_price_above_forward_anchors(self):
+        consensus = {
+            "current_price": 150,
+            "trailing_eps": 5,
+            "eps_growth_pct": 5,
+            "hist_pe_median": 20,
+            "n_analysts": 10,
+            "target_mean": 120,
+            "target_upside_pct": -20,
+            "implied_pe_hold": 118,
+            "implied_pe_hold_upside": -21.3,
+            "implied_hist_median": 115,
+            "implied_hist_upside": -23.3,
+            "forward_estimates": {
+                "revision_summary": {"signal": "downward"},
+            },
+        }
+
+        pricing = webui._build_expectation_pricing(consensus)
+
+        self.assertEqual(pricing["classification"], "overpriced")
+        self.assertEqual(pricing["label"], "预期透支")
+        self.assertLess(pricing["median_gap_pct"], -15)
+
+    def test_revision_summary_marks_eps_value_and_breadth_conflict_as_mixed(self):
+        class FakeFrame:
+            empty = False
+
+            def __init__(self, rows):
+                self.rows = rows
+
+            def iterrows(self):
+                return iter(self.rows)
+
+        class FakeTicker:
+            earnings_estimate = None
+            revenue_estimate = None
+            eps_trend = FakeFrame([
+                ("+1y", {"current": 9.86, "30daysAgo": 10.0}),
+            ])
+            eps_revisions = FakeFrame([
+                ("+1y", {"upLast30days": 8, "downLast30days": 3}),
+            ])
+
+        summary = webui._fetch_forward_estimate_snapshot(FakeTicker())["revision_summary"]
+
+        self.assertEqual(summary["trend_signal"], "downward")
+        self.assertEqual(summary["breadth_signal"], "upward")
+        self.assertEqual(summary["signal"], "mixed")
+
+    def test_equity_outlook_labels_proxy_without_using_etf_as_price_anchor(self):
+        ready = {
+            "source_stock": "NVDA",
+            "state": "ready",
+            "analyst_consensus": {"current_price": 190},
+            "pricing": {"classification": "matched"},
+        }
+        with patch.object(webui, "_cached", return_value=ready) as cached:
+            result = webui.api_equity_outlook("TQQQ")
+
+        self.assertTrue(result["is_proxy"])
+        self.assertEqual(result["source_stock"], "NVDA")
+        self.assertEqual(result["analyst_consensus"]["current_price"], 190)
+        self.assertEqual(cached.call_args.args[0], webui._equity_outlook_cache_name("NVDA"))
+
     def test_option_recompute_never_opens_macro_chains(self):
         opened: list[str] = []
         yfinance = types.ModuleType("yfinance")
@@ -266,6 +364,26 @@ class DashboardAssetProfileTests(unittest.TestCase):
         with patch.object(webui, "_TICKER_AI_CACHE_SCHEMA", webui._TICKER_AI_CACHE_SCHEMA + 1):
             self.assertNotEqual(first_key, webui._ticker_ai_cache_key(first))
 
+    def test_ai_cache_key_tracks_forward_outlook_changes(self):
+        signal = {"action_zh": "买入", "conf": 4, "scale": 5}
+        options = {"spot": 100}
+        fundamentals = {"latest": {"croic": 10}}
+        first = [("AAPL", signal, options, fundamentals, {
+            "source_stock": "AAPL",
+            "pricing": {"classification": "matched", "median_gap_pct": 1},
+            "analyst_consensus": {"forward_eps": 8},
+        })]
+        revised = [("AAPL", signal, options, fundamentals, {
+            "source_stock": "AAPL",
+            "pricing": {"classification": "overpriced", "median_gap_pct": -20},
+            "analyst_consensus": {"forward_eps": 7},
+        })]
+
+        self.assertNotEqual(
+            webui._ticker_ai_cache_key(first),
+            webui._ticker_ai_cache_key(revised),
+        )
+
 
 class DashboardMarkupContractTests(unittest.TestCase):
     @classmethod
@@ -282,7 +400,13 @@ class DashboardMarkupContractTests(unittest.TestCase):
         self.assertIn("showOptions ? renderOptAnalysis(opt) : ''", self.html)
         self.assertIn("showAI ? renderTickerAI(t, context) : ''", self.html)
         self.assertIn("const fundamentals = showFundamentals ?", self.html)
+        self.assertIn("const forwardOutlook = showForwardOutlook ?", self.html)
         self.assertIn("const supplyChain = showSupplyChain ?", self.html)
+
+    def test_forward_outlook_is_visible_and_discloses_proxy_scope(self):
+        self.assertIn("前瞻与预期定价", self.html)
+        self.assertIn("不能当作 ${ticker} 的目标价", self.html)
+        self.assertIn("本模块用于解释预期，不单独触发交易", self.html)
 
     def test_stale_gex_is_visibly_disclosed(self):
         self.assertIn("GEX 为上一份有效数据", self.html)

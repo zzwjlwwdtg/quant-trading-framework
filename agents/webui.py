@@ -14,6 +14,7 @@ API 端点：
   GET /api/trades?n=20    → 最近 N 笔 trade_log
   GET /api/log?n=100      → 当天 log 最后 N 行
   GET /api/benchmark      → 若有 signals/benchmark_report.md 则读
+  GET /api/equity_outlook → 美股前瞻共识 + 预期定价匹配
 
 安全：默认只绑 127.0.0.1，仅本机可访问。
 """
@@ -158,6 +159,7 @@ _DEFAULT_TICKER_DISPLAY_PROFILE = {
     "asset_label_zh": "股票 / 股票 ETF",
     "show_options": True,
     "show_fundamentals": True,
+    "show_forward_outlook": True,
     "show_ai_analysis": True,
     "show_supply_chain": True,
     "fundamental_profile": "industrial",
@@ -170,6 +172,7 @@ TICKER_DISPLAY_PROFILES = {
         "asset_label_zh": "黄金大宗商品",
         "show_options": False,
         "show_fundamentals": False,
+        "show_forward_outlook": False,
         "show_ai_analysis": False,
         "show_supply_chain": False,
     },
@@ -179,6 +182,7 @@ TICKER_DISPLAY_PROFILES = {
         "asset_label_zh": "1–3 年美国国债",
         "show_options": False,
         "show_fundamentals": False,
+        "show_forward_outlook": False,
         "show_ai_analysis": False,
         "show_supply_chain": False,
     },
@@ -188,6 +192,7 @@ TICKER_DISPLAY_PROFILES = {
         "asset_label_zh": "3–7 年美国国债",
         "show_options": False,
         "show_fundamentals": False,
+        "show_forward_outlook": False,
         "show_ai_analysis": False,
         "show_supply_chain": False,
     },
@@ -197,6 +202,7 @@ TICKER_DISPLAY_PROFILES = {
         "asset_label_zh": "日本银行",
         "show_options": False,
         "show_fundamentals": True,
+        "show_forward_outlook": False,
         "show_ai_analysis": False,
         "show_supply_chain": False,
         "fundamental_profile": "bank",
@@ -1995,7 +2001,250 @@ def _fetch_peer_median_pe(ticker: str) -> dict | None:
         return None
 
 
-def _fetch_analyst_consensus(stock: str, ticker: str | None = None) -> dict | None:
+def _finite_number(value):
+    """Convert pandas/numpy scalars to a JSON-safe finite float."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number in (float("inf"), float("-inf")):
+        return None
+    return round(number, 4)
+
+
+def _estimate_frame_rows(frame, fields: tuple[str, ...]) -> dict:
+    """Normalize a yfinance estimate DataFrame without depending on pandas."""
+    if frame is None or getattr(frame, "empty", True):
+        return {}
+    rows: dict[str, dict] = {}
+    try:
+        iterator = frame.iterrows()
+    except Exception:
+        return {}
+    for period, row in iterator:
+        values: dict[str, float] = {}
+        for field in fields:
+            try:
+                value = row.get(field) if hasattr(row, "get") else row[field]
+            except Exception:
+                continue
+            number = _finite_number(value)
+            if number is not None:
+                values[field] = number
+        if values:
+            rows[str(period)] = values
+    return rows
+
+
+def _ticker_estimate_table(ticker_obj, attribute: str):
+    try:
+        return getattr(ticker_obj, attribute)
+    except Exception:
+        return None
+
+
+def _fetch_forward_estimate_snapshot(ticker_obj) -> dict:
+    """Fetch forward earnings/revenue consensus and revision direction."""
+    earnings = _estimate_frame_rows(
+        _ticker_estimate_table(ticker_obj, "earnings_estimate"),
+        ("avg", "low", "high", "yearAgoEps", "numberOfAnalysts", "growth"),
+    )
+    revenue = _estimate_frame_rows(
+        _ticker_estimate_table(ticker_obj, "revenue_estimate"),
+        ("avg", "low", "high", "yearAgoRevenue", "numberOfAnalysts", "growth"),
+    )
+    trend = _estimate_frame_rows(
+        _ticker_estimate_table(ticker_obj, "eps_trend"),
+        ("current", "7daysAgo", "30daysAgo", "60daysAgo", "90daysAgo"),
+    )
+    revisions = _estimate_frame_rows(
+        _ticker_estimate_table(ticker_obj, "eps_revisions"),
+        ("upLast7days", "upLast30days", "downLast7days", "downLast30days"),
+    )
+
+    preferred_periods = ("+1y", "0y", "+1q", "0q")
+    period = next(
+        (p for p in preferred_periods if p in trend or p in revisions),
+        next(iter(trend or revisions), None),
+    )
+    trend_row = trend.get(period, {}) if period else {}
+    revision_row = revisions.get(period, {}) if period else {}
+    current = _finite_number(trend_row.get("current"))
+    thirty_days_ago = _finite_number(trend_row.get("30daysAgo"))
+    trend_pct_30d = None
+    if current is not None and thirty_days_ago not in (None, 0):
+        trend_pct_30d = round((current / thirty_days_ago - 1) * 100, 2)
+    up_30d = _finite_number(revision_row.get("upLast30days"))
+    down_30d = _finite_number(revision_row.get("downLast30days"))
+    net_30d = None
+    if up_30d is not None or down_30d is not None:
+        net_30d = int(round((up_30d or 0) - (down_30d or 0)))
+
+    if trend_pct_30d is None:
+        trend_signal = "unavailable"
+    elif trend_pct_30d > 1:
+        trend_signal = "upward"
+    elif trend_pct_30d < -1:
+        trend_signal = "downward"
+    else:
+        trend_signal = "flat"
+    if net_30d is None:
+        breadth_signal = "unavailable"
+    elif net_30d > 0:
+        breadth_signal = "upward"
+    elif net_30d < 0:
+        breadth_signal = "downward"
+    else:
+        breadth_signal = "flat"
+
+    directional = {trend_signal, breadth_signal} - {"flat", "unavailable"}
+    if len(directional) > 1:
+        signal = "mixed"
+    elif directional:
+        signal = next(iter(directional))
+    elif trend_signal == "flat" or breadth_signal == "flat":
+        signal = "flat"
+    else:
+        signal = "unavailable"
+
+    return {
+        "earnings": earnings,
+        "revenue": revenue,
+        "eps_trend": trend,
+        "eps_revisions": revisions,
+        "revision_summary": {
+            "period": period,
+            "signal": signal,
+            "trend_signal": trend_signal,
+            "breadth_signal": breadth_signal,
+            "eps_current": current,
+            "eps_30d_ago": thirty_days_ago,
+            "eps_trend_pct_30d": trend_pct_30d,
+            "up_30d": int(up_30d) if up_30d is not None else None,
+            "down_30d": int(down_30d) if down_30d is not None else None,
+            "net_30d": net_30d,
+        },
+    }
+
+
+def _median_number(values: list[float]) -> float | None:
+    clean = sorted(float(v) for v in values if _finite_number(v) is not None)
+    if not clean:
+        return None
+    mid = len(clean) // 2
+    if len(clean) % 2:
+        return clean[mid]
+    return (clean[mid - 1] + clean[mid]) / 2
+
+
+def _build_expectation_pricing(consensus: dict) -> dict:
+    """Compare price with forward consensus using several transparent anchors."""
+    anchor_specs = (
+        ("analyst_target", "分析师目标均值", "target_mean", "target_upside_pct"),
+        ("pe_hold", "前瞻 EPS × 当前估值", "implied_pe_hold", "implied_pe_hold_upside"),
+        ("historical_pe", "前瞻 EPS × 五年 PE 中位", "implied_hist_median", "implied_hist_upside"),
+        ("peer_pe", "前瞻 EPS × 同行 PE 中位", "implied_peer_median", "implied_peer_upside"),
+    )
+    anchors = []
+    for key, label, price_field, gap_field in anchor_specs:
+        price = _finite_number(consensus.get(price_field))
+        gap = _finite_number(consensus.get(gap_field))
+        if price is None or gap is None or not (-95 < gap < 500):
+            continue
+        anchors.append({
+            "key": key,
+            "label": label,
+            "implied_price": round(price, 2),
+            "gap_pct": round(gap, 1),
+        })
+
+    median_gap = _median_number([row["gap_pct"] for row in anchors])
+    median_gap = round(median_gap, 1) if median_gap is not None else None
+    estimates = consensus.get("forward_estimates") or {}
+    revision = estimates.get("revision_summary") or {}
+    revision_signal = revision.get("signal") or "unavailable"
+
+    current_price = _finite_number(consensus.get("current_price"))
+    trailing_eps = _finite_number(consensus.get("trailing_eps"))
+    historical_pe = _finite_number(consensus.get("hist_pe_median"))
+    consensus_growth = _finite_number(consensus.get("eps_growth_pct"))
+    required_growth = None
+    growth_cushion = None
+    if current_price and trailing_eps and trailing_eps > 0 and historical_pe and historical_pe > 0:
+        required_eps = current_price / historical_pe
+        required_growth = round((required_eps / trailing_eps - 1) * 100, 1)
+        if consensus_growth is not None:
+            growth_cushion = round(consensus_growth - required_growth, 1)
+
+    if median_gap is None:
+        code, label, tone = "insufficient", "数据不足", "muted"
+    elif median_gap >= 12:
+        if revision_signal in {"downward", "mixed"}:
+            code, label, tone = "mixed", "估值与修正信号分歧", "warn"
+        else:
+            code, label, tone = "underpriced", "市场预期偏低", "ok"
+    elif median_gap <= -15 and revision_signal == "mixed":
+        code, label, tone = "mixed", "估值与修正信号分歧", "warn"
+    elif median_gap <= -15 and revision_signal != "upward":
+        code, label, tone = "overpriced", "预期透支", "bad"
+    elif median_gap <= -5 or (growth_cushion is not None and growth_cushion <= -5):
+        if revision_signal == "downward":
+            code, label, tone = "overpriced", "预期透支", "bad"
+        else:
+            code, label, tone = "fully_priced", "利好已充分计价", "warn"
+    elif median_gap >= 5 and revision_signal == "upward":
+        code, label, tone = "underpriced", "市场预期偏低", "ok"
+    else:
+        code, label, tone = "matched", "预期与股价基本匹配", "muted"
+
+    rationale = []
+    if median_gap is not None:
+        direction = "高于" if median_gap >= 0 else "低于"
+        rationale.append(f"多口径隐含价中位数{direction}现价 {abs(median_gap):.1f}%")
+    revision_zh = {
+        "upward": "近 30 天 EPS 共识上修",
+        "downward": "近 30 天 EPS 共识下修",
+        "flat": "近 30 天 EPS 共识基本持平",
+        "mixed": "近 30 天 EPS 数值与上调/下调家数方向分歧",
+        "unavailable": "暂无可靠 EPS 修正序列",
+    }.get(revision_signal, "暂无可靠 EPS 修正序列")
+    rationale.append(revision_zh)
+    if required_growth is not None and consensus_growth is not None:
+        rationale.append(
+            f"历史 PE 口径要求 EPS 增长 {required_growth:+.1f}%，共识为 {consensus_growth:+.1f}%"
+        )
+
+    analyst_count = int(_finite_number(consensus.get("n_analysts")) or 0)
+    if len(anchors) >= 3 and analyst_count >= 8 and revision_signal != "unavailable":
+        confidence = "high"
+    elif len(anchors) >= 2 or analyst_count >= 5:
+        confidence = "medium"
+    else:
+        confidence = "low"
+
+    return {
+        "classification": code,
+        "label": label,
+        "tone": tone,
+        "confidence": confidence,
+        "anchor_count": len(anchors),
+        "anchors": anchors,
+        "median_gap_pct": median_gap,
+        "revision_signal": revision_signal,
+        "required_eps_growth_pct": required_growth,
+        "consensus_eps_growth_pct": consensus_growth,
+        "growth_cushion_pct": growth_cushion,
+        "rationale": rationale,
+    }
+
+
+def _fetch_analyst_consensus(
+    stock: str,
+    ticker: str | None = None,
+    include_estimates: bool = False,
+) -> dict | None:
     """yfinance 分析师聚合 → 归一化字段。失败返 {'error': ...}，无覆盖返 None。
 
     stock: yfinance symbol (e.g. NVDA / 6762.T)
@@ -2077,7 +2326,7 @@ def _fetch_analyst_consensus(stock: str, ticker: str | None = None) -> dict | No
                     (implied_peer_median / current_price - 1) * 100, 1
                 )
 
-        return {
+        result = {
             "n_analysts":         n_analysts,
             "recommendation":     rec_key,
             "current_price":      round(current_price, 2) if current_price else None,
@@ -2115,8 +2364,81 @@ def _fetch_analyst_consensus(stock: str, ticker: str | None = None) -> dict | No
             "implied_peer_upside":     implied_peer_upside,
             "source":             "yfinance analyst aggregation",
         }
+        if include_estimates:
+            result["forward_estimates"] = _fetch_forward_estimate_snapshot(t)
+        return result
     except Exception as e:
         return {"error": str(e)[:120]}
+
+
+EQUITY_OUTLOOK_CACHE_SCHEMA = 1
+
+
+def _equity_outlook_cache_name(source_stock: str) -> str:
+    cache_key = re.sub(r"[^A-Z0-9]+", "_", source_stock.upper()).strip("_")
+    return f"equity_outlook_v{EQUITY_OUTLOOK_CACHE_SCHEMA}_{cache_key}"
+
+
+def _compute_equity_outlook(source_stock: str) -> dict:
+    source_ticker = source_stock.split(".", 1)[0].upper()
+    consensus = _fetch_analyst_consensus(
+        source_stock,
+        ticker=source_ticker,
+        include_estimates=True,
+    )
+    if not consensus:
+        return {
+            "cache_schema": EQUITY_OUTLOOK_CACHE_SCHEMA,
+            "source_stock": source_stock,
+            "state": "unavailable",
+            "error": "no_analyst_forward_coverage",
+        }
+    if consensus.get("error"):
+        return {
+            "cache_schema": EQUITY_OUTLOOK_CACHE_SCHEMA,
+            "source_stock": source_stock,
+            "state": "error",
+            "error": consensus["error"],
+        }
+    return {
+        "cache_schema": EQUITY_OUTLOOK_CACHE_SCHEMA,
+        "source_stock": source_stock,
+        "state": "ready",
+        "analyst_consensus": consensus,
+        "pricing": _build_expectation_pricing(consensus),
+        "official_guidance_status": "not_connected",
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "source": "yfinance analyst aggregation",
+    }
+
+
+def api_equity_outlook(ticker: str) -> dict:
+    """Forward consensus and expectation-vs-price analysis for equity cards."""
+    tk = (ticker or "").upper().strip().removeprefix("US.")
+    profile = ticker_display_profile(tk)
+    if not tk or not profile.get("show_forward_outlook", True):
+        return {"ticker": tk, "error": "no_forward_outlook_for_this_type"}
+    source_stock = TICKER_TO_FUNDAMENTAL_STOCK.get(tk, tk)
+    if source_stock is None:
+        return {"ticker": tk, "error": "no_forward_outlook_for_this_type"}
+
+    data = _cached(
+        _equity_outlook_cache_name(source_stock),
+        ttl_sec=6 * 3600,
+        compute_fn=lambda: _compute_equity_outlook(source_stock),
+        first_call_async=True,
+        first_call_placeholder={
+            "source_stock": source_stock,
+            "state": "loading",
+            "cache_schema": EQUITY_OUTLOOK_CACHE_SCHEMA,
+        },
+    )
+    return {
+        **data,
+        "ticker": tk,
+        "source_stock": source_stock,
+        "is_proxy": source_stock.upper() != tk,
+    }
 
 
 _TRUSTED_JP_GUIDANCE_DOMAINS = (
@@ -2483,43 +2805,78 @@ def _read_fundamentals_cache_for_ai(ticker: str) -> dict | None:
     return None
 
 
-_TICKER_AI_CACHE_SCHEMA = 2
+def _read_equity_outlook_cache_for_ai(ticker: str) -> dict | None:
+    """Read a completed outlook cache without triggering network work."""
+    tk = (ticker or "").upper().removeprefix("US.")
+    if not ticker_display_profile(tk).get("show_forward_outlook", True):
+        return None
+    source_stock = TICKER_TO_FUNDAMENTAL_STOCK.get(tk, tk)
+    if not source_stock:
+        return None
+    path = _WEBUI_CACHE_DIR / f"{_equity_outlook_cache_name(source_stock)}.json"
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(data, dict) or data.get("state") != "ready":
+        return None
+    return data
+
+
+_TICKER_AI_CACHE_SCHEMA = 3
 
 
 def _ticker_ai_cache_key(ticker_rows: list[tuple]) -> str:
     """Hash every input that can alter the generated per-ticker AI analysis."""
     import hashlib
 
+    ticker_payloads = []
+    for row in ticker_rows:
+        tk, sig, opt, fundamentals = row[:4]
+        outlook = row[4] if len(row) >= 5 else None
+        ticker_payloads.append({
+            "ticker": tk,
+            "signal": {
+                key: sig.get(key)
+                for key in ("action_zh", "conf", "scale", "bull_count", "bear_count",
+                            "rsi", "vol_ratio", "regime")
+            },
+            "options": {
+                "spot": opt.get("spot"),
+                "call_wall_oi": opt.get("call_wall_oi"),
+                "put_wall_oi": opt.get("put_wall_oi"),
+                "squeeze_type": (
+                    opt.get("squeeze_risk", {}).get("type")
+                    if isinstance(opt.get("squeeze_risk"), dict) else None
+                ),
+            },
+            "fundamentals": (
+                {
+                    key: fundamentals.get(key)
+                    for key in ("source_stock", "period", "years", "latest", "croic",
+                                "piotroski", "financial_debt", "ccc")
+                }
+                if fundamentals else None
+            ),
+            "outlook": (
+                {
+                    "source_stock": outlook.get("source_stock"),
+                    "pricing": outlook.get("pricing"),
+                    "consensus": {
+                        key: (outlook.get("analyst_consensus") or {}).get(key)
+                        for key in ("forward_eps", "forward_pe", "eps_growth_pct",
+                                    "target_upside_pct", "next_earnings")
+                    },
+                }
+                if outlook else None
+            ),
+        })
+
     payload = {
         "schema": _TICKER_AI_CACHE_SCHEMA,
-        "tickers": [
-            {
-                "ticker": tk,
-                "signal": {
-                    key: sig.get(key)
-                    for key in ("action_zh", "conf", "scale", "bull_count", "bear_count",
-                                "rsi", "vol_ratio", "regime")
-                },
-                "options": {
-                    "spot": opt.get("spot"),
-                    "call_wall_oi": opt.get("call_wall_oi"),
-                    "put_wall_oi": opt.get("put_wall_oi"),
-                    "squeeze_type": (
-                        opt.get("squeeze_risk", {}).get("type")
-                        if isinstance(opt.get("squeeze_risk"), dict) else None
-                    ),
-                },
-                "fundamentals": (
-                    {
-                        key: fundamentals.get(key)
-                        for key in ("source_stock", "period", "years", "latest", "croic",
-                                    "piotroski", "financial_debt", "ccc")
-                    }
-                    if fundamentals else None
-                ),
-            }
-            for tk, sig, opt, fundamentals in ticker_rows
-        ],
+        "tickers": ticker_payloads,
     }
     raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
@@ -2545,7 +2902,8 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
         if not sig and (not opt or 'error' in opt):
             continue
         fundamentals = _read_fundamentals_cache_for_ai(tk)
-        tk_list.append((tk, sig, opt, fundamentals))
+        outlook = _read_equity_outlook_cache_for_ai(tk)
+        tk_list.append((tk, sig, opt, fundamentals, outlook))
 
     if not tk_list:
         return {"tickers": {}, "state": "empty"}
@@ -2568,7 +2926,7 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
             try:
                 from ai_prompt import query_ai_cli
                 lines = []
-                for tk, s, o, fd in tk_list:
+                for tk, s, o, fd, outlook in tk_list:
                     lines.append(f"--- {tk} ---")
                     lines.append(
                         f"信号: {s.get('action_zh','?')} conf={s.get('conf','?')}/{s.get('scale','?')} "
@@ -2605,6 +2963,17 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                             f"Piotroski={latest.get('piotroski')}/9 借款=${latest.get('fin_debt')}M "
                             f"CCC={latest.get('ccc')}天 · 4 年趋势 CROIC={fd.get('croic')}"
                         )
+                    if outlook:
+                        ac = outlook.get("analyst_consensus") or {}
+                        pricing = outlook.get("pricing") or {}
+                        lines.append(
+                            f"  前瞻(来源 {outlook.get('source_stock','?')}): "
+                            f"分类={pricing.get('label','数据不足')} 可信度={pricing.get('confidence','low')} "
+                            f"Forward EPS={ac.get('forward_eps')} 增长={ac.get('eps_growth_pct')}% "
+                            f"Forward PE={ac.get('forward_pe')}x 目标价差={ac.get('target_upside_pct')}% "
+                            f"多锚隐含价差中位={pricing.get('median_gap_pct')}% "
+                            f"修正={pricing.get('revision_signal','unavailable')}"
+                        )
                     lines.append("")
 
                 prompt = (
@@ -2620,7 +2989,8 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                     "3. gamma_up 挤压[high] = 突破 call wall 加速上涨；put_break 挤压[high] = 跌破 put wall 加速下跌\n"
                     "4. 信号 conf ≥ 4 且期权攻防共振 → 明确机会；信号看多但 put OI 大幅堆积 → 警示 divergence\n"
                     "5. 若基本面存在 → 综合行里带一句：CROIC 趋势方向 + Piotroski 强/弱 + 借款激增警示\n"
-                    "6. 严格只输出 ### 段落，不要总结不要展望不要重复问题\n\n"
+                    "6. 若前瞻存在 → 综合行必须写预期定价分类；警示行说明 EPS 修正与估值是否背离。代理 ETF 只代表底层公司，不把公司目标价当 ETF 目标价\n"
+                    "7. 严格只输出 ### 段落，不要另写总结、泛泛展望或重复问题\n\n"
                     "标的数据：\n"
                     + "\n".join(lines)
                 )
@@ -3523,6 +3893,9 @@ class Handler(BaseHTTPRequestHandler):
                 tk = qs.get("ticker", [""])[0]
                 pd = qs.get("period", ["year"])[0]
                 self._json(api_fundamentals(tk, period=pd))
+            elif path == "/api/equity_outlook":
+                tk = qs.get("ticker", [""])[0]
+                self._json(api_equity_outlook(tk))
             elif path == "/api/jp_watch":
                 self._json(api_jp_watch())
             elif path == "/api/jp_guidance":

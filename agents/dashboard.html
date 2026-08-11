@@ -1705,6 +1705,81 @@ function renderSignalOverview(t, optSrc = '') {
     </div>`;
 }
 
+function renderEquityOutlook(r, ticker) {
+  if (!r) return '<small class="bad">前瞻接口无响应</small>';
+  if (r.state === 'loading' || (r._meta && r._meta.first_call)) {
+    return '<small style="color:var(--muted); padding:6px; display:block">⏳ 正在聚合分析师共识、估值带与 EPS 修正… 首次约 10–60 秒</small>';
+  }
+  if (r.error || r.state === 'error' || r.state === 'unavailable') {
+    const msg = r.error === 'no_analyst_forward_coverage' ? '该标的暂无足够分析师前瞻覆盖' : (r.error || '前瞻数据暂不可用');
+    return `<small class="warn" style="padding:6px; display:block">⚠ ${msg}</small>`;
+  }
+
+  const ac = r.analyst_consensus || {};
+  const pricing = r.pricing || {};
+  const estimate = ac.forward_estimates || {};
+  const revision = estimate.revision_summary || {};
+  const pct = v => v == null ? '-' : `${v >= 0 ? '+' : ''}${Number(v).toFixed(1)}%`;
+  const num = (v, digits=1) => v == null ? '-' : Number(v).toFixed(digits);
+  const pctCls = v => v == null ? 'muted' : (v >= 5 ? 'ok' : (v <= -5 ? 'bad' : 'muted'));
+  const revisionMetaMap = {
+    upward: ['上修', 'ok'], downward: ['下修', 'bad'], flat: ['持平', 'muted'], mixed: ['方向分歧', 'warn'], unavailable: ['暂无序列', 'muted'],
+  };
+  const revisionMeta = revisionMetaMap[pricing.revision_signal || 'unavailable'] || revisionMetaMap.unavailable;
+  const confidenceZh = {high:'高', medium:'中', low:'低'}[pricing.confidence] || '低';
+  const sourceScope = r.is_proxy
+    ? `<div class="warn" style="font-size:9px; margin-bottom:5px; padding:4px 6px; background:rgba(210,153,34,0.08); border-radius:3px">⚠ ${ticker} 使用 ${r.source_stock} 作为底层公司代理；下列目标价和估值只对应 ${r.source_stock}，不能当作 ${ticker} 的目标价。</div>`
+    : '';
+  const anchors = (pricing.anchors || []).map(a => `
+    <div style="display:grid; grid-template-columns:1fr auto auto; gap:5px; font-size:9px; padding:3px 0; border-bottom:1px dashed rgba(125,133,144,0.2)">
+      <span title="独立估值锚">${a.label}</span>
+      <b>$${num(a.implied_price, 2)}</b>
+      <span class="${pctCls(a.gap_pct)}">${pct(a.gap_pct)}</span>
+    </div>`).join('');
+  const rationale = (pricing.rationale || []).map(x => `<li>${x}</li>`).join('');
+  const requiredGrowth = pricing.required_eps_growth_pct == null ? '' : `
+    <div style="font-size:9px; margin-top:4px; color:var(--muted)">
+      当前股价按五年 PE 中位倒推，要求 EPS 增长 <b>${pct(pricing.required_eps_growth_pct)}</b>；分析师共识 <b class="${pctCls(pricing.consensus_eps_growth_pct)}">${pct(pricing.consensus_eps_growth_pct)}</b>
+      ${pricing.growth_cushion_pct != null ? `· 安全垫 <b class="${pctCls(pricing.growth_cushion_pct)}">${pct(pricing.growth_cushion_pct)}</b>` : ''}
+    </div>`;
+
+  return `<div style="padding:5px 0">
+    ${sourceScope}
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px">
+      <span class="badge ${pricing.tone || 'muted'}" style="font-size:9px">${pricing.label || '数据不足'}</span>
+      <small style="color:var(--muted)">可信度 ${confidenceZh} · ${pricing.anchor_count || 0} 个估值锚</small>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; font-size:9px; margin-bottom:5px">
+      <span>前瞻 EPS <b>${num(ac.forward_eps, 2)}</b> <span class="${pctCls(ac.eps_growth_pct)}">${pct(ac.eps_growth_pct)}</span></span>
+      <span>Forward P/E <b>${num(ac.forward_pe, 1)}x</b></span>
+      <span>收入成长 <b class="${pctCls(ac.revenue_growth_pct)}">${pct(ac.revenue_growth_pct)}</b></span>
+      <span>分析师目标 <b>${ac.target_mean == null ? '-' : '$' + num(ac.target_mean, 2)}</b> <span class="${pctCls(ac.target_upside_pct)}">${pct(ac.target_upside_pct)}</span></span>
+      <span>EPS 30日修正 <b class="${revisionMeta[1]}">${revisionMeta[0]}</b> ${revision.eps_trend_pct_30d != null ? pct(revision.eps_trend_pct_30d) : ''}</span>
+      <span>下次财报 <b>${ac.next_earnings || '-'}</b></span>
+    </div>
+    ${anchors ? `<div style="padding:4px 6px; background:rgba(88,166,255,0.04); border-radius:4px">
+      <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📐 前瞻共识对应的隐含股价</div>${anchors}
+      <div style="display:flex; justify-content:space-between; font-size:9px; margin-top:3px"><span>多口径中位价差</span><b class="${pctCls(pricing.median_gap_pct)}">${pct(pricing.median_gap_pct)}</b></div>
+    </div>` : ''}
+    ${requiredGrowth}
+    ${rationale ? `<ul style="font-size:9px; color:var(--muted); margin:5px 0 0; padding-left:16px">${rationale}</ul>` : ''}
+    <div style="font-size:8px; color:var(--muted); margin-top:5px">来源：yfinance 分析师聚合，缓存 6 小时；公司官方 guidance 尚未结构化接入。本模块用于解释预期，不单独触发交易。</div>
+  </div>`;
+}
+
+async function loadEquityOutlookOnDemand(ticker, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el || el.dataset.loading === 'true') return;
+  if (el.dataset.loaded === 'true') return;
+  el.dataset.loading = 'true';
+  el.innerHTML = '<small style="color:var(--muted); padding:6px; display:block">⏳ 加载前瞻共识与预期定价…</small>';
+  const r = await fetchJson(`/api/equity_outlook?ticker=${encodeURIComponent(ticker)}`);
+  el.dataset.loading = 'false';
+  el.innerHTML = renderEquityOutlook(r, ticker);
+  // 首次异步计算只返回 placeholder；保留未加载状态，让下一轮 dashboard 刷新取真值。
+  el.dataset.loaded = (r && r.state !== 'loading' && !(r._meta && r._meta.first_call)) ? 'true' : 'false';
+}
+
 function renderTickerAI(t, context) {
   const body = context.aiMap[t.ticker];
   const src  = context.aiSrc[t.ticker];
@@ -1728,6 +1803,7 @@ function renderSignalCard(t, context) {
   const isMacro = profile.card_group === 'macro';
   const showOptions = profile.show_options !== false;
   const showFundamentals = profile.show_fundamentals !== false;
+  const showForwardOutlook = profile.show_forward_outlook !== false;
   const showAI = profile.show_ai_analysis !== false;
   const showSupplyChain = profile.show_supply_chain !== false;
   const opt = showOptions ? context.optMap[t.ticker] : null;
@@ -1750,11 +1826,16 @@ function renderSignalCard(t, context) {
     <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">📊 <b style="color:#58a6ff">4 年基本面</b> <small style="font-size:9px">▲折叠 (yfinance，缓存 30 天)</small></summary>
     <div id="fd-${t.ticker}"></div>
   </details>` : '';
+  const forwardOutlook = showForwardOutlook ? `<details data-details-key="outlook-${t.ticker}" open style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this); if(this.open) loadEquityOutlookOnDemand('${t.ticker}', 'outlook-${t.ticker}')">
+    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🔭 <b style="color:#58a6ff">前瞻与预期定价</b> <small style="font-size:9px">▲折叠 (分析师共识 · 6h)</small></summary>
+    <div id="outlook-${t.ticker}"></div>
+  </details>` : '';
   return `<div class="signal-card${isMacro ? ' macro-asset' : ''}">
     ${renderSignalOverview(t, optSrc)}
     ${macroMeta}
     ${showOptions ? renderMiniWall(opt) : ''}
     ${showOptions ? renderOptAnalysis(opt) : ''}
+    ${forwardOutlook}
     ${showAI ? renderTickerAI(t, context) : ''}
     ${capitalFlow}
     ${supplyChain}
