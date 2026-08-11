@@ -3176,6 +3176,50 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
             except Exception:
                 pass
 
+            # === GEX + IV Regime + Skew 综合分析（对期权小白输出结论）===
+            gex_analysis = None
+            try:
+                from gex_calc import full_analysis as _gex_full
+                from datetime import datetime as _dt, date as _date
+                import math as _math
+                # DTE
+                try:
+                    exp_dt = _dt.strptime(exp, "%Y-%m-%d").date()
+                    dte = max(1, (exp_dt - _date.today()).days)
+                except Exception:
+                    dte = 30
+                # ⚠ 关键：IV 单位归一
+                # yfinance 返 impliedVolatility 是**小数** (0.335 = 33.5%)
+                # moomoo openD 返是**百分比** (33.5 = 33.5%)
+                # gex_calc 期待小数格式，openD 情况下 ÷100
+                calls_gex = calls.copy()
+                puts_gex  = puts.copy()
+                # 用 max 值判断单位：>3 (即 300%) 一定是百分比格式
+                iv_max = max(
+                    float(calls_gex["impliedVolatility"].max() or 0) if "impliedVolatility" in calls_gex.columns else 0,
+                    float(puts_gex["impliedVolatility"].max() or 0)  if "impliedVolatility" in puts_gex.columns else 0,
+                )
+                if iv_max > 3.0:
+                    calls_gex["impliedVolatility"] = calls_gex["impliedVolatility"] / 100.0
+                    puts_gex["impliedVolatility"]  = puts_gex["impliedVolatility"]  / 100.0
+                # 60d realized vol (小数格式)
+                rv = None
+                try:
+                    import yfinance as _yf
+                    hist = _yf.Ticker(underlying).history(period="60d")["Close"]
+                    rets = hist.pct_change().dropna()
+                    if len(rets) >= 10:
+                        rv = float(rets.std() * _math.sqrt(252))
+                except Exception:
+                    rv = None
+                gex_analysis = _gex_full(
+                    calls_gex, puts_gex, spot, dte,
+                    realized_vol_60d=rv,
+                    next_earnings_days=earnings_meta.get("days_to_earnings"),
+                )
+            except Exception as e:
+                gex_analysis = {"error": f"gex_calc_fail: {str(e)[:100]}"}
+
             out["tickers"][tk] = {
                 "underlying":       underlying,
                 "spot":             round(spot, 2),
@@ -3188,10 +3232,12 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 "call_wall_oi_strike": call_wall_oi["strike"] if call_wall_oi else None,
                 "put_wall_oi_strike":  put_wall_oi["strike"]  if put_wall_oi  else None,
                 # 联合 wall bands（相邻强 OI strike 合并 → 隐性双墙识别）
-                "put_bands_below":  put_bands_below,   # spot 下方 put 联合防御
-                "call_bands_above": call_bands_above,  # spot 上方 call 联合阻力
+                "put_bands_below":  put_bands_below,
+                "call_bands_above": call_bands_above,
                 "max_pain":         best_s,
-                "source":           source_used,   # openD or yfinance
+                "source":           source_used,
+                # 期权结构综合读 (GEX + IV Regime + Skew + Verdict)
+                "gex_analysis":     gex_analysis,
                 **analysis,
                 **earnings_meta,
             }
