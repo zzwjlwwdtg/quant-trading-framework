@@ -1608,12 +1608,12 @@ function renderOptAnalysis(opt) {
         ${oppRow('reduce',   '减仓时机',    op.reduce   || {level:'none', reason:'-'})}
       </table>
 
-      <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📍 关键价位</div>
-      <div style="font-size:10px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.6">
-        ${kp.upper_resistance ? `<div>⬆ 上方阻力 (call wall): <b>$${kp.upper_resistance}</b> <span style="color:var(--muted); font-size:9px">— 涨到此位可能被卖压</span></div>` : ''}
-        ${kp.pin ? `<div>🎯 pin 中枢 (gamma flip): <b class="ok">$${kp.pin}</b> <span style="color:var(--muted); font-size:9px">— dealer 会把价格吸引到这</span></div>` : ''}
-        ${kp.lower_support ? `<div>⬇ 下方支撑 (put wall): <b>$${kp.lower_support}</b> <span style="color:var(--muted); font-size:9px">— 跌到此位 dealer 会买入托底</span></div>` : ''}
-        ${kp.break_watch ? `<div class="warn" style="margin-top:2px">⚠ ${kp.break_watch}</div>` : ''}
+      <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📍 关键价位 · 记这几个数就够了</div>
+      <div style="font-size:10px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.7">
+        ${kp.upper_resistance ? `<div>⬆ <b>上方阻力 $${kp.upper_resistance}</b> <span style="color:var(--muted); font-size:9.5px">— 涨到这里会遇到卖压（因为持有卖出期权的人会主动砸盘保护自己）</span></div>` : ''}
+        ${kp.pin ? `<div>🎯 <b class="ok">关键中枢 $${kp.pin}</b> <span style="color:var(--muted); font-size:9.5px">— 华尔街对冲盘想把股价固定在这个价，价格偏离就会被拉回来</span></div>` : ''}
+        ${kp.lower_support ? `<div>⬇ <b>下方支撑 $${kp.lower_support}</b> <span style="color:var(--muted); font-size:9.5px">— 跌到这里会有买盘接（因为持有买入期权的人会主动买入保护自己）</span></div>` : ''}
+        ${kp.break_watch ? `<div class="warn" style="margin-top:3px; padding:3px 5px; background:rgba(210,153,34,0.10); border-radius:2px">${kp.break_watch}</div>` : ''}
       </div>
 
       <details style="margin-top:5px">

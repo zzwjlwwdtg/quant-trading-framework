@@ -383,7 +383,7 @@ def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
                             call_wall_strike: Optional[float] = None,
                             put_wall_strike: Optional[float] = None,
                             next_earnings_days: Optional[int] = None) -> dict:
-    """Stock 持仓视角: 3 类风险 + 3 类机会 + 关键价位 (小白友好，不涉及期权买卖)."""
+    """Stock 持仓视角: 3 类风险 + 3 类机会 + 关键价位 (完全大白话，零期权术语)."""
     flip = gex.get("gamma_flip_strike")
     spot_vs_flip = gex.get("spot_vs_flip_pct", 0)
     gex_regime = gex.get("regime", "")
@@ -392,105 +392,109 @@ def generate_stock_verdict(gex: dict, iv: dict, skew: dict, spot: float,
     skew_pct   = skew.get("skew_pct", 0) or 0
     skew_regime = skew.get("regime", "")
 
-    # === 3 类风险 ===
-    # 风险 A: 短期跌破 (下方支撑强度)
+    # === 3 类风险 (大白话版) ===
+    # 风险 A: 短期跌破
     if gex_regime == "negative_squeeze":
         breakdown = {"level": "high",
-                     "reason": f"负 GEX 区 · dealer 追跌 · 跌破 flip ${flip} 后加速下跌"}
+                     "reason": f"现价已跌破关键位 ${flip} · 一旦继续跌，华尔街对冲盘会跟着抛售，跌得更快"}
     elif gex_regime == "positive_pin" and spot_vs_flip < 2:
         breakdown = {"level": "mid",
-                     "reason": f"正 GEX 但距 flip ${flip} 仅 {spot_vs_flip:.1f}% · 缓冲有限"}
+                     "reason": f"现价刚在关键位 ${flip} 上方 · 缓冲只有 {spot_vs_flip:.1f}%，跌破就没保护"}
     elif skew_regime == "steep_fear" and put_wall_strike:
         breakdown = {"level": "mid",
-                     "reason": f"skew {skew_pct:.1f}% 陡峭 · 跌破 put wall ${put_wall_strike} 杀伤大"}
+                     "reason": f"市场恐慌情绪已定价（保险费涨了 {skew_pct:.1f}%）· 一旦跌破 ${put_wall_strike}，抛售会加剧"}
     else:
         breakdown = {"level": "low",
-                     "reason": f"正 GEX pin @ ${flip} · dealer 会买跌托底 · 下方安全"}
+                     "reason": f"现价在关键位 ${flip} 上方 · 华尔街对冲盘需要在跌的时候买入，会自动帮你托住底"}
 
-    # 风险 B: 事件风险 (财报/CPI)
+    # 风险 B: 事件风险
     if next_earnings_days is not None and next_earnings_days < 7:
         event_risk = {"level": "high",
-                      "reason": f"财报仅 {next_earnings_days} 天 · gap 风险 · 建议减仓避险"}
+                      "reason": f"财报还有 {next_earnings_days} 天 · 财报日通常会跳空（±5-15% 常见）· 建议提前减一部分锁利"}
     elif iv_regime == "crush_risk":
         event_risk = {"level": "high",
-                      "reason": f"IV rich +{iv_premium:.0f}% · 市场已定价大波 · 事件后可能急跌"}
+                      "reason": f"期权保险费已涨得很贵（比正常高 +{iv_premium:.0f}%）· 意味着市场预期有大波动 · 事件后往往急跌"}
     elif next_earnings_days is not None and next_earnings_days < 21:
         event_risk = {"level": "mid",
-                      "reason": f"财报 T-{next_earnings_days} · 距离尚可 · 观察 IV 是否 rising"}
+                      "reason": f"财报还有 {next_earnings_days} 天 · 目前保险费未涨 · 观察是否临近再动"}
     else:
         event_risk = {"level": "low",
-                      "reason": "无近期事件 · IV 未 rich · 事件风险可控"}
+                      "reason": "近期无财报/大事件 · 期权保险费正常 · 不会有突发跳空"}
 
     # 风险 C: 追高
     if spot_vs_flip > 8 and gex_regime == "positive_pin":
         chase = {"level": "high",
-                 "reason": f"spot 距 pin ${flip} 已 +{spot_vs_flip:.1f}% · dealer 会卖压 · 追高 asymmetric"}
+                 "reason": (f"现价已比关键位 ${flip} 高 +{spot_vs_flip:.1f}% · "
+                            f"华尔街对冲盘为了平衡持仓会主动卖股票压价，把价格拉回 ${flip} · "
+                            f"你现在追进去 = 涨的空间少 · 回落到 ${flip} 的可能大")}
     elif spot_vs_flip > 5:
         chase = {"level": "mid",
-                 "reason": f"距 pin ${flip} +{spot_vs_flip:.1f}% · 涨势有限 · 别加满仓"}
+                 "reason": f"现价比关键位 ${flip} 高 +{spot_vs_flip:.1f}% · 还能涨但空间有限 · 别加满仓，留点子弹回踩再补"}
     elif spot_vs_flip < -3:
         chase = {"level": "low",
-                 "reason": "现价在 pin 下方 · 涨到 pin 空间大 · 追多仍 OK"}
+                 "reason": f"现价在关键位 ${flip} 下方 · 涨回到 ${flip} 的空间还有 {abs(spot_vs_flip):.1f}% · 追多不算高位"}
     else:
         chase = {"level": "low",
-                 "reason": "现价靠近 pin · 中性区 · 不算追高"}
+                 "reason": f"现价靠近关键位 ${flip} · 上下空间都合理 · 不算追高"}
 
-    # === 3 类机会 ===
-    # 机会 A: 短期买入时机 (下方有支撑 · vol regime 友好)
+    # === 3 类机会 (大白话版) ===
+    # 机会 A: 短期买入时机
     if gex_regime == "positive_pin" and iv_regime in ("cheap", "normal") and skew_regime != "steep_fear":
         if spot_vs_flip > 5:
             buy_now = {"level": "wait",
-                       "reason": f"结构友好但现价已高 · 等回踩 ${flip} 附近再进"}
+                       "reason": (f"下方有华尔街对冲盘的支撑 + 期权保险便宜 · 结构友好 · "
+                                  f"但现价太高（比关键位 ${flip} 高 +{spot_vs_flip:.1f}%），等回落到 ${flip} 附近再买更安全")}
         else:
             buy_now = {"level": "good",
-                       "reason": f"正 GEX pin @ ${flip} + IV 便宜 · 下方 dealer 托底 · 买入 asymmetric"}
+                       "reason": f"现价接近关键位 ${flip} + 下方对冲盘会托底 + 期权保险便宜 · 买入下跌空间有限，涨的空间大"}
     elif gex_regime == "negative_squeeze":
         buy_now = {"level": "none",
-                   "reason": f"负 GEX · dealer 追跌放大波动 · 等突破 ${flip} 再动"}
+                   "reason": f"现价已跌破关键位 ${flip} · 对冲盘会追跌 · 现在买等于接刀，等价格站稳 ${flip} 再动"}
     elif iv_regime == "crush_risk":
         buy_now = {"level": "wait",
-                   "reason": "IV rich · 等事件后 vol crush + 价格回踩再买"}
+                   "reason": "期权保险费已涨很贵 · 意味着市场预期大波动 · 等事件（财报/CPI）过后价格回踩再买"}
     else:
         buy_now = {"level": "wait",
-                   "reason": "结构中性 · 无 asymmetric edge · 等更清晰信号"}
+                   "reason": "结构不明确 · 没有明显的优势买点 · 等更清晰的信号"}
 
     # 机会 B: 加仓时机
     if gex_regime == "positive_pin" and spot_vs_flip < 3 and iv_regime == "cheap":
         add_more = {"level": "good",
-                    "reason": f"pin @ ${flip} 稳固 + 现价接近 · 加仓 downside 有限"}
+                    "reason": f"现价接近关键位 ${flip} + 下方托底稳固 · 加仓风险有限（对冲盘会帮你护住 downside）"}
     elif flip and spot < flip:
         add_more = {"level": "wait",
-                    "reason": f"现价 {spot_vs_flip:.1f}% 低于 flip ${flip} · 等突破 flip 再加"}
+                    "reason": f"现价 {abs(spot_vs_flip):.1f}% 低于关键位 ${flip} · 等价格站上 ${flip} 再加，避免抄底失败"}
     else:
         add_more = {"level": "wait",
-                    "reason": "无明确加仓价位 · 观察"}
+                    "reason": "没有明确加仓价位 · 等价格回到关键位附近再考虑"}
 
     # 机会 C: 减仓时机
     if next_earnings_days is not None and next_earnings_days < 7:
         reduce = {"level": "good",
-                  "reason": f"财报 T-{next_earnings_days} · 减 20-30% 避 gap · 事件后再回补"}
+                  "reason": f"财报还有 {next_earnings_days} 天 · 建议先减 20-30% 锁利 · 财报后按结果再补仓"}
     elif gex_regime == "positive_pin" and spot_vs_flip > 8:
         reduce = {"level": "wait",
-                  "reason": f"距 pin +{spot_vs_flip:.1f}% · 若再涨 3-5% 考虑减一半锁利"}
+                  "reason": (f"现价已比关键位 ${flip} 高 +{spot_vs_flip:.1f}% · "
+                             f"如果再涨 3-5% 就考虑减一半锁利 · "
+                             f"因为对冲盘会把价格拉回 ${flip}")}
     elif gex_regime == "negative_squeeze" and spot < flip:
         reduce = {"level": "good",
-                  "reason": f"跌破 flip ${flip} · 负 GEX 加速下跌 · 减 30-50% 止损"}
+                  "reason": f"现价已跌破关键位 ${flip} · 对冲盘会跟着抛 · 建议减 30-50% 止损"}
     else:
         reduce = {"level": "none",
-                  "reason": "无卖压信号 · 持仓"}
+                  "reason": "没有卖出信号 · 继续持仓"}
 
-    # === 关键价位 ===
+    # === 关键价位 (大白话版) ===
     break_watch = None
     if gex_regime == "positive_pin":
-        # 跌破 flip 就 regime shift
-        break_watch = f"跌破 ${flip} (gamma flip) → 转负 GEX 加速下跌 · 减仓触发点"
+        break_watch = f"⚠ 跌破 ${flip} → 华尔街对冲盘会从「买跌」变「卖跌」，下跌会加速 · 这时候立即减仓"
     elif gex_regime == "negative_squeeze":
-        break_watch = f"突破 ${flip} (gamma flip) → 转正 GEX 抑波 · 加仓触发点"
+        break_watch = f"✓ 突破 ${flip} → 对冲盘会从「卖涨」变「买涨」，涨势会加速 · 这时候可以加仓"
 
     key_prices = {
-        "upper_resistance": call_wall_strike,   # call wall 上方阻力
-        "pin":              flip,                # gamma flip
-        "lower_support":    put_wall_strike,     # put wall 下方支撑
+        "upper_resistance": call_wall_strike,
+        "pin":              flip,
+        "lower_support":    put_wall_strike,
         "break_watch":      break_watch,
     }
 
