@@ -1,20 +1,20 @@
 {
   "exists": true,
-  "path": "ai_targets_2026-08-10.json",
-  "mtime": "2026-08-10T22:27:17.987360",
+  "path": "ai_targets_2026-08-11.json",
+  "mtime": "2026-08-11T22:35:06.607452",
   "version": 1,
-  "ts": "2026-08-10T09:25",
-  "source_date": "2026-08-10",
+  "ts": "2026-08-11T09:32",
+  "source_date": "2026-08-11",
   "targets": [
     {
       "ticker": "US.TQQQ",
-      "action": "watch_buy",
-      "entry_ref": 72.0,
-      "stop_ref": 69.5,
-      "target_ref": 78.0,
-      "use_limit": true,
+      "action": "skip",
+      "entry_ref": null,
+      "stop_ref": null,
+      "target_ref": null,
+      "use_limit": false,
       "size_hint": "small",
-      "notes": "等回踩 Max Pain $72 磁吸位，CPI 前轻仓"
+      "notes": "MACD零轴下+ADX35强下行, CPI明天, 观望不入场"
     },
     {
       "ticker": "US.SOXL",
@@ -24,7 +24,7 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "昨日 +5.99% 空头反弹追高风险大，SMH proxy squeeze 风险，等 CPI"
+      "notes": "SOX PCA衰退风险+Q3 thesis avoid semi, alpha反弹不追"
     },
     {
       "ticker": "US.DRAM",
@@ -34,27 +34,27 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 空头强趋势无入场信号"
+      "notes": "MACD零轴下+ADX31强下行, Put Wall $44支撑, 观望"
     },
     {
       "ticker": "US.MULL",
-      "action": "skip",
+      "action": "reduce",
       "entry_ref": null,
       "stop_ref": null,
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 空头，跟 MU 走，无信号"
+      "notes": "15min放量下跌量比2.6, 存储板块弱, 有仓位可减"
     },
     {
       "ticker": "US.GLD",
       "action": "watch_buy",
-      "entry_ref": 399.5,
-      "stop_ref": 394.0,
-      "target_ref": 408.0,
+      "entry_ref": 400.5,
+      "stop_ref": 396.5,
+      "target_ref": 410.0,
       "use_limit": true,
       "size_hint": "small",
-      "notes": "GC +1.28% 高开不追，回落 $399-400 进小仓（Fed 扩表 + 宏观 bullish）"
+      "notes": "GC期货+2.24%+Fed扩表bullish, 等回踩$400-401, 跌破Put Wall $397止损"
     }
   ]
 }

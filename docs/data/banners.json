@@ -1,48 +1,48 @@
 {
   "exists": true,
-  "snapshot_path": "snapshot_20260728_145208.txt",
-  "snapshot_mtime": "2026-07-28T14:52:08.956498",
+  "snapshot_path": "snapshot_20260811_205128.txt",
+  "snapshot_mtime": "2026-08-11T20:51:28.887129",
   "trump": {
-    "posts": 27,
-    "direction": "bullish",
-    "magnitude": "medium",
-    "score": 22,
+    "posts": 26,
+    "direction": "neutral",
+    "magnitude": "small",
+    "score": -8,
     "event_counts": {
-      "NOISE": 3,
+      "DOMESTIC_POLICY": 19,
+      "NOISE": 4,
       "MEDIA_ATTACK": 3,
-      "DOMESTIC_POLICY": 3,
-      "GEOPOLITICAL": 2
+      "GEOPOLITICAL": 1
     },
     "breaking": [],
     "summary": {
-      "text": "特朗普三推聚焦伊朗谈判并抨击对手参议员，风险偏好偏负面。",
+      "text": "荐书、释放美方公民、批评纽约房产税；市场情绪中性偏正面。",
       "state": "cached",
       "post_ids": [
-        "117072424154442498",
-        "117072168149236615",
-        "117071135057100871"
+        "117078431335584148",
+        "117077744957374868",
+        "117077620225720641"
       ]
     }
   },
   "gold_macro": {
-    "direction": "bearish",
-    "score": -2,
-    "conf": "10/10",
+    "direction": "neutral",
+    "score": 1,
+    "conf": "4/10",
     "factors": [
       {
-        "arrow": "▼",
+        "arrow": "·",
         "name": "实际利率",
-        "direction": "bearish",
-        "weight": 3,
-        "value": "2.43",
-        "trend": "rising"
+        "direction": "neutral",
+        "weight": 1,
+        "value": "2.4",
+        "trend": "flat"
       },
       {
         "arrow": "·",
         "name": "美元指数",
         "direction": "neutral",
-        "weight": 1,
-        "value": "101.56",
+        "weight": 0,
+        "value": "99.83",
         "trend": "flat"
       },
       {
@@ -50,7 +50,7 @@
         "name": "10Y名义利率",
         "direction": "neutral",
         "weight": 0,
-        "value": "4.69",
+        "value": "4.65",
         "trend": "flat"
       },
       {
@@ -66,7 +66,7 @@
         "name": "WTI 原油",
         "direction": "neutral",
         "weight": 0,
-        "value": "84.38",
+        "value": "81.96",
         "trend": "flat"
       },
       {
@@ -81,6 +81,6 @@
   },
   "options_risk": {
     "level": "low",
-    "days_to_witching": 52
+    "days_to_witching": 38
   }
 }

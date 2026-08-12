@@ -1,12 +1,12 @@
 {
-  "ts": "2026-08-11T03:16:25.653065+00:00",
+  "ts": "2026-08-12T05:39:08.754211+00:00",
   "factors": [
     {
-      "arrow": "·",
+      "arrow": "▲",
       "name": "WTI 油价",
-      "direction": "neutral",
+      "direction": "bullish",
       "weight": 1,
-      "value": "$82.35 (20d +5.4%)",
+      "value": "$83.74 (20d +5.2%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,15 +14,15 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$5.56 (Brent $87.91 - WTI $82.35)",
+      "value": "$5.75 (Brent $89.49 - WTI $83.74)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
-      "arrow": "·",
+      "arrow": "▲",
       "name": "XLE 能源板块",
-      "direction": "neutral",
+      "direction": "bullish",
       "weight": 1,
-      "value": "XLE +6.1% vs SPY +3.2% (差 +2.9pp)",
+      "value": "XLE +7.0% vs SPY +2.5% (差 +4.5pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "99.81 (5d -0.1%)",
+      "value": "99.9 (5d +0.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -38,7 +38,7 @@
       "name": "美国汽油零售价",
       "direction": "bullish",
       "weight": 1,
-      "value": "$4.08/gal (4周 +8.0%)",
+      "value": "$4.01/gal (4周 +3.9%)",
       "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
@@ -46,22 +46,22 @@
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "56.06 · 极高（>45），市场恐慌",
+      "value": "54.99 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     }
   ],
-  "direction": "neutral",
-  "score": 0,
+  "direction": "bullish",
+  "score": 2,
   "notes": [
-    "综合 score=+0，多因子分歧，观察后续"
+    "综合 score=+2，多因子分歧，观察后续"
   ],
-  "price": 82.35,
-  "pct_5d": 2.5,
-  "pct_20d": 5.39,
+  "price": 83.74,
+  "pct_5d": 11.33,
+  "pct_20d": 5.2,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-11T12:16:27.396767",
-    "age_sec": 192,
+    "cached_at": "2026-08-12T14:39:10.587286",
+    "age_sec": 107,
     "stale": false,
     "refreshing": false
   }

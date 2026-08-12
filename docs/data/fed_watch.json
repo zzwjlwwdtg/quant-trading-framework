@@ -3,73 +3,67 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 36,
+      "days_until": 35,
       "probabilities": {
-        "hold": 60,
-        "hike_25": 37,
-        "cut_25": 3
+        "hold": 5,
+        "cut_25": 85,
+        "cut_50": 10
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean_softening"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish_strong"
     },
     {
       "date": "2026-10-28",
-      "days_until": 78,
+      "days_until": 77,
       "probabilities": {
-        "hold": 55,
-        "hike_25": 27,
-        "cut_25": 16,
-        "cut_50": 2
+        "hold": 20,
+        "cut_25": 60,
+        "cut_50": 20
       },
-      "most_likely": "hold",
-      "consensus_direction": "two_way_uncertain"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 120,
+      "days_until": 119,
       "probabilities": {
-        "hold": 45,
-        "hike_25": 20,
-        "cut_25": 28,
-        "cut_50": 7
+        "hold": 35,
+        "cut_25": 50,
+        "cut_50": 15
       },
-      "most_likely": "hold",
+      "most_likely": "cut_25",
       "consensus_direction": "dovish_lean"
     }
   ],
-  "implied_terminal_rate": "3.25-3.50",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-08-08",
-  "recent_event_impact": "8/1 July NFP -23K vs +83K expected (May/Jun revised down -103K combined) → Sep hike odds collapsed from ~57% to ~37%, hold jumped from ~43% to ~60%; oil +20% on Iran talks breakdown partially caps dovish repricing",
-  "commentary": "Fed held 3.50-3.75% at July 29 meeting (5th straight hold, 9-3 vote with 3 hawkish dissenters — Hammack/Kashkari/Logan wanting hike due to sticky inflation). Aug 7 NFP shock (-23K vs +83K, unemployment 4.1%) triggered sharp dovish repricing: Sep now leans hold (60%) over hike (37%), with cut probabilities building into Q4. July CPI due tomorrow (8/12) — hot print could partially reverse this shift given oil surge from collapsed US-Iran talks.",
+  "implied_terminal_rate": "2.75-3.00",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-08-09",
+  "recent_event_impact": "8/7 NFP -23K jobs vs +80K expected (+ May/Jun revisions -103K) → 单日降息预期从 hike 61.9% 翻转到 cut 90%；8/12 今早 CPI（预期 +0.1% MoM headline / core +0.32% MoM）刚发布尚未反映在 snapshot 里",
+  "commentary": "数据滞后警告：可用 FedWatch snapshot 停在 2026-08-09（post-NFP, pre-CPI），今天 8/12 早 8:30 ET 刚发 7 月 CPI（预期 headline +3.4% YoY / core +2.5% YoY），Warsh 主席原本 hawkish 立场遇上劳动力市场急冻+潜在通胀反弹（油价上月+20%）→ 预期极不稳，实际 post-CPI 数值可能显著偏离本 snapshot",
   "sources": [
     {
-      "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
-      "type": "cme_fedwatch_summary"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
-      "type": "nfp_data"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/07/29/fed-rate-decision-july-2026.html",
-      "type": "fomc_decision"
+      "url": "https://growbeansprout.com/tools/fedwatch",
+      "type": "cme_fedwatch"
     },
     {
       "url": "https://centralbank.watch/federal-reserve/",
-      "type": "fedwatch_aggregator"
+      "type": "cme_fedwatch"
     },
     {
-      "url": "https://finance.yahoo.com/economy/policy/articles/us-rate-futures-cut-chances-124656547.html",
-      "type": "rate_futures"
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch"
+    },
+    {
+      "url": "https://polymarket.com/event/fed-decision-in-september-762",
+      "type": "prediction_market"
     }
   ],
-  "confidence": "medium",
+  "confidence": "low",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-10T20:02:21+00:00",
+  "fetched_at": "2026-08-12T04:11:18+00:00",
   "_meta": {
-    "cached_at": "2026-08-11T05:02:21.566129",
-    "age_sec": 26238,
+    "cached_at": "2026-08-12T13:11:18.651038",
+    "age_sec": 5379,
     "stale": false,
     "refreshing": false
   }
