@@ -66,6 +66,7 @@ PER_TICKER_ENDPOINTS = {
     "/api/capital_flow":   "all",
     "/api/fundamentals":   "all",
     "/api/supply_chain":   "us",
+    "/api/equity_outlook": "us",   # 美股前瞻共识 + 预期定价（NVDA/MSFT/AAPL/... 6h 缓存）
     "/api/tostnet_hits":   "jp",
     "/api/jp_guidance":    "jp",
 }
@@ -223,6 +224,18 @@ def _watch_tickers() -> tuple[list[str], list[str]]:
     if sig and isinstance(sig.get("tickers"), dict):
         for tk in sig["tickers"].keys():
             us_tickers.append(tk)
+    # Fallback：orchestrator 没跑或 /api/signals 空时（如 OpenD 挂了），从 config 拿完整 universe
+    # 保证 equity_outlook / supply_chain 这类不依赖 moomoo 的静态快照仍能生成
+    if not us_tickers:
+        try:
+            from config import TICKERS, TRACKED_TICKERS
+            for tk_full in list(TICKERS) + list(TRACKED_TICKERS):
+                tk = tk_full.replace("US.", "")
+                if tk not in us_tickers:
+                    us_tickers.append(tk)
+            print(f"  [fallback] /api/signals 空，从 config 拉 {len(us_tickers)} 个 US ticker")
+        except Exception as e:
+            print(f"  [fallback] config import 失败: {e}")
     jpw = _fetch(f"{BASE_URL}/api/jp_watch", timeout=15)
     if jpw and isinstance(jpw.get("tickers"), list):
         for entry in jpw["tickers"]:
