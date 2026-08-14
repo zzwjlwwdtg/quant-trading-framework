@@ -201,12 +201,39 @@ def _url_to_filename(url: str) -> str:
     return f"{path}.json"
 
 
-def _save(url: str, data: dict) -> Path:
-    """Save data to docs/data/<encoded>.json."""
+def _looks_empty(data: dict) -> bool:
+    """探测 webui 返回的 payload 是不是"实际啥都没有"（backend degraded）。
+    避免把老快照覆盖成空 dict —— 之前 /api/signals 在 OpenD 挂时返 {tickers:{}}
+    直接覆盖导致 dashboard 空白。"""
+    if not isinstance(data, dict):
+        return False
+    if data.get("error"):
+        return True
+    # 常见空 payload 模式
+    for k in ("tickers", "items", "data", "boards", "results", "rows"):
+        v = data.get(k)
+        if isinstance(v, (dict, list)) and len(v) == 0:
+            # 只有这一个 key 空 = 空快照；有其它数据字段 = 是正常的 no-data 状态
+            other_keys = [x for x in data.keys() if x != k and not x.startswith("_") and x not in ("ts", "log_path", "log_stale", "log_note", "generated_at")]
+            if not any(data.get(ok) for ok in other_keys):
+                return True
+    return False
+
+
+def _save(url: str, data: dict) -> Path | None:
+    """Save data to docs/data/<encoded>.json.
+    Guards against overwriting a healthy snapshot with a degraded empty one:
+      - 若 payload 空 且 老文件 > 5x 大 → 保留老文件, 只打 warning."""
     fname = _url_to_filename(url)
     out = DATA_DIR / fname
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    new_bytes = json.dumps(data, ensure_ascii=False, indent=2)
+    if _looks_empty(data) and out.exists():
+        old_size = out.stat().st_size
+        if old_size > len(new_bytes) * 5 and old_size > 500:
+            print(f"  ⚠ SKIP overwrite {fname}: new empty ({len(new_bytes)}B) vs existing ({old_size}B) — 保留旧快照")
+            return None
+    out.write_text(new_bytes, encoding="utf-8")
     return out
 
 
@@ -268,7 +295,8 @@ def snapshot_all(only: str | None = None, skip_tickers: bool = False) -> dict:
         data = _fetch(url)
         if data is not None:
             path = _save(ep, data)
-            saved_files.append(path.name)
+            if path is not None:
+                saved_files.append(path.name)
             ok += 1
         else:
             fail += 1
