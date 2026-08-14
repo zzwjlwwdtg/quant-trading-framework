@@ -3,67 +3,86 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 35,
+      "days_until": 33,
       "probabilities": {
-        "hold": 5,
-        "cut_25": 85,
-        "cut_50": 10
+        "hold": 56,
+        "hike_25": 42,
+        "cut_25": 2
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_strong"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 77,
+      "days_until": 75,
       "probabilities": {
-        "hold": 20,
-        "cut_25": 60,
-        "cut_50": 20
+        "hold": 38,
+        "hike_25": 47,
+        "hike_50": 8,
+        "cut_25": 7
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 119,
+      "days_until": 117,
       "probabilities": {
-        "hold": 35,
-        "cut_25": 50,
-        "cut_50": 15
+        "hold": 32,
+        "hike_25": 40,
+        "hike_50": 12,
+        "cut_25": 14,
+        "cut_50": 2
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 166,
+      "probabilities": {
+        "hold": 38,
+        "hike_25": 32,
+        "cut_25": 25,
+        "cut_50": 5
+      },
+      "most_likely": "hold",
+      "consensus_direction": "mixed"
     }
   ],
-  "implied_terminal_rate": "2.75-3.00",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-09",
-  "recent_event_impact": "8/7 NFP -23K jobs vs +80K expected (+ May/Jun revisions -103K) → 单日降息预期从 hike 61.9% 翻转到 cut 90%；8/12 今早 CPI（预期 +0.1% MoM headline / core +0.32% MoM）刚发布尚未反映在 snapshot 里",
-  "commentary": "数据滞后警告：可用 FedWatch snapshot 停在 2026-08-09（post-NFP, pre-CPI），今天 8/12 早 8:30 ET 刚发 7 月 CPI（预期 headline +3.4% YoY / core +2.5% YoY），Warsh 主席原本 hawkish 立场遇上劳动力市场急冻+潜在通胀反弹（油价上月+20%）→ 预期极不稳，实际 post-CPI 数值可能显著偏离本 snapshot",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2026-Q4/2027-Q1",
+  "data_snapshot_date": "2026-08-13",
+  "recent_event_impact": "2026-08-12 July CPI report (+0.1% m/m, +3.4% y/y; headline soft but core sticky) shifted September pricing from prior hike-lean back toward hold ~56% vs hike ~42%; rate CUTS have effectively been repriced off the near-term curve. Trump-Powell tension remains a background factor cited in tipranks coverage of collapsing cut odds.",
+  "commentary": "Post July-CPI (2026-08-12), CME FedWatch shows Sep 2026 FOMC as a genuine toss-up between HOLD (~56%) and 25bp HIKE (~42%) — cuts are essentially off the near-term table with the target range at 3.50-3.75%. Market pricing implies a modestly hawkish path with terminal ~3.75-4.00% by year-end 2026 into Q1 2027; October/December/January per-meeting probabilities are directional estimates from aggregator commentary (I could not fetch CME primary page directly — WebFetch permission denied) so downweight tail probabilities beyond September.",
   "sources": [
-    {
-      "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "cme_fedwatch"
-    },
-    {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "cme_fedwatch"
-    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://polymarket.com/event/fed-decision-in-september-762",
-      "type": "prediction_market"
+      "url": "https://growbeansprout.com/tools/fedwatch",
+      "type": "aggregator"
+    },
+    {
+      "url": "https://centralbank.watch/federal-reserve/",
+      "type": "aggregator"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/08/12/cpi-inflation-report-july-2026.html",
+      "type": "cpi_release"
+    },
+    {
+      "url": "https://www.tipranks.com/news/september-rate-cut-odds-plummet-as-trump-slams-powell",
+      "type": "market_commentary"
     }
   ],
-  "confidence": "low",
+  "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-12T04:11:18+00:00",
+  "fetched_at": "2026-08-13T22:52:27+00:00",
   "_meta": {
-    "cached_at": "2026-08-12T13:11:18.651038",
-    "age_sec": 5379,
+    "cached_at": "2026-08-14T07:52:27.532568",
+    "age_sec": 15496,
     "stale": false,
     "refreshing": false
   }

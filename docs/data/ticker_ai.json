@@ -1,21 +1,19 @@
 {
   "exists": true,
   "tickers": {
-    "AAPL": "- 综合: 试探多 conf=4 但 C/P=2.72 情绪偏热+put_break 挤压有下破风险；基本面 CROIC 72% Piotroski 8/9 强，前瞻定价基本匹配无背离\n- 攻防: 防守 $305 put wall 距-1.06% 极近可作止损参考，进攻 $315 call wall 距+2.19% 突破即加速\n- 警示: put_break 挤压叠加高 C/P 是短线陷阱前兆，回踩 $305 破位需减仓",
-    "AMAT": "- 综合: 观望 conf=2 期权 C/P=1.08 中性无共振；基本面 CROIC 28.88% 连续两年下滑但 Piotroski 6/9 稳，前瞻已充分计价+修正 upward 偏乐观\n- 攻防: 防守 $500 put wall 距-4.24% 有缓冲，进攻 $550 call wall 距+5.34% 空间够\n- 警示: CROIC 从 48%→28% 两年腰斩且目标价差已 20%，追高性价比低",
-    "DRAM": "- 综合: 观望 conf=1 期权 Put OI 32761 是 Call 近 3 倍属机构大规模廉价保险(距 spot 9.27% OTM 远端)非真恐慌；MU 基本面 CROIC 仅 2.98% 但前瞻 Forward PE 5.61x 极低+250% 增长 upward 强预期差\n- 攻防: 防守 $45 put wall 距-9.27% 太远无近护盘，进攻 $53 call wall 距+6.85% 中等强度\n- 警示: 无近距离防守位，短线跌破 $48 无支撑；但前瞻预期极低是中线机会",
-    "GOOGL": "- 综合: 观望 conf=1 但 C/P=2.88 情绪极热无实质动能；基本面 CROIC 从 24%→17% 三年下滑 Piotroski 6/9 中性，前瞻分类\"预期偏低\"+修正 upward 有预期差\n- 攻防: 防守 $350 put wall 距-2.1% 近可用，进攻 $375 call wall 距+4.89% 需突破\n- 警示: Forward EPS 增长 -23% 与\"预期偏低\"分类矛盾，估值修正 upward 但盈利下修，divergence 需警惕",
-    "KLAC": "- 综合: 信号缺失无法判定多空；期权 C/P=0.49 看空极端+max_pain_gravity 挤压向下拉扯；基本面 CROIC 44% Piotroski 8/9 极强\n- 攻防: 防守 $184 put wall 距-4.53% 强吸磁，进攻 $200 call wall 距+3.77% 中等\n- 警示: 信号数据缺失+期权极度看空+CCC 279 天占款高，短线避免",
-    "LITE": "- 综合: 观望 conf=1 但 C/P=0.19 看空极端与 spot 距 put wall 仅 1.66% 有真恐慌成分；基本面 CROIC 连续两年负值 Piotroski 6/9，前瞻已充分计价+目标价差 37% 高\n- 攻防: 防守 $800 put wall 距-1.66% 极近但强度仅中，进攻 $870 call wall 距+6.94% 远\n- 警示: 期权 C/P 0.19 是短线砸盘信号 叠加 CROIC 转负，跌破 $800 加速下行风险大",
-    "MSFT": "- 综合: 试探多 conf=3 RSI=87 严重超买+put_break 挤压+Put/Call OI=5.1 倍严重失衡是空头真押跌不是保险；基本面 CROIC 32%→20% 四年逐年下滑 Piotroski 5/9 走弱，前瞻估值与修正分歧\n- 攻防: 防守 $500 put wall 距-1.2% 极近是关键决战位，进攻 $520 call wall 距+2.75% 但强度弱\n- 警示: RSI 87 极端超买+put_break+Put OI 5.1 倍堆积 三重风险，跌破 $500 加速下行",
-    "MULL": "- 综合: 观望 conf=1 但期权链是 MU 的 spot=$861 与信号 MULL 不匹配数据错配无法解读；MU 前瞻 Forward PE 5.61x + 增长 250% 预期极低\n- 攻防: 数据错配 攻防位不可用\n- 警示: 信号 ticker 与期权 ticker 不一致，需上游修数据后再评估",
-    "NBIS": "- 综合: 观望 conf=1 期权 C/P=1.11 中性+max_pain 向 $180 拉扯；基本面 CROIC -72.99% 连续两年恶化 Piotroski 6/9 高估，前瞻 Forward EPS 负值分歧\n- 攻防: 防守 $180 put wall 距-2.23% 近可用，进攻 $200 call wall 距+8.63% 远\n- 警示: CROIC 连年-70% + CCC -1880 天 极端异常，估值与基本面严重背离",
-    "NVDA": "- 综合: 试探多 conf=3+C/P=1.74+gamma_up 挤压[high] 期权攻防明确共振向上；基本面 CROIC 62% 强 Piotroski 4/9 偏弱，前瞻预期偏低+修正 upward+多锚中位 94.7% 强预期差\n- 攻防: 防守 $215 put wall 距-1.17% 极近为决战位，进攻 $220 call wall 距+1.13% 突破即加速\n- 警示: Piotroski 仅 4/9 与 CROIC 62% 分歧关注质量恶化；短线突破 $220 加仓机会",
-    "SOXL": "- 综合: 观望 conf=1 SOXX 期权 C/P=1.92 偏多但无挤压；用 NVDA 代理基本面 CROIC 62% 强+前瞻预期偏低，代理仅代表 NVDA 一家不覆盖 SOXL 底层组合\n- 攻防: SOXX 防守 $490 距-7.44% 太远，进攻 $550 距+3.89% 可作短线目标\n- 警示: 代理 ETF 用 NVDA 基本面存在结构性偏差，SOXX 组合含多家半导体不能等同 NVDA 目标价",
-    "STM": "- 综合: 观望 conf=3 RSI=34.6 超卖有反弹倾向；无期权数据无法看攻防共振；基本面 CROIC -0.3% 连年恶化 Piotroski 6/9，前瞻 Forward EPS 增长 390%+市场预期偏低\n- 攻防: 无期权数据攻防位不可用，仅能靠 RSI 超卖作反弹参考\n- 警示: 基本面 CROIC 转负但前瞻预期极强 divergence 大，无期权护盘缺乏防守锚",
-    "TQQQ": "- 综合: 观望 conf=1 QQQ 期权 C/P=1.53+gamma_up 挤压[high] 上行动能明确；用 NVDA 代理基本面不代表 QQQ 全组合\n- 攻防: QQQ 防守 $700 距-2.9% 近可用，进攻 $730 距+1.27% 突破即加速\n- 警示: 代理基本面结构性偏差，QQQ 组合远大于 NVDA 一家不可用 NVDA 目标价推 TQQQ",
-    "TSLA": "- 综合: 观望 conf=3 RSI=33.2 超卖+C/P=1.99 偏多；Put/Call OI=0.3 倍严重失衡=Call 堆积上方 $350 是 pin 磁吸位下方无护盘；前瞻分类\"预期透支\"Forward PE 149x + 修正 downward 明确利空\n- 攻防: 防守 $320 put wall 距-3.29% 强度仅中不牢，进攻 $350 call wall 距+5.78% 有 pin 吸引\n- 警示: 前瞻\"预期透支\"+多锚中位 -20%+修正 downward 三重利空，反弹遇 $350 需减仓",
-    "USO": "- 综合: 试探多 conf=4 量比 1.12 放量+RSI 47 中性 多头动能较强；无期权数据无法验证攻防共振；无基本面无前瞻\n- 攻防: 无期权数据攻防位不可用\n- 警示: conf=4 是本批最强多头信号之一但缺期权与前瞻验证，需结合原油基本面独立确认"
+    "AAPL": "- 综合: C/P 1.87 情绪偏热但期权走廊仅 4.9%（$300–315），CROIC 72%+Piotroski 8/9 基本面强，预期与股价基本匹配\n- 攻防: 上破 $315 call wall 3.31% 即打开加速，下方 $300 put wall 1.61% 是必守线，防守空间紧\n- 警示: 借款 $986 亿+CCC -71 天靠供应链融资，若破 $300 无护盘直接测 $295",
+    "AMAT": "- 综合: C/P 0.82 均衡但双 wall 皆强呈区间锁定，CROIC 从 48%→29% 连续两年下滑，利好已充分计价+forward PE 32x 偏贵\n- 攻防: 上方 $550 call wall 4.64%、下方 $500 put wall 4.87% 对称区间，突破任一侧才有方向\n- 警示: CROIC 趋势向下但修正 upward，EPS 修正与基本面背离，追高性价比低",
+    "DRAM": "- 综合: 代理 MU，C/P 2.77 极热但 Put OI 3.3 倍失衡且 put wall 就在 $50（1.75%），机构对冲 ATM=真恐慌\n- 攻防: 下方 $50 put wall 仅 1.75% 是生死线，上方 $53 call wall 4.15% 强度中易破\n- 警示: MU forward PE 6.17x+目标价差 57% 预期极低，但 CROIC 波动大（-12.85→2.98）+put OI ATM 堆积，破 $50 直接连续杀跌",
+    "GOOGL": "- 综合: C/P 1.18 均衡+Call OI 反而是 Put 的 3.85 倍（$375 pin 磁吸），CROIC 从 24%→17% 三连降但 forward 分类市场预期偏低+目标价差 24.5%\n- 攻防: 下方 $335 put wall 2.56% 强度仅中，上方 $375 call wall 9.08% 距离远靠 pin 拉动\n- 警示: forward EPS 增长 -26% 与\"预期偏低\"分类背离，CROIC 下滑需盯 Q3 capex 是否继续上调（thesis invalidation 触发点）",
+    "KLAC": "- 综合: C/P 0.94 均衡但 put_break [high] 已在 ATM 触发，CROIC 44%+Piotroski 8/9 基本面强却技术面破位\n- 攻防: $200 put wall 仅 0.23% 就在脚下，一旦跌破直接 gamma 加速；上方 $220 call wall 9.74% 太远无参考\n- 警示: 基本面强 vs 期权破位 divergence，机构对冲已启动，短线优先止损而非抄底",
+    "LITE": "- 综合: C/P 1.09 均衡+put_band_break [medium] 破位中，CROIC 连负两年（-3.71/-3.29）基本面弱，利好已充分计价\n- 攻防: 下方 $800 put wall 2.51% 是关键防守，破位直接测；上方 $870 call wall 6.02% 需强驱动\n- 警示: forward EPS 增长 390% 明显过度乐观+CROIC 为负，估值/基本面严重背离",
+    "MSFT": "- 综合: C/P 1.43 偏多但 put_break [high] 已触发+put wall $500 仅 0.76%，CROIC 从 32%→20% 四连降，估值/修正分歧\n- 攻防: $500 put wall 极近（0.76%）是绝对生死线；上方 $520 call wall 3.21% 强度中\n- 警示: CROIC 连续下滑+多锚隐含 22.6% vs 目标价差 14.1% 分歧，破 $500 加速下跌",
+    "MULL": "- 综合: 代理 MU，C/P 4.13 极端看多+Call OI 大于 Put，Put OI 远端 $800（7.89%）是廉价保险非恐慌，基本面弱但 forward PE 6.17x\n- 攻防: 上方 $900 call wall 3.62% 是磁吸位，下方 $800 put wall 7.89% 距离宽护盘薄\n- 警示: MULL 本身与 MU 走势关联度低，基本面数据不适用，追高需警惕流动性风险",
+    "NBIS": "- 综合: C/P 1.32 均衡+双 wall 皆强锁 $190–200 窄区间，CROIC -73% 极端负+forward EPS -3.32，利好已充分计价\n- 攻防: 上方 $200 call wall 3.5%、下方 $190 put wall 1.67% 极窄区间，突破方向即定短期\n- 警示: CROIC 从 20%→-73% 崩塌+CCC -1880 天异常，基本面严重恶化不宜追高",
+    "NVDA": "- 综合: C/P 0.86 均衡但 gamma_up [high] 已触发+双 wall 都在 ATM，CROIC 62%+forward PE 17.53x+目标价差 34.8%，预期偏低有空间\n- 攻防: 上方 $220 call wall 仅 1.15% 突破即加速，下方 $215 put wall 1.15% 是同距离防守\n- 警示: Piotroski 仅 4/9 财务质量走弱+CROIC 从 77%→62% 回落，但符合\"避 semi\"thesis 需警惕反转，追高看 $220 突破确认",
+    "SOXL": "- 综合: 代理 SOXX，C/P 0.24 极端看空+put_band_break [medium] 破位中，Put OI 11039 远大于 Call，OTM 远端 $490 是廉价保险\n- 攻防: 下方 $490 put wall 8.27% 是防守线但距离宽，上方 $585 call wall 9.51% 强度仅中，短线无方向\n- 警示: 极端看空情绪+破位共振，3x 杠杆放大风险，符合\"避 semi\"thesis 应减仓不抄底",
+    "TQQQ": "- 综合: 代理 QQQ，C/P 0.41 极端看空但 gamma_band_up [medium] 上冲信号+Put OI 略大于 Call，指数级恐慌与 gamma 挤压对冲\n- 攻防: 下方 $700 put wall 2.57% 是关键防守，上方 $750 call wall 4.39% 是 gamma 加速目标\n- 警示: 情绪极端看空 vs gamma 上冲 divergence，3x 杠杆需盯 QQQ $700 得失，破位直接砍仓",
+    "TSLA": "- 综合: C/P 2.95 极端看多+双 wall 皆强锁 $327.5–350，CROIC 5.47→8.35 弱回升但 Piotroski 仅 5/9，预期透支+forward PE 152.99x\n- 攻防: 下方 $327.5 put wall 仅 1.6% 是生死线，上方 $350 call wall 5.17% 是 pin 磁吸目标\n- 警示: 多锚隐含价差 -20.6% vs 目标价差 +18.9% 严重背离+修正 downward+情绪极热，典型顶部特征需警惕"
   },
   "sources": {
     "AAPL": "live",
@@ -29,13 +27,11 @@
     "NBIS": "live",
     "NVDA": "live",
     "SOXL": "live",
-    "STM": "live",
     "TQQQ": "live",
-    "TSLA": "live",
-    "USO": "live"
+    "TSLA": "live"
   },
   "live_state": "cached",
-  "live_generated": "2026-08-12T05:35:35.647417+00:00",
-  "snapshot_path": "ai_analysis_snapshot_20260811_223506.md",
-  "snapshot_mtime": "2026-08-11T22:35:06.604317"
+  "live_generated": "2026-08-13T15:09:59.982024+00:00",
+  "snapshot_path": "ai_analysis_snapshot_20260812_223053.md",
+  "snapshot_mtime": "2026-08-12T22:30:53.685845"
 }
