@@ -5,84 +5,77 @@
       "date": "2026-09-16",
       "days_until": 33,
       "probabilities": {
-        "hold": 56,
-        "hike_25": 42,
-        "cut_25": 2
+        "hold": 64,
+        "cut_25": 25,
+        "hike_25": 11
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 75,
       "probabilities": {
-        "hold": 38,
-        "hike_25": 47,
-        "hike_50": 8,
-        "cut_25": 7
+        "hold": 55,
+        "cut_25": 32,
+        "hike_25": 13
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hold",
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 117,
       "probabilities": {
-        "hold": 32,
-        "hike_25": 40,
-        "hike_50": 12,
-        "cut_25": 14,
-        "cut_50": 2
+        "hold": 48,
+        "cut_25": 38,
+        "hike_25": 14
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hold",
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2027-01-27",
       "days_until": 166,
       "probabilities": {
-        "hold": 38,
-        "hike_25": 32,
-        "cut_25": 25,
-        "cut_50": 5
+        "hold": 42,
+        "cut_25": 43,
+        "cut_50": 8,
+        "hike_25": 7
       },
-      "most_likely": "hold",
-      "consensus_direction": "mixed"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish_lean"
     }
   ],
-  "implied_terminal_rate": "3.75-4.00",
-  "implied_terminal_date": "2026-Q4/2027-Q1",
+  "implied_terminal_rate": "3.25-3.50",
+  "implied_terminal_date": "2027-Q2",
   "data_snapshot_date": "2026-08-13",
-  "recent_event_impact": "2026-08-12 July CPI report (+0.1% m/m, +3.4% y/y; headline soft but core sticky) shifted September pricing from prior hike-lean back toward hold ~56% vs hike ~42%; rate CUTS have effectively been repriced off the near-term curve. Trump-Powell tension remains a background factor cited in tipranks coverage of collapsing cut odds.",
-  "commentary": "Post July-CPI (2026-08-12), CME FedWatch shows Sep 2026 FOMC as a genuine toss-up between HOLD (~56%) and 25bp HIKE (~42%) — cuts are essentially off the near-term table with the target range at 3.50-3.75%. Market pricing implies a modestly hawkish path with terminal ~3.75-4.00% by year-end 2026 into Q1 2027; October/December/January per-meeting probabilities are directional estimates from aggregator commentary (I could not fetch CME primary page directly — WebFetch permission denied) so downweight tail probabilities beyond September.",
+  "recent_event_impact": "8/12 July CPI +0.1% m/m, core 3.4%/2.5% (soft, -0.1pp vs Jun) → Sep hold prob 52%→64%; earlier Aug July NFP printed net job LOSS → killed 'need to hike' narrative, added ~10pp to cut path",
+  "commentary": "Post-soft-CPI + weak July NFP (net job loss), CME FedWatch shows market pricing 64% HOLD at Sep 16 vs 25% cut_25, with cumulative 78.2% no-change through Dec and 15.4% cut_25 vs only 5.4% hike_25 — a clear dovish lean but no near-term cut conviction; Powell Jackson Hole (Aug 21-23) is next major catalyst.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "aggregator"
-    },
-    {
       "url": "https://centralbank.watch/federal-reserve/",
       "type": "aggregator"
     },
     {
-      "url": "https://www.cnbc.com/2026/08/12/cpi-inflation-report-july-2026.html",
-      "type": "cpi_release"
+      "url": "https://growbeansprout.com/tools/fedwatch",
+      "type": "aggregator"
     },
     {
-      "url": "https://www.tipranks.com/news/september-rate-cut-odds-plummet-as-trump-slams-powell",
-      "type": "market_commentary"
+      "url": "https://www.cnbc.com/2026/08/12/cpi-inflation-report-july-2026.html",
+      "type": "news_cpi"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-13T22:52:27+00:00",
+  "fetched_at": "2026-08-14T06:54:19+00:00",
   "_meta": {
-    "cached_at": "2026-08-14T07:52:27.532568",
-    "age_sec": 15496,
+    "cached_at": "2026-08-14T15:54:19.892519",
+    "age_sec": 7030,
     "stale": false,
     "refreshing": false
   }

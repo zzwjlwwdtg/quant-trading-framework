@@ -220,18 +220,46 @@ def _looks_empty(data: dict) -> bool:
     return False
 
 
+# 快照开始前记录老文件大小（用于 _save 守卫，即使 full-refresh 清了目录也不丢参考）
+_PRE_SNAPSHOT_SIZES: dict[str, int] = {}
+
+
+def _snapshot_old_sizes() -> None:
+    """在 DATA_DIR 清空前记录每个 JSON 文件的字节数，供 _save 守卫参考。"""
+    _PRE_SNAPSHOT_SIZES.clear()
+    if not DATA_DIR.exists():
+        return
+    for f in DATA_DIR.glob("*.json"):
+        try:
+            _PRE_SNAPSHOT_SIZES[f.name] = f.stat().st_size
+        except OSError:
+            pass
+
+
 def _save(url: str, data: dict) -> Path | None:
     """Save data to docs/data/<encoded>.json.
     Guards against overwriting a healthy snapshot with a degraded empty one:
-      - 若 payload 空 且 老文件 > 5x 大 → 保留老文件, 只打 warning."""
+      - 若 payload 空 且 老文件（快照前记录）> 5x 大 → 拒绝写入, 保留 old 文件。
+      - 若 full-refresh 已把 old 文件删掉 → 恢复它（用 git checkout 或不删）。"""
     fname = _url_to_filename(url)
     out = DATA_DIR / fname
     out.parent.mkdir(parents=True, exist_ok=True)
     new_bytes = json.dumps(data, ensure_ascii=False, indent=2)
-    if _looks_empty(data) and out.exists():
-        old_size = out.stat().st_size
+    if _looks_empty(data):
+        old_size = _PRE_SNAPSHOT_SIZES.get(fname) or (out.stat().st_size if out.exists() else 0)
         if old_size > len(new_bytes) * 5 and old_size > 500:
-            print(f"  ⚠ SKIP overwrite {fname}: new empty ({len(new_bytes)}B) vs existing ({old_size}B) — 保留旧快照")
+            print(f"  ⚠ SKIP overwrite {fname}: new empty ({len(new_bytes)}B) vs pre-snapshot ({old_size}B) — 试图恢复旧快照")
+            # 如果 full-refresh 清空了目录，从 git HEAD 恢复
+            if not out.exists():
+                try:
+                    import subprocess
+                    subprocess.run(
+                        ["git", "checkout", "HEAD", "--", str(out.relative_to(REPO_ROOT))],
+                        cwd=str(REPO_ROOT), check=True, capture_output=True, timeout=10,
+                    )
+                    print(f"    ✓ 从 git HEAD 恢复 {fname}")
+                except Exception as e:
+                    print(f"    ✗ git restore 失败: {e}")
             return None
     out.write_text(new_bytes, encoding="utf-8")
     return out
@@ -278,6 +306,8 @@ def _watch_tickers() -> tuple[list[str], list[str]]:
 def snapshot_all(only: str | None = None, skip_tickers: bool = False) -> dict:
     """执行全量快照。返回 stats dict."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    # 清目录之前记录老文件大小，供 _save 的空 payload 守卫参考
+    _snapshot_old_sizes()
     # Full refresh 时清 stale JSON（防止 ticker 改名后老文件留下来占位）
     if not only and not skip_tickers:
         for old in DATA_DIR.glob("*.json"):

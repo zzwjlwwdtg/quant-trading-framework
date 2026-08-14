@@ -5,16 +5,16 @@
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 274.31,
+    "current_price": 255.04,
     "forward_eps": -3.32,
     "trailing_eps": -0.26,
     "eps_growth_pct": null,
-    "forward_pe": -82.73,
+    "forward_pe": -81.8,
     "trailing_pe": null,
     "target_mean": 250.75,
     "target_high": 410.0,
     "target_low": 120.0,
-    "target_upside_pct": -8.6,
+    "target_upside_pct": -1.7,
     "revenue_growth_pct": 454.0,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-10",
@@ -30,24 +30,24 @@
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 21.11,
+    "peer_pe_median": 21.08,
     "peer_pe_n_peers": 3,
     "peer_pe_details": [
       {
         "ticker": "AMZN",
-        "pe": 25.84
+        "pe": 25.54
       },
       {
         "ticker": "MSFT",
-        "pe": 21.11
+        "pe": 21.08
       },
       {
         "ticker": "ORCL",
-        "pe": 14.45
+        "pe": 14.31
       }
     ],
-    "implied_peer_median": -69.99,
-    "implied_peer_upside": -125.5,
+    "implied_peer_median": -69.9,
+    "implied_peer_upside": -127.4,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -183,9 +183,9 @@
     }
   },
   "pricing": {
-    "classification": "fully_priced",
-    "label": "利好已充分计价",
-    "tone": "warn",
+    "classification": "matched",
+    "label": "预期与股价基本匹配",
+    "tone": "muted",
     "confidence": "medium",
     "anchor_count": 1,
     "anchors": [
@@ -193,27 +193,27 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 250.75,
-        "gap_pct": -8.6
+        "gap_pct": -1.7
       }
     ],
-    "median_gap_pct": -8.6,
+    "median_gap_pct": -1.7,
     "revision_signal": "mixed",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数低于现价 8.6%",
+      "多口径隐含价中位数低于现价 1.7%",
       "近 30 天 EPS 数值与上调/下调家数方向分歧"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-13T14:48:57.129714+00:00",
+  "fetched_at": "2026-08-14T03:19:06.056253+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-13T23:48:57.130251",
-    "age_sec": 45004,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-14T12:19:06.057257",
+    "age_sec": 19945,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "NBIS",
   "is_proxy": false
