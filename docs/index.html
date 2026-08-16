@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-16T12:51:58", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-16T15:03:04", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1543,10 +1543,19 @@ function renderOptAnalysis(opt, cardTicker = '') {
   if (opt.error) return `<div class="opt-analysis" style="font-size:10px; color:var(--muted); padding:4px 0" title="${opt.error}">期权数据不可用</div>`;
   const d = opt.defense || {}, o = opt.offense || {}, r = opt.squeeze_risk || {}, sm = opt.sentiment || {};
   const lm = opt.leveraged_mapping || null;
+  const ap = opt.actionable_prices || null;
+  const actionableLevels = (ap && ap.levels) || {};
   const isProxy = Boolean(cardTicker && opt.underlying && cardTicker !== opt.underlying);
   const structureSource = lm ? lm.source : (isProxy ? opt.underlying : '');
   const lmLevels = (lm && lm.levels) || {};
   const mappedPrice = (key, raw) => {
+    const actionable = actionableLevels[key];
+    if (actionable && actionable.target && actionable.target.spot_anchored != null) {
+      const expiry = actionable.target.expiry_estimate != null
+        ? `<small style="display:block; color:var(--muted); padding-left:14px">到期路径估算 $${actionable.target.expiry_estimate} · 约 $${actionable.target.expiry_range_low}–$${actionable.target.expiry_range_high}（非挂单价）</small>`
+        : '';
+      return `<b>${actionable.target.ticker}≈$${actionable.target.spot_anchored}</b> <small style="color:var(--muted)">（源 ${actionable.source.ticker} $${actionable.source.strike} · ${actionable.basis}）</small>${expiry}`;
+    }
     const m = lmLevels[key];
     if (!lm || !m || m.spot_anchored_level == null) {
       return isProxy
@@ -1559,8 +1568,23 @@ function renderOptAnalysis(opt, cardTicker = '') {
     return `<b>${lm.ticker}≈$${m.spot_anchored_level}</b> <small style="color:var(--muted)">（源 ${lm.source} $${raw}）</small>${expiry}`;
   };
   const mappedMove = (key, fallback) => {
+    const actionable = actionableLevels[key];
+    if (actionable && actionable.target && actionable.target.move_pct != null) {
+      return actionable.target.move_pct;
+    }
     const m = lmLevels[key];
     return m && m.spot_anchored_move_pct != null ? m.spot_anchored_move_pct : fallback;
+  };
+  const actionableInline = (key, fallbackStrike) => {
+    const actionable = actionableLevels[key];
+    if (actionable && actionable.target && actionable.target.spot_anchored != null) {
+      return `${actionable.target.ticker}≈$${actionable.target.spot_anchored} <small>（${actionable.source.ticker} $${actionable.source.strike} · ${actionable.basis}）</small>`;
+    }
+    return lm
+      ? `${lm.ticker}≈$${(lmLevels[key] || {}).spot_anchored_level || '-'} <small>（${lm.source} $${fallbackStrike || '-'}）</small>`
+      : (isProxy
+          ? `${opt.underlying} $${fallbackStrike || '-'} <small class="warn">（原价，不可挂单）</small>`
+          : `$${fallbackStrike || '-'}`);
   };
   let mappingBlock = '';
   if (lm) {
@@ -1702,11 +1726,11 @@ function renderOptAnalysis(opt, cardTicker = '') {
     ${gexBlock}
     ${earningsBadge}
     <div style="display:flex; justify-content:space-between">
-      <span>🛡 <b>防守</b> ${lm ? `${lm.ticker}≈$${(lmLevels.put_wall || {}).spot_anchored_level || '-'} <small>（${lm.source} $${d.strike || '-'}）</small>` : (isProxy ? `${opt.underlying} $${d.strike || '-'} <small class="warn">（原价，不可挂单）</small>` : `$${d.strike || '-'}`)} <small>(${mappedMove('put_wall', -(d.dist_pct||0)) >= 0 ? '+' : ''}${mappedMove('put_wall', -(d.dist_pct||0)).toFixed(1)}%)</small></span>
+      <span>🛡 <b>防守</b> ${actionableInline('put_wall', d.strike)} <small>(${mappedMove('put_wall', -(d.dist_pct||0)) >= 0 ? '+' : ''}${mappedMove('put_wall', -(d.dist_pct||0)).toFixed(1)}%)</small></span>
       <span class="${dCls}"><small>${d.strength || '-'} · 占 ${d.share || 0}%</small></span>
     </div>
     <div style="display:flex; justify-content:space-between">
-      <span>⚔ <b>进攻</b> ${lm ? `${lm.ticker}≈$${(lmLevels.call_wall || {}).spot_anchored_level || '-'} <small>（${lm.source} $${o.strike || '-'}）</small>` : (isProxy ? `${opt.underlying} $${o.strike || '-'} <small class="warn">（原价，不可挂单）</small>` : `$${o.strike || '-'}`)} <small>(${mappedMove('call_wall', o.dist_pct||0) >= 0 ? '+' : ''}${mappedMove('call_wall', o.dist_pct||0).toFixed(1)}%)</small></span>
+      <span>⚔ <b>进攻</b> ${actionableInline('call_wall', o.strike)} <small>(${mappedMove('call_wall', o.dist_pct||0) >= 0 ? '+' : ''}${mappedMove('call_wall', o.dist_pct||0).toFixed(1)}%)</small></span>
       <span class="${oCls}"><small>${o.strength || '-'} · 占 ${o.share || 0}%</small></span>
     </div>
     <div style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr 1.2fr; gap:2px; margin-top:4px; padding:2px 0; font-size:9px; color:var(--muted); border-bottom:1px solid var(--border)">
