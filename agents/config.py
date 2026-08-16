@@ -47,6 +47,33 @@ def is_sim_active_trading() -> bool:
 # LEVERAGED_PAIRS 配置防止 MU↔MULL 同时持仓叠杠杆（见 paper_trader.py）
 TICKERS = ["US.TQQQ", "US.SOXL", "US.DRAM", "US.MULL"]
 
+# --- Asset class (per-class calibration & TA weight lookup) ---
+# 不同资产类别对相同 TA 信号的反应完全不同：
+#   commodity（黄金/石油）— 结构性趋势强，均值回归信号（RSI/CCI/BB 超买）容易失效
+#   equity_leveraged（3x ETF）— 高波动 mean-revert 强，超买/超卖信号有效
+#   bond（IEI/SHY）— 低波动，趋势信号权重高，超买信号几乎无效
+#   equity_single — 中等波动，all signals modest weight
+# 用于 _calibrate_confidence.py 分组校准 + confluence.py 按 class 查权重
+ASSET_CLASS_MAP = {
+    "US.GLD":  "commodity",
+    "US.USO":  "commodity",   # oil ETF, if added
+    "US.SHY":  "bond",
+    "US.IEI":  "bond",
+    "US.TQQQ": "equity_leveraged",
+    "US.SOXL": "equity_leveraged",
+    "US.MULL": "equity_leveraged",  # 2x MU
+    "US.DRAM": "equity_single",
+    # 剩余单股默认 equity_single（NVDA/MSFT/AAPL/NBIS/LITE 等）
+}
+DEFAULT_ASSET_CLASS = "equity_single"
+
+def get_asset_class(ticker: str) -> str:
+    """从 ticker 推 asset_class；未映射的默认 equity_single。"""
+    if not ticker:
+        return DEFAULT_ASSET_CLASS
+    tk = ticker if ticker.startswith("US.") else f"US.{ticker}"
+    return ASSET_CLASS_MAP.get(tk, DEFAULT_ASSET_CLASS)
+
 # 用户显式加入的跟踪标的。展示类型不决定交易资格：这里的每个美股/ETF
 # 都会参与 scan，并可在 SIMULATE 账户按统一信号和风控规则买入。
 # 动态 universe picks 只负责发现列表外的额外卫星票。
@@ -64,6 +91,10 @@ TRACKED_TICKERS = [
     "US.IEI",    # 3-7Y Treasury ETF — 5Y 债券多仓代理
     # AI DC 光通信链
     "US.LITE",   # Lumentum — 400G/800G 光模块 / laser diode, NVIDIA/Cisco 光互联供应
+    # AI 芯片新势力（NVDA 竞品）
+    "US.CBRS",   # Cerebras Systems — WSE 晶圆级芯片, AI inference 替代方案, 2025 IPO
+    # 大宗商品（macro / inflation proxy）
+    "US.USO",    # WTI 原油 ETF — 通胀 proxy + geopolitics gauge，也用于 gold_macro 输入
 ]
 
 # 单一交易资格源：以后只需把标的加入 TICKERS 或 TRACKED_TICKERS，

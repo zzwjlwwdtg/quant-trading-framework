@@ -24,8 +24,10 @@ import ctypes
 import copy
 import hashlib
 import json
+import math
 import os
 import re
+import statistics
 import sys
 import threading
 import time
@@ -1336,6 +1338,7 @@ TICKER_TO_FUNDAMENTAL_STOCK = {
     "IEI":  None,     # 债券 ETF 无股票基本面
     # AI DC 光通信链
     "LITE": "LITE",   # Lumentum — 400G/800G optical transceivers + laser diodes, NVIDIA supplier
+    "CBRS": "CBRS",   # Cerebras Systems — WSE 晶圆级 AI 芯片, NVDA inference 竞品, 2025 IPO
     # 日股（东证）：仅基本面+供应链，无期权，不进 orchestrator scan
     "TDK":      "6762.T",   # TDK — 电子元器件/固态电池/HDD磁头，AAPL/NVDA 供应链
     "KIOXIA":   "285A.T",   # キオクシア — NAND 闪存全球#2（前东芝存储），2024-12 IPO
@@ -2825,7 +2828,7 @@ def _read_equity_outlook_cache_for_ai(ticker: str) -> dict | None:
     return data
 
 
-_TICKER_AI_CACHE_SCHEMA = 3
+_TICKER_AI_CACHE_SCHEMA = 4
 
 
 def _ticker_ai_cache_key(ticker_rows: list[tuple]) -> str:
@@ -2847,6 +2850,7 @@ def _ticker_ai_cache_key(ticker_rows: list[tuple]) -> str:
                 "spot": opt.get("spot"),
                 "call_wall_oi": opt.get("call_wall_oi"),
                 "put_wall_oi": opt.get("put_wall_oi"),
+                "leveraged_mapping": opt.get("leveraged_mapping"),
                 "squeeze_type": (
                     opt.get("squeeze_risk", {}).get("type")
                     if isinstance(opt.get("squeeze_risk"), dict) else None
@@ -2938,15 +2942,52 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                         ds = o.get('defense', {}) or {}
                         sr = o.get('squeeze_risk', {}) or {}
                         sm = o.get('sentiment', {}) or {}
-                        lines.append(f"期权链={o.get('underlying','?')} spot=${o.get('spot')} exp={o.get('expiry')}")
+                        lm = o.get('leveraged_mapping') or {}
+                        mapped_levels = lm.get('levels') or {}
+
+                        def _mapped_suffix(level_name: str) -> str:
+                            mapped = mapped_levels.get(level_name) or {}
+                            if not mapped:
+                                return ""
+                            suffix = (
+                                f" => {lm.get('ticker')}即时≈${mapped.get('spot_anchored_level')}"
+                            )
+                            if mapped.get('expiry_estimate') is not None:
+                                suffix += (
+                                    f"；到期路径估≈${mapped.get('expiry_estimate')}"
+                                    f"（${mapped.get('expiry_range_low')}-${mapped.get('expiry_range_high')}）"
+                                )
+                            return suffix
+
+                        chain_line = (
+                            f"期权链={o.get('underlying','?')} spot=${o.get('spot')} exp={o.get('expiry')}"
+                        )
+                        if lm:
+                            chain_line += (
+                                f" | 交易标的={lm.get('ticker')} spot=${lm.get('leveraged_spot')} "
+                                f"杠杆={lm.get('leverage')}x"
+                            )
+                        lines.append(chain_line)
                         lines.append(
-                            f"  Call wall ${of.get('strike')} OI={of.get('oi',0)} 保费=${of.get('prem')} "
+                            f"  Call wall {o.get('underlying','?')} ${of.get('strike')}"
+                            f"{_mapped_suffix('call_wall')} OI={of.get('oi',0)} 保费=${of.get('prem')} "
                             f"(距spot {of.get('dist_pct')}%) 强度{of.get('strength','?')}"
                         )
                         lines.append(
-                            f"  Put  wall ${ds.get('strike')} OI={ds.get('oi',0)} 保费=${ds.get('prem')} "
+                            f"  Put  wall {o.get('underlying','?')} ${ds.get('strike')}"
+                            f"{_mapped_suffix('put_wall')} OI={ds.get('oi',0)} 保费=${ds.get('prem')} "
                             f"(距spot {ds.get('dist_pct')}%) 强度{ds.get('strength','?')}"
                         )
+                        if lm:
+                            decay = lm.get('decay') or {}
+                            if decay.get('available'):
+                                lines.append(
+                                    f"  杠杆折损估计: 历史{decay.get('sample_days')}交易日，"
+                                    f"日均carry={decay.get('daily_carry_pct')}%，"
+                                    f"到期尚有{lm.get('calendar_days')}日；即时价用于挂单，到期价仅情景估计"
+                                )
+                            else:
+                                lines.append("  杠杆折损估计不可用；只能用即时锚定价，长期价位必须标注不确定")
                         lines.append(f"  C/P成交={sm.get('cp_ratio','?')} ({sm.get('label','')}) 挤压=[{sr.get('urgency')}]{sr.get('type')}")
                         # OI 失衡数据
                         p_oi = ds.get('oi', 0) or 0
@@ -2991,6 +3032,8 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                     "5. 若基本面存在 → 综合行里带一句：CROIC 趋势方向 + Piotroski 强/弱 + 借款激增警示\n"
                     "6. 若前瞻存在 → 综合行必须写预期定价分类；警示行说明 EPS 修正与估值是否背离。代理 ETF 只代表底层公司，不把公司目标价当 ETF 目标价\n"
                     "7. 严格只输出 ### 段落，不要另写总结、泛泛展望或重复问题\n\n"
+                    "8. TQQQ/SOXL 的 QQQ/SOXX strike 只是信号源；写买入、支撑、阻力时必须优先写 => 后的杠杆 ETF 即时换算价，禁止把底层 strike 当成挂单价；若 => 换算缺失，只能写等待换算，不能给数字挂单价\n"
+                    "9. 到期路径估价已含历史平均折损但仍不精确；期限较长时必须提示每日重置/路径依赖，并以触发时重新换算为准\n\n"
                     "标的数据：\n"
                     + "\n".join(lines)
                 )
@@ -3078,7 +3121,194 @@ TICKER_TO_OPTION_SOURCE = {
     "LITE": "LITE",  # Lumentum 有 options chain
 }
 
-TICKER_OPTIONS_CACHE_SCHEMA = 4
+# 这些卡片用流动性更深的 1x ETF 期权链判断结构，但所有可执行价位必须
+# 映射回用户实际交易的杠杆 ETF。映射以同一时点的两只 ETF 现价为锚；
+# 到期估值另用历史日收益残差估算波动折损/跟踪偏差，并明确给出误差带。
+LEVERAGED_OPTION_PRICE_MAP = {
+    "TQQQ": {"source": "QQQ", "leverage": 3.0},
+    "SOXL": {"source": "SOXX", "leverage": 3.0},
+}
+
+TICKER_OPTIONS_CACHE_SCHEMA = 5
+
+
+def _series_by_day(series) -> dict[str, float]:
+    """把 pandas Series / dict 归一成 YYYY-MM-DD -> 正价格，方便无 pandas 单测。"""
+    if series is None:
+        return {}
+    try:
+        items = series.items()
+    except AttributeError:
+        return {}
+    result: dict[str, float] = {}
+    for key, value in items:
+        try:
+            price = float(value)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(price) or price <= 0:
+            continue
+        day = key.date().isoformat() if hasattr(key, "date") else str(key)[:10]
+        result[day] = price
+    return result
+
+
+def _estimate_leveraged_decay(proxy_closes, leveraged_closes,
+                               leverage: float) -> dict:
+    """估算杠杆 ETF 相对 `leverage × 底层日收益` 的历史折损。
+
+    combined residual 同时包含波动路径折损与基金跟踪成本；tracking residual
+    只比较基金实际日收益和理论日重置收益。到期换算使用 combined residual，
+    因为只知道终点 strike，并不知道中间路径。
+    """
+    proxy = _series_by_day(proxy_closes)
+    lev = _series_by_day(leveraged_closes)
+    days = sorted(set(proxy) & set(lev))
+    combined: list[float] = []
+    tracking: list[float] = []
+    for prev_day, day in zip(days, days[1:]):
+        p0, p1 = proxy[prev_day], proxy[day]
+        l0, l1 = lev[prev_day], lev[day]
+        proxy_ratio = p1 / p0
+        lev_ratio = l1 / l0
+        theoretical_ratio = 1.0 + leverage * (proxy_ratio - 1.0)
+        if proxy_ratio <= 0 or lev_ratio <= 0 or theoretical_ratio <= 0:
+            continue
+        combined.append(math.log(lev_ratio) - leverage * math.log(proxy_ratio))
+        tracking.append(math.log(lev_ratio) - math.log(theoretical_ratio))
+
+    if len(combined) < 10:
+        return {
+            "available": False,
+            "sample_days": len(combined),
+            "quality": "insufficient",
+        }
+
+    mean_combined = statistics.fmean(combined)
+    mean_tracking = statistics.fmean(tracking)
+    residual_std = statistics.stdev(combined) if len(combined) > 1 else 0.0
+    annualized = math.exp(mean_combined * 252) - 1.0
+    return {
+        "available": True,
+        "sample_days": len(combined),
+        "quality": "good" if len(combined) >= 40 else "limited",
+        "combined_residual_log_daily": mean_combined,
+        "tracking_residual_log_daily": mean_tracking,
+        "daily_carry_pct": round((math.exp(mean_combined) - 1.0) * 100, 4),
+        "daily_decay_pct": round(max(0.0, 1.0 - math.exp(mean_combined)) * 100, 4),
+        "tracking_daily_pct": round((math.exp(mean_tracking) - 1.0) * 100, 4),
+        "annualized_carry_pct": round(annualized * 100, 2),
+        "residual_std_daily_pct": round(residual_std * 100, 4),
+    }
+
+
+def _convert_proxy_level(proxy_level: float | None, proxy_spot: float | None,
+                         leveraged_spot: float | None, leverage: float,
+                         calendar_days: int = 0,
+                         decay: dict | None = None) -> dict | None:
+    """同时返回即时 3x 锚定价与包含历史折损的到期估值/误差带。"""
+    try:
+        source_level = float(proxy_level)
+        source_spot = float(proxy_spot)
+        target_spot = float(leveraged_spot)
+        multiple = float(leverage)
+    except (TypeError, ValueError):
+        return None
+    if min(source_level, source_spot, target_spot, multiple) <= 0:
+        return None
+
+    proxy_move = source_level / source_spot - 1.0
+    instant_factor = 1.0 + multiple * proxy_move
+    if instant_factor <= 0:
+        return None
+    instant_level = target_spot * instant_factor
+    result = {
+        "source_level": round(source_level, 2),
+        "source_move_pct": round(proxy_move * 100, 2),
+        "spot_anchored_level": round(instant_level, 2),
+        "spot_anchored_move_pct": round((instant_factor - 1.0) * 100, 2),
+        "calendar_days": max(0, int(calendar_days or 0)),
+        "method": "current_spot_daily_reset",
+    }
+
+    # 历史 residual 是按交易日估计，不能直接乘含周末的日历天数。
+    trading_days = max(0, round(result["calendar_days"] * 252 / 365))
+    result["estimated_trading_days"] = trading_days
+    if trading_days <= 0 or not decay or not decay.get("available"):
+        return result
+
+    mean_residual = float(decay.get("combined_residual_log_daily") or 0.0)
+    residual_std = float(decay.get("residual_std_daily_pct") or 0.0) / 100.0
+    expiry_level = target_spot * math.exp(
+        multiple * math.log(source_level / source_spot)
+        + mean_residual * trading_days
+    )
+    one_sigma = residual_std * math.sqrt(trading_days)
+    result.update({
+        "expiry_estimate": round(expiry_level, 2),
+        "expiry_range_low": round(expiry_level * math.exp(-one_sigma), 2),
+        "expiry_range_high": round(expiry_level * math.exp(one_sigma), 2),
+        "expiry_method": "historical_path_decay",
+    })
+    return result
+
+
+def _build_leveraged_option_mapping(ticker: str, source: str,
+                                     proxy_spot: float | None,
+                                     leveraged_spot: float | None,
+                                     expiry: str | None,
+                                     decay: dict | None,
+                                     levels: dict[str, float | None]) -> dict | None:
+    cfg = LEVERAGED_OPTION_PRICE_MAP.get(ticker)
+    if not cfg or cfg.get("source") != source:
+        return None
+    try:
+        expiry_day = datetime.strptime(expiry, "%Y-%m-%d").date() if expiry else None
+        calendar_days = max(0, (expiry_day - datetime.now().date()).days) if expiry_day else 0
+    except (TypeError, ValueError):
+        calendar_days = 0
+    converted = {
+        key: _convert_proxy_level(value, proxy_spot, leveraged_spot,
+                                  cfg["leverage"], calendar_days, decay)
+        for key, value in levels.items()
+    }
+    converted = {key: value for key, value in converted.items() if value}
+    if not converted:
+        return None
+    return {
+        "ticker": ticker,
+        "source": source,
+        "leverage": cfg["leverage"],
+        "proxy_spot": round(float(proxy_spot), 2),
+        "leveraged_spot": round(float(leveraged_spot), 2),
+        "expiry": expiry,
+        "calendar_days": calendar_days,
+        "decay": decay or {"available": False, "quality": "unavailable"},
+        "levels": converted,
+        "execution_rule": (
+            f"{source} 只负责触发结构信号；{ticker} 挂单必须使用 spot_anchored_level，"
+            "并在触发时按最新两只 ETF 现价重新换算"
+        ),
+        "long_horizon_warning": (
+            "杠杆 ETF 每日重置且路径依赖；expiry_estimate 已加入历史平均折损，"
+            "但不是可直接挂单的精确价格"
+            if calendar_days >= 2 else None
+        ),
+    }
+
+
+def _latest_signal_price(ticker: str) -> float | None:
+    """网络报价暂缺时，用同一轮 orchestrator 写下的标的现价兜底。"""
+    for name in (ticker, f"US.{ticker}"):
+        path = SIGNALS_DIR / f"{name}_latest.json"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            price = float((payload.get("market") or {}).get("price"))
+            if math.isfinite(price) and price > 0:
+                return price
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            continue
+    return None
 
 
 def _visible_option_sources() -> dict[str, str]:
@@ -3096,7 +3326,11 @@ def _ticker_options_cache_contract() -> str:
         for ticker, underlying in _visible_option_sources().items()
     )
     contract = json.dumps(
-        {"schema": TICKER_OPTIONS_CACHE_SCHEMA, "sources": sources},
+        {
+            "schema": TICKER_OPTIONS_CACHE_SCHEMA,
+            "sources": sources,
+            "leveraged_price_map": LEVERAGED_OPTION_PRICE_MAP,
+        },
         ensure_ascii=True,
         separators=(",", ":"),
     )
@@ -3603,6 +3837,61 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
             except Exception as e:
                 gex_analysis = {"error": f"gex_calc_fail: {str(e)[:100]}"}
 
+            # === QQQ/SOXX 结构价 -> TQQQ/SOXL 可执行价 ===
+            # GEX/墙的底层计算始终保留在原期权链单位；这里只另外生成杠杆 ETF
+            # 的即时锚定价和带历史折损的到期估值，避免把 $700 的 QQQ strike
+            # 误显示成 TQQQ 挂单价。
+            leveraged_mapping = None
+            mapping_cfg = LEVERAGED_OPTION_PRICE_MAP.get(tk)
+            if mapping_cfg and mapping_cfg.get("source") == underlying:
+                proxy_history = None
+                leveraged_history = None
+                leveraged_spot = None
+                try:
+                    proxy_history = t.history(period="3mo")
+                except Exception:
+                    proxy_history = None
+                try:
+                    leveraged_history = yf.Ticker(tk).history(period="3mo")
+                    if leveraged_history is not None and not leveraged_history.empty:
+                        leveraged_spot = float(leveraged_history["Close"].iloc[-1])
+                except Exception:
+                    leveraged_history = None
+                if not leveraged_spot:
+                    leveraged_spot = _latest_signal_price(tk)
+
+                try:
+                    proxy_closes = proxy_history["Close"] if proxy_history is not None else None
+                    leveraged_closes = (
+                        leveraged_history["Close"] if leveraged_history is not None else None
+                    )
+                    decay = _estimate_leveraged_decay(
+                        proxy_closes, leveraged_closes, mapping_cfg["leverage"]
+                    )
+                except Exception:
+                    decay = {"available": False, "sample_days": 0, "quality": "unavailable"}
+
+                key_prices = (
+                    (gex_analysis.get("stock_verdict") or {}).get("key_prices") or {}
+                    if isinstance(gex_analysis, dict) else {}
+                )
+                leveraged_mapping = _build_leveraged_option_mapping(
+                    ticker=tk,
+                    source=underlying,
+                    proxy_spot=spot,
+                    leveraged_spot=leveraged_spot,
+                    expiry=exp,
+                    decay=decay,
+                    levels={
+                        "upper_resistance": key_prices.get("upper_resistance", an_call["strike"]),
+                        "pin": key_prices.get("pin"),
+                        "lower_support": key_prices.get("lower_support", an_put["strike"]),
+                        "call_wall": an_call["strike"],
+                        "put_wall": an_put["strike"],
+                        "max_pain": best_s,
+                    },
+                )
+
             out["tickers"][tk] = {
                 "underlying":       underlying,
                 "spot":             round(spot, 2),
@@ -3623,6 +3912,7 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 "opend_fallback_error": opend_fallback_error,
                 # 期权结构综合读 (GEX + IV Regime + Skew + Verdict)
                 "gex_analysis":     gex_analysis,
+                "leveraged_mapping": leveraged_mapping,
                 **analysis,
                 **earnings_meta,
             }
@@ -3677,6 +3967,23 @@ def _retain_last_known_good_gex(previous: dict, refreshed: dict) -> dict:
             "stale_as_of": retained.get("stale_as_of") or previous.get("ts"),
         })
         current["gex_analysis"] = retained
+        # retained verdict 里的 pin/支撑/阻力也来自旧 GEX；同步重建它们的杠杆
+        # 映射，避免 UI 一边显示旧 QQQ pin、一边缺少对应 TQQQ 价格。
+        mapping = current.get("leveraged_mapping")
+        key_prices = (retained.get("stock_verdict") or {}).get("key_prices") or {}
+        if isinstance(mapping, dict) and key_prices:
+            levels = mapping.setdefault("levels", {})
+            for key in ("upper_resistance", "pin", "lower_support"):
+                converted = _convert_proxy_level(
+                    key_prices.get(key),
+                    mapping.get("proxy_spot"),
+                    mapping.get("leveraged_spot"),
+                    mapping.get("leverage"),
+                    mapping.get("calendar_days") or 0,
+                    mapping.get("decay"),
+                )
+                if converted:
+                    levels[key] = converted
         current["gex_data_status"] = "stale_last_known_good"
     return result
 
