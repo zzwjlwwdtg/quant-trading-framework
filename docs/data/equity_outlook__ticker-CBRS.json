@@ -11,10 +11,10 @@
     "eps_growth_pct": null,
     "forward_pe": 168.83,
     "trailing_pe": null,
-    "target_mean": 290.73,
-    "target_high": 325.0,
+    "target_mean": 291.64,
+    "target_high": 330.0,
     "target_low": 209.0,
-    "target_upside_pct": 32.8,
+    "target_upside_pct": 33.2,
     "revenue_growth_pct": 74.3,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-11",
@@ -30,11 +30,20 @@
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": null,
-    "peer_pe_n_peers": null,
-    "peer_pe_details": null,
-    "implied_peer_median": null,
-    "implied_peer_upside": null,
+    "peer_pe_median": 25.43,
+    "peer_pe_n_peers": 2,
+    "peer_pe_details": [
+      {
+        "ticker": "NVDA",
+        "pe": 17.59
+      },
+      {
+        "ticker": "AMD",
+        "pe": 33.27
+      }
+    ],
+    "implied_peer_median": 32.98,
+    "implied_peer_upside": -84.9,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -51,18 +60,18 @@
           "numberOfAnalysts": 9.0
         },
         "0y": {
-          "avg": -0.4423,
-          "low": -0.5821,
+          "avg": -0.4715,
+          "low": -0.7056,
           "high": -0.16,
-          "numberOfAnalysts": 8.0
+          "numberOfAnalysts": 9.0
         },
         "+1y": {
           "avg": 1.2971,
           "low": 0.84,
           "high": 1.943,
-          "yearAgoEps": -0.4423,
+          "yearAgoEps": -0.4715,
           "numberOfAnalysts": 10.0,
-          "growth": 3.9328
+          "growth": 3.7508
         }
       },
       "revenue": {
@@ -109,7 +118,7 @@
           "90daysAgo": 0.0
         },
         "0y": {
-          "current": -0.4423,
+          "current": -0.4715,
           "7daysAgo": -0.9376,
           "30daysAgo": -0.9702,
           "60daysAgo": -1.2912,
@@ -125,14 +134,14 @@
       },
       "eps_revisions": {
         "0q": {
-          "upLast7days": 10.0,
+          "upLast7days": 1.0,
           "upLast30days": 1.0,
           "downLast30days": 0.0
         },
         "+1q": {
-          "upLast7days": 9.0,
-          "upLast30days": 0.0,
-          "downLast30days": 0.0
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
+          "downLast30days": 1.0
         },
         "0y": {
           "upLast7days": 1.0,
@@ -141,7 +150,7 @@
         },
         "+1y": {
           "upLast7days": 1.0,
-          "upLast30days": 0.0,
+          "upLast30days": 2.0,
           "downLast30days": 0.0
         }
       },
@@ -149,46 +158,52 @@
         "period": "+1y",
         "signal": "upward",
         "trend_signal": "upward",
-        "breadth_signal": "flat",
+        "breadth_signal": "upward",
         "eps_current": 1.2971,
         "eps_30d_ago": 0.9573,
         "eps_trend_pct_30d": 35.5,
-        "up_30d": 0,
+        "up_30d": 2,
         "down_30d": 0,
-        "net_30d": 0
+        "net_30d": 2
       }
     }
   },
   "pricing": {
-    "classification": "underpriced",
-    "label": "市场预期偏低",
-    "tone": "ok",
+    "classification": "fully_priced",
+    "label": "利好已充分计价",
+    "tone": "warn",
     "confidence": "medium",
-    "anchor_count": 1,
+    "anchor_count": 2,
     "anchors": [
       {
         "key": "analyst_target",
         "label": "分析师目标均值",
-        "implied_price": 290.73,
-        "gap_pct": 32.8
+        "implied_price": 291.64,
+        "gap_pct": 33.2
+      },
+      {
+        "key": "peer_pe",
+        "label": "前瞻 EPS × 同行 PE 中位",
+        "implied_price": 32.98,
+        "gap_pct": -84.9
       }
     ],
-    "median_gap_pct": 32.8,
+    "median_gap_pct": -25.9,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数高于现价 32.8%",
+      "多口径隐含价中位数低于现价 25.9%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-16T03:33:13.090853+00:00",
+  "fetched_at": "2026-08-16T09:33:44.398238+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-16T12:33:13.091853",
-    "age_sec": 16190,
+    "cached_at": "2026-08-16T18:33:44.399237",
+    "age_sec": 1760,
     "stale": false,
     "refreshing": false
   },
