@@ -3119,6 +3119,8 @@ TICKER_TO_OPTION_SOURCE = {
     "SHY":  "SHY",   # 1-3Y Treasury ETF
     "IEI":  "IEI",   # 3-7Y Treasury ETF
     "LITE": "LITE",  # Lumentum 有 options chain
+    "CBRS": "CBRS",  # Cerebras — 14 个到期日 (2026-08-21 起)
+    "USO":  "USO",   # WTI 原油 ETF — 17 个到期日 (2026-08-19 起)
 }
 
 # 这些卡片用流动性更深的 1x ETF 期权链判断结构，但所有可执行价位必须
