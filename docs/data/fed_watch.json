@@ -5,75 +5,72 @@
       "date": "2026-09-16",
       "days_until": 31,
       "probabilities": {
-        "hold": 73,
-        "hike_25": 26,
-        "cut_25": 1
+        "hold": 62,
+        "cut_25": 34,
+        "hike_25": 4
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 73,
       "probabilities": {
-        "hold": 55,
-        "hike_25": 40,
-        "hike_50": 3,
-        "cut_25": 2
+        "hold": 45,
+        "cut_25": 42,
+        "cut_50": 10,
+        "hike_25": 3
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 115,
       "probabilities": {
-        "hold": 42,
-        "hike_25": 45,
-        "hike_50": 8,
-        "cut_25": 5
+        "hold": 30,
+        "cut_25": 40,
+        "cut_50": 22,
+        "cut_75": 5,
+        "hike_25": 3
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish"
     }
   ],
-  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_rate": "3.25-3.50",
   "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-08-14",
-  "recent_event_impact": "8/7 NFP -23K (vs +83K expected) collapsed Sept hike odds from 57% → 26% and flipped base case to hold; 8/12 CPI came in 'uneventful' (inline), leaving hawkish bias intact but not reinforced. Kept small hike-tail alive given July FOMC's 9-3 vote with 3 hawkish dissents.",
-  "commentary": "Data snapshot is Aug 12-14 aggregator/prediction-market composite (2-4 days stale, CME direct source not directly fetched). Market is not pricing cuts — the debate is between HOLD (dominant) and additional HIKES, reflecting sticky inflation and the 3 dissenting hawks at the July FOMC. Weak Aug 7 NFP defused near-term hike risk but hawkish tail widens into Oct/Dec.",
+  "data_snapshot_date": "2026-08-15",
+  "recent_event_impact": "8/7 NFP net job loss (weak) + 8/12 July CPI 3.4% YoY (in-line, core 2.5%) + 8/13 PPI ~4.9% YoY (down from 5.5%) → Sept hike probability collapsed from ~42% to ~4%; hold odds rose to ~62%, cut_25 near 34%; December 2027 mode still 3.75-4.00% suggests market sees limited near-term easing then drift higher.",
+  "commentary": "Aug 15 CME FedWatch snapshot shows dovish lean for Sep FOMC (62% hold / 34% cut_25) after soft July NFP and in-line 3.4% July CPI erased the summer hike narrative. Cut odds compound into Oct/Dec with Dec 9 modal outcome flipping to cut_25 (~40%); terminal path implied near 3.25-3.50 by early 2027 before drifting back toward 3.75-4.00 by end-2027 per dot-plot alignment.",
   "sources": [
     {
-      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/september-2026",
-      "type": "prediction_market"
+      "url": "https://www.kiplinger.com/investing/economy/cpi-report-july-2026-what-to-expect",
+      "type": "cme_fedwatch_citation"
     },
     {
-      "url": "https://finance.yahoo.com/economy/policy/articles/us-rate-futures-cut-chances-124656547.html",
-      "type": "rate_futures_news"
-    },
-    {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "fedwatch_aggregator"
+      "url": "https://www.fool.com/investing/2026/08/12/july-inflation-data-came-in-as-expected-lowering-the-odds-of-a-fed-hike-in-september-yet-again/",
+      "type": "cme_fedwatch_citation"
     },
     {
       "url": "https://growbeansprout.com/tools/fedwatch",
       "type": "fedwatch_aggregator"
     },
     {
-      "url": "https://cryptobriefing.com/fed-rate-hold-probability-september/",
-      "type": "market_commentary"
+      "url": "https://www.cnbc.com/2026/08/12/cpi-inflation-report-july-2026.html",
+      "type": "cpi_release"
     },
     {
-      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch"
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240809a.htm",
+      "type": "fomc_schedule"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-15T23:02:40+00:00",
+  "fetched_at": "2026-08-16T07:05:19+00:00",
   "_meta": {
-    "cached_at": "2026-08-16T08:02:40.840244",
-    "age_sec": 25222,
+    "cached_at": "2026-08-16T16:05:19.646209",
+    "age_sec": 3462,
     "stale": false,
     "refreshing": false
   }
