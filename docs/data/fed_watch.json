@@ -3,79 +3,77 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 33,
+      "days_until": 31,
       "probabilities": {
-        "hold": 64,
-        "cut_25": 25,
-        "hike_25": 11
+        "hold": 73,
+        "hike_25": 26,
+        "cut_25": 1
       },
       "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 75,
+      "days_until": 73,
       "probabilities": {
         "hold": 55,
-        "cut_25": 32,
-        "hike_25": 13
+        "hike_25": 40,
+        "hike_50": 3,
+        "cut_25": 2
       },
       "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 117,
-      "probabilities": {
-        "hold": 48,
-        "cut_25": 38,
-        "hike_25": 14
-      },
-      "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 166,
+      "days_until": 115,
       "probabilities": {
         "hold": 42,
-        "cut_25": 43,
-        "cut_50": 8,
-        "hike_25": 7
+        "hike_25": 45,
+        "hike_50": 8,
+        "cut_25": 5
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "3.25-3.50",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-13",
-  "recent_event_impact": "8/12 July CPI +0.1% m/m, core 3.4%/2.5% (soft, -0.1pp vs Jun) → Sep hold prob 52%→64%; earlier Aug July NFP printed net job LOSS → killed 'need to hike' narrative, added ~10pp to cut path",
-  "commentary": "Post-soft-CPI + weak July NFP (net job loss), CME FedWatch shows market pricing 64% HOLD at Sep 16 vs 25% cut_25, with cumulative 78.2% no-change through Dec and 15.4% cut_25 vs only 5.4% hike_25 — a clear dovish lean but no near-term cut conviction; Powell Jackson Hole (Aug 21-23) is next major catalyst.",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-08-14",
+  "recent_event_impact": "8/7 NFP -23K (vs +83K expected) collapsed Sept hike odds from 57% → 26% and flipped base case to hold; 8/12 CPI came in 'uneventful' (inline), leaving hawkish bias intact but not reinforced. Kept small hike-tail alive given July FOMC's 9-3 vote with 3 hawkish dissents.",
+  "commentary": "Data snapshot is Aug 12-14 aggregator/prediction-market composite (2-4 days stale, CME direct source not directly fetched). Market is not pricing cuts — the debate is between HOLD (dominant) and additional HIKES, reflecting sticky inflation and the 3 dissenting hawks at the July FOMC. Weak Aug 7 NFP defused near-term hike risk but hawkish tail widens into Oct/Dec.",
   "sources": [
     {
-      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch"
+      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/september-2026",
+      "type": "prediction_market"
+    },
+    {
+      "url": "https://finance.yahoo.com/economy/policy/articles/us-rate-futures-cut-chances-124656547.html",
+      "type": "rate_futures_news"
     },
     {
       "url": "https://centralbank.watch/federal-reserve/",
-      "type": "aggregator"
+      "type": "fedwatch_aggregator"
     },
     {
       "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "aggregator"
+      "type": "fedwatch_aggregator"
     },
     {
-      "url": "https://www.cnbc.com/2026/08/12/cpi-inflation-report-july-2026.html",
-      "type": "news_cpi"
+      "url": "https://cryptobriefing.com/fed-rate-hold-probability-september/",
+      "type": "market_commentary"
+    },
+    {
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-14T06:54:19+00:00",
+  "fetched_at": "2026-08-15T23:02:40+00:00",
   "_meta": {
-    "cached_at": "2026-08-14T15:54:19.892519",
-    "age_sec": 7030,
+    "cached_at": "2026-08-16T08:02:40.840244",
+    "age_sec": 16802,
     "stale": false,
     "refreshing": false
   }

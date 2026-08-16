@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-14T17:51:31", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-16T12:42:44", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1479,6 +1479,7 @@ function renderMiniWall(opt) {
   if (!opt || opt.error || !opt.distribution || !opt.distribution.length) return '';
   const dist = opt.distribution;
   const spot = opt.spot;
+  const source = opt.underlying || '';
   const H = 60;  // px
   const maxV = Math.max(...dist.map(d => Math.max(d.call_vol, d.put_vol)), 1);
   const barW = 100 / dist.length;
@@ -1515,15 +1516,15 @@ function renderMiniWall(opt) {
   return `<svg width="100%" height="${H}" style="display:block; margin-top:4px">
     <line x1="0" y1="${H/2}" x2="100%" y2="${H/2}" stroke="rgba(125,133,144,0.3)" stroke-width="1"/>
     ${bars}
-    <line x1="${spotX}%" y1="0" x2="${spotX}%" y2="${H}" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="3,3"><title>现价 spot $${spot}</title></line>
-    ${mpX != null ? `<line x1="${mpX}%" y1="0" x2="${mpX}%" y2="${H}" stroke="#d29922" stroke-width="1" stroke-dasharray="2,4" opacity="0.7"><title>Max Pain $${opt.max_pain} — 期权到期时使多数持有者亏损最大的价位</title></line>` : ''}
-    ${pinX != null && pinInRange ? `<line x1="${pinX}%" y1="0" x2="${pinX}%" y2="${H}" stroke="#a78bfa" stroke-width="1.3" stroke-dasharray="5,2"><title>关键中枢 pin $${pinStrike} — 华尔街对冲盘的引力中心（本到期日范围有效，约 1-6 周）</title></line>` : ''}
-    ${pinStrike != null && !pinInRange ? `<text x="${pinStrike < minS ? 2 : 98}%" y="10" fill="#a78bfa" font-size="9" text-anchor="${pinStrike < minS ? 'start' : 'end'}"><title>pin $${pinStrike} 在图外 (${pinStrike < minS ? '左' : '右'}方)</title>pin${pinStrike < minS ? '←' : '→'}</text>` : ''}
+    <line x1="${spotX}%" y1="0" x2="${spotX}%" y2="${H}" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="3,3"><title>${source} 现价 $${spot}（底层期权链原价）</title></line>
+    ${mpX != null ? `<line x1="${mpX}%" y1="0" x2="${mpX}%" y2="${H}" stroke="#d29922" stroke-width="1" stroke-dasharray="2,4" opacity="0.7"><title>${source} Max Pain $${opt.max_pain} — 底层期权链原价</title></line>` : ''}
+    ${pinX != null && pinInRange ? `<line x1="${pinX}%" y1="0" x2="${pinX}%" y2="${H}" stroke="#a78bfa" stroke-width="1.3" stroke-dasharray="5,2"><title>${source} 关键中枢 pin $${pinStrike} — 底层期权链原价；下方另列杠杆 ETF 换算价</title></line>` : ''}
+    ${pinStrike != null && !pinInRange ? `<text x="${pinStrike < minS ? 2 : 98}%" y="10" fill="#a78bfa" font-size="9" text-anchor="${pinStrike < minS ? 'start' : 'end'}"><title>${source} pin $${pinStrike} 在图外 (${pinStrike < minS ? '左' : '右'}方)</title>pin${pinStrike < minS ? '←' : '→'}</text>` : ''}
   </svg>
   <div style="font-size:9px; color:var(--muted); margin-top:2px; display:flex; gap:8px; flex-wrap:wrap">
-    <span><span style="color:#58a6ff">━</span> 现价</span>
-    ${opt.max_pain != null ? '<span><span style="color:#d29922">┅</span> Max Pain</span>' : ''}
-    ${pinStrike != null ? '<span title="华尔街对冲盘中枢，本到期日范围有效"><span style="color:#a78bfa">┅</span> Pin (对冲盘中枢)</span>' : ''}
+    <span><span style="color:#58a6ff">━</span> ${source} 原始现价</span>
+    ${opt.max_pain != null ? `<span><span style="color:#d29922">┅</span> ${source} Max Pain</span>` : ''}
+    ${pinStrike != null ? `<span title="底层期权链的对冲盘中枢"><span style="color:#a78bfa">┅</span> ${source} Pin</span>` : ''}
   </div>`;
 }
 
@@ -1537,10 +1538,47 @@ function fmtNotional(n) {
 function fmtOI(n) { return n ? n.toLocaleString('en-US') : '-'; }
 function fmtPrem(p) { return p != null ? '$' + p.toFixed(2) : '-'; }
 
-function renderOptAnalysis(opt) {
+function renderOptAnalysis(opt, cardTicker = '') {
   if (!opt) return '<div class="opt-analysis" style="font-size:10px; color:var(--muted); padding:4px 0">🔄 期权数据加载中...</div>';
   if (opt.error) return `<div class="opt-analysis" style="font-size:10px; color:var(--muted); padding:4px 0" title="${opt.error}">期权数据不可用</div>`;
   const d = opt.defense || {}, o = opt.offense || {}, r = opt.squeeze_risk || {}, sm = opt.sentiment || {};
+  const lm = opt.leveraged_mapping || null;
+  const isProxy = Boolean(cardTicker && opt.underlying && cardTicker !== opt.underlying);
+  const structureSource = lm ? lm.source : (isProxy ? opt.underlying : '');
+  const lmLevels = (lm && lm.levels) || {};
+  const mappedPrice = (key, raw) => {
+    const m = lmLevels[key];
+    if (!lm || !m || m.spot_anchored_level == null) {
+      return isProxy
+        ? `<b>${opt.underlying} $${raw}</b> <small class="warn">（换算未就绪，不可直接挂单）</small>`
+        : `<b>$${raw}</b>`;
+    }
+    const expiry = m.expiry_estimate != null
+      ? `<small style="display:block; color:var(--muted); padding-left:14px">到期路径估算 $${m.expiry_estimate} · 约 $${m.expiry_range_low}–$${m.expiry_range_high}（非挂单价）</small>`
+      : '';
+    return `<b>${lm.ticker}≈$${m.spot_anchored_level}</b> <small style="color:var(--muted)">（源 ${lm.source} $${raw}）</small>${expiry}`;
+  };
+  const mappedMove = (key, fallback) => {
+    const m = lmLevels[key];
+    return m && m.spot_anchored_move_pct != null ? m.spot_anchored_move_pct : fallback;
+  };
+  let mappingBlock = '';
+  if (lm) {
+    const decay = lm.decay || {};
+    const carry = decay.daily_carry_pct;
+    const decayText = decay.available
+      ? `${carry < 0 ? '历史日均折损' : '历史日均偏差'} ${carry >= 0 ? '+' : ''}${carry}%（${decay.sample_days} 个交易日样本）`
+      : '历史折损样本不足';
+    mappingBlock = `<div style="margin:0 0 6px; padding:5px 7px; background:rgba(88,166,255,0.08); border-left:3px solid #58a6ff; border-radius:3px; font-size:10px; line-height:1.55">
+      🔁 <b>${lm.source} 结构 → ${lm.ticker} 可执行价</b><br>
+      <span style="color:var(--muted)">${lm.source} $${lm.proxy_spot} / ${lm.ticker} $${lm.leveraged_spot} · ${lm.leverage}×即时锚定 · ${decayText}</span>
+      ${lm.long_horizon_warning ? `<small class="warn" style="display:block">⚠ ${lm.calendar_days} 天期限有每日重置和路径偏差；买入价使用即时换算，并在触发时重新计算。</small>` : ''}
+    </div>`;
+  } else if (isProxy) {
+    mappingBlock = `<div class="warn" style="margin:0 0 6px; padding:5px 7px; background:rgba(210,153,34,0.10); border-left:3px solid var(--warn); border-radius:3px; font-size:10px">
+      ⚠ ${opt.underlying} → ${cardTicker} 价格换算正在加载；当前只显示底层期权原价，禁止用作 ${cardTicker} 挂单价。
+    </div>`;
+  }
   const strCls = { '强':'bad', '中':'warn', '弱':'muted' };
   const dCls = strCls[d.strength] || '';
   const oCls = strCls[o.strength] || '';
@@ -1602,20 +1640,20 @@ function renderOptAnalysis(opt) {
       <tr>
         <td style="padding:2px 4px; color:var(--muted); font-size:9.5px">${levelDot[r.level]} ${label}</td>
         <td style="padding:2px 4px; font-size:9.5px" class="${levelCls[r.level]}"><b>${r.level === 'high' ? '高' : r.level === 'mid' ? '中' : '低'}</b></td>
-        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${r.reason}</td>
+        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${structureSource ? `[${structureSource}结构] ` : ''}${r.reason}</td>
       </tr>`;
     const oppRow = (key, label, o) => `
       <tr>
         <td style="padding:2px 4px; color:var(--muted); font-size:9.5px">${oppDot[o.level]} ${label}</td>
         <td style="padding:2px 4px; font-size:9.5px" class="${oppCls[o.level]}"><b>${o.level === 'good' ? '好' : o.level === 'wait' ? '等' : '无'}</b></td>
-        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${o.reason}</td>
+        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${structureSource ? `[${structureSource}结构] ` : ''}${o.reason}</td>
       </tr>`;
 
     gexBlock = `
     <div style="border-radius:4px; padding:6px 8px; margin-bottom:6px; background:${summaryBg}; border-left:3px solid ${summaryBorder}">
       ${staleBadge}
       <div style="font-size:11px; font-weight:600; color:var(--fg); margin-bottom:5px" title="通过期权结构判断你的 stock 该怎么办 (不涉及买期权)">
-        ⚡ 期权判读你的 stock: <span class="${sv.summary_cls || 'muted'}">${sv.summary || '-'}</span>
+        ⚡ 期权判读${lm ? ` ${lm.ticker}（结构源 ${lm.source}）` : (isProxy ? ` ${cardTicker}（结构源 ${opt.underlying}，换算待更新）` : '你的 stock')}: <span class="${sv.summary_cls || 'muted'}">${sv.summary || '-'}</span>
       </div>
 
       <div style="font-size:9px; color:var(--muted); margin-bottom:2px">🔴 三类风险 (高/中/低)</div>
@@ -1634,16 +1672,16 @@ function renderOptAnalysis(opt) {
 
       <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📍 关键价位 · 记这几个数就够了</div>
       <div style="font-size:10px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.7">
-        ${kp.upper_resistance ? `<div>⬆ <b>上方阻力 $${kp.upper_resistance}</b> <span style="color:var(--muted); font-size:9.5px">— 涨到这里会遇到卖压（因为持有卖出期权的人会主动砸盘保护自己）</span></div>` : ''}
-        ${kp.pin ? `<div>🎯 <b class="ok">关键中枢 $${kp.pin}</b> <span style="color:var(--muted); font-size:9.5px">— 华尔街对冲盘想把股价固定在这个价，价格偏离就会被拉回来</span></div>` : ''}
-        ${kp.lower_support ? `<div>⬇ <b>下方支撑 $${kp.lower_support}</b> <span style="color:var(--muted); font-size:9.5px">— 跌到这里会有买盘接（因为持有买入期权的人会主动买入保护自己）</span></div>` : ''}
-        ${kp.break_watch ? `<div class="warn" style="margin-top:3px; padding:3px 5px; background:rgba(210,153,34,0.10); border-radius:2px">${kp.break_watch}</div>` : ''}
+        ${kp.upper_resistance ? `<div>⬆ 上方阻力 ${mappedPrice('upper_resistance', kp.upper_resistance)} <span style="color:var(--muted); font-size:9.5px">— 涨到这里会遇到卖压</span></div>` : ''}
+        ${kp.pin ? `<div>🎯 <span class="ok">关键中枢 ${mappedPrice('pin', kp.pin)}</span> <span style="color:var(--muted); font-size:9.5px">— 对冲盘引力中心</span></div>` : ''}
+        ${kp.lower_support ? `<div>⬇ 下方支撑 ${mappedPrice('lower_support', kp.lower_support)} <span style="color:var(--muted); font-size:9.5px">— 跌到这里可能有承接</span></div>` : ''}
+        ${kp.break_watch ? `<div class="warn" style="margin-top:3px; padding:3px 5px; background:rgba(210,153,34,0.10); border-radius:2px">${structureSource ? `底层 ${structureSource} 条件：` : ''}${kp.break_watch}</div>` : ''}
       </div>
 
       <details style="margin-top:5px">
         <summary style="cursor:pointer; font-size:9px; color:var(--muted); list-style:none">📊 底层数据 (GEX/IV/Skew 原始，看着学)</summary>
         <div style="font-size:9.5px; color:var(--muted); margin-top:4px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.6">
-          <div>📊 <b>GEX</b>: ${ga.gex?.regime_zh || '-'} · 总 ${(ga.gex?.total_gex_millions || 0) >= 0 ? '+' : ''}${ga.gex?.total_gex_millions || 0}M · flip $${ga.gex?.gamma_flip_strike || '-'} (spot vs flip ${(ga.gex?.spot_vs_flip_pct || 0) >= 0 ? '+' : ''}${ga.gex?.spot_vs_flip_pct || 0}%)</div>
+          <div>📊 <b>GEX</b>: ${ga.gex?.regime_zh || '-'} · 总 ${(ga.gex?.total_gex_millions || 0) >= 0 ? '+' : ''}${ga.gex?.total_gex_millions || 0}M · ${opt.underlying || ''} flip $${ga.gex?.gamma_flip_strike || '-'} (spot vs flip ${(ga.gex?.spot_vs_flip_pct || 0) >= 0 ? '+' : ''}${ga.gex?.spot_vs_flip_pct || 0}%)</div>
           <div>📈 <b>IV</b>: ${ga.iv?.regime_zh || '-'} · ATM IV ${ga.iv?.atm_iv_pct || 0}% vs 60d RV ${ga.iv?.realized_vol_60d_pct || '-'}% · premium ${(ga.iv?.iv_premium_pct || 0) >= 0 ? '+' : ''}${ga.iv?.iv_premium_pct || 0}%</div>
           <div>📉 <b>Skew</b>: ${ga.skew?.regime_zh || '-'} · OTM put IV ${ga.skew?.otm_put_iv_pct || 0}% - call IV ${ga.skew?.otm_call_iv_pct || 0}% = ${(ga.skew?.skew_pct || 0) >= 0 ? '+' : ''}${ga.skew?.skew_pct || 0}%</div>
           <div style="margin-top:4px; padding-top:4px; border-top:1px dashed var(--border)">
@@ -1660,18 +1698,19 @@ function renderOptAnalysis(opt) {
   }
 
   return `<div class="opt-analysis" style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10.5px; line-height:1.4">
+    ${mappingBlock}
     ${gexBlock}
     ${earningsBadge}
     <div style="display:flex; justify-content:space-between">
-      <span>🛡 <b>防守</b> $${d.strike || '-'} <small>(${d.dist_pct > 0 ? '-' : '+'}${Math.abs(d.dist_pct||0).toFixed(1)}%)</small></span>
+      <span>🛡 <b>防守</b> ${lm ? `${lm.ticker}≈$${(lmLevels.put_wall || {}).spot_anchored_level || '-'} <small>（${lm.source} $${d.strike || '-'}）</small>` : (isProxy ? `${opt.underlying} $${d.strike || '-'} <small class="warn">（原价，不可挂单）</small>` : `$${d.strike || '-'}`)} <small>(${mappedMove('put_wall', -(d.dist_pct||0)) >= 0 ? '+' : ''}${mappedMove('put_wall', -(d.dist_pct||0)).toFixed(1)}%)</small></span>
       <span class="${dCls}"><small>${d.strength || '-'} · 占 ${d.share || 0}%</small></span>
     </div>
     <div style="display:flex; justify-content:space-between">
-      <span>⚔ <b>进攻</b> $${o.strike || '-'} <small>(${o.dist_pct > 0 ? '+' : ''}${(o.dist_pct||0).toFixed(1)}%)</small></span>
+      <span>⚔ <b>进攻</b> ${lm ? `${lm.ticker}≈$${(lmLevels.call_wall || {}).spot_anchored_level || '-'} <small>（${lm.source} $${o.strike || '-'}）</small>` : (isProxy ? `${opt.underlying} $${o.strike || '-'} <small class="warn">（原价，不可挂单）</small>` : `$${o.strike || '-'}`)} <small>(${mappedMove('call_wall', o.dist_pct||0) >= 0 ? '+' : ''}${mappedMove('call_wall', o.dist_pct||0).toFixed(1)}%)</small></span>
       <span class="${oCls}"><small>${o.strength || '-'} · 占 ${o.share || 0}%</small></span>
     </div>
     <div style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr 1.2fr; gap:2px; margin-top:4px; padding:2px 0; font-size:9px; color:var(--muted); border-bottom:1px solid var(--border)">
-      <span title="Call Wall 或 Put Wall 的行权价">Strike</span>
+      <span title="Call Wall 或 Put Wall 的原始行权价">${opt.underlying || ''} Strike（原价）</span>
       <span title="单手合约保费（bid/ask 中点）">保费</span>
       <span title="Open Interest：未平仓合约数（持仓量，非当日成交）">OI 仓位</span>
       <span title="名义敞口 = OI × 100 × 行权价">名义</span>
@@ -1680,7 +1719,7 @@ function renderOptAnalysis(opt) {
     ${tableRow('🛡 Put',  'bad', d)}
     <div style="margin-top:5px" title="${(r.detail || '').replace(/"/g,'&quot;')}">
       <span class="${urgCls}"><b>${urgIcon} ${RISK_ZH[r.type] || r.type}</b></span>
-      <small style="color:var(--muted); display:block; margin-top:1px">${(r.detail || '').slice(0,100)}${r.detail && r.detail.length > 100 ? '…' : ''}</small>
+      <small style="color:var(--muted); display:block; margin-top:1px">${structureSource ? `[底层 ${structureSource}] ` : ''}${(r.detail || '').slice(0,100)}${r.detail && r.detail.length > 100 ? '…' : ''}</small>
     </div>
     ${sm.cp_ratio != null ? `<details style="margin-top:3px" title="Call 总成交 / Put 总成交比值；点开看详细解读">
       <summary style="cursor:pointer; display:flex; justify-content:space-between; list-style:none">
@@ -1854,7 +1893,7 @@ function renderSignalCard(t, context) {
     ${renderSignalOverview(t, optSrc)}
     ${macroMeta}
     ${showOptions ? renderMiniWall(opt) : ''}
-    ${showOptions ? renderOptAnalysis(opt) : ''}
+    ${showOptions ? renderOptAnalysis(opt, t.ticker) : ''}
     ${forwardOutlook}
     ${showAI ? renderTickerAI(t, context) : ''}
     ${capitalFlow}

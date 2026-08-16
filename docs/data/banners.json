@@ -1,40 +1,41 @@
 {
   "exists": true,
-  "snapshot_path": "snapshot_20260811_205128.txt",
-  "snapshot_mtime": "2026-08-11T20:51:28.887129",
+  "snapshot_path": "snapshot_20260816_122756.txt",
+  "snapshot_mtime": "2026-08-16T12:27:56.507641",
   "trump": {
-    "posts": 26,
+    "posts": 11,
     "direction": "neutral",
     "magnitude": "small",
-    "score": -8,
+    "score": 0,
     "event_counts": {
-      "MEDIA_ATTACK": 5,
-      "TARIFF": 2,
-      "DOMESTIC_POLICY": 18,
-      "NOISE": 1
+      "NOISE": 2,
+      "MEDIA_ATTACK": 1,
+      "GEOPOLITICAL": 2,
+      "TARIFF": 1,
+      "DOMESTIC_POLICY": 5
     },
     "breaking": [],
     "summary": {
-      "text": "Trump 强推关税打击转运避税，风险偏好偏空、贸易摩擦升温。",
+      "text": "Trump聚焦国内政策：呼吁通过永久夏令时法案并为佛州两位州议员站台背书，与市场无关，情绪中性。",
       "state": "cached",
       "post_ids": [
-        "117091934703272898",
-        "117090920749960452",
-        "117090738512511305"
+        "117102785991799720",
+        "117101661290326953",
+        "117101660036144509"
       ]
     }
   },
   "gold_macro": {
-    "direction": "neutral",
-    "score": 1,
-    "conf": "4/10",
+    "direction": "bullish",
+    "score": 2,
+    "conf": "6/10",
     "factors": [
       {
         "arrow": "·",
         "name": "实际利率",
         "direction": "neutral",
         "weight": 1,
-        "value": "2.4",
+        "value": "2.39",
         "trend": "flat"
       },
       {
@@ -42,7 +43,7 @@
         "name": "美元指数",
         "direction": "neutral",
         "weight": 0,
-        "value": "99.83",
+        "value": "99.67",
         "trend": "flat"
       },
       {
@@ -50,7 +51,7 @@
         "name": "10Y名义利率",
         "direction": "neutral",
         "weight": 0,
-        "value": "4.65",
+        "value": "4.63",
         "trend": "flat"
       },
       {
@@ -62,12 +63,12 @@
         "trend": "expanding"
       },
       {
-        "arrow": "·",
+        "arrow": "▲",
         "name": "WTI 原油",
-        "direction": "neutral",
-        "weight": 0,
-        "value": "81.96",
-        "trend": "flat"
+        "direction": "bullish",
+        "weight": 1,
+        "value": "84.77",
+        "trend": "rising"
       },
       {
         "arrow": "·",
@@ -81,6 +82,6 @@
   },
   "options_risk": {
     "level": "low",
-    "days_to_witching": 38
+    "days_to_witching": 34
   }
 }

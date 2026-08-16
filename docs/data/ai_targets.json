@@ -1,20 +1,20 @@
 {
   "exists": true,
-  "path": "ai_targets_2026-08-12.json",
-  "mtime": "2026-08-12T22:30:53.688860",
+  "path": "ai_targets_2026-08-14.json",
+  "mtime": "2026-08-14T22:26:52.558326",
   "version": 1,
-  "ts": "2026-08-12T09:29",
-  "source_date": "2026-08-12",
+  "ts": "2026-08-14T09:24",
+  "source_date": "2026-08-14",
   "targets": [
     {
       "ticker": "US.TQQQ",
       "action": "watch_buy",
-      "entry_ref": 72.0,
-      "stop_ref": 70.5,
-      "target_ref": 75.0,
+      "entry_ref": 76.5,
+      "stop_ref": 74.8,
+      "target_ref": 80.0,
       "use_limit": true,
       "size_hint": "small",
-      "notes": "日K 强空但盘前 NQ +1.11%，等回踩 Put Wall $72 小仓位试多"
+      "notes": "MACD 刚翻多但 15m RSI 76 超买，等回踩 Max Pain $76 附近；Put Wall $75 下方止损"
     },
     {
       "ticker": "US.SOXL",
@@ -24,7 +24,7 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "15m RSI 78 极度超买 + 日K 深度空头，不追高不接刀"
+      "notes": "MACD -10.85 深度空 + ADX 26.7 强下行趋势，昨日 +2.25% 属 α 反弹非翻转"
     },
     {
       "ticker": "US.DRAM",
@@ -34,7 +34,7 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "Put Wall $50 巨量对冲 C/P 0.24，多空博弈激烈观望"
+      "notes": "0DTE 磁吸-3.39% strong 拉跌 vs MU 昨 +4.14% 强反弹，方向冲突观望"
     },
     {
       "ticker": "US.MULL",
@@ -44,17 +44,17 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 弱空 + 无短线信号，方向不明观望"
+      "notes": "MACD 空 + log 未提供 MULL 现价 + NVDA 财报 12d 前 2x 单股杠杆不宜"
     },
     {
       "ticker": "US.GLD",
       "action": "watch_buy",
-      "entry_ref": 398.0,
-      "stop_ref": 395.0,
-      "target_ref": 410.0,
+      "entry_ref": 400.0,
+      "stop_ref": 396.0,
+      "target_ref": 408.0,
       "use_limit": true,
       "size_hint": "normal",
-      "notes": "GC 夜盘 +2.34% + MACD 多头 + Fed 扩表，等回踩 Max Pain $400 附近入场"
+      "notes": "MACD 多 + 宏观 bullish + GC 夜盘 +1.61% 三共振，高开后等回踩 Put Wall $400"
     }
   ]
 }

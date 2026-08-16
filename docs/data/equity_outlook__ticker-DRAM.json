@@ -5,53 +5,53 @@
   "analyst_consensus": {
     "n_analysts": 43,
     "recommendation": "strong_buy",
-    "current_price": 949.83,
+    "current_price": 971.66,
     "forward_eps": 154.89,
-    "trailing_eps": 44.2,
-    "eps_growth_pct": 250.4,
-    "forward_pe": 6.13,
-    "trailing_pe": 21.49,
+    "trailing_eps": 44.21,
+    "eps_growth_pct": 250.3,
+    "forward_pe": 6.27,
+    "trailing_pe": 21.98,
     "target_mean": 1501.98,
     "target_high": 2200.0,
     "target_low": 361.0,
-    "target_upside_pct": 58.1,
+    "target_upside_pct": 54.6,
     "revenue_growth_pct": 345.7,
     "earnings_growth_pct": 1368.5,
     "next_earnings": "2026-09-24",
-    "implied_pe_hold": 3328.48,
-    "implied_pe_hold_upside": 250.4,
-    "peg_fair_price": 38784.35,
-    "peg_ratio": 0.02,
-    "hist_pe_median": 52.38,
+    "implied_pe_hold": 3404.21,
+    "implied_pe_hold_upside": 250.3,
+    "peg_fair_price": 38768.86,
+    "peg_ratio": 0.03,
+    "hist_pe_median": 52.52,
     "hist_pe_p25": 8.22,
     "hist_pe_p75": 134.4,
-    "hist_pe_n_days": 739,
-    "implied_hist_median": 8113.12,
+    "hist_pe_n_days": 740,
+    "implied_hist_median": 8134.8,
     "implied_hist_p25": 1273.19,
     "implied_hist_p75": 20817.16,
-    "implied_hist_upside": 754.2,
-    "peer_pe_median": 9.68,
+    "implied_hist_upside": 737.2,
+    "peer_pe_median": 10.07,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "005930.KS",
-        "pe": 3.99
+        "pe": 4.09
       },
       {
         "ticker": "000660.KS",
-        "pe": 3.61
+        "pe": 3.62
       },
       {
         "ticker": "285A.T",
-        "pe": 53.35
+        "pe": 53.19
       },
       {
         "ticker": "WDC",
-        "pe": 15.37
+        "pe": 16.05
       }
     ],
-    "implied_peer_median": 1499.33,
-    "implied_peer_upside": 57.9,
+    "implied_peer_median": 1559.74,
+    "implied_peer_upside": 60.5,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -169,9 +169,9 @@
           "downLast30days": 1.0
         },
         "+1y": {
-          "upLast7days": 3.0,
-          "upLast30days": 30.0,
-          "downLast30days": 0.0
+          "upLast7days": 0.0,
+          "upLast30days": 5.0,
+          "downLast30days": 1.0
         }
       },
       "revision_summary": {
@@ -182,9 +182,9 @@
         "eps_current": 154.8896,
         "eps_30d_ago": 149.324,
         "eps_trend_pct_30d": 3.73,
-        "up_30d": 30,
-        "down_30d": 0,
-        "net_30d": 30
+        "up_30d": 5,
+        "down_30d": 1,
+        "net_30d": 4
       }
     }
   },
@@ -199,38 +199,38 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 1501.98,
-        "gap_pct": 58.1
+        "gap_pct": 54.6
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 3328.48,
-        "gap_pct": 250.4
+        "implied_price": 3404.21,
+        "gap_pct": 250.3
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 1499.33,
-        "gap_pct": 57.9
+        "implied_price": 1559.74,
+        "gap_pct": 60.5
       }
     ],
-    "median_gap_pct": 58.1,
+    "median_gap_pct": 60.5,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -59.0,
-    "consensus_eps_growth_pct": 250.4,
-    "growth_cushion_pct": 309.4,
+    "required_eps_growth_pct": -58.2,
+    "consensus_eps_growth_pct": 250.3,
+    "growth_cushion_pct": 308.5,
     "rationale": [
-      "多口径隐含价中位数高于现价 58.1%",
+      "多口径隐含价中位数高于现价 60.5%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -59.0%，共识为 +250.4%"
+      "历史 PE 口径要求 EPS 增长 -58.2%，共识为 +250.3%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-14T03:19:06.288937+00:00",
+  "fetched_at": "2026-08-16T03:35:47.854084+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-14T12:19:06.289944",
-    "age_sec": 19945,
+    "cached_at": "2026-08-16T12:35:47.881292",
+    "age_sec": 416,
     "stale": false,
     "refreshing": false
   },
