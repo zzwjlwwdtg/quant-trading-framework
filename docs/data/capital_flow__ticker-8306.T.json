@@ -4,7 +4,7 @@
   "anomaly": {
     "detected": true,
     "reason": "8/17 09:00 0.52× 均值 · 主动卖 ¥69.0億 (@¥3698.0)",
-    "score": 0.6000000000000001,
+    "score": 0.8,
     "peak_bars": [
       {
         "time": "09:00",
@@ -31,6 +31,18 @@
         "tier": "huge_abs"
       },
       {
+        "time": "12:30",
+        "vol": 1077100,
+        "ratio": 0.81,
+        "open": 3661.0,
+        "price": 3659.0,
+        "chg_pct": -0.05,
+        "direction": "flat",
+        "value_oku": 39.41,
+        "date": "2026-08-17",
+        "tier": "huge_abs"
+      },
+      {
         "time": "09:05",
         "vol": 1007400,
         "ratio": 0.52,
@@ -43,7 +55,7 @@
         "tier": "huge_abs"
       }
     ],
-    "day_ratio": 0.36,
+    "day_ratio": 0.41,
     "trading_date": "2026-08-17",
     "date_short": "8/17",
     "net_bias": "sell",
@@ -81,6 +93,18 @@
             "tier": "huge_abs"
           },
           {
+            "time": "12:30",
+            "vol": 1077100,
+            "ratio": 0.81,
+            "open": 3661.0,
+            "price": 3659.0,
+            "chg_pct": -0.05,
+            "direction": "flat",
+            "value_oku": 39.41,
+            "date": "2026-08-17",
+            "tier": "huge_abs"
+          },
+          {
             "time": "09:05",
             "vol": 1007400,
             "ratio": 0.52,
@@ -94,20 +118,20 @@
           }
         ],
         "slices": [],
-        "day_ratio": 0.36,
-        "day_chg_pct": -1.08,
+        "day_ratio": 0.41,
+        "day_chg_pct": -1.19,
         "day_open": 3705.0,
-        "day_close": 3665.0,
+        "day_close": 3661.0,
         "net_bias": "sell",
         "buy_shares": 0,
         "sell_shares": 3959600,
         "buy_value_oku": 0,
         "sell_value_oku": 146.07,
         "full_bias": "sell",
-        "full_up_shares": 3464700,
-        "full_down_shares": 8379500,
-        "full_up_value_oku": 127.43,
-        "full_down_value_oku": 308.33
+        "full_up_shares": 3891900,
+        "full_down_shares": 9736500,
+        "full_up_value_oku": 143.06,
+        "full_down_value_oku": 357.97
       },
       {
         "trading_date": "2026-08-14",
@@ -592,11 +616,11 @@
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-08-17 11:30 JST",
+  "asof": "2026-08-17 12:45 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-08-17T12:32:43.412933",
-    "age_sec": 19,
+    "cached_at": "2026-08-17T13:00:14.961642",
+    "age_sec": 169,
     "stale": false,
     "refreshing": false
   }
