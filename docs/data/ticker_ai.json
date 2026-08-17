@@ -1,39 +1,9 @@
 {
   "exists": true,
-  "tickers": {
-    "AAPL": "- 综合: C/P 2.1 偏多且 call wall $310 强，spot 逼近 pin；CROIC 72% + Piotroski 8/9 强，但前瞻已匹配价格、修正向下，向上空间受限\n- 攻防: 防守 put wall $295（-3.57%）中强，进攻突破 $310（+1.33%）可看向 max pain 磁吸；两位皆贴近可操作\n- 警示: EPS 修正向下 + 目标价差仅 5%，pin 磁吸大于突破概率，追高性价比低",
-    "AMAT": "- 综合: C/P 0.8 均衡 + 挤压 none，期权无方向；基本面 CROIC 从 48%→28% 走弱但 Piotroski 6/9 尚可，前瞻分类\"预期偏低\"+修正向上，中期价值 vs 短期无催化背离\n- 攻防: 防守 put wall $460（-9.3%）强，进攻 call wall $550（+8.44%）中，两侧空间大、贴近价缺锚\n- 警示: CROIC 连续 2 年下滑与前瞻上修背离，短期区间震荡为主",
-    "CBRS": "- 综合: C/P 0.4 极端看空 + Put OI 3.3× Call 严重失衡，纯空头押跌非机构对冲；基本面 Piotroski 4/9 偏弱、CROIC 波动大，前瞻\"利好已充分计价\"共振利空\n- 攻防: 防守 put wall $200（-8.67%）强，跌破即加速；进攻 $240（+9.6%）中，空间对称但空方主导\n- 警示: 多锚隐含价差 -25.9% 提示估值透支，Forward PE 168x，规避多单",
-    "GOOGL": "- 综合: C/P 6.06 极热 + call wall $350 pin 强磁吸；CROIC 24%→17% 下滑但前瞻\"预期偏低\"、目标价差 24.9%、修正向上，中期共振偏多\n- 攻防: 防守 put wall $340（-1.71%）中，进攻突破 $350（+1.19%）可看向上一档；两位极贴近可操作\n- 警示: CROIC 连年下滑与 EPS 修正上调背离，短线 pin 压制需突破 $350 才打开空间",
-    "KLAC": "- 综合: C/P 21.91 极热 + Put OI 近 0（0.0×失衡）意味无护盘，call wall $210 强 pin + max_pain_gravity 挤压；CROIC 44% + Piotroski 8/9 强，多头共振\n- 攻防: 进攻 call wall $210（+3.08%）为磁吸兼阻力，防守 put wall $185（-9.19%）弱几乎无支撑\n- 警示: 下方无护盘一旦情绪逆转跌幅无缓冲，谨慎追高、宜在 pin 附近减仓",
-    "LITE": "- 综合: C/P 3.63 偏多但双 wall 对称贴近（±2.7%）呈区间压制；CROIC -3.29% 连续两年负、Piotroski 6/9，前瞻匹配价格，基本面弱不共振\n- 攻防: 防守 put wall $900（-2.82%）强，进攻 call wall $950（+2.58%）强，双强对峙操作性高但空间窄\n- 警示: 基本面 CROIC 转负与情绪偏多背离，突破前不宜追多",
-    "MSFT": "- 综合: C/P 0.38 极端看空 + Put OI 0.1× Call 严重失衡（ATM 附近，机构对冲），但挤压 gamma_up 高 + call wall $500 强，实为多头对冲共振；CROIC 32%→20% 下滑但前瞻\"预期偏低\"+修正向上共振多\n- 攻防: 防守 put wall $487.5（-1.59%）弱，进攻 突破 $500（+0.93%）触发 gamma 加速\n- 警示: CROIC 连年下滑但估值仍高，突破 $500 后需警惕 pin 反转",
-    "MULL": "(MU)\n- 综合: C/P 3.05 偏多 + max_pain_gravity 磁吸至 $1000 call wall，Put OI 0.3×失衡但 put wall $950 贴近 spot 属机构对冲；前瞻\"预期偏低\"、目标价差 54.6%、EPS 增速 250% 共振多\n- 攻防: 防守 put wall $950（-2.23%）中，进攻 call wall $1000（+2.92%）强 pin，两位皆可操作\n- 警示: CROIC 仅 2.98% 且历史大幅波动，若突破 $1000 需 EPS 兑现验证",
-    "NBIS": "- 综合: C/P 1.68 均衡 + Put OI 0.2× Call 失衡但为 OTM 廉价保险，挤压 none；CROIC -73% 严重恶化、前瞻 EPS 负、匹配价格，基本面弱不共振\n- 攻防: 防守 put wall $250（-9.97%）中，进攻 call wall $300（+8.04%）强，两侧空间均大缺贴近锚\n- 警示: CROIC 断崖 + CCC -1880 天异常，基本面高风险，情绪与基本面严重背离",
-    "NVDA": "- 综合: C/P 2.88 偏多 + gamma_band_up 挤压中 + 双 wall 均强（对称 ±5%），机构双向对冲；CROIC 62% 高但 Piotroski 仅 4/9，前瞻\"预期偏低\"、目标价差 34.5%、修正向上共振多\n- 攻防: 防守 put wall $210（-6.73%）强，进攻 call wall $235（+4.37%）强，双强区间可高抛低吸\n- 警示: Piotroski 4/9 与前瞻上调背离，突破 $235 才启动 gamma 加速",
-    "SOXL": "- 综合: C/P 0.47 极端看空 + Put OI 0.1×失衡但挤压 none，纯空头押跌；底层 NVDA 基本面强但 SOXX 结构承压；期权与基本面背离\n- 攻防: 防守 put wall SOXX $500 => SOXL 即时≈$105.12（-27.5%）弱，进攻 call wall SOXX $590 => SOXL 即时≈$176.22（+21.6%）强；即时价用于挂单，路径估价（到期≈$170.34/$103.68）仅情景参考\n- 警示: 3x 杠杆日均 carry -0.58% 且尚有 11 日，路径依赖显著，触发时必须重新换算；C/P 极端偏空提示短线下行风险",
-    "TQQQ": "- 综合: C/P 0.81 均衡但挤压 gamma_up 高 + call wall QQQ $740 强 pin，突破即加速；底层前瞻偏多但 TQQQ 结构折损\n- 攻防: 防守 put wall QQQ $700 => TQQQ 即时≈$67.0（-12.7%）强，进攻 call wall QQQ $740 => TQQQ 即时≈$79.6（+3.66%）强；即时价挂单，路径估价（$79.16/$67.01）仅情景\n- 警示: 3x 杠杆日均 carry -0.12% 尚有 7 日，路径依赖较轻但仍以触发时换算为准；突破 $79.6 触发 gamma 加速",
-    "TSLA": "- 综合: C/P 2.04 偏多但挤压 none，双 wall 对称（±5%）区间震荡；CROIC 8.35% 弱 + Piotroski 5/9 + 前瞻\"预期透支\"、多锚 -22.8%、修正向下，基本面利空共振\n- 攻防: 防守 put wall $325（-5.05%）中，进攻 call wall $360（+5.18%）强，区间清晰\n- 警示: Forward PE 157x + 修正向下与情绪偏多严重背离，追高警惕估值坍塌",
-    "USO": "- 综合: C/P 0.59 均衡但 Put OI 0.3× Call 失衡为廉价保险，挤压 none，无明确方向；无基本面/前瞻数据\n- 攻防: 防守 put wall $124（-2.05%）中，进攻 call wall $130（+2.69%）强，两位贴近可窄区间操作\n- 警示: 暂无"
-  },
-  "sources": {
-    "AAPL": "live",
-    "AMAT": "live",
-    "CBRS": "live",
-    "GOOGL": "live",
-    "KLAC": "live",
-    "LITE": "live",
-    "MSFT": "live",
-    "MULL": "live",
-    "NBIS": "live",
-    "NVDA": "live",
-    "SOXL": "live",
-    "TQQQ": "live",
-    "TSLA": "live",
-    "USO": "live"
-  },
-  "live_state": "cached",
-  "live_generated": "2026-08-17T04:34:06.920526+00:00",
+  "tickers": {},
+  "sources": {},
+  "live_state": "generating",
+  "live_generated": null,
   "snapshot_path": "ai_analysis_snapshot_20260814_222652.md",
   "snapshot_mtime": "2026-08-14T22:26:52.556325"
 }

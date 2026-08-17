@@ -1339,6 +1339,7 @@ TICKER_TO_FUNDAMENTAL_STOCK = {
     # AI DC 光通信链
     "LITE": "LITE",   # Lumentum — 400G/800G optical transceivers + laser diodes, NVIDIA supplier
     "CBRS": "CBRS",   # Cerebras Systems — WSE 晶圆级 AI 芯片, NVDA inference 竞品, 2025 IPO
+    "USO":  None,     # WTI 原油 ETF 无股票基本面（yfinance 404）
     # 日股（东证）：仅基本面+供应链，无期权，不进 orchestrator scan
     "TDK":      "6762.T",   # TDK — 电子元器件/固态电池/HDD磁头，AAPL/NVDA 供应链
     "KIOXIA":   "285A.T",   # キオクシア — NAND 闪存全球#2（前东芝存储），2024-12 IPO
@@ -3131,7 +3132,7 @@ LEVERAGED_OPTION_PRICE_MAP = {
     "SOXL": {"source": "SOXX", "leverage": 3.0},
 }
 
-TICKER_OPTIONS_CACHE_SCHEMA = 5
+TICKER_OPTIONS_CACHE_SCHEMA = 6
 
 
 def _series_by_day(series) -> dict[str, float]:
@@ -3297,6 +3298,137 @@ def _build_leveraged_option_mapping(ticker: str, source: str,
             if calendar_days >= 2 else None
         ),
     }
+
+
+def _build_actionable_option_prices(ticker: str, source: str,
+                                    mapping: dict | None) -> dict | None:
+    """把 proxy 原价和杠杆 ETF 执行价绑定在同一个 level 对象里。
+
+    这是给 API 消费者使用的无歧义契约。旧 top-level `spot`、
+    `call_wall_strike` 等字段仍属于原始期权链，不能替换，否则 OI、保费、
+    名义敞口和 SVG 分布会被混到另一价格空间。
+    """
+    if not isinstance(mapping, dict):
+        return None
+    levels = mapping.get("levels")
+    if not isinstance(levels, dict):
+        return None
+    basis_by_level = {
+        "call_wall": "open_interest",
+        "put_wall": "open_interest",
+        "call_wall_oi": "open_interest",
+        "put_wall_oi": "open_interest",
+        "call_wall_volume": "volume",
+        "put_wall_volume": "volume",
+        "upper_resistance": "open_interest",
+        "lower_support": "open_interest",
+        "pin": "gamma_flip",
+        "max_pain": "volume_derived_max_pain",
+    }
+    actionable_levels = {}
+    for name, basis in basis_by_level.items():
+        mapped = levels.get(name)
+        if not isinstance(mapped, dict) or mapped.get("source_level") is None:
+            continue
+        target = {
+            "ticker": ticker,
+            "spot_anchored": mapped.get("spot_anchored_level"),
+            "move_pct": mapped.get("spot_anchored_move_pct"),
+            "expiry_estimate": mapped.get("expiry_estimate"),
+            "expiry_range_low": mapped.get("expiry_range_low"),
+            "expiry_range_high": mapped.get("expiry_range_high"),
+        }
+        actionable_levels[name] = {
+            "basis": (mapping.get("level_basis") or {}).get(name, basis),
+            "source": {
+                "ticker": source,
+                "strike": mapped.get("source_level"),
+                "move_pct": mapped.get("source_move_pct"),
+            },
+            "target": target,
+        }
+    if not actionable_levels:
+        return None
+    return {
+        "contract_version": 2,
+        "ticker": ticker,
+        "spot": mapping.get("leveraged_spot"),
+        "source_ticker": source,
+        "source_spot": mapping.get("proxy_spot"),
+        "leverage": mapping.get("leverage"),
+        "expiry": mapping.get("expiry"),
+        "levels": actionable_levels,
+        "execution_price_path": "levels.<name>.target.spot_anchored",
+        "warning": (
+            f"{source} strike 只作结构触发；{ticker} 订单必须使用 target.spot_anchored，"
+            "并在触发时按最新现价重算"
+        ),
+    }
+
+
+def _option_price_context(ticker: str, source: str,
+                          actionable: dict | None) -> dict:
+    is_proxy = ticker != source
+    return {
+        "card_ticker": ticker,
+        "option_source_ticker": source,
+        "is_proxy": is_proxy,
+        "top_level_price_space": source,
+        "actionable_price_space": ticker,
+        "top_level_field_semantics": {
+            "spot": f"{source} spot",
+            "call_wall_strike": f"{source} max-volume call wall",
+            "put_wall_strike": f"{source} max-volume put wall",
+            "call_wall_oi_strike": f"{source} max-OI call wall",
+            "put_wall_oi_strike": f"{source} max-OI put wall",
+            "max_pain": f"{source} volume-derived max pain",
+        },
+        "consumer_rule": (
+            "proxy card: never use top-level source prices for orders; read actionable_prices"
+            if is_proxy else "native card: top-level and card ticker share the same price space"
+        ),
+        "actionable_ready": bool(actionable),
+    }
+
+
+def _enrich_explicit_wall_mappings(payload: dict) -> None:
+    """给 schema-5 cache 补出明确的 OI/volume wall 映射，原地更新。"""
+    mapping = payload.get("leveraged_mapping")
+    if not isinstance(mapping, dict):
+        return
+    levels = mapping.setdefault("levels", {})
+    basis = mapping.setdefault("level_basis", {})
+    source_fields = {
+        "call_wall_oi": ("call_wall_oi_strike", "open_interest"),
+        "put_wall_oi": ("put_wall_oi_strike", "open_interest"),
+        "call_wall_volume": ("call_wall_strike", "volume"),
+        "put_wall_volume": ("put_wall_strike", "volume"),
+    }
+    for level_name, (field_name, level_basis) in source_fields.items():
+        source_level = payload.get(field_name)
+        if source_level is not None and level_name not in levels:
+            converted = _convert_proxy_level(
+                source_level,
+                mapping.get("proxy_spot"),
+                mapping.get("leveraged_spot"),
+                mapping.get("leverage"),
+                mapping.get("calendar_days") or 0,
+                mapping.get("decay"),
+            )
+            if converted:
+                levels[level_name] = converted
+        if level_name in levels:
+            basis[level_name] = level_basis
+    basis.setdefault(
+        "call_wall",
+        "open_interest" if payload.get("call_wall_oi_strike") is not None
+        else "volume_fallback",
+    )
+    basis.setdefault(
+        "put_wall",
+        "open_interest" if payload.get("put_wall_oi_strike") is not None
+        else "volume_fallback",
+    )
 
 
 def _latest_signal_price(ticker: str) -> float | None:
@@ -3553,6 +3685,19 @@ def api_ticker_options() -> dict:
             tk: value for tk, value in data["tickers"].items()
             if ticker_display_profile(tk)["show_options"]
         }
+        # 即使后台仍在刷新旧 cache，也在 API 边界即时补上 v2 价格空间契约，
+        # 防止消费者把 proxy top-level strike 和杠杆 ETF 映射价拼错。
+        for tk, value in data["tickers"].items():
+            if not isinstance(value, dict):
+                continue
+            source = value.get("underlying") or tk
+            _enrich_explicit_wall_mappings(value)
+            actionable = _build_actionable_option_prices(
+                tk, source, value.get("leveraged_mapping")
+            ) or value.get("actionable_prices")
+            value["actionable_prices"] = actionable
+            value["price_context"] = _option_price_context(tk, source, actionable)
+        data["api_contract_version"] = 2
     return data
 
 
@@ -3579,6 +3724,7 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
         "ts": datetime.now(timezone.utc).isoformat(),
         "tickers": {},
         "data_source": "yfinance",
+        "api_contract_version": 2,
         "cache_schema": TICKER_OPTIONS_CACHE_SCHEMA,
         "cache_contract": _ticker_options_cache_contract(),
     }
@@ -3739,6 +3885,16 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 put_bands_below=put_bands_below,
                 call_bands_above=call_bands_above,
             )
+            if isinstance(analysis.get("offense"), dict):
+                analysis["offense"]["basis"] = (
+                    "open_interest" if call_wall_oi else "volume_fallback"
+                )
+                analysis["offense"]["source_ticker"] = underlying
+            if isinstance(analysis.get("defense"), dict):
+                analysis["defense"]["basis"] = (
+                    "open_interest" if put_wall_oi else "volume_fallback"
+                )
+                analysis["defense"]["source_ticker"] = underlying
 
             def _wall_meta(w, side):
                 """把 wall dict 展平成 strike / prem / oi / notional"""
@@ -3888,11 +4044,37 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                         "upper_resistance": key_prices.get("upper_resistance", an_call["strike"]),
                         "pin": key_prices.get("pin"),
                         "lower_support": key_prices.get("lower_support", an_put["strike"]),
+                        # call_wall / put_wall 是决策引擎采用的 OI 墙；同时提供
+                        # 明确命名的 OI/volume 两套字段，禁止 API 消费者串线。
                         "call_wall": an_call["strike"],
                         "put_wall": an_put["strike"],
+                        "call_wall_oi": call_wall_oi["strike"] if call_wall_oi else None,
+                        "put_wall_oi": put_wall_oi["strike"] if put_wall_oi else None,
+                        "call_wall_volume": call_wall["strike"],
+                        "put_wall_volume": put_wall["strike"],
                         "max_pain": best_s,
                     },
                 )
+                if leveraged_mapping:
+                    call_basis = "open_interest" if call_wall_oi else "volume_fallback"
+                    put_basis = "open_interest" if put_wall_oi else "volume_fallback"
+                    leveraged_mapping["level_basis"] = {
+                        "call_wall": call_basis,
+                        "put_wall": put_basis,
+                        "call_wall_oi": "open_interest",
+                        "put_wall_oi": "open_interest",
+                        "call_wall_volume": "volume",
+                        "put_wall_volume": "volume",
+                        "upper_resistance": call_basis,
+                        "lower_support": put_basis,
+                        "pin": "gamma_flip",
+                        "max_pain": "volume_derived_max_pain",
+                    }
+
+            actionable_prices = _build_actionable_option_prices(
+                tk, underlying, leveraged_mapping
+            )
+            price_context = _option_price_context(tk, underlying, actionable_prices)
 
             out["tickers"][tk] = {
                 "underlying":       underlying,
@@ -3902,9 +4084,13 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 # 保留 vol-based walls（SVG 图用）
                 **_wall_meta(call_wall, "call"),
                 **_wall_meta(put_wall, "put"),
+                "call_wall_basis": "volume",
+                "put_wall_basis":  "volume",
                 # OI-based walls（分析用；若与 vol wall 同一 strike 则相同）
                 "call_wall_oi_strike": call_wall_oi["strike"] if call_wall_oi else None,
                 "put_wall_oi_strike":  put_wall_oi["strike"]  if put_wall_oi  else None,
+                "call_wall_oi_basis": "open_interest",
+                "put_wall_oi_basis":  "open_interest",
                 # 联合 wall bands（相邻强 OI strike 合并 → 隐性双墙识别）
                 "put_bands_below":  put_bands_below,
                 "call_bands_above": call_bands_above,
@@ -3915,6 +4101,8 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                 # 期权结构综合读 (GEX + IV Regime + Skew + Verdict)
                 "gex_analysis":     gex_analysis,
                 "leveraged_mapping": leveraged_mapping,
+                "actionable_prices": actionable_prices,
+                "price_context":    price_context,
                 **analysis,
                 **earnings_meta,
             }
