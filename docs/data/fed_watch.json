@@ -5,53 +5,55 @@
       "date": "2026-09-16",
       "days_until": 30,
       "probabilities": {
-        "hold": 81,
-        "hike_25": 19,
-        "cut_25": 0
+        "hold": 50,
+        "hike_25": 45,
+        "cut_25": 5
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish_lean_toss_up"
     },
     {
       "date": "2026-10-28",
       "days_until": 72,
       "probabilities": {
-        "hold": 65,
-        "hike_25": 25,
-        "cut_25": 10
+        "hold": 45,
+        "hike_25": 48,
+        "hike_50": 2,
+        "cut_25": 5
       },
-      "most_likely": "hold",
-      "consensus_direction": "neutral"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 114,
       "probabilities": {
-        "hold": 50,
-        "hike_25": 20,
-        "cut_25": 30
+        "hold": 35,
+        "hike_25": 50,
+        "hike_50": 8,
+        "cut_25": 7
       },
-      "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-27",
-      "days_until": 163,
+      "date": "2027-01-28",
+      "days_until": 164,
       "probabilities": {
-        "hold": 40,
-        "hike_25": 15,
-        "cut_25": 40,
-        "cut_50": 5
+        "hold": 30,
+        "hike_25": 52,
+        "hike_50": 10,
+        "cut_25": 8
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "3.25-3.50",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-13",
-  "recent_event_impact": "8/7 July NFP miss shifted Sept odds from ~55% hike to ~19% hike; 8/12 July CPI in-line (headline 3.4% YoY, core +0.21% MoM) and 8/13 PPI -0.1% MoM (well below +0.3% expected) further cemented hold expectation for Sept and opened door to Q4 cuts",
-  "commentary": "Market priced ~81% hold at Sept 16 meeting as of 8/13 snapshot; July NFP miss + soft July CPI/PPI collapsed the hike narrative Powell had been pushing in late July. Curve implies first cut likely by Dec/Jan with terminal drifting to 3.25-3.50 by mid-2027, though later-meeting probs are extrapolated and less firm than Sept.",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-08-12",
+  "recent_event_impact": "8/7 July NFP +23K vs +83K expected (May+Jun revised -103K) → Sept hike odds tumbled from ~55% to ~44%, hold jumped from 45% to 60%. 8/12 July CPI +0.1% MoM / 3.4% YoY (down from 3.5%) — modest cooling failed to fully reverse hike bias, hold settled at 50.3% and hike_25 rebuilt to ~45%.",
+  "commentary": "Market is essentially coin-flipping Sept 16 between a hold (50%) and a 25bp HIKE (45%) — cut probabilities are minimal. This is a hawkish regime: Fed held at 3.50-3.75% for 5 straight meetings with 3 hawkish dissenters in July wanting a hike; weak July NFP briefly cooled hike bets but sticky 3.4% CPI kept the hike scenario alive. Implied path shows ~50-60% cumulative probability of at least one hike by year-end 2026, with terminal centered at 3.75-4.00% by Q1 2027. Out-meeting (Oct/Dec/Jan) probabilities are estimated from implied path direction, not directly observed on CME snapshot.",
   "sources": [
     {
       "url": "https://centralbank.watch/federal-reserve/",
@@ -59,15 +61,11 @@
     },
     {
       "url": "https://www.cnbc.com/2026/08/07/odds-the-fed-hikes-in-september-tumble-following-big-july-jobs-miss.html",
-      "type": "news_analysis"
+      "type": "news_nfp_reaction"
     },
     {
-      "url": "https://www.xtb.com/en/market-analysis/economic-calendar-us-ppi-jobless-claims-and-fed-speeches-to-bring-more-insight-after-uneventful-cpi-13-08-2026",
-      "type": "economic_calendar"
-    },
-    {
-      "url": "https://www.mufgresearch.com/fx/asia-fx-talk-us-cpi-in-line-fed-on-hold-for-now-13-august-2026/",
-      "type": "sellside_research"
+      "url": "https://www.kiplinger.com/investing/economy/cpi-report-july-2026-what-to-expect",
+      "type": "news_cpi_reaction"
     },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -76,10 +74,10 @@
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-16T15:07:03+00:00",
+  "fetched_at": "2026-08-16T23:09:08+00:00",
   "_meta": {
-    "cached_at": "2026-08-17T00:07:03.798424",
-    "age_sec": 24958,
+    "cached_at": "2026-08-17T08:09:08.284900",
+    "age_sec": 3234,
     "stale": false,
     "refreshing": false
   }
