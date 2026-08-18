@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-19T06:00",
+  "asof": "2026-08-19T06:31",
   "yields": {
     "10y": {
       "value": 4.706,
@@ -129,6 +129,38 @@
       "name": "3M 短端",
       "source": "yfinance ^IRX"
     },
+    "2y": {
+      "value": 4.19,
+      "chg_1d_bps": 2.0,
+      "chg_5d_bps": -6.0,
+      "chg_20d_bps": -2.0,
+      "z_score_20d": 0.45,
+      "history": [
+        4.19,
+        4.17,
+        4.15,
+        4.2,
+        4.22,
+        4.25,
+        4.19,
+        4.25,
+        4.18,
+        4.2,
+        4.25,
+        4.28,
+        4.23,
+        4.22,
+        4.26,
+        4.31,
+        4.33,
+        4.37,
+        4.31,
+        4.26
+      ],
+      "asof": "2026-08-17",
+      "name": "2Y 国债",
+      "source": "FRED DGS2"
+    },
     "tips_10y": {
       "value": 2.44,
       "chg_1d_bps": 3.0,
@@ -162,7 +194,14 @@
       "source": "FRED DFII10"
     }
   },
-  "spreads": {},
+  "spreads": {
+    "2s10s": {
+      "value": 0.52,
+      "chg_20d_bps": 16.0,
+      "regime": "正常",
+      "asof": "2026-08-18"
+    }
+  },
   "gld_correlation": {
     "vs_10y": -0.033,
     "vs_tips_10y": -0.353,
@@ -171,8 +210,8 @@
   },
   "anomalies": [],
   "_meta": {
-    "cached_at": "2026-08-19T06:00:47.504165",
-    "age_sec": 135,
+    "cached_at": "2026-08-19T06:31:23.313875",
+    "age_sec": 101,
     "stale": false,
     "refreshing": false
   }
