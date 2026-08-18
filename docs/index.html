@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-18T18:03:08", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-18T18:33:07", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -277,6 +277,14 @@
   </div>
 </div>
 
+<!-- Row 3.5: 机构级组合风险与执行质量 -->
+<div class="grid owner-only">
+  <div class="card" style="border-left:3px solid #d29922">
+    <h2 title="统一组合账本：VaR/ES、压力测试、杠杆有效暴露、路径折损、流动性、成交短差和样本外验证">🏛 组合风险台 <small>Institutional Risk & Execution</small></h2>
+    <div id="institutional-risk"><small>加载中...</small></div>
+  </div>
+</div>
+
 <!-- Row 4: 每标的信号卡 -->
 <div class="grid">
   <div class="card">
@@ -332,7 +340,7 @@ const sideCls = a => {
 async function fetchJson(url) {
   if (window.STATIC_SNAPSHOT_MODE) {
     // 私人 endpoint 直接返 null（面板会显示 owner-only 或直接空）
-    const PRIVATE = ['/api/positions', '/api/trades', '/api/log', '/api/nav', '/api/trump_verify'];
+    const PRIVATE = ['/api/positions', '/api/trades', '/api/log', '/api/nav', '/api/trump_verify', '/api/institutional'];
     if (PRIVATE.some(p => url.startsWith(p))) return { error: 'owner_only' };
     // /api/xxx?ticker=Y&days=Z → data/xxx__Y__d10.json
     let path = url.replace(/^\//, '');
@@ -2006,6 +2014,62 @@ async function loadPositions() {
   `;
 }
 
+async function loadInstitutional() {
+  const el = $('institutional-risk');
+  if (!el) return;
+  const r = await fetchJson('/api/institutional');
+  if (!r || r.refreshing || (r._meta && r._meta.refreshing)) {
+    el.innerHTML = '<small>正在同步持仓并计算6个月风险历史…</small>';
+    return;
+  }
+  if (r.error) {
+    el.innerHTML = `<small class="warn">风险报告暂不可用：${r.error}</small>`;
+    return;
+  }
+  const risk = r.risk || {};
+  const dq = r.data_quality || {};
+  const ex = r.execution_quality || {};
+  const stress = (r.stress_tests || []).slice().sort((a,b) => a.nav_impact_pct - b.nav_impact_pct);
+  const worst = stress[0] || {};
+  const flags = r.risk_flags || [];
+  const val = r.research_validation || [];
+  const bench = r.benchmark_attribution || {};
+  const riskContrib = ((r.factor_and_correlation_risk || {}).risk_contributions || [])[0] || {};
+  const pass = val.reduce((s,x) => s + (x.walk_forward_passed || 0), 0);
+  const rules = val.reduce((s,x) => s + (x.rules || 0), 0);
+  const statusCls = r.status === 'high_risk' ? 'bad' : (flags.length ? 'warn' : 'ok');
+  const positions = (r.positions || []).map(p => `<tr>
+    <td><b>${(p.ticker||'').replace('US.','')}</b></td>
+    <td>${(p.weight*100).toFixed(1)}%</td>
+    <td>${p.leverage.toFixed(1)}×</td>
+    <td>$${fmt(p.effective_exposure)}</td>
+    <td>${p.group}</td>
+  </tr>`).join('');
+  const pathRows = (r.leveraged_path_risk || []).map(p => {
+    const flat = (p.scenarios || []).find(x => x.name === '横盘高波动') || {};
+    return `<span class="badge warn" title="20日±4%交替路径下的日复位结果">${p.ticker} ${p.leverage}× 横盘折损 ${(flat.leveraged_return*100 || 0).toFixed(1)}%</span>`;
+  }).join(' ');
+  el.innerHTML = `
+    <div class="grid g4" style="gap:6px; margin-bottom:8px">
+      <div class="stat"><span class="k">有效总暴露</span><span class="v ${statusCls}">${(r.effective_gross_exposure_pct||0).toFixed(1)}%</span></div>
+      <div class="stat"><span class="k">1日 VaR 95%</span><span class="v">$${fmt(risk.var_95_1d)} <small>${(risk.var_95_1d_pct||0).toFixed(2)}%</small></span></div>
+      <div class="stat"><span class="k">最差压力</span><span class="v bad">${worst.name||'-'} ${(worst.nav_impact_pct||0).toFixed(1)}%</span></div>
+      <div class="stat"><span class="k">现金</span><span class="v">${(r.cash_pct||0).toFixed(1)}%</span></div>
+    </div>
+    ${flags.length ? `<div style="padding:5px; border-left:2px solid var(--bad); margin-bottom:6px">${flags.map(f=>'⚠ '+f.message).join(' · ')}</div>` : '<div class="ok" style="margin-bottom:6px">✓ 未触发组合级硬风险警报</div>'}
+    <div style="margin-bottom:6px">${pathRows || '<small>当前无杠杆ETF路径风险</small>'}</div>
+    <table><thead><tr><th>Ticker</th><th>NAV权重</th><th>杠杆</th><th>有效暴露</th><th>风险组</th></tr></thead><tbody>${positions}</tbody></table>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:7px; font-size:10px; color:var(--muted)">
+      <span>数据质量 <b class="${dq.status==='critical'?'bad':dq.status==='warning'?'warn':'ok'}">${dq.status||'unavailable'}</b> (${dq.checked_files||0})</span>
+      <span>实际成交率 <b>${ex.avg_fill_ratio == null ? '-' : (ex.avg_fill_ratio*100).toFixed(1)+'%'}</b></span>
+      <span>成交短差 <b>${ex.avg_shortfall_bps == null ? '-' : ex.avg_shortfall_bps.toFixed(1)+' bps'}</b></span>
+      <span>Walk-forward通过 <b>${pass}/${rules}</b></span>
+      <span>VaR源 <b>${risk.source||'-'} · N=${risk.observations||0}</b></span>
+      <span>SPY Beta <b>${bench.available ? bench.beta.toFixed(2) : '-'}</b></span>
+      <span>最大风险贡献 <b>${riskContrib.ticker ? riskContrib.ticker.replace('US.','')+' '+riskContrib.pct.toFixed(1)+'%' : '-'}</b></span>
+    </div>`;
+}
+
 // 供应链懒加载 —— 展开卡时才 fetch，之后缓存 7 天
 function renderSupplyChain(sc, ticker) {
   const confCls = c => ({high:'ok', medium:'warn', low:'muted'}[c] || '');
@@ -2610,7 +2674,7 @@ async function loadAll() {
   ];
   // Owner-only endpoints skip in static mode
   if (!window.STATIC_SNAPSHOT_MODE) {
-    promises.push(loadNav(), loadPositions(), loadTrades(), loadLog());
+    promises.push(loadNav(), loadPositions(), loadInstitutional(), loadTrades(), loadLog());
   }
   await Promise.all(promises);
 }
