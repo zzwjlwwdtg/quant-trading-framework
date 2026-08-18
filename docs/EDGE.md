@@ -50,13 +50,6 @@
 - **结论**：confluence 不是 alpha，只是趋势状态 marker。**它的作用是让你"敢于"持仓而不是焦虑切换**
 - **保留度**：3⭐⭐⭐ — 心理工具而非预测工具
 
-### Edge 6：Evolved Quant Rules（K 线挖掘）
-
-- **机制**：strategy_engine 从历史 K 线挖掘高胜率规则（quant_signal 输出 buy_score / sell_score）
-- **OOS 实证**：未单独验证，与 confluence 混合贡献
-- **风险**：极易过拟合训练集
-- **保留度**：2⭐⭐ — 需要单独 OOS 验证
-
 ---
 
 ## 三、明确**不是** Edge 的（已被 OOS 证伪）
@@ -64,6 +57,7 @@
 - ❌ **顶/底背离自动减/加仓**（C 方案，commit 94546b3 回滚）：OOS n=42, 5d 下跌率 31% vs 基线 47.8%，**反指标**
 - ❌ **CAUTION + overheated 多日累积阈值**（A+B 方案）：OOS n=58, 5d 下跌率 31% vs 基线 47.8%，**反指标**
 - ❌ **Trump signal / breaking news 直接进决策**：消息面信息会**先反映到技术面**，再二次注入 = 双重计费 + 滞后（TECHNICAL_ONLY 模式禁用）
+- ❌ **自动挖掘/交叉生成的 K 线规则分数**：缺少独立 OOS 证明且容易过拟合，已从生成、评分、AI 上下文和实时决策链完整移除
 - ❌ **任何反转预测**：技术指标对反转的预测力极差
 - ❌ **crisis 触发自动 BUY 反向 ETF (SQQQ/SOXS/SH/PSQ)**（P4.4, 2026-06-29 OOS）：
   - 20 次 crisis 触发，反向 ETF 5d 上涨率仅 26.5% (门槛 60%)
