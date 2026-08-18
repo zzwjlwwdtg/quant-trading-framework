@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-19T04:58",
+  "asof": "2026-08-19T05:29",
   "yields": {
     "10y": {
       "value": 4.706,
@@ -130,12 +130,13 @@
       "source": "yfinance ^IRX"
     },
     "2y": {
-      "value": 4.17,
+      "value": 4.19,
       "chg_1d_bps": 2.0,
-      "chg_5d_bps": -2.0,
-      "chg_20d_bps": -1.0,
-      "z_score_20d": 0.44,
+      "chg_5d_bps": -6.0,
+      "chg_20d_bps": -2.0,
+      "z_score_20d": 0.45,
       "history": [
+        4.19,
         4.17,
         4.15,
         4.2,
@@ -154,20 +155,20 @@
         4.33,
         4.37,
         4.31,
-        4.26,
-        4.21
+        4.26
       ],
-      "asof": "2026-08-14",
+      "asof": "2026-08-17",
       "name": "2Y 国债",
       "source": "FRED DGS2"
     },
     "tips_10y": {
-      "value": 2.41,
-      "chg_1d_bps": 2.0,
+      "value": 2.44,
+      "chg_1d_bps": 3.0,
       "chg_5d_bps": 1.0,
-      "chg_20d_bps": 10.0,
-      "z_score_20d": 0.74,
+      "chg_20d_bps": 9.0,
+      "z_score_20d": 1.1,
       "history": [
+        2.44,
         2.41,
         2.39,
         2.42,
@@ -186,10 +187,9 @@
         2.43,
         2.43,
         2.39,
-        2.37,
-        2.35
+        2.37
       ],
-      "asof": "2026-08-14",
+      "asof": "2026-08-17",
       "name": "10Y TIPS 实际利率",
       "source": "FRED DFII10"
     }
@@ -203,15 +203,15 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.031,
-    "vs_tips_10y": -0.249,
+    "vs_10y": -0.033,
+    "vs_tips_10y": -0.353,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.249，对冲关系变弱"
+    "reason": "相关性 -0.353，对冲关系变弱"
   },
   "anomalies": [],
   "_meta": {
-    "cached_at": "2026-08-19T04:58:20.448660",
-    "age_sec": 282,
+    "cached_at": "2026-08-19T05:29:20.780390",
+    "age_sec": 225,
     "stale": false,
     "refreshing": false
   }
