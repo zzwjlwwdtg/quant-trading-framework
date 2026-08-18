@@ -1,40 +1,40 @@
 {
   "exists": true,
-  "path": "ai_targets_2026-08-17.json",
-  "mtime": "2026-08-17T22:28:05.732410",
+  "path": "ai_targets_2026-08-18.json",
+  "mtime": "2026-08-18T22:27:05.056852",
   "version": 1,
-  "ts": "2026-08-17T09:25",
-  "source_date": "2026-08-17",
+  "ts": "2026-08-18T09:26",
+  "source_date": "2026-08-18",
   "targets": [
     {
       "ticker": "US.TQQQ",
       "action": "skip",
       "entry_ref": null,
       "stop_ref": null,
-      "target_ref": null,
+      "target_ref": 78.01,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 中性 + 15m 死叉 + NVDA 财报前静默期，观望"
+      "notes": "NQ盘前偏空，等TQQQ约76.44守稳再说"
     },
     {
       "ticker": "US.SOXL",
-      "action": "skip",
-      "entry_ref": null,
-      "stop_ref": null,
-      "target_ref": null,
-      "use_limit": false,
+      "action": "watch_buy",
+      "entry_ref": 152.24,
+      "stop_ref": 150.21,
+      "target_ref": 156.07,
+      "use_limit": true,
       "size_hint": "small",
-      "notes": "MACD 深空 + PC1 震荡 + 设备股拖累，不入场"
+      "notes": "仅在重新站回SMH换算关键位后小仓试多"
     },
     {
       "ticker": "US.DRAM",
-      "action": "skip",
-      "entry_ref": null,
-      "stop_ref": null,
-      "target_ref": null,
-      "use_limit": false,
+      "action": "hold",
+      "entry_ref": 60.29,
+      "stop_ref": 59.69,
+      "target_ref": 62.67,
+      "use_limit": true,
       "size_hint": "small",
-      "notes": "技术空 vs 期权 C/P 4.52 多头共识矛盾，GEX pin 压制，观望"
+      "notes": "15m金叉但60附近期权压力大，等站稳"
     },
     {
       "ticker": "US.MULL",
@@ -44,17 +44,17 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "空头势能减弱但未反转，等 MU 站上 $1000 且 MACD 金叉再考虑"
+      "notes": "缺少现价和可用期权墙，不能盲挂单"
     },
     {
       "ticker": "US.GLD",
       "action": "watch_buy",
-      "entry_ref": 402.5,
-      "stop_ref": 397.0,
-      "target_ref": 407.0,
-      "use_limit": true,
-      "size_hint": "normal",
-      "notes": "技术多 + 宏观 bullish + GC 期货 +1.37% 三重共振，等回踩 $402.5"
+      "entry_ref": 405.49,
+      "stop_ref": 403.0,
+      "target_ref": 406.0,
+      "use_limit": false,
+      "size_hint": "small",
+      "notes": "黄金期货上行且技术趋势偏多，但405附近有期权压力"
     }
   ]
 }
