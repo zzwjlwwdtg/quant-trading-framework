@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-19T00:03:05", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-19T00:33:06", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -195,10 +195,10 @@
 </div>
 </details>
 
-<!-- Row 0a: 系统自动挂单（最优先 —— 落地到实际价位的具体动作） -->
+<!-- Row 0a: 自动执行状态（broker 未结订单为事实源，AI 价位仅作参考） -->
 <div class="grid">
   <div class="card" style="border-left:3px solid #f85149; background:linear-gradient(180deg, rgba(248,81,73,0.03) 0%, transparent 60%)">
-    <h2 title="AI CLI 输出的结构化目标 → paper_trader 挂 GTC 限价 + broker SELL STOP。这是系统实际在执行的动作。">⚡ 系统自动挂单 · Auto Orders <small id="ai-targets-mtime"></small></h2>
+    <h2 title="最新规则决策决定是否交易；AI CLI 只提供价位参考；是否真的已挂单以 broker 未结订单为准。">⚡ 自动执行状态 · Auto Execution <small id="ai-targets-mtime"></small></h2>
     <div id="ai-targets"></div>
   </div>
 </div>
@@ -2357,31 +2357,42 @@ async function loadLog() {
   el.scrollTop = el.scrollHeight;
 }
 
-// 系统自动挂单展示 —— 从 /api/ai_targets 读结构化 JSON, paper_trader 用此挂单
+// 自动执行展示：broker 未结订单是事实；AI JSON 只是价位计划。
 async function loadAITargets() {
   const el = document.getElementById('ai-targets');
   const mtimeEl = document.getElementById('ai-targets-mtime');
   if (!el) return;
   const t = await fetchJson('/api/ai_targets');
   if (!t || !t.exists) {
-    el.innerHTML = '<small style="color:var(--muted)">暂无自动挂单目标 (需 owner 端 snap.bat 运行)</small>';
+    el.innerHTML = '<small style="color:var(--muted)">当前没有系统未结订单，也没有可用的 AI 价位计划。</small>';
     return;
   }
-  if (mtimeEl) mtimeEl.textContent = '· 生成 ' + (t.ts || '').slice(5, 16);
+  if (mtimeEl) mtimeEl.textContent = '· 价位计划 ' + (t.ts || '').slice(5, 16);
 
   const ACT_META = {
-    watch_buy: { zh: '关注买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
-    buy:       { zh: '立即买入', color: '#3fb950', bg: 'rgba(63,185,80,0.18)', icon: '🟢' },
-    hold:      { zh: '维持',     color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
-    skip:      { zh: '不操作',   color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚫' },
-    sell:      { zh: '卖出',     color: '#f85149', bg: 'rgba(248,81,73,0.10)', icon: '🔴' },
-    reduce:    { zh: '减仓',     color: '#d29922', bg: 'rgba(210,153,34,0.10)', icon: '🟡' },
+    WATCH_BUY:       { zh: '关注买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
+    WATCH_BUY_PROBE: { zh: '试探买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
+    BUY:             { zh: '买入',     color: '#3fb950', bg: 'rgba(63,185,80,0.18)', icon: '🟢' },
+    HOLD:            { zh: '维持',     color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
+    SKIP:            { zh: '不操作',   color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚫' },
+    SELL:            { zh: '卖出',     color: '#f85149', bg: 'rgba(248,81,73,0.10)', icon: '🔴' },
+    REDUCE:          { zh: '减仓',     color: '#d29922', bg: 'rgba(210,153,34,0.10)', icon: '🟡' },
+    UNKNOWN:         { zh: '无新决策', color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
+  };
+  const STATUS_META = {
+    submitted:      { text: '已在 broker 挂单', color: '#3fb950' },
+    position_open:  { text: '已持仓，无未结单', color: '#58a6ff' },
+    candidate:      { text: '候选，尚未挂单', color: '#d29922' },
+    inactive_signal:{ text: '已被新决策停用', color: '#7d8590' },
+    inactive:       { text: '未触发', color: '#7d8590' },
   };
   const cleanTk = (raw) => (raw || '').replace(/^(US|JP|HK|SH|SZ)\./,'');
 
   const rows = (t.targets || []).map(tg => {
-    const act = ACT_META[tg.action] || ACT_META.hold;
-    const isActive = tg.entry_ref !== null && tg.action !== 'skip' && tg.action !== 'hold';
+    const act = ACT_META[tg.system_action] || ACT_META.UNKNOWN;
+    const status = STATUS_META[tg.execution_status] || STATUS_META.inactive;
+    const order = (tg.pending_orders || [])[0];
+    const hasPlan = tg.entry_ref !== null && tg.entry_ref !== undefined;
     const potentialUpside = (tg.target_ref && tg.entry_ref)
       ? ((tg.target_ref - tg.entry_ref) / tg.entry_ref * 100)
       : null;
@@ -2390,15 +2401,22 @@ async function loadAITargets() {
       : null;
     const rr = (potentialUpside && stopDist) ? Math.abs(potentialUpside / stopDist) : null;
 
-    return `<div style="display:grid; grid-template-columns:auto 90px 100px 90px 90px 65px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
+    const actual = order
+      ? `<b style="color:#3fb950">${order.side} ${order.qty} @ $${order.price}</b><small style="display:block;color:var(--muted)">${order.status} · #${order.order_id}</small>`
+      : `<b style="color:${status.color}">${status.text}</b>${tg.position_qty ? `<small style="display:block;color:var(--muted)">持仓 ${tg.position_qty}</small>` : ''}`;
+    const stale = tg.target_outdated
+      ? '<small style="display:block;color:#d29922">旧于当前系统决策</small>' : '';
+
+    return `<div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
       <span style="min-width:70px"><b style="color:#79c0ff; font-size:12.5px">${cleanTk(tg.ticker)}</b></span>
       <span><span class="badge" style="font-size:9px; background:${act.color}; color:#0d1117">${act.icon} ${act.zh}</span></span>
-      <span title="限价挂单价 (等回踩到才买)">
-        ${isActive
-          ? `<b style="color:var(--fg); font-size:12px">$${tg.entry_ref}</b> <small style="color:var(--muted); font-size:9px">${tg.use_limit ? 'LIMIT' : 'MKT'}</small>`
+      <span title="AI CLI 给出的入场参考；不等于已经提交到 broker 的订单">
+        ${hasPlan
+          ? `<b style="color:var(--fg); font-size:12px">$${tg.entry_ref}</b> <small style="color:var(--muted); font-size:9px">${tg.use_limit ? 'LIMIT参考' : '市价参考'}</small>${stale}`
           : '<span class="muted">—</span>'}
       </span>
-      <span title="broker 端 SELL STOP 触发价 (跌破自动止损)">
+      <span title="broker 真实未结订单状态">${actual}</span>
+      <span title="止损参考；模拟账户不支持 broker STOP 时由软件风控每分钟巡检">
         ${tg.stop_ref
           ? `<b class="bad" style="font-size:11px">$${tg.stop_ref}</b> <small style="color:var(--muted); font-size:9px">${stopDist ? stopDist.toFixed(1) + '%' : ''}</small>`
           : '<span class="muted">—</span>'}
@@ -2408,32 +2426,31 @@ async function loadAITargets() {
           ? `<b class="ok" style="font-size:11px">$${tg.target_ref}</b> <small style="color:var(--muted); font-size:9px">${potentialUpside ? '+' + potentialUpside.toFixed(1) + '%' : ''}</small>`
           : '<span class="muted">—</span>'}
       </span>
-      <span title="风险回报比 (target 涨幅 / stop 跌幅)">
-        ${rr ? `<b style="color:${rr >= 2 ? '#3fb950' : (rr >= 1 ? '#d29922' : '#f85149')}">R:R ${rr.toFixed(1)}</b>` : '<span class="muted">—</span>'}
-      </span>
-      <span style="color:var(--muted); font-size:10px; line-height:1.4">${tg.notes || ''}</span>
+      <span style="color:var(--muted); font-size:10px; line-height:1.4">${tg.system_reason || tg.notes || ''}${rr ? `<small style="display:block">计划 R:R ${rr.toFixed(1)}</small>` : ''}</span>
     </div>`;
   }).join('');
 
-  const activeCount = (t.targets || []).filter(x => x.action !== 'skip' && x.action !== 'hold').length;
+  const activeCount = t.pending_count || 0;
   const totalCount = (t.targets || []).length;
+  const brokerNote = t.broker_status === 'ok'
+    ? `broker 已核对` : `<span class="warn">broker 暂不可用，状态未知</span>`;
 
   el.innerHTML = `
     <div style="font-size:10.5px; color:var(--muted); margin-bottom:6px">
-      <b class="ok">${activeCount}</b> / ${totalCount} 只挂单 · 数据源: <code style="font-size:9.5px">${t.path || ''}</code>
+      真实系统未结单 <b class="ok">${activeCount}</b> · ${brokerNote} · 价位计划: <code style="font-size:9.5px">${t.path || '无'}</code>
     </div>
-    <div style="display:grid; grid-template-columns:auto 90px 100px 90px 90px 65px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
+    <div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
       <span style="min-width:70px">Ticker</span>
-      <span>Action</span>
-      <span>入场价 (limit)</span>
-      <span>止损 (broker stop)</span>
+      <span>最新系统决策</span>
+      <span>AI 入场参考</span>
+      <span>broker 实际状态</span>
+      <span>止损参考</span>
       <span>目标 (参考)</span>
-      <span>R:R</span>
-      <span>决策理由</span>
+      <span>当前系统理由</span>
     </div>
     ${rows}
     <div style="font-size:9px; color:var(--muted); margin-top:6px; padding:4px 6px; background:rgba(255,255,255,0.02); border-radius:2px">
-      <b>逻辑</b>: paper_trader 收到 orchestrator BUY/WATCH_BUY 信号 → 读此 JSON → 挂 <b>GTC 限价</b> @ 入场价（如挂 LIMIT）+ <b>broker SELL STOP</b> @ 止损价（orchestrator 离线也生效）。<code>skip/hold</code> 直接跳过。
+      <b>执行口径</b>: 最新规则/动量决策是下单开关；AI 价位只在 BUY/WATCH_BUY 已触发时用于限价参考。绿色“已在 broker 挂单”才代表真实未结单。模拟账户不支持原生 STOP 时，止损由后台软件风控每分钟执行。
     </div>
   `;
 }

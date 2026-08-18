@@ -2,6 +2,10 @@
   "exists": true,
   "path": "ai_targets_2026-08-18.json",
   "mtime": "2026-08-18T22:27:05.056852",
+  "broker_status": "ok",
+  "pending_count": 0,
+  "pending_orders": [],
+  "manual_pending_count": 0,
   "version": 1,
   "ts": "2026-08-18T09:26",
   "source_date": "2026-08-18",
@@ -14,7 +18,15 @@
       "target_ref": 78.01,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "NQ盘前偏空，等TQQQ约76.44守稳再说"
+      "notes": "NQ盘前偏空，等TQQQ约76.44守稳再说",
+      "system_action": "WATCH_BUY_PROBE",
+      "system_confidence": 1,
+      "system_reason": "uptrend + positive confluence + sim_active_earnings_probe (NVDA T-7, lev_IM=19.4%)",
+      "system_ts": "2026-08-19T00:30:53.482248",
+      "target_outdated": true,
+      "execution_status": "position_open",
+      "position_qty": 3123,
+      "pending_orders": []
     },
     {
       "ticker": "US.SOXL",
@@ -24,7 +36,15 @@
       "target_ref": 156.07,
       "use_limit": true,
       "size_hint": "small",
-      "notes": "仅在重新站回SMH换算关键位后小仓试多"
+      "notes": "仅在重新站回SMH换算关键位后小仓试多",
+      "system_action": "HOLD",
+      "system_confidence": 1,
+      "system_reason": "no clear signal",
+      "system_ts": "2026-08-19T00:30:54.072793",
+      "target_outdated": true,
+      "execution_status": "inactive_signal",
+      "position_qty": 0,
+      "pending_orders": []
     },
     {
       "ticker": "US.DRAM",
@@ -34,7 +54,15 @@
       "target_ref": 62.67,
       "use_limit": true,
       "size_hint": "small",
-      "notes": "15m金叉但60附近期权压力大，等站稳"
+      "notes": "15m金叉但60附近期权压力大，等站稳",
+      "system_action": "HOLD",
+      "system_confidence": 3,
+      "system_reason": "no clear signal",
+      "system_ts": "2026-08-19T00:30:54.508948",
+      "target_outdated": true,
+      "execution_status": "position_open",
+      "position_qty": 162,
+      "pending_orders": []
     },
     {
       "ticker": "US.MULL",
@@ -44,7 +72,15 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "缺少现价和可用期权墙，不能盲挂单"
+      "notes": "缺少现价和可用期权墙，不能盲挂单",
+      "system_action": "HOLD",
+      "system_confidence": 3,
+      "system_reason": "no clear signal",
+      "system_ts": "2026-08-19T00:30:54.947728",
+      "target_outdated": true,
+      "execution_status": "position_open",
+      "position_qty": 283,
+      "pending_orders": []
     },
     {
       "ticker": "US.GLD",
@@ -54,7 +90,15 @@
       "target_ref": 406.0,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "黄金期货上行且技术趋势偏多，但405附近有期权压力"
+      "notes": "黄金期货上行且技术趋势偏多，但405附近有期权压力",
+      "system_action": "BUY",
+      "system_confidence": 5,
+      "system_reason": "oversold + uptrend",
+      "system_ts": "2026-08-19T00:31:32.125375",
+      "target_outdated": true,
+      "execution_status": "candidate",
+      "position_qty": 0,
+      "pending_orders": []
     }
   ]
 }
