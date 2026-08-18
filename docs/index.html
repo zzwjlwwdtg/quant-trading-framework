@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-19T00:33:06", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-19T01:03:10", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -348,7 +348,8 @@ async function fetchJson(url) {
     const [route, query] = path.split('?');
     const fname = ['data', route + (query ? '__' + query.replace(/=/g,'-').replace(/&/g,'__') : '') + '.json'].join('/');
     try {
-      const r = await fetch(fname);
+      const snapshotVersion = (window.SNAPSHOT_META && window.SNAPSHOT_META.generated_at) || '';
+      const r = await fetch(fname + '?v=' + encodeURIComponent(snapshotVersion), {cache: 'no-store'});
       if (!r.ok) return { error: 'snapshot_missing_' + r.status };
       return await r.json();
     } catch (e) { return { error: 'snapshot_fetch_fail' }; }
@@ -2392,38 +2393,41 @@ async function loadAITargets() {
     const act = ACT_META[tg.system_action] || ACT_META.UNKNOWN;
     const status = STATUS_META[tg.execution_status] || STATUS_META.inactive;
     const order = (tg.pending_orders || [])[0];
-    const hasPlan = tg.entry_ref !== null && tg.entry_ref !== undefined;
-    const potentialUpside = (tg.target_ref && tg.entry_ref)
-      ? ((tg.target_ref - tg.entry_ref) / tg.entry_ref * 100)
+    const entryRef = tg.effective_entry_ref;
+    const stopRef = tg.effective_stop_ref;
+    const targetRef = tg.effective_target_ref;
+    const hasPlan = entryRef !== null && entryRef !== undefined;
+    const potentialUpside = (targetRef && entryRef)
+      ? ((targetRef - entryRef) / entryRef * 100)
       : null;
-    const stopDist = (tg.stop_ref && tg.entry_ref)
-      ? ((tg.stop_ref - tg.entry_ref) / tg.entry_ref * 100)
+    const stopDist = (stopRef && entryRef)
+      ? ((stopRef - entryRef) / entryRef * 100)
       : null;
     const rr = (potentialUpside && stopDist) ? Math.abs(potentialUpside / stopDist) : null;
 
     const actual = order
       ? `<b style="color:#3fb950">${order.side} ${order.qty} @ $${order.price}</b><small style="display:block;color:var(--muted)">${order.status} · #${order.order_id}</small>`
       : `<b style="color:${status.color}">${status.text}</b>${tg.position_qty ? `<small style="display:block;color:var(--muted)">持仓 ${tg.position_qty}</small>` : ''}`;
-    const stale = tg.target_outdated
-      ? '<small style="display:block;color:#d29922">旧于当前系统决策</small>' : '';
+    const sourceLabel = tg.effective_price_source === 'ai_target'
+      ? 'AI价位' : '当前系统价';
 
     return `<div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
       <span style="min-width:70px"><b style="color:#79c0ff; font-size:12.5px">${cleanTk(tg.ticker)}</b></span>
       <span><span class="badge" style="font-size:9px; background:${act.color}; color:#0d1117">${act.icon} ${act.zh}</span></span>
-      <span title="AI CLI 给出的入场参考；不等于已经提交到 broker 的订单">
+      <span title="当前系统入场参考；只有 broker 状态显示已挂单才代表真实订单">
         ${hasPlan
-          ? `<b style="color:var(--fg); font-size:12px">$${tg.entry_ref}</b> <small style="color:var(--muted); font-size:9px">${tg.use_limit ? 'LIMIT参考' : '市价参考'}</small>${stale}`
-          : '<span class="muted">—</span>'}
+          ? `<b style="color:var(--fg); font-size:12px">$${entryRef}</b> <small style="color:var(--muted); font-size:9px">${sourceLabel}</small>`
+          : (tg.target_outdated ? '<span class="muted">旧计划已隐藏</span>' : '<span class="muted">—</span>')}
       </span>
       <span title="broker 真实未结订单状态">${actual}</span>
       <span title="止损参考；模拟账户不支持 broker STOP 时由软件风控每分钟巡检">
-        ${tg.stop_ref
-          ? `<b class="bad" style="font-size:11px">$${tg.stop_ref}</b> <small style="color:var(--muted); font-size:9px">${stopDist ? stopDist.toFixed(1) + '%' : ''}</small>`
+        ${stopRef
+          ? `<b class="bad" style="font-size:11px">$${stopRef}</b> <small style="color:var(--muted); font-size:9px">${stopDist ? stopDist.toFixed(1) + '%' : ''}</small>`
           : '<span class="muted">—</span>'}
       </span>
       <span title="第一目标位 (参考, paper_trader 暂不用于自动止盈)">
-        ${tg.target_ref
-          ? `<b class="ok" style="font-size:11px">$${tg.target_ref}</b> <small style="color:var(--muted); font-size:9px">${potentialUpside ? '+' + potentialUpside.toFixed(1) + '%' : ''}</small>`
+        ${targetRef
+          ? `<b class="ok" style="font-size:11px">$${targetRef}</b> <small style="color:var(--muted); font-size:9px">${potentialUpside ? '+' + potentialUpside.toFixed(1) + '%' : ''}</small>`
           : '<span class="muted">—</span>'}
       </span>
       <span style="color:var(--muted); font-size:10px; line-height:1.4">${tg.system_reason || tg.notes || ''}${rr ? `<small style="display:block">计划 R:R ${rr.toFixed(1)}</small>` : ''}</span>
@@ -2442,7 +2446,7 @@ async function loadAITargets() {
     <div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
       <span style="min-width:70px">Ticker</span>
       <span>最新系统决策</span>
-      <span>AI 入场参考</span>
+      <span>当前入场参考</span>
       <span>broker 实际状态</span>
       <span>止损参考</span>
       <span>目标 (参考)</span>
@@ -2450,7 +2454,7 @@ async function loadAITargets() {
     </div>
     ${rows}
     <div style="font-size:9px; color:var(--muted); margin-top:6px; padding:4px 6px; background:rgba(255,255,255,0.02); border-radius:2px">
-      <b>执行口径</b>: 最新规则/动量决策是下单开关；AI 价位只在 BUY/WATCH_BUY 已触发时用于限价参考。绿色“已在 broker 挂单”才代表真实未结单。模拟账户不支持原生 STOP 时，止损由后台软件风控每分钟执行。
+      <b>执行口径</b>: 最新规则/动量决策是下单开关；旧于当前决策的 AI 数字会隐藏。绿色“已在 broker 挂单”才代表真实未结单。模拟账户不支持原生 STOP 时，止损由后台软件风控每分钟执行。
     </div>
   `;
 }
@@ -2698,8 +2702,23 @@ async function loadAll() {
 }
 
 loadAll();
-// Static mode: 快照本身已定型，不需要 30s 反复刷
-if (!window.STATIC_SNAPSHOT_MODE) setInterval(loadAll, 30000);
+if (!window.STATIC_SNAPSHOT_MODE) {
+  setInterval(loadAll, 30000);
+} else {
+  // 打开的 GitHub Pages 标签页也会检测新快照；只在版本真的变化时重载，
+  // 避免页面长期停留在旧 JS / 旧自动挂单价。
+  setInterval(async () => {
+    try {
+      const r = await fetch('data/_meta.json?_=' + Date.now(), {cache: 'no-store'});
+      if (!r.ok) return;
+      const latest = await r.json();
+      const loaded = window.SNAPSHOT_META && window.SNAPSHOT_META.generated_at;
+      if (latest.generated_at_local && loaded && latest.generated_at_local !== loaded) {
+        location.reload();
+      }
+    } catch (_) {}
+  }, 120000);
+}
 
 // Preview mode: URL ?expand=all → 展开所有 details 并触发 supply chain 加载（for README 截图）
 if (new URLSearchParams(location.search).get('expand') === 'all') {
