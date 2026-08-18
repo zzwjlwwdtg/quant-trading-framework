@@ -1,44 +1,39 @@
 {
   "ticker": "TEKSCEND",
   "source_stock": "429A.T",
-  "direction": "新指引",
-  "revision_type": "initial",
-  "magnitude": "小",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
   "last_update": "2026-05-15",
-  "next_earnings": "2026-08-08",
-  "guidance_note": "FY2027（2027年3月期）通期予想：売上高 前期比+8.1%（FY2026実績 129.58億円ベース）、営業利益 +8.2%、EPS 248.06円、年間配当 70円（前期56円）",
-  "revision_reason": "上場後初の通期ガイダンス。FY2026売上 129.58億円（+9.8% YoY）、純利益 24.9億円（+150.9%）を受け、AI・データセンター需要に支えられフォトマスク市場堅調継続を前提にFY2027 売上+8.1%、営業利益+8.2%の初期予想を提示",
+  "next_earnings": "2026-11-14",
+  "guidance_note": "通期FY2027（2027年3月期）予想EPS 248.06円（FY2026 実績 261.12円 比 -5%）；FY2026 実績は売上高 1,295.8億円 +9.8% YoY、純利益 249.5億円 +150.9% YoY",
+  "revision_reason": "90日以内の一次ソース（TDnet/IR）を直接確認できず。2026年4月にFY2026見通しを上方修正（配当54.39→56円）していたが、これは90日窓外の可能性が高い。5月頃のFY2026本決算発表と同時に出された初期FY2027ガイダンスと推定されるが未確認",
   "market_reaction": "不明",
-  "confidence": "medium",
+  "confidence": "low",
   "source_verified": true,
   "source_status": "claude_websearch",
-  "generated_at": "2026-08-14T08:47:26.064599+00:00",
+  "generated_at": "2026-08-17T08:48:12.404097+00:00",
   "sources": [
-    {
-      "url": "https://minkabu.jp/stock/429A/settlement_summary",
-      "type": "news",
-      "title": "テクセンドフォトマスク (429A) : 企業情報・決算短信AI要約 - みんかぶ"
-    },
     {
       "url": "https://minkabu.jp/stock/429A/settlement",
       "type": "news",
-      "title": "テクセンドフォトマスク (429A) : 決算情報・業績 - みんかぶ"
+      "title": "テクセンドフォトマスク (429A) 決算情報・業績 - みんかぶ"
     }
   ],
   "source_via": "claude_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 5,
     "recommendation": "buy",
-    "current_price": 3840.0,
+    "current_price": 3895.0,
     "forward_eps": null,
-    "trailing_eps": 249.48,
+    "trailing_eps": 249.22,
     "eps_growth_pct": null,
     "forward_pe": null,
-    "trailing_pe": 15.39,
+    "trailing_pe": 15.63,
     "target_mean": 4980.0,
     "target_high": 5700.0,
     "target_low": 4400.0,
-    "target_upside_pct": 29.7,
+    "target_upside_pct": 27.9,
     "revenue_growth_pct": 14.8,
     "earnings_growth_pct": -9.0,
     "next_earnings": "2026-08-06",
@@ -46,36 +41,36 @@
     "implied_pe_hold_upside": null,
     "peg_fair_price": null,
     "peg_ratio": null,
-    "hist_pe_median": 27.85,
-    "hist_pe_p25": 15.97,
+    "hist_pe_median": 27.8,
+    "hist_pe_p25": 15.96,
     "hist_pe_p75": 29.67,
-    "hist_pe_n_days": 202,
+    "hist_pe_n_days": 203,
     "implied_hist_median": null,
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 19.76,
+    "peer_pe_median": 20.33,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "PLAB",
-        "pe": 16.57
+        "pe": 16.5
       },
       {
         "ticker": "7911.T",
-        "pe": 19.76
+        "pe": 20.33
       },
       {
         "ticker": "7912.T",
-        "pe": 16.89
+        "pe": 16.91
       },
       {
         "ticker": "0981.HK",
-        "pe": 49.32
+        "pe": 46.29
       },
       {
         "ticker": "INTC",
-        "pe": 51.25
+        "pe": 50.24
       }
     ],
     "implied_peer_median": null,
@@ -83,8 +78,8 @@
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-14T17:48:10.534809",
-    "age_sec": 250278,
+    "cached_at": "2026-08-17T17:49:14.249151",
+    "age_sec": 61186,
     "stale": false,
     "refreshing": false
   }

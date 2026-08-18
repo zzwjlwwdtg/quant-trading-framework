@@ -1319,40 +1319,45 @@ def _cfg_helper(key: str, default: str = "") -> str:
         return default
 
 
-TICKER_TO_FUNDAMENTAL_STOCK = {
-    "TQQQ": "NVDA",   # 3x QQQ, 用 QQQ 最大权重股 NVDA 代表
-    "SOXL": "NVDA",   # 3x SOX, 用半导体龙头 NVDA
-    "DRAM": "MU",     # Memory ETF, MU 是锚
-    "MULL": "MU",     # 2x MU
-    "GLD":  None,     # 大宗商品 ETF, 无 fundamentals
-    "TSLA": "TSLA",
-    "KLAC": "KLAC",
-    "AMAT": "AMAT",
-    "GOOGL":"GOOGL",
-    "NVDA": "NVDA",
-    "MSFT": "MSFT",
-    "AAPL": "AAPL",
-    # 2026-Q3 thesis
-    "NBIS": "NBIS",   # Nebius (pure-play AI cloud，有股票基本面)
-    "SHY":  None,     # 债券 ETF 无股票基本面
-    "IEI":  None,     # 债券 ETF 无股票基本面
-    # AI DC 光通信链
-    "LITE": "LITE",   # Lumentum — 400G/800G optical transceivers + laser diodes, NVIDIA supplier
-    "CBRS": "CBRS",   # Cerebras Systems — WSE 晶圆级 AI 芯片, NVDA inference 竞品, 2025 IPO
-    "USO":  None,     # WTI 原油 ETF 无股票基本面（yfinance 404）
-    # 日股（东证）：仅基本面+供应链，无期权，不进 orchestrator scan
+# JP 短名 → 6-digit .T symbol 映射（美股用 config.get_fundamental_stock 单一源）
+JP_SHORT_TO_SYMBOL = {
     "TDK":      "6762.T",   # TDK — 电子元器件/固态电池/HDD磁头，AAPL/NVDA 供应链
     "KIOXIA":   "285A.T",   # キオクシア — NAND 闪存全球#2（前东芝存储），2024-12 IPO
     "FUJIKURA": "5803.T",   # 藤倉 — 光纤/海底电缆/AI 数据中心互联概念
     "MURATA":   "6981.T",   # 村田製作所 — MLCC 全球龙头，Apple/NVDA 直接供应
     "TEKSCEND": "429A.T",   # TEKSCEND PHOTOMASK — 光罩制造，TSMC 关键工艺供应
-    "ARE":      "5857.T",   # ARE Holdings (旧 Asahi Holdings) — 贵金属回收（金/银/铂），半导体/urban mining 概念
+    "ARE":      "5857.T",   # ARE Holdings (旧 Asahi Holdings) — 贵金属回收（金/银/铂）
     "MUFG":     "8306.T",   # 三菱 UFJ 金融集团 — 日本最大银行，日本加息受益股
-    "SUMCO":    "3436.T",   # SUMCO 胜高 — 硅晶圆全球 #2（信越化学后），300mm wafer 供 TSMC/Samsung/Intel，AI 芯片上游
-    "SHINETSU": "4063.T",   # 信越化学 — 硅晶圆全球 #1 + PVC + 光罩用光刻胶，半导体材料 upstream 龙头
-    "CYAGENT":  "4751.T",   # CyberAgent サイバーエージェント — 互联网广告/游戏(Uma Musume)/Abema TV，AI 生成内容
-    "DOWA":     "5714.T",   # 同和控股 DOWA — 非鉄金属精炼(锌/铅/铜) + 半导体电子材料，与 ARE 同 urban mining 板块
+    "SUMCO":    "3436.T",   # SUMCO 胜高 — 硅晶圆全球 #2
+    "SHINETSU": "4063.T",   # 信越化学 — 硅晶圆全球 #1
+    "CYAGENT":  "4751.T",   # CyberAgent — 互联网广告/游戏
+    "DOWA":     "5714.T",   # 同和控股 DOWA — 非鉄金属精炼 + 半导体材料
 }
+
+def _resolve_fundamental_stock(ticker: str) -> str | None:
+    """单一源基本面 stock 解析。
+    - JP 短名（TDK/KIOXIA/...）→ 对应 6-digit .T symbol
+    - 美股 → config.get_fundamental_stock（None = 无基本面商品/债券 ETF）
+    加新美股不用改这里，进 TRACKED_TICKERS 就默认用自身。"""
+    tk = (ticker or "").upper()
+    if tk in JP_SHORT_TO_SYMBOL:
+        return JP_SHORT_TO_SYMBOL[tk]
+    try:
+        from config import get_fundamental_stock
+        return get_fundamental_stock(tk)
+    except Exception:
+        return tk
+
+# 向后兼容旧调用（TICKER_TO_FUNDAMENTAL_STOCK.get(tk, tk)）—— 提供 dict-like 接口
+# 关键：resolve 已内置 "未知→自身" 的 fallback，所以永远返 resolve 结果，
+# 忽略传入 default（否则 GLD/USO 这类明确返 None 的会被 default 掩盖）。
+class _FundamentalStockMap:
+    def get(self, tk, default=None):
+        return _resolve_fundamental_stock(tk)
+    def __getitem__(self, tk):
+        return _resolve_fundamental_stock(tk)
+
+TICKER_TO_FUNDAMENTAL_STOCK = _FundamentalStockMap()
 
 # 日股关注列表（不参与 orchestrator scan，只在 dashboard 单独展示）
 JP_WATCH_LIST = [

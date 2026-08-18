@@ -1,20 +1,20 @@
 {
   "exists": true,
-  "path": "ai_targets_2026-08-14.json",
-  "mtime": "2026-08-14T22:26:52.558326",
+  "path": "ai_targets_2026-08-17.json",
+  "mtime": "2026-08-17T22:28:05.732410",
   "version": 1,
-  "ts": "2026-08-14T09:24",
-  "source_date": "2026-08-14",
+  "ts": "2026-08-17T09:25",
+  "source_date": "2026-08-17",
   "targets": [
     {
       "ticker": "US.TQQQ",
-      "action": "watch_buy",
-      "entry_ref": 76.5,
-      "stop_ref": 74.8,
-      "target_ref": 80.0,
-      "use_limit": true,
+      "action": "skip",
+      "entry_ref": null,
+      "stop_ref": null,
+      "target_ref": null,
+      "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 刚翻多但 15m RSI 76 超买，等回踩 Max Pain $76 附近；Put Wall $75 下方止损"
+      "notes": "MACD 中性 + 15m 死叉 + NVDA 财报前静默期，观望"
     },
     {
       "ticker": "US.SOXL",
@@ -24,7 +24,7 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD -10.85 深度空 + ADX 26.7 强下行趋势，昨日 +2.25% 属 α 反弹非翻转"
+      "notes": "MACD 深空 + PC1 震荡 + 设备股拖累，不入场"
     },
     {
       "ticker": "US.DRAM",
@@ -34,7 +34,7 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "0DTE 磁吸-3.39% strong 拉跌 vs MU 昨 +4.14% 强反弹，方向冲突观望"
+      "notes": "技术空 vs 期权 C/P 4.52 多头共识矛盾，GEX pin 压制，观望"
     },
     {
       "ticker": "US.MULL",
@@ -44,17 +44,17 @@
       "target_ref": null,
       "use_limit": false,
       "size_hint": "small",
-      "notes": "MACD 空 + log 未提供 MULL 现价 + NVDA 财报 12d 前 2x 单股杠杆不宜"
+      "notes": "空头势能减弱但未反转，等 MU 站上 $1000 且 MACD 金叉再考虑"
     },
     {
       "ticker": "US.GLD",
       "action": "watch_buy",
-      "entry_ref": 400.0,
-      "stop_ref": 396.0,
-      "target_ref": 408.0,
+      "entry_ref": 402.5,
+      "stop_ref": 397.0,
+      "target_ref": 407.0,
       "use_limit": true,
       "size_hint": "normal",
-      "notes": "MACD 多 + 宏观 bullish + GC 夜盘 +1.61% 三共振，高开后等回踩 Put Wall $400"
+      "notes": "技术多 + 宏观 bullish + GC 期货 +1.37% 三重共振，等回踩 $402.5"
     }
   ]
 }

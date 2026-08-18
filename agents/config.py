@@ -74,6 +74,30 @@ def get_asset_class(ticker: str) -> str:
     tk = ticker if ticker.startswith("US.") else f"US.{ticker}"
     return ASSET_CLASS_MAP.get(tk, DEFAULT_ASSET_CLASS)
 
+# 无股票基本面的 ticker（商品/债券 ETF）—— yfinance quoteSummary 会返 404
+# 用于 webui.get_fundamental_stock() 单一源判定，避免每加一个 ETF 都要手动补 None
+NO_FUNDAMENTALS_TICKERS = {"GLD", "USO", "SHY", "IEI"}
+
+# 用其它股票作为基本面代理的杠杆/主题 ETF —— 显示 proxy 公司的基本面
+# 未列出的 ticker 默认用自身（NVDA→NVDA, LITE→LITE, CBRS→CBRS 等）
+FUNDAMENTAL_PROXY = {
+    "TQQQ": "NVDA",   # 3x QQQ, 用最大权重 NVDA
+    "SOXL": "NVDA",   # 3x SOX, 用半导体龙头 NVDA
+    "DRAM": "MU",     # Memory ETF, MU 是锚
+    "MULL": "MU",     # 2x MU
+}
+
+def get_fundamental_stock(ticker: str) -> str | None:
+    """ticker → 基本面 stock symbol。None 表示无基本面（商品/债券 ETF）。
+    优先级：NO_FUNDAMENTALS → FUNDAMENTAL_PROXY → 自身。
+    加新单股票只要进 TRACKED_TICKERS，此函数会默认返自身（正确）。"""
+    if not ticker:
+        return None
+    tk = ticker.replace("US.", "").upper()
+    if tk in NO_FUNDAMENTALS_TICKERS:
+        return None
+    return FUNDAMENTAL_PROXY.get(tk, tk)
+
 # 用户显式加入的跟踪标的。展示类型不决定交易资格：这里的每个美股/ETF
 # 都会参与 scan，并可在 SIMULATE 账户按统一信号和风控规则买入。
 # 动态 universe picks 只负责发现列表外的额外卫星票。
