@@ -1,12 +1,12 @@
 {
-  "ts": "2026-08-18T16:28:18.866620+00:00",
+  "ts": "2026-08-18T17:01:18.869994+00:00",
   "factors": [
     {
       "arrow": "·",
       "name": "WTI 油价",
       "direction": "neutral",
       "weight": 1,
-      "value": "$84.44 (20d -0.6%)",
+      "value": "$84.33 (20d -0.7%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "bullish",
       "weight": 1,
-      "value": "$7.07 (Brent $91.51 - WTI $84.44)",
+      "value": "$7.05 (Brent $91.38 - WTI $84.33)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "bullish",
       "weight": 1,
-      "value": "XLE +8.4% vs SPY +2.7% (差 +5.8pp)",
+      "value": "XLE +8.4% vs SPY +2.7% (差 +5.7pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,23 +30,15 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "99.59 (5d -0.2%)",
+      "value": "99.61 (5d -0.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
-    },
-    {
-      "arrow": "·",
-      "name": "美国汽油零售价",
-      "direction": "neutral",
-      "weight": 1,
-      "value": "$4.05/gal (4周 +1.2%)",
-      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
       "arrow": "▼",
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "49.31 · 极高（>45），市场恐慌",
+      "value": "49.11 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -63,13 +55,13 @@
   "notes": [
     "综合 score=+1，多因子分歧，观察后续"
   ],
-  "price": 84.44,
-  "pct_5d": 1.49,
-  "pct_20d": -0.55,
+  "price": 84.33,
+  "pct_5d": 1.36,
+  "pct_20d": -0.68,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-19T01:28:20.703440",
-    "age_sec": 282,
+    "cached_at": "2026-08-19T02:01:28.282360",
+    "age_sec": 97,
     "stale": false,
     "refreshing": false
   }
