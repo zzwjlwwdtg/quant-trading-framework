@@ -7,7 +7,7 @@
     "recommendation": "buy",
     "current_price": 968.9,
     "forward_eps": 33.01,
-    "trailing_eps": -92.98,
+    "trailing_eps": -97.28,
     "eps_growth_pct": null,
     "forward_pe": 29.35,
     "trailing_pe": null,
@@ -30,7 +30,7 @@
     "implied_hist_p25": 640.46,
     "implied_hist_p75": 910.5,
     "implied_hist_upside": -27.6,
-    "peer_pe_median": 29.95,
+    "peer_pe_median": 26.66,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
@@ -39,7 +39,7 @@
       },
       {
         "ticker": "FN",
-        "pe": 34.56
+        "pe": 27.97
       },
       {
         "ticker": "MRVL",
@@ -47,11 +47,11 @@
       },
       {
         "ticker": "300502.SZ",
-        "pe": 13.08
+        "pe": 12.71
       }
     ],
-    "implied_peer_median": 988.74,
-    "implied_peer_upside": 2.0,
+    "implied_peer_median": 880.13,
+    "implied_peer_upside": -9.2,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -189,9 +189,9 @@
     }
   },
   "pricing": {
-    "classification": "matched",
-    "label": "预期与股价基本匹配",
-    "tone": "muted",
+    "classification": "fully_priced",
+    "label": "利好已充分计价",
+    "tone": "warn",
     "confidence": "high",
     "anchor_count": 3,
     "anchors": [
@@ -210,26 +210,26 @@
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 988.74,
-        "gap_pct": 2.0
+        "implied_price": 880.13,
+        "gap_pct": -9.2
       }
     ],
-    "median_gap_pct": 2.0,
+    "median_gap_pct": -9.2,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数高于现价 2.0%",
+      "多口径隐含价中位数低于现价 9.2%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-17T22:34:15.743098+00:00",
+  "fetched_at": "2026-08-18T04:34:47.163093+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-18T07:34:15.886932",
-    "age_sec": 11684,
+    "cached_at": "2026-08-18T13:34:47.164094",
+    "age_sec": 12501,
     "stale": false,
     "refreshing": false
   },

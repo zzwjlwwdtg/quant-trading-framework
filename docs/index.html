@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-18T10:49:00", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-18T17:03:09", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -198,15 +198,15 @@
 <!-- Row 0a: 系统自动挂单（最优先 —— 落地到实际价位的具体动作） -->
 <div class="grid">
   <div class="card" style="border-left:3px solid #f85149; background:linear-gradient(180deg, rgba(248,81,73,0.03) 0%, transparent 60%)">
-    <h2 title="Claude 输出的结构化目标 → paper_trader 挂 GTC 限价 + broker SELL STOP。这是系统实际在执行的动作。">⚡ 系统自动挂单 · Auto Orders <small id="ai-targets-mtime"></small></h2>
+    <h2 title="AI CLI 输出的结构化目标 → paper_trader 挂 GTC 限价 + broker SELL STOP。这是系统实际在执行的动作。">⚡ 系统自动挂单 · Auto Orders <small id="ai-targets-mtime"></small></h2>
     <div id="ai-targets"></div>
   </div>
 </div>
 
-<!-- Row 0b: Claude 综合分析（结构化 TL;DR） -->
+<!-- Row 0b: AI CLI 综合分析（结构化 TL;DR） -->
 <div class="grid">
   <div class="card" style="border-left:3px solid #58a6ff">
-    <h2 title="Claude CLI 综合解读 — 结构化 TL;DR + 可展开完整分析">🎯 Claude 综合分析 <small id="ai-mtime"></small></h2>
+    <h2 title="本地 AI CLI 综合解读（默认 Codex）— 结构化 TL;DR + 可展开完整分析">🎯 AI 综合分析 <small id="ai-mtime"></small></h2>
     <div id="ai-analysis"></div>
   </div>
 </div>
@@ -280,7 +280,7 @@
 <!-- Row 4: 每标的信号卡 -->
 <div class="grid">
   <div class="card">
-    <h2 title="股票与股票 ETF 的完整分析：技术信号、期权攻防、Claude、供应链和基本面">股票与股票 ETF <small>完整分析</small></h2>
+    <h2 title="股票与股票 ETF 的完整分析：技术信号、期权攻防、AI、供应链和基本面">股票与股票 ETF <small>完整分析</small></h2>
     <div id="signals" class="grid g3"></div>
   </div>
 </div>
@@ -626,14 +626,14 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
     const upside = ac.target_upside_pct;
     const upsideBadge = upside == null ? '' :
       `<span class="badge ${pctCls(upside)}" style="font-size:9px" title="距分析师平均目标价">目标 ${fmtPct(upside)}</span>`;
-    // divergence: Claude 官方指引方向 vs 分析师 rec (仅在两边都有意义时提示)
+    // divergence: AI 官方指引方向 vs 分析师 rec (仅在两边都有意义时提示)
     const claudeBull = ['上修','新指引'].includes(r.direction);
     const claudeBear = r.direction === '下修';
     const anaBull = ['strong_buy','buy'].includes(ac.recommendation);
     const anaBear = ['sell','underperform','strong_sell'].includes(ac.recommendation);
-    if (claudeBull && anaBear) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="Claude 上修但分析师看空">⚠ 背离</span>';
-    else if (claudeBear && anaBull) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="Claude 下修但分析师看多">⚠ 背离</span>';
-    else if ((claudeBull && anaBull) || (claudeBear && anaBear)) divergenceBadge = '<span class="badge ok" style="font-size:9px" title="Claude 方向与分析师一致">✓ 一致</span>';
+    if (claudeBull && anaBear) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="AI 上修但分析师看空">⚠ 背离</span>';
+    else if (claudeBear && anaBull) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="AI 下修但分析师看多">⚠ 背离</span>';
+    else if ((claudeBull && anaBull) || (claudeBear && anaBear)) divergenceBadge = '<span class="badge ok" style="font-size:9px" title="AI 方向与分析师一致">✓ 一致</span>';
     // 前瞻 EPS 派生估值行 (3 种 PE 假设隐含价 + PEG)
     const valRows = [];
     if (ac.current_price != null) {
@@ -736,12 +736,12 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
       ${(r.sources && r.sources.length) ? `<div style="font-size:9px; color:var(--muted); margin:3px 0 4px 0; line-height:1.5">
         <b style="color:#58a6ff">🔗 出处</b>: ${r.sources.slice(0,4).map(s => `<a href="${s.url}" target="_blank" rel="noopener" title="${(s.title||'').replace(/"/g,'&quot;')}" style="color:#79c0ff; text-decoration:none; margin-right:6px">[${s.type||'src'}] ↗</a>`).join('')}
       </div>` : ''}
-      ${r.claude_error ? `<div style="font-size:9px; color:var(--warn); margin:2px 0" title="业绩预想 CLI 查询未成功；分析师共识仍可参考">⚠ CLI: ${r.claude_error.replace(/^(claude|codex)_/,'').slice(0,120)}</div>` : ''}
+      ${(r.ai_error || r.claude_error) ? `<div style="font-size:9px; color:var(--warn); margin:2px 0" title="业绩预想 CLI 查询未成功；分析师共识仍可参考">⚠ CLI: ${(r.ai_error || r.claude_error).replace(/^(claude|codex)_/,'').slice(0,120)}</div>` : ''}
       ${analystHtml}
       ${r.data_note ? `<div style="font-size:9px; color:var(--muted); margin:4px 0">${r.data_note}</div>` : ''}
       <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-top:5px">
         <span>指引生效: ${r.guidance_effective_date || r.last_update || '-'} · 来源材料: ${r.source_published_at || '-'} · ${eventLabel}</span>
-        <span>信頼度 ${confidenceLabel} ${r.source_via==='claude_cli_websearch'?'· 🤖 Claude+Web':(r.source_via==='codex_cli_websearch'?'· 🤖 Codex':'')}</span>
+        <span>信頼度 ${confidenceLabel} ${r.source_via==='claude_cli_websearch'?'· 🤖 Claude+Web':(r.source_via==='codex_cli_websearch'?'· 🤖 Codex+Web':'')}</span>
       </div>
     </div>
   `;
@@ -902,7 +902,7 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
         lines.push(`↩️ <b>反转形态</b>: ${reversal.down.date_short} <span class="bad">${reversal.down.day_chg_pct}%</span> 大跌 → ${reversal.up.date_short} <span class="ok">+${reversal.up.day_chg_pct}%</span> 反弹`);
       }
       return `<div style="margin:5px 0; padding:6px 8px; background:rgba(88,166,255,0.06); border-left:2px solid #58a6ff; border-radius:2px; font-size:10.5px; line-height:1.6">
-        <div style="font-size:9px; color:var(--muted); margin-bottom:3px">🤖 AI 综合读 (rule-based · 无 Claude 成本)</div>
+        <div style="font-size:9px; color:var(--muted); margin-bottom:3px">🤖 AI 综合读 (rule-based · 无 CLI 成本)</div>
         ${lines.join('<br>')}
       </div>`;
     };
@@ -1232,15 +1232,15 @@ async function loadBanners() {
       <div style="color:var(--fg); margin-top:3px; line-height:1.4">${(it.preview||'').replace(/</g,'&lt;')}</div>
     </div>`;
   }).join('');
-  // Claude 一句话总结（最近 3 条推文）
+  // AI CLI 一句话总结（最近 3 条推文）
   const sum = t.summary || {};
   let summaryRow = '';
   if (sum.text) {
-    summaryRow = `<div style="margin: 6px 0; padding: 6px 8px; background: rgba(88,166,255,0.08); border-left: 2px solid #58a6ff; font-size: 11px; line-height: 1.4" title="Claude 对最近 3 条推文的一句话概括">
+    summaryRow = `<div style="margin: 6px 0; padding: 6px 8px; background: rgba(88,166,255,0.08); border-left: 2px solid #58a6ff; font-size: 11px; line-height: 1.4" title="AI CLI 对最近 3 条推文的一句话概括">
       <b style="color:#58a6ff">🤖 一句话摘要</b>：${sum.text.replace(/</g,'&lt;')}
     </div>`;
   } else if (sum.state === 'generating') {
-    summaryRow = `<div style="margin: 6px 0; text-align:center; color:var(--muted); font-size: 11px">🤖 Claude 生成中... (下次刷新可见)</div>`;
+    summaryRow = `<div style="margin: 6px 0; text-align:center; color:var(--muted); font-size: 11px">🤖 AI 生成中... (下次刷新可见)</div>`;
   }
   $('trump-banner').innerHTML = t.direction ? `
     <div class="banner-num ${dirColor}" style="text-align:center" title="bullish=利多风险资产 / bearish=利空 / neutral=中性">${t.direction} ${t.score >= 0 ? '+' : ''}${t.score}</div>
@@ -1378,7 +1378,7 @@ async function loadBondMonitor() {
   // Fed rate expectations (async 拉，先放 placeholder，稍后 loadFedWatch 填)
   const fedHtml = `
     <div style="margin-top:6px; padding-top:5px; border-top:1px dashed var(--border)">
-      <div style="font-size:10.5px; color:var(--muted)"><b style="color:#58a6ff">📅 CME FedWatch 加息/降息预期</b> <small>(Claude+Web, 缓存 2h)</small></div>
+      <div style="font-size:10.5px; color:var(--muted)"><b style="color:#58a6ff">📅 CME FedWatch 加息/降息预期</b> <small>(AI CLI+Web, 缓存 2h)</small></div>
       <div id="fed-watch-body" style="margin-top:3px; font-size:10px; color:var(--muted)">🔄 加载中...</div>
     </div>`;
 
@@ -1868,15 +1868,15 @@ function renderTickerAI(t, context) {
   const src  = context.aiSrc[t.ticker];
   if (!body) {
     if (context.aiLiveState === 'generating') {
-      return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 Claude 即时分析生成中… （首次 30-60s，之后刷新秒开）</div>`;
+      return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 AI 即时分析生成中… （首次 30-60s，之后刷新秒开）</div>`;
     }
-    return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 Claude 分析：数据不足或 Claude CLI 不可用</div>`;
+    return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 AI 分析：数据不足或 AI CLI 不可用</div>`;
   }
   const srcBadge = src === 'live'
     ? `<span style="color:#3fb950; font-size:9px" title="基于当前 signals+期权数据即时生成，${context.aiLiveMtime}">🟢 LIVE ${context.aiLiveMtime}</span>`
     : `<span style="color:var(--muted); font-size:9px" title="来自 orchestrator 定时快照 ${context.aiSnapMtime}">📸 SNAPSHOT ${context.aiSnapMtime}</span>`;
   return `<details data-details-key="ai-${t.ticker}" open style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this)">
-    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🤖 <b style="color:#58a6ff">Claude 分析</b> ${srcBadge} <span style="font-size:9px">▲折叠</span></summary>
+    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🤖 <b style="color:#58a6ff">AI 分析</b> ${srcBadge} <span style="font-size:9px">▲折叠</span></summary>
     <div class="analysis" style="font-size:11px; line-height:1.55">${(typeof marked !== 'undefined' ? marked.parse(body) : body.replace(/\n/g,'<br>'))}</div>
   </details>`;
 }
@@ -1898,7 +1898,7 @@ function renderSignalCard(t, context) {
     <span title="日线趋势方向">趋势 ${trendZh} · 技术简报</span>
   </div>` : '';
   const supplyChain = showSupplyChain ? `<details data-details-key="sc-${t.ticker}" style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this); if(this.open) loadSupplyChainOnDemand('${t.ticker}', 'sc-${t.ticker}')">
-    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🔗 <b style="color:#58a6ff">上下游供应链</b> <small style="font-size:9px">▼展开加载 (Claude 生成，缓存 14 天)</small></summary>
+    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🔗 <b style="color:#58a6ff">上下游供应链</b> <small style="font-size:9px">▼展开加载 (AI CLI 生成，缓存 30 天)</small></summary>
     <div id="sc-${t.ticker}"></div>
   </details>` : '';
   const capitalFlow = `<details data-details-key="cf-${t.ticker}" open style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this); if(this.open) loadCapitalFlowOnDemand('${t.ticker}', 'cf-${t.ticker}')">
@@ -1927,7 +1927,7 @@ function renderSignalCard(t, context) {
 }
 
 async function loadSignals() {
-  // 并行拉信号 + 股票标的期权 + 股票标的 Claude 分析
+  // 并行拉信号 + 股票标的期权 + 股票标的 AI 分析
   const [s, tOpts, tAI] = await Promise.all([
     fetchJson('/api/signals'),
     fetchJson('/api/ticker_options'),
@@ -2024,9 +2024,10 @@ function renderSupplyChain(sc, ticker) {
     const badge = p.fmp_verified ? ' ✓' : '';
     return `<span class="badge ${cls}" title="${(p.note||'').replace(/"/g,'&quot;')}${p.fmp_verified?' · FMP 已验证':''}" style="font-size:9px; margin:1px 2px">${p.name}${p.ticker?' ['+p.ticker+']':''}${badge}</span>`;
   }).join('');
-  const srcBadge = sc.source === 'claude+fmp'
-    ? '<span class="badge ok" style="font-size:8px">Claude+FMP ✓</span>'
-    : '<span class="badge muted" style="font-size:8px">Claude only</span>';
+  const srcLabel = sc.source === 'codex+fmp' ? 'Codex+FMP ✓'
+    : (sc.source === 'claude+fmp' ? 'Claude+FMP ✓'
+    : (sc.source === 'codex' ? 'Codex' : 'Claude'));
+  const srcBadge = `<span class="badge ${sc.source && sc.source.endsWith('+fmp') ? 'ok' : 'muted'}" style="font-size:8px">${srcLabel}</span>`;
   const graphBtn = ticker ? `
     <span style="margin-left:auto; display:flex; gap:4px">
       <button onclick="showSupplyChainGraph('${ticker}',1)" style="background:transparent; border:1px solid var(--blue); color:var(--blue); font-size:10px; padding:2px 8px; border-radius:4px; cursor:pointer" title="直接邻居（快）">🕸 1 层</button>
@@ -2247,7 +2248,7 @@ async function loadSupplyChainOnDemand(ticker, containerId) {
   if (!el || el.dataset.loaded === 'true') return;
   if (el.dataset.loading === 'true') return;
   el.dataset.loading = 'true';
-  el.innerHTML = '<small style="color:var(--muted); padding:8px; display:block">🔄 Claude 生成中… (首次 30-60s，之后缓存 7 天)</small>';
+  el.innerHTML = '<small style="color:var(--muted); padding:8px; display:block">🔄 AI CLI 生成中… (首次 30-60s，之后缓存 30 天)</small>';
   const r = await fetchJson(`/api/supply_chain?ticker=${encodeURIComponent(ticker)}`);
   el.dataset.loading = 'false';
   if (!r || r.error) {
@@ -2372,8 +2373,8 @@ async function loadAITargets() {
   `;
 }
 
-// 从 Claude ai_analysis markdown 提取结构化 TL;DR
-function parseClaudeAnalysis(rawContent) {
+// 从 AI CLI ai_analysis markdown 提取结构化 TL;DR
+function parseAIAnalysis(rawContent) {
   const clean = (rawContent || '').replace(/\x1b\[[0-9;]*m/g, '');
   // 全景 intro: 第一段 (在第一个 ## heading 之前，去掉两个 # 元数据 header)
   const introMatch = clean.match(/^(?:#[^\n]*\n\n){1,2}([\s\S]+?)(?=\n---|\n## \d)/);
@@ -2420,8 +2421,8 @@ async function loadAI() {
   }
   if (mtimeEl) mtimeEl.textContent = '· ' + (a.mtime || '').slice(5, 16);
 
-  const { intro, sections, raw } = parseClaudeAnalysis(a.content);
-  // 尝试匹配各类 section (Claude 输出格式变化时容错)
+  const { intro, sections, raw } = parseAIAnalysis(a.content);
+  // 尝试匹配各类 section (AI 输出格式变化时容错)
   const secByKey = (k) => Object.entries(sections).find(([n]) => n.includes(k))?.[1] || '';
   const secExec  = secByKey('执行建议');
   const secEvent = secByKey('事件') || secByKey('重大');

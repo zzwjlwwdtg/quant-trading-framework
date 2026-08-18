@@ -2,72 +2,58 @@
   "current_target_range": "3.50-3.75",
   "meetings": [
     {
-      "date": "2026-09-17",
-      "days_until": 30,
+      "date": "2026-09-16",
+      "days_until": 29,
       "probabilities": {
-        "hold": 69,
-        "cut_25": 25,
-        "hike_25": 6
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 61,
+        "hike_25": 39,
+        "hike_50": 0
       },
       "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 71,
       "probabilities": {
-        "hold": 62,
-        "cut_25": 30,
-        "hike_25": 8
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 81,
+        "hike_25": 19,
+        "hike_50": 0
       },
       "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "consensus_direction": "mild_hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 113,
       "probabilities": {
-        "hold": 55,
-        "cut_25": 38,
-        "hike_25": 7
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 58,
+        "hike_25": 42,
+        "hike_50": 0
       },
       "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 162,
-      "probabilities": {
-        "hold": 48,
-        "cut_25": 45,
-        "cut_50": 3,
-        "hike_25": 4
-      },
-      "most_likely": "hold",
-      "consensus_direction": "dovish_lean"
+      "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": "3.25-3.50",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-08-14",
-  "recent_event_impact": "8/1 July NFP -23K (vs +83K expected) + 103K downward revisions to May/Jun → strong dovish shift; 8/12 July CPI 3.4% YoY headline / 2.5% core in-line → traders trimmed Sept hike odds and kept a dovish lean, cumulative Dec pricing shows 15% cut vs 5% hike odds",
-  "commentary": "Fed on hold at 3.50-3.75% since July FOMC; market pricing (snapshot 8/14) leans dovish after weak July payrolls (-23K) and benign July CPI (headline 3.4%, core 2.5%), with ~69% Sept-hold odds and cumulative Dec pricing implying ~78% chance rates remain 3.50-3.75% through year-end. Data is 4 days stale but no major NFP/CPI/FOMC event has occurred since; Jackson Hole 8/21-23 (Powell speech) is the next probable catalyst.",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2026-12",
+  "data_snapshot_date": "2026-08-18",
+  "recent_event_impact": "2026-08-12 July CPI: headline CPI +0.1% m/m, +3.4% y/y; core CPI +0.2% m/m, +2.5% y/y, broadly cooled and reduced near-term hike urgency. 2026-08-13 July PPI: final demand flat, core PPI +0.2%, further lowering hike odds. 2026-08-07 July NFP was weak, earlier cutting September hike odds sharply.",
+  "commentary": "Data snapshot is 2026-08-18 and is after the 2026-08-12 CPI and 2026-08-13 PPI releases, so the latest inflation data should be reflected. Market pricing still leans to holds at the next three FOMC meetings, but a meaningful residual hike premium remains, especially for September and December, despite weak July NFP and cooler CPI/PPI.",
   "sources": [
     {
-      "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "cme_fedwatch_mirror"
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch"
     },
     {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "cme_fedwatch_mirror"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/08/12/cpi-inflation-report-july-2026.html",
-      "type": "cpi_release"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/08/07/jobs-report-july-2026.html",
-      "type": "nfp_release"
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fed_funds_futures_live"
     },
     {
       "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
@@ -75,11 +61,11 @@
     }
   ],
   "confidence": "medium",
-  "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-08-17T23:15:10+00:00",
+  "source_via": "codex_cli_websearch",
+  "fetched_at": "2026-08-18T07:34:08+00:00",
   "_meta": {
-    "cached_at": "2026-08-18T08:15:10.315819",
-    "age_sec": 9229,
+    "cached_at": "2026-08-18T16:34:08.168416",
+    "age_sec": 1738,
     "stale": false,
     "refreshing": false
   }
