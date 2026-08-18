@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-18T18:33:07", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-18T19:03:05", "endpoints_ok": 127, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -2056,13 +2056,14 @@ async function loadInstitutional() {
       <div class="stat"><span class="k">最差压力</span><span class="v bad">${worst.name||'-'} ${(worst.nav_impact_pct||0).toFixed(1)}%</span></div>
       <div class="stat"><span class="k">现金</span><span class="v">${(r.cash_pct||0).toFixed(1)}%</span></div>
     </div>
-    ${flags.length ? `<div style="padding:5px; border-left:2px solid var(--bad); margin-bottom:6px">${flags.map(f=>'⚠ '+f.message).join(' · ')}</div>` : '<div class="ok" style="margin-bottom:6px">✓ 未触发组合级硬风险警报</div>'}
+    ${flags.length ? `<div style="padding:5px; border-left:2px solid var(--bad); margin-bottom:6px">${flags.map(f=>'⚠ '+f.message).join(' · ')} <small>· SIM_ACTIVE 仅提示，不拦单</small></div>` : '<div class="ok" style="margin-bottom:6px">✓ 未触发组合风险提示 · SIM_ACTIVE 不设 VaR/压力限仓</div>'}
     <div style="margin-bottom:6px">${pathRows || '<small>当前无杠杆ETF路径风险</small>'}</div>
     <table><thead><tr><th>Ticker</th><th>NAV权重</th><th>杠杆</th><th>有效暴露</th><th>风险组</th></tr></thead><tbody>${positions}</tbody></table>
     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:7px; font-size:10px; color:var(--muted)">
       <span>数据质量 <b class="${dq.status==='critical'?'bad':dq.status==='warning'?'warn':'ok'}">${dq.status||'unavailable'}</b> (${dq.checked_files||0})</span>
       <span>实际成交率 <b>${ex.avg_fill_ratio == null ? '-' : (ex.avg_fill_ratio*100).toFixed(1)+'%'}</b></span>
       <span>成交短差 <b>${ex.avg_shortfall_bps == null ? '-' : ex.avg_shortfall_bps.toFixed(1)+' bps'}</b></span>
+      <span>小资金执行 <b>不计理论点差/冲击/容量</b></span>
       <span>Walk-forward通过 <b>${pass}/${rules}</b></span>
       <span>VaR源 <b>${risk.source||'-'} · N=${risk.observations||0}</b></span>
       <span>SPY Beta <b>${bench.available ? bench.beta.toFixed(2) : '-'}</b></span>
