@@ -1,14 +1,14 @@
 {
-  "asof": "2026-08-19T22:30",
+  "asof": "2026-08-19T23:01",
   "yields": {
     "10y": {
-      "value": 4.639,
-      "chg_1d_bps": -6.7,
-      "chg_5d_bps": -4.3,
-      "chg_20d_bps": -1.8,
-      "z_score_20d": -1.54,
+      "value": 4.653,
+      "chg_1d_bps": -5.3,
+      "chg_5d_bps": -2.9,
+      "chg_20d_bps": -0.4,
+      "z_score_20d": -1.25,
       "history": [
-        4.639,
+        4.653,
         4.706,
         4.724,
         4.696,
@@ -34,13 +34,13 @@
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.327,
-      "chg_1d_bps": -4.0,
-      "chg_5d_bps": -4.8,
-      "chg_20d_bps": -8.0,
-      "z_score_20d": -0.92,
+      "value": 4.346,
+      "chg_1d_bps": -2.1,
+      "chg_5d_bps": -2.9,
+      "chg_20d_bps": -6.1,
+      "z_score_20d": -0.49,
       "history": [
-        4.327,
+        4.346,
         4.367,
         4.376,
         4.362,
@@ -66,13 +66,13 @@
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.192,
-      "chg_1d_bps": -9.3,
-      "chg_5d_bps": -5.5,
-      "chg_20d_bps": 4.5,
-      "z_score_20d": -2.11,
+      "value": 5.199,
+      "chg_1d_bps": -8.6,
+      "chg_5d_bps": -4.8,
+      "chg_20d_bps": 5.2,
+      "z_score_20d": -1.99,
       "history": [
-        5.192,
+        5.199,
         5.285,
         5.309,
         5.265,
@@ -98,13 +98,13 @@
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.703,
-      "chg_1d_bps": -0.2,
-      "chg_5d_bps": -0.4,
-      "chg_20d_bps": -4.2,
-      "z_score_20d": -0.07,
+      "value": 3.705,
+      "chg_1d_bps": 0.0,
+      "chg_5d_bps": -0.2,
+      "chg_20d_bps": -4.0,
+      "z_score_20d": 0.0,
       "history": [
-        3.703,
+        3.705,
         3.705,
         3.703,
         3.697,
@@ -128,56 +128,18 @@
       "asof": "2026-08-19",
       "name": "3M 短端",
       "source": "yfinance ^IRX"
-    },
-    "2y": {
-      "value": 4.19,
-      "chg_1d_bps": 2.0,
-      "chg_5d_bps": -6.0,
-      "chg_20d_bps": -2.0,
-      "z_score_20d": 0.45,
-      "history": [
-        4.19,
-        4.17,
-        4.15,
-        4.2,
-        4.22,
-        4.25,
-        4.19,
-        4.25,
-        4.18,
-        4.2,
-        4.25,
-        4.28,
-        4.23,
-        4.22,
-        4.26,
-        4.31,
-        4.33,
-        4.37,
-        4.31,
-        4.26
-      ],
-      "asof": "2026-08-17",
-      "name": "2Y 国债",
-      "source": "FRED DGS2"
     }
   },
   "spreads": {},
   "gld_correlation": {
-    "vs_10y": -0.066,
+    "vs_10y": -0.041,
     "regime": "unknown",
     "reason": "数据不足无法计算"
   },
-  "anomalies": [
-    {
-      "metric": "30y",
-      "reason": "30Y 国债 单日 -9.3 bps (2.1σ · 下探)",
-      "severity": "medium"
-    }
-  ],
+  "anomalies": [],
   "_meta": {
-    "cached_at": "2026-08-19T22:31:18.857904",
-    "age_sec": 105,
+    "cached_at": "2026-08-19T23:02:27.082756",
+    "age_sec": 36,
     "stale": false,
     "refreshing": false
   }
