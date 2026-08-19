@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-19T13:33:03", "endpoints_ok": 128, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-19T14:03:03", "endpoints_ok": 128, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -154,10 +154,10 @@
 <dd>9+ 维技术指标投票（RSI/MA/CCI/量/BB/PSAR 等）。<span class="eg">多3 vs 空1 = 3 个指标看多，1 个看空</span></dd>
 
 <dt>Regime (市场状态)</dt>
-<dd>系统对当前市场的定性判断。<span class="eg">neutral 中性 · bull_low_vol 温和牛 · crisis 危机（单日≤-5%）· overheated 过热</span></dd>
+<dd>系统对当前交易环境的日线判断，不等同于 HMM 慢周期背景。<span class="eg">neutral 中性 · neutral_chop 中性震荡 · crisis 危机 · overheated 过热</span></dd>
 
 <dt>HMM Meta-Regime</dt>
-<dd>Hidden Markov Model 隐马尔可夫模型判定的市场大周期。相比即时 regime 更稳定。<span class="eg">bull_low_vol / volatile / crisis</span></dd>
+<dd>Hidden Markov Model 判定的 SPY 慢周期背景。它用于风险背景，不是当前买入或加仓信号。<span class="eg">长期偏多也可能同时处于短线震荡偏弱</span></dd>
 
 <dt>Confidence (置信度) X/5</dt>
 <dd>系统对信号的把握程度。5 分制（TECHNICAL_ONLY 模式）。<span class="eg">1/5=弱 · 3/5=中 · 5/5=强</span></dd>
@@ -218,7 +218,7 @@
     <div id="nav-summary"></div>
   </div>
   <div class="card">
-    <h2 title="Hidden Markov Model 判定的市场大周期。bull_low_vol=温和牛 / crisis=危机">HMM Meta-Regime <small>市场大周期</small></h2>
+    <h2 title="宏观背景、日线前提和短线风格分开显示；慢周期偏多不代表现在适合加仓">市场环境 <small>分周期，不把宏观当买点</small></h2>
     <div id="hmm"></div>
   </div>
   <div class="card" style="grid-column: span 2">
@@ -1139,8 +1139,8 @@ async function loadNav() {
 }
 
 const HMM_LABELS = {
-  'bull_low_vol':       '温和牛市（低波动）',
-  'bull_normal':        '正常牛市',
+  'bull_low_vol':       '长期温和偏多（低波动）',
+  'bull_normal':        '长期偏多',
   'volatile_uncertain': '震荡不明',
   'bear_or_correction': '熊市/回调',
   'crisis':             '危机',
@@ -1161,13 +1161,18 @@ async function loadHmm() {
   const age = ageInDays(h.ts);
   const stale = age > 3;
   const staleWarn = stale ? `<span class="warn" style="font-size:11px" title="数据超过 3 天没重算，可能与实际市场脱节。运行 hmm_regime.py 或等 weekly.bat 重算">⚠ ${age}天前更新</span>` : `<span class="ok" style="font-size:11px">✓ ${age}天前更新</span>`;
+  const trading = h.trading || {};
+  const style = trading.style || {};
+  const tradingStale = trading.stale ? `<span class="warn" title="日线状态日期 ${trading.date || '?'}，预期 ${trading.expected_date || '?'}">⚠ 待刷新</span>` : '<span class="ok">✓ 当日</span>';
+  const styleCls = style.is_choppy ? 'warn' : ((style.style || '').includes('down') ? 'bad' : 'info');
   $('hmm').innerHTML = `
-    <div class="banner-num" style="text-align:center">
-      <span class="badge ${cls}" style="font-size:14px; padding:4px 12px" title="HMM 判定的 SPY 大盘状态（不是杠杆 ETF）">${h.label || '?'}</span>
+    <div style="padding:6px 8px; background:rgba(210,153,34,.08); border-left:3px solid var(--warn); border-radius:3px; font-size:11px; margin-bottom:7px">
+      <b>注意：</b>${h.warning || '慢周期背景，不是当前买入或加仓信号'}
     </div>
-    <div style="text-align:center; font-size:13px; color:var(--fg); margin: 4px 0">${zh}</div>
-    <div class="stat"><span class="k term" title="HMM 对当前状态的把握程度">置信度</span><span class="v">${((h.prob || 0) * 100).toFixed(0)}%</span></div>
-    <div class="stat"><span class="k">数据源</span><span class="v" title="HMM 用 SPY 日收益/波动率/VIX，反映大盘。杠杆 ETF 崩盘不一定触发换档" style="font-size:11px">SPY 大盘</span></div>
+    <div class="stat"><span class="k" title="约500日 SPY/VIX 状态模型；只描述背景">① 宏观背景</span><span class="v"><span class="badge ${cls}" title="${h.label || '?'} · 模型后验概率 ${((h.prob || 0) * 100).toFixed(0)}%">${zh || h.label || '?'}</span></span></div>
+    <div class="stat"><span class="k" title="日线方向与宏观输入共同形成的实际决策前提">② 波段前提</span><span class="v">${trading.regime_zh || '待刷新'} ${tradingStale}</span></div>
+    <div class="stat"><span class="k" title="趋势效率、ADX、反转次数、MA20穿越、净位移/路径、ATR共同计算">③ 短线风格</span><span class="v"><span class="badge ${styleCls}">${style.style_zh || '待刷新'}</span>${style.chop_score != null ? ` <small>震荡分 ${style.chop_score}</small>` : ''}</span></div>
+    <div style="font-size:10px; color:var(--muted); line-height:1.45; margin-top:6px">${style.policy_note || '短线风格尚未生成'}${style.reason ? `<br>依据：${style.reason}` : ''}</div>
     <div class="stat"><span class="k">数据新鲜度</span><span class="v">${staleWarn}</span></div>
   `;
 }
@@ -1819,7 +1824,7 @@ function renderSignalOverview(t, optSrc = '') {
     </div>
     <div class="top-row">
       <span class="${actionCls}" title="建议动作 + 置信度 (X/5)">${t.action_zh || '?'} <small>${t.conf||''}/${t.scale||''}</small></span>
-      <span class="badge ${regimeCls}" title="市场状态：crisis=危机 / overheated=过热 / bull=温和牛 / neutral=中性">${t.regime || 'neutral'}</span>
+      <span class="badge ${regimeCls}" title="实际交易前提：bull=日线偏多趋势（不是单独买点）/ neutral_chop=中性震荡 / risk_off=风险收缩 / crisis=危机">${t.regime || 'neutral'}</span>
     </div>
     <div class="bar-container" title="共振多空条：绿=看多信号数，红=看空信号数">
       <div class="bar-bull" style="width:${bullPct}%"></div>
@@ -2608,6 +2613,11 @@ const SECTOR_REGIME_CLS = {
   neutral:'info', strong:'ok', overheated:'warn',
 };
 
+const STYLE_CLS = {
+  trend_up:'ok', trend_down:'bad', pullback:'warn', rebound:'info',
+  chop_bull:'warn', chop:'warn', chop_weak:'bad', mixed:'info', unknown:'info',
+};
+
 async function loadSectors() {
   const r = await fetchJson('/api/sectors');
   const sf = $('sectors-freshness');
@@ -2619,6 +2629,9 @@ async function loadSectors() {
     const p20cls = s.pct_20d === null ? '' : (s.pct_20d > 0 ? 'ok' : 'bad');
     const trendCls = s.trend === 'up' ? 'ok' : 'bad';
     const regimeCls = SECTOR_REGIME_CLS[s.regime] || '';
+    const styleCls = STYLE_CLS[s.style] || 'info';
+    const metrics = s.style_metrics || {};
+    const styleTitle = `${s.style_reason || ''}${metrics.efficiency_10 != null ? ` · 趋势效率=${metrics.efficiency_10}` : ''}${metrics.adx_14 != null ? ` · ADX=${metrics.adx_14}` : ''}`;
     return `
     <div class="signal-card">
       <div class="top-row">
@@ -2626,13 +2639,14 @@ async function loadSectors() {
         <span class="price">$${fmt(s.price)}</span>
       </div>
       <div class="top-row">
-        <span class="badge ${regimeCls==='bad'?'bad':(regimeCls==='ok'?'ok':(regimeCls==='warn'?'warn':'info'))}" style="font-size:11px" title="基于 5d 涨跌幅：≤-5% 危机 / ≤-2% 弱势 / ±2% 中性 / ≥+2% 强势 / ≥+5% 过热">${s.regime_zh || s.regime}</span>
+        <span class="badge ${styleCls}" style="font-size:11px" title="${styleTitle}">${s.style_zh || '短线待判'}${s.chop_score != null ? ` · 震荡${s.chop_score}` : ''}</span>
         <small class="${trendCls}" title="MA20 之上=up / 之下=down">${s.trend === 'up' ? '↑ 站上MA20' : '↓ 破MA20'}</small>
       </div>
       <div style="font-size:11px; display:flex; gap:12px; margin-top:6px">
         <span title="过去 5 天累积涨跌">5天 <b class="${p5cls}">${s.pct_5d !== null ? (s.pct_5d>0?'+':'') + s.pct_5d.toFixed(2) : '-'}%</b></span>
         <span title="过去 20 天累积涨跌">20天 <b class="${p20cls}">${s.pct_20d !== null ? (s.pct_20d>0?'+':'') + s.pct_20d.toFixed(2) : '-'}%</b></span>
       </div>
+      <div style="font-size:10px; color:var(--muted); margin-top:3px">中期方向：<span class="${regimeCls}">${s.regime_zh || s.regime}</span> · ${s.policy_note || ''}</div>
       <div style="font-size:10px; color:var(--muted); margin-top:4px" title="你的哪些仓位对应这个板块">你的仓位: ${s.linked}</div>
     </div>`;
   }).join('');

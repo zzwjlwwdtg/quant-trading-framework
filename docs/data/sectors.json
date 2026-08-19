@@ -10,7 +10,25 @@
       "dist_ma20": 1.16,
       "trend": "up",
       "regime": "neutral",
-      "regime_zh": "中性"
+      "regime_zh": "中性",
+      "style": "chop",
+      "style_zh": "横盘震荡",
+      "chop_score": 3,
+      "is_choppy": true,
+      "style_reason": "10日趋势效率很低(0.14)；净涨跌小但路径反复",
+      "style_metrics": {
+        "pct_5d": -0.4,
+        "pct_20d": 2.56,
+        "dist_ma20_pct": 1.16,
+        "dist_ma50_pct": 2.39,
+        "efficiency_10": 0.139,
+        "efficiency_20": 0.204,
+        "adx_14": 23.6,
+        "reversal_count_10d": 4,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 0.638
+      },
+      "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
     {
       "key": "QQQ",
@@ -22,7 +40,25 @@
       "dist_ma20": 1.6,
       "trend": "up",
       "regime": "neutral",
-      "regime_zh": "中性"
+      "regime_zh": "中性",
+      "style": "chop",
+      "style_zh": "横盘震荡",
+      "chop_score": 4,
+      "is_choppy": true,
+      "style_reason": "10日趋势效率很低(0.13)；ADX偏低(15.3)；净涨跌小但路径反复",
+      "style_metrics": {
+        "pct_5d": -0.13,
+        "pct_20d": 1.2,
+        "dist_ma20_pct": 1.6,
+        "dist_ma50_pct": 0.65,
+        "efficiency_10": 0.126,
+        "efficiency_20": 0.053,
+        "adx_14": 15.3,
+        "reversal_count_10d": 4,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 0.705
+      },
+      "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
     {
       "key": "SMH",
@@ -34,7 +70,25 @@
       "dist_ma20": 0.82,
       "trend": "up",
       "regime": "neutral",
-      "regime_zh": "中性"
+      "regime_zh": "中性",
+      "style": "chop",
+      "style_zh": "横盘震荡",
+      "chop_score": 5,
+      "is_choppy": true,
+      "style_reason": "10日趋势效率很低(0.07)；ADX偏低(14.7)；10日涨跌反转6次；净涨跌小但路径反复",
+      "style_metrics": {
+        "pct_5d": -0.55,
+        "pct_20d": -2.45,
+        "dist_ma20_pct": 0.82,
+        "dist_ma50_pct": -3.56,
+        "efficiency_10": 0.071,
+        "efficiency_20": 0.059,
+        "adx_14": 14.7,
+        "reversal_count_10d": 6,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 0.767
+      },
+      "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
     {
       "key": "GLD",
@@ -46,13 +100,31 @@
       "dist_ma20": 3.21,
       "trend": "up",
       "regime": "neutral",
-      "regime_zh": "中性"
+      "regime_zh": "中性",
+      "style": "pullback",
+      "style_zh": "上升结构内回调",
+      "chop_score": 1,
+      "is_choppy": false,
+      "style_reason": "10日涨跌反转5次",
+      "style_metrics": {
+        "pct_5d": -0.6,
+        "pct_20d": 6.33,
+        "dist_ma20_pct": 3.21,
+        "dist_ma50_pct": 4.54,
+        "efficiency_10": 0.457,
+        "efficiency_20": 0.265,
+        "adx_14": 24.5,
+        "reversal_count_10d": 5,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 0.859
+      },
+      "policy_note": "短线承压：等待价格与动量重新确认"
     }
   ],
-  "ts": "2026-08-19T04:31:54.990791+00:00",
+  "ts": "2026-08-19T05:01:25.014204+00:00",
   "_meta": {
-    "cached_at": "2026-08-19T13:31:55.006627",
-    "age_sec": 67,
+    "cached_at": "2026-08-19T14:01:25.015205",
+    "age_sec": 97,
     "stale": false,
     "refreshing": false
   }
