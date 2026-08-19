@@ -1,0 +1,126 @@
+{
+  "ticker": "GLD",
+  "sector": "贵金属/黄金ETF",
+  "business": "追踪伦敦金现货价格的实物黄金ETF，由SPDR Gold Trust发行，持有实物金条",
+  "upstream": [
+    {
+      "name": "HSBC Bank plc",
+      "ticker": "HSBC",
+      "note": "托管行，负责在伦敦金库保管实物黄金",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "JPMorgan Chase (JPM London)",
+      "ticker": "JPM",
+      "note": "副托管行/清算行，参与黄金结算与保管",
+      "weight": 20,
+      "confidence": "high"
+    },
+    {
+      "name": "State Street Global Advisors",
+      "ticker": "STT",
+      "note": "ETF发起人与营销代理，负责基金管理运营",
+      "weight": 15,
+      "confidence": "high"
+    },
+    {
+      "name": "World Gold Council",
+      "ticker": null,
+      "note": "发起机构，通过WGT Issuer持有信托权益",
+      "weight": 10,
+      "confidence": "high"
+    },
+    {
+      "name": "Barrick Gold",
+      "ticker": "GOLD",
+      "note": "上游金矿供给方，全球最大金矿商之一，为伦敦金市场提供实物金",
+      "weight": 8,
+      "confidence": "medium"
+    },
+    {
+      "name": "Newmont Corporation",
+      "ticker": "NEM",
+      "note": "上游金矿供给方，全球最大黄金生产商，供给LBMA合格金条",
+      "weight": 7,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "机构投资者（对冲基金/主权基金）",
+      "ticker": null,
+      "note": "用于对冲通胀/美元贬值/地缘风险的宏观配置",
+      "weight": 35,
+      "confidence": "high"
+    },
+    {
+      "name": "资产管理公司/养老金",
+      "ticker": null,
+      "note": "作为组合分散化和避险资产配置",
+      "weight": 30,
+      "confidence": "high"
+    },
+    {
+      "name": "零售投资者",
+      "ticker": null,
+      "note": "通过券商账户便捷持有黄金敞口",
+      "weight": 20,
+      "confidence": "high"
+    },
+    {
+      "name": "授权参与者（Authorized Participants）",
+      "ticker": null,
+      "note": "如高盛、摩根士丹利、瑞银等做市商，负责一级市场申赎",
+      "weight": 10,
+      "confidence": "high"
+    },
+    {
+      "name": "财富管理平台/RIA",
+      "ticker": null,
+      "note": "配置到客户组合中的另类资产篮子",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "iShares Gold Trust",
+      "ticker": "IAU",
+      "note": "贝莱德旗下实物黄金ETF，费率更低的直接竞品",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR Gold MiniShares",
+      "ticker": "GLDM",
+      "note": "同为SPDR发行的低费率黄金ETF，蚕食GLD低端市场",
+      "confidence": "high"
+    },
+    {
+      "name": "abrdn Physical Gold Shares",
+      "ticker": "SGOL",
+      "note": "瑞士金库存放实物金的黄金ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "VanEck Merk Gold Trust",
+      "ticker": "OUNZ",
+      "note": "支持实物赎回的黄金ETF差异化竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "iShares Gold Trust Micro",
+      "ticker": "IAUM",
+      "note": "贝莱德推出的超低费率黄金ETF",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-07-29T08:50:35.920723+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-07-29T17:50:35.922228",
+    "age_sec": 1842151,
+    "stale": false,
+    "refreshing": false
+  }
+}
