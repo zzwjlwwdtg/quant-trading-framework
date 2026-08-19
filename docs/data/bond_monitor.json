@@ -1,14 +1,14 @@
 {
-  "asof": "2026-08-19T23:48",
+  "asof": "2026-08-20T00:19",
   "yields": {
     "10y": {
-      "value": 4.645,
-      "chg_1d_bps": -6.1,
-      "chg_5d_bps": -3.7,
-      "chg_20d_bps": -1.2,
-      "z_score_20d": -1.42,
+      "value": 4.651,
+      "chg_1d_bps": -5.5,
+      "chg_5d_bps": -3.1,
+      "chg_20d_bps": -0.6,
+      "z_score_20d": -1.29,
       "history": [
-        4.645,
+        4.651,
         4.706,
         4.724,
         4.696,
@@ -34,13 +34,13 @@
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.344,
-      "chg_1d_bps": -2.3,
-      "chg_5d_bps": -3.1,
-      "chg_20d_bps": -6.3,
-      "z_score_20d": -0.54,
+      "value": 4.353,
+      "chg_1d_bps": -1.4,
+      "chg_5d_bps": -2.2,
+      "chg_20d_bps": -5.4,
+      "z_score_20d": -0.33,
       "history": [
-        4.344,
+        4.353,
         4.367,
         4.376,
         4.362,
@@ -66,13 +66,13 @@
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.187,
-      "chg_1d_bps": -9.8,
-      "chg_5d_bps": -6.0,
-      "chg_20d_bps": 4.0,
-      "z_score_20d": -2.2,
+      "value": 5.189,
+      "chg_1d_bps": -9.6,
+      "chg_5d_bps": -5.8,
+      "chg_20d_bps": 4.2,
+      "z_score_20d": -2.17,
       "history": [
-        5.187,
+        5.189,
         5.285,
         5.309,
         5.265,
@@ -203,21 +203,21 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.076,
-    "vs_tips_10y": -0.092,
+    "vs_10y": -0.069,
+    "vs_tips_10y": -0.087,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.092，对冲关系变弱"
+    "reason": "相关性 -0.087，对冲关系变弱"
   },
   "anomalies": [
     {
       "metric": "30y",
-      "reason": "30Y 国债 单日 -9.8 bps (2.2σ · 下探)",
+      "reason": "30Y 国债 单日 -9.6 bps (2.2σ · 下探)",
       "severity": "medium"
     }
   ],
   "_meta": {
-    "cached_at": "2026-08-19T23:48:57.926309",
-    "age_sec": 845,
+    "cached_at": "2026-08-20T00:19:57.752529",
+    "age_sec": 787,
     "stale": false,
     "refreshing": false
   }
