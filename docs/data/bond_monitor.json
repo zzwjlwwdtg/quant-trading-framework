@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-19T21:59",
+  "asof": "2026-08-19T22:30",
   "yields": {
     "10y": {
       "value": 4.639,
@@ -66,13 +66,13 @@
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.19,
-      "chg_1d_bps": -9.5,
-      "chg_5d_bps": -5.7,
-      "chg_20d_bps": 4.3,
-      "z_score_20d": -2.15,
+      "value": 5.192,
+      "chg_1d_bps": -9.3,
+      "chg_5d_bps": -5.5,
+      "chg_20d_bps": 4.5,
+      "z_score_20d": -2.11,
       "history": [
-        5.19,
+        5.192,
         5.285,
         5.309,
         5.265,
@@ -98,13 +98,13 @@
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.7,
-      "chg_1d_bps": -0.5,
-      "chg_5d_bps": -0.7,
-      "chg_20d_bps": -4.5,
-      "z_score_20d": -0.18,
+      "value": 3.703,
+      "chg_1d_bps": -0.2,
+      "chg_5d_bps": -0.4,
+      "chg_20d_bps": -4.2,
+      "z_score_20d": -0.07,
       "history": [
-        3.7,
+        3.703,
         3.705,
         3.703,
         3.697,
@@ -162,29 +162,22 @@
       "source": "FRED DGS2"
     }
   },
-  "spreads": {
-    "2s10s": {
-      "value": 0.52,
-      "chg_20d_bps": 16.0,
-      "regime": "正常",
-      "asof": "2026-08-18"
-    }
-  },
+  "spreads": {},
   "gld_correlation": {
-    "vs_10y": 0.444,
+    "vs_10y": -0.066,
     "regime": "unknown",
     "reason": "数据不足无法计算"
   },
   "anomalies": [
     {
       "metric": "30y",
-      "reason": "30Y 国债 单日 -9.5 bps (2.1σ · 下探)",
+      "reason": "30Y 国债 单日 -9.3 bps (2.1σ · 下探)",
       "severity": "medium"
     }
   ],
   "_meta": {
-    "cached_at": "2026-08-19T22:00:10.812676",
-    "age_sec": 175,
+    "cached_at": "2026-08-19T22:31:18.857904",
+    "age_sec": 105,
     "stale": false,
     "refreshing": false
   }
