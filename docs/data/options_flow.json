@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-19T03:50:24.555137+00:00",
-  "session_date_et": "2026-08-18",
+  "generated_at": "2026-08-19T12:16:26.037127+00:00",
+  "session_date_et": "2026-08-19",
   "refresh_sec": 1800,
   "monitoring_scope": [
     "QQQ",
@@ -40,7 +40,7 @@
         "2027-12-17",
         "2028-01-21"
       ],
-      "contracts_seen": 2721,
+      "contracts_seen": 5,
       "errors": []
     },
     "SMH": {
@@ -65,7 +65,7 @@
         "2027-12-17",
         "2028-01-21"
       ],
-      "contracts_seen": 1435,
+      "contracts_seen": 1,
       "errors": []
     },
     "SOXX": {
@@ -88,7 +88,7 @@
         "2027-12-17",
         "2028-01-21"
       ],
-      "contracts_seen": 742,
+      "contracts_seen": 1,
       "errors": []
     },
     "MU": {
@@ -113,7 +113,7 @@
         "2027-12-17",
         "2028-01-21"
       ],
-      "contracts_seen": 3223,
+      "contracts_seen": 12,
       "errors": []
     },
     "GLD": {
@@ -137,358 +137,16 @@
         "2027-09-17",
         "2028-01-21"
       ],
-      "contracts_seen": 1365,
+      "contracts_seen": 0,
       "errors": []
     }
   },
   "events": [
     {
-      "id": "MU|2026-08-19|put|960.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 960.0,
-      "spot": 940.76,
-      "moneyness": 1.0205,
-      "contracts": 5392,
-      "session_volume": 5392,
-      "open_interest": 909,
-      "volume_oi_ratio": 5.932,
-      "volume_zscore": null,
-      "estimated_premium": 14143216.0,
-      "delta_notional": 358235730.05,
-      "price_used": 26.23,
-      "spread_pct": 11.83,
-      "iv": 0.686527,
-      "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.28,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 45,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.7062,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-21|call|1000.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-21",
-      "dte": 3,
-      "dte_bucket": "3-14d_event",
-      "option_type": "call",
-      "strike": 1000.0,
-      "spot": 940.76,
-      "moneyness": 1.063,
-      "contracts": 21560,
-      "session_volume": 21560,
-      "open_interest": 9821,
-      "volume_oi_ratio": 2.195,
-      "volume_zscore": null,
-      "estimated_premium": 13151600.0,
-      "delta_notional": 382255841.97,
-      "price_used": 6.1,
-      "spread_pct": 4.84,
-      "iv": 0.730838,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.29,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 45,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.1885,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-19|call|960.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "call",
-      "strike": 960.0,
-      "spot": 940.76,
-      "moneyness": 1.0205,
-      "contracts": 17089,
-      "session_volume": 17089,
-      "open_interest": 158,
-      "volume_oi_ratio": 108.158,
-      "volume_zscore": null,
-      "estimated_premium": 11705965.0,
-      "delta_notional": 496900954.36,
-      "price_used": 6.85,
-      "spread_pct": 6.36,
-      "iv": 0.7428,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.35,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 45,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.3091,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-19|put|975.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 975.0,
-      "spot": 940.76,
-      "moneyness": 1.0364,
-      "contracts": 2719,
-      "session_volume": 2719,
-      "open_interest": 551,
-      "volume_oi_ratio": 4.935,
-      "volume_zscore": null,
-      "estimated_premium": 10604100.0,
-      "delta_notional": 211064528.02,
-      "price_used": 39.0,
-      "spread_pct": 10.81,
-      "iv": 0.71387,
-      "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.31,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 45,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.8251,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-19|put|965.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 965.0,
-      "spot": 940.76,
-      "moneyness": 1.0258,
-      "contracts": 2699,
-      "session_volume": 2699,
-      "open_interest": 612,
-      "volume_oi_ratio": 4.41,
-      "volume_zscore": null,
-      "estimated_premium": 8455967.0,
-      "delta_notional": 189664192.87,
-      "price_used": 31.33,
-      "spread_pct": 11.9,
-      "iv": 0.708011,
-      "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.35,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 44,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 19,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.747,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-19|put|920.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 920.0,
-      "spot": 940.76,
-      "moneyness": 0.9779,
-      "contracts": 10130,
-      "session_volume": 10130,
-      "open_interest": 666,
-      "volume_oi_ratio": 15.21,
-      "volume_zscore": null,
-      "estimated_premium": 6240080.0,
-      "delta_notional": 255578385.05,
-      "price_used": 6.16,
-      "spread_pct": 16.95,
-      "iv": 0.71448,
-      "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.27,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 43,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 18,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.2682,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
       "id": "QQQ|2026-09-04|put|680.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
+      "status": "oi_confirmed",
       "source": "QQQ",
       "expiry": "2026-09-04",
       "dte": 17,
@@ -516,10 +174,11 @@
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 14656,
+        "ratio": 0.944
       },
-      "score": 42,
+      "score": 57,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
@@ -527,7 +186,7 @@
         "novelty": 15,
         "direction": 8,
         "persistence": 0,
-        "oi_confirmation": 0,
+        "oi_confirmation": 15,
         "iv_price_confirmation": 5,
         "penalty": -3
       },
@@ -538,14 +197,13 @@
         }
       ],
       "abs_delta": 0.1397,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+      "delta_source": "black_scholes_approx"
     },
     {
       "id": "SOXX|2026-09-18|call|560.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
+      "status": "oi_confirmed",
       "source": "SOXX",
       "expiry": "2026-09-18",
       "dte": 31,
@@ -573,10 +231,11 @@
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 2356,
+        "ratio": 0.923
       },
-      "score": 41,
+      "score": 56,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
@@ -584,7 +243,7 @@
         "novelty": 15,
         "direction": 8,
         "persistence": 0,
-        "oi_confirmation": 0,
+        "oi_confirmation": 15,
         "iv_price_confirmation": 5,
         "penalty": -3
       },
@@ -595,32 +254,31 @@
         }
       ],
       "abs_delta": 0.3778,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+      "delta_source": "black_scholes_approx"
     },
     {
-      "id": "MU|2026-08-19|call|965.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "id": "MU|2026-08-19|call|960.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
+      "status": "oi_confirmed",
       "source": "MU",
       "expiry": "2026-08-19",
       "dte": 1,
       "dte_bucket": "0-2d_gamma",
       "option_type": "call",
-      "strike": 965.0,
+      "strike": 960.0,
       "spot": 940.76,
-      "moneyness": 1.0258,
-      "contracts": 5566,
-      "session_volume": 5566,
-      "open_interest": 512,
-      "volume_oi_ratio": 10.871,
+      "moneyness": 1.0205,
+      "contracts": 17089,
+      "session_volume": 17089,
+      "open_interest": 158,
+      "volume_oi_ratio": 108.158,
       "volume_zscore": null,
-      "estimated_premium": 3061300.0,
-      "delta_notional": 137933870.1,
-      "price_used": 5.5,
-      "spread_pct": 7.02,
-      "iv": 0.741946,
+      "estimated_premium": 11705965.0,
+      "delta_notional": 496900954.36,
+      "price_used": 6.85,
+      "spread_pct": 6.36,
+      "iv": 0.7428,
       "iv_change_pct": null,
       "aggressor": "sell",
       "aggressor_confidence": 0.35,
@@ -630,18 +288,19 @@
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 3033,
+        "ratio": 0.177
       },
-      "score": 41,
+      "score": 50,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
-        "size": 16,
+        "size": 20,
         "novelty": 15,
         "direction": 8,
         "persistence": 0,
-        "oi_confirmation": 0,
+        "oi_confirmation": 5,
         "iv_price_confirmation": 5,
         "penalty": -3
       },
@@ -651,414 +310,14 @@
           "points": 3
         }
       ],
-      "abs_delta": 0.2634,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-21|put|950.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-21",
-      "dte": 3,
-      "dte_bucket": "3-14d_event",
-      "option_type": "put",
-      "strike": 950.0,
-      "spot": 940.76,
-      "moneyness": 1.0098,
-      "contracts": 6736,
-      "session_volume": 6736,
-      "open_interest": 3587,
-      "volume_oi_ratio": 1.878,
-      "volume_zscore": null,
-      "estimated_premium": 19096560.0,
-      "delta_notional": 346065282.92,
-      "price_used": 28.35,
-      "spread_pct": 6.9,
-      "iv": 0.704959,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.29,
-      "direction": "bullish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": false,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 0,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.5461,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-19|put|935.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 935.0,
-      "spot": 940.76,
-      "moneyness": 0.9939,
-      "contracts": 14477,
-      "session_volume": 14477,
-      "open_interest": 893,
-      "volume_oi_ratio": 16.212,
-      "volume_zscore": null,
-      "estimated_premium": 15056080.0,
-      "delta_notional": 578947042.36,
-      "price_used": 10.4,
-      "spread_pct": 11.34,
-      "iv": 0.700198,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.35,
-      "direction": "bullish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": false,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 0,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.4251,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-09-18|call|880.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-09-18",
-      "dte": 31,
-      "dte_bucket": "15-45d_swing",
-      "option_type": "call",
-      "strike": 880.0,
-      "spot": 940.76,
-      "moneyness": 0.9354,
-      "contracts": 1429,
-      "session_volume": 1429,
-      "open_interest": 1558,
-      "volume_oi_ratio": 0.917,
-      "volume_zscore": null,
-      "estimated_premium": 14937337.0,
-      "delta_notional": 90785248.3,
-      "price_used": 104.53,
-      "spread_pct": 1.56,
-      "iv": 0.676059,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.35,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 10,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.6753,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "QQQ|2026-08-19|put|717.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "QQQ",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 717.0,
-      "spot": 717.51,
-      "moneyness": 0.9993,
-      "contracts": 57230,
-      "session_volume": 57230,
-      "open_interest": 529,
-      "volume_oi_ratio": 108.185,
-      "volume_zscore": null,
-      "estimated_premium": 14765340.0,
-      "delta_notional": 1910143385.61,
-      "price_used": 2.58,
-      "spread_pct": 0.77,
-      "iv": 0.190194,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.35,
-      "direction": "bullish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": false,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 0,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.4652,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "MU|2026-08-19|call|945.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "MU",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "call",
-      "strike": 945.0,
-      "spot": 940.76,
-      "moneyness": 1.0045,
-      "contracts": 7529,
-      "session_volume": 7529,
-      "open_interest": 87,
-      "volume_oi_ratio": 86.54,
-      "volume_zscore": null,
-      "estimated_premium": 9448895.0,
-      "delta_notional": 326742723.66,
-      "price_used": 12.55,
-      "spread_pct": 9.02,
-      "iv": 0.722293,
-      "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.29,
-      "direction": "bullish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": false,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 0,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.4613,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "QQQ|2026-08-19|put|719.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "QQQ",
-      "expiry": "2026-08-19",
-      "dte": 1,
-      "dte_bucket": "0-2d_gamma",
-      "option_type": "put",
-      "strike": 719.0,
-      "spot": 717.51,
-      "moneyness": 1.0021,
-      "contracts": 26582,
-      "session_volume": 26582,
-      "open_interest": 650,
-      "volume_oi_ratio": 40.895,
-      "volume_zscore": null,
-      "estimated_premium": 9197372.0,
-      "delta_notional": 1104141347.31,
-      "price_used": 3.46,
-      "spread_pct": 2.84,
-      "iv": 0.18409,
-      "iv_change_pct": null,
-      "aggressor": "sell",
-      "aggressor_confidence": 0.35,
-      "direction": "bullish",
-      "direction_evidence": "snapshot_last_near_bid",
-      "price_confirmed": false,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 15,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 0,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.5789,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    },
-    {
-      "id": "QQQ|2026-08-21|put|720.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
-      "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "QQQ",
-      "expiry": "2026-08-21",
-      "dte": 3,
-      "dte_bucket": "3-14d_event",
-      "option_type": "put",
-      "strike": 720.0,
-      "spot": 717.51,
-      "moneyness": 1.0035,
-      "contracts": 15305,
-      "session_volume": 15305,
-      "open_interest": 34569,
-      "volume_oi_ratio": 0.443,
-      "volume_zscore": null,
-      "estimated_premium": 9106475.0,
-      "delta_notional": 630742070.74,
-      "price_used": 5.95,
-      "spread_pct": 1.18,
-      "iv": 0.176888,
-      "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.35,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": true,
-      "repeat_count": 1,
-      "complex_suspected": false,
-      "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
-      },
-      "score": 40,
-      "score_cap": 69,
-      "data_quality": "snapshot",
-      "components": {
-        "size": 20,
-        "novelty": 10,
-        "direction": 8,
-        "persistence": 0,
-        "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
-        "penalty": -3
-      },
-      "penalties": [
-        {
-          "reason": "first_snapshot_accumulated_volume",
-          "points": 3
-        }
-      ],
-      "abs_delta": 0.5744,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+      "abs_delta": 0.3091,
+      "delta_source": "black_scholes_approx"
     },
     {
       "id": "QQQ|2026-09-18|call|755.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
+      "status": "oi_confirmed",
       "source": "QQQ",
       "expiry": "2026-09-18",
       "dte": 31,
@@ -1086,15 +345,244 @@
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 4652,
+        "ratio": 0.363
       },
-      "score": 40,
+      "score": 50,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
         "size": 17,
         "novelty": 13,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 10,
+        "iv_price_confirmation": 5,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.1882,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "MU|2026-08-19|call|965.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
+      "option_type": "call",
+      "strike": 965.0,
+      "spot": 940.76,
+      "moneyness": 1.0258,
+      "contracts": 5566,
+      "session_volume": 5566,
+      "open_interest": 512,
+      "volume_oi_ratio": 10.871,
+      "volume_zscore": null,
+      "estimated_premium": 3061300.0,
+      "delta_notional": 137933870.1,
+      "price_used": 5.5,
+      "spread_pct": 7.02,
+      "iv": 0.741946,
+      "iv_change_pct": null,
+      "aggressor": "sell",
+      "aggressor_confidence": 0.35,
+      "direction": "bearish",
+      "direction_evidence": "snapshot_last_near_bid",
+      "price_confirmed": true,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 673,
+        "ratio": 0.121
+      },
+      "score": 46,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 16,
+        "novelty": 15,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 5,
+        "iv_price_confirmation": 5,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.2634,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "MU|2026-08-21|put|950.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-21",
+      "dte": 3,
+      "dte_bucket": "3-14d_event",
+      "option_type": "put",
+      "strike": 950.0,
+      "spot": 940.76,
+      "moneyness": 1.0098,
+      "contracts": 6736,
+      "session_volume": 6736,
+      "open_interest": 3587,
+      "volume_oi_ratio": 1.878,
+      "volume_zscore": null,
+      "estimated_premium": 19096560.0,
+      "delta_notional": 346065282.92,
+      "price_used": 28.35,
+      "spread_pct": 6.9,
+      "iv": 0.704959,
+      "iv_change_pct": null,
+      "aggressor": "sell",
+      "aggressor_confidence": 0.29,
+      "direction": "bullish",
+      "direction_evidence": "snapshot_last_near_bid",
+      "price_confirmed": false,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 855,
+        "ratio": 0.127
+      },
+      "score": 45,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 20,
+        "novelty": 15,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 5,
+        "iv_price_confirmation": 0,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.5461,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "QQQ|2026-08-19|put|717.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "QQQ",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
+      "option_type": "put",
+      "strike": 717.0,
+      "spot": 717.51,
+      "moneyness": 0.9993,
+      "contracts": 57230,
+      "session_volume": 57230,
+      "open_interest": 529,
+      "volume_oi_ratio": 108.185,
+      "volume_zscore": null,
+      "estimated_premium": 14765340.0,
+      "delta_notional": 1910143385.61,
+      "price_used": 2.58,
+      "spread_pct": 0.77,
+      "iv": 0.190194,
+      "iv_change_pct": null,
+      "aggressor": "sell",
+      "aggressor_confidence": 0.35,
+      "direction": "bullish",
+      "direction_evidence": "snapshot_last_near_bid",
+      "price_confirmed": false,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 16043,
+        "ratio": 0.28
+      },
+      "score": 45,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 20,
+        "novelty": 15,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 5,
+        "iv_price_confirmation": 0,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.4652,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "MU|2026-08-21|call|1000.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-21",
+      "dte": 3,
+      "dte_bucket": "3-14d_event",
+      "option_type": "call",
+      "strike": 1000.0,
+      "spot": 940.76,
+      "moneyness": 1.063,
+      "contracts": 21560,
+      "session_volume": 21560,
+      "open_interest": 9821,
+      "volume_oi_ratio": 2.195,
+      "volume_zscore": null,
+      "estimated_premium": 13151600.0,
+      "delta_notional": 382255841.97,
+      "price_used": 6.1,
+      "spread_pct": 4.84,
+      "iv": 0.730838,
+      "iv_change_pct": null,
+      "aggressor": "sell",
+      "aggressor_confidence": 0.29,
+      "direction": "bearish",
+      "direction_evidence": "snapshot_last_near_bid",
+      "price_confirmed": true,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 2006,
+        "ratio": 0.093
+      },
+      "score": 45,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 20,
+        "novelty": 15,
         "direction": 8,
         "persistence": 0,
         "oi_confirmation": 0,
@@ -1107,15 +595,128 @@
           "points": 3
         }
       ],
-      "abs_delta": 0.1882,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+      "abs_delta": 0.1885,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "MU|2026-08-19|put|975.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
+      "option_type": "put",
+      "strike": 975.0,
+      "spot": 940.76,
+      "moneyness": 1.0364,
+      "contracts": 2719,
+      "session_volume": 2719,
+      "open_interest": 551,
+      "volume_oi_ratio": 4.935,
+      "volume_zscore": null,
+      "estimated_premium": 10604100.0,
+      "delta_notional": 211064528.02,
+      "price_used": 39.0,
+      "spread_pct": 10.81,
+      "iv": 0.71387,
+      "iv_change_pct": null,
+      "aggressor": "buy",
+      "aggressor_confidence": 0.31,
+      "direction": "bearish",
+      "direction_evidence": "snapshot_last_near_ask",
+      "price_confirmed": true,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 104,
+        "ratio": 0.038
+      },
+      "score": 45,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 20,
+        "novelty": 15,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 0,
+        "iv_price_confirmation": 5,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.8251,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "MU|2026-08-19|call|945.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
+      "option_type": "call",
+      "strike": 945.0,
+      "spot": 940.76,
+      "moneyness": 1.0045,
+      "contracts": 7529,
+      "session_volume": 7529,
+      "open_interest": 87,
+      "volume_oi_ratio": 86.54,
+      "volume_zscore": null,
+      "estimated_premium": 9448895.0,
+      "delta_notional": 326742723.66,
+      "price_used": 12.55,
+      "spread_pct": 9.02,
+      "iv": 0.722293,
+      "iv_change_pct": null,
+      "aggressor": "buy",
+      "aggressor_confidence": 0.29,
+      "direction": "bullish",
+      "direction_evidence": "snapshot_last_near_ask",
+      "price_confirmed": false,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 844,
+        "ratio": 0.112
+      },
+      "score": 45,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 20,
+        "novelty": 15,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 5,
+        "iv_price_confirmation": 0,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.4613,
+      "delta_source": "black_scholes_approx"
     },
     {
       "id": "MU|2026-08-19|call|975.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
+      "status": "oi_confirmed",
       "source": "MU",
       "expiry": "2026-08-19",
       "dte": 1,
@@ -1143,10 +744,11 @@
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 1725,
+        "ratio": 0.216
       },
-      "score": 40,
+      "score": 45,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
@@ -1154,7 +756,7 @@
         "novelty": 15,
         "direction": 8,
         "persistence": 0,
-        "oi_confirmation": 0,
+        "oi_confirmation": 5,
         "iv_price_confirmation": 5,
         "penalty": -3
       },
@@ -1165,49 +767,49 @@
         }
       ],
       "abs_delta": 0.1909,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+      "delta_source": "black_scholes_approx"
     },
     {
-      "id": "SMH|2026-10-16|put|470.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "id": "MU|2026-08-19|put|920.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "SMH",
-      "expiry": "2026-10-16",
-      "dte": 59,
-      "dte_bucket": "46-120d_institutional",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
       "option_type": "put",
-      "strike": 470.0,
-      "spot": 569.77,
-      "moneyness": 0.8249,
-      "contracts": 3994,
-      "session_volume": 3994,
-      "open_interest": 3985,
-      "volume_oi_ratio": 1.002,
+      "strike": 920.0,
+      "spot": 940.76,
+      "moneyness": 0.9779,
+      "contracts": 10130,
+      "session_volume": 10130,
+      "open_interest": 666,
+      "volume_oi_ratio": 15.21,
       "volume_zscore": null,
-      "estimated_premium": 2895650.0,
-      "delta_notional": 27610424.35,
-      "price_used": 7.25,
-      "spread_pct": 20.22,
-      "iv": 0.459966,
+      "estimated_premium": 6240080.0,
+      "delta_notional": 255578385.05,
+      "price_used": 6.16,
+      "spread_pct": 16.95,
+      "iv": 0.71448,
       "iv_change_pct": null,
       "aggressor": "buy",
-      "aggressor_confidence": 0.32,
+      "aggressor_confidence": 0.27,
       "direction": "bearish",
       "direction_evidence": "snapshot_last_near_ask",
       "price_confirmed": true,
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 933,
+        "ratio": 0.092
       },
-      "score": 40,
+      "score": 43,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
-        "size": 15,
+        "size": 18,
         "novelty": 15,
         "direction": 8,
         "persistence": 0,
@@ -1221,57 +823,55 @@
           "points": 3
         }
       ],
-      "abs_delta": 0.1213,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-    }
-  ],
-  "long_dated_events": [
+      "abs_delta": 0.2682,
+      "delta_source": "black_scholes_approx"
+    },
     {
-      "id": "SMH|2026-10-16|put|470.0000",
-      "observed_at": "2026-08-19T03:48:38.805418+00:00",
+      "id": "MU|2026-08-19|put|935.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
       "event_date": "2026-08-18",
-      "status": "monitoring_existing_burst",
-      "source": "SMH",
-      "expiry": "2026-10-16",
-      "dte": 59,
-      "dte_bucket": "46-120d_institutional",
+      "status": "oi_confirmed",
+      "source": "MU",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
       "option_type": "put",
-      "strike": 470.0,
-      "spot": 569.77,
-      "moneyness": 0.8249,
-      "contracts": 3994,
-      "session_volume": 3994,
-      "open_interest": 3985,
-      "volume_oi_ratio": 1.002,
+      "strike": 935.0,
+      "spot": 940.76,
+      "moneyness": 0.9939,
+      "contracts": 14477,
+      "session_volume": 14477,
+      "open_interest": 893,
+      "volume_oi_ratio": 16.212,
       "volume_zscore": null,
-      "estimated_premium": 2895650.0,
-      "delta_notional": 27610424.35,
-      "price_used": 7.25,
-      "spread_pct": 20.22,
-      "iv": 0.459966,
+      "estimated_premium": 15056080.0,
+      "delta_notional": 578947042.36,
+      "price_used": 10.4,
+      "spread_pct": 11.34,
+      "iv": 0.700198,
       "iv_change_pct": null,
-      "aggressor": "buy",
-      "aggressor_confidence": 0.32,
-      "direction": "bearish",
-      "direction_evidence": "snapshot_last_near_ask",
-      "price_confirmed": true,
+      "aggressor": "sell",
+      "aggressor_confidence": 0.35,
+      "direction": "bullish",
+      "direction_evidence": "snapshot_last_near_bid",
+      "price_confirmed": false,
       "repeat_count": 1,
       "complex_suspected": false,
       "oi_confirmation": {
-        "state": "pending",
-        "note": "open interest is confirmed after clearing on the next session"
+        "state": "confirmed",
+        "oi_delta": 428,
+        "ratio": 0.03
       },
       "score": 40,
       "score_cap": 69,
       "data_quality": "snapshot",
       "components": {
-        "size": 15,
+        "size": 20,
         "novelty": 15,
         "direction": 8,
         "persistence": 0,
         "oi_confirmation": 0,
-        "iv_price_confirmation": 5,
+        "iv_price_confirmation": 0,
         "penalty": -3
       },
       "penalties": [
@@ -1280,31 +880,90 @@
           "points": 3
         }
       ],
-      "abs_delta": 0.1213,
-      "delta_source": "black_scholes_approx",
-      "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+      "abs_delta": 0.4251,
+      "delta_source": "black_scholes_approx"
+    },
+    {
+      "id": "QQQ|2026-08-19|put|719.0000",
+      "observed_at": "2026-08-19T12:16:26.037127+00:00",
+      "event_date": "2026-08-18",
+      "status": "oi_confirmed",
+      "source": "QQQ",
+      "expiry": "2026-08-19",
+      "dte": 1,
+      "dte_bucket": "0-2d_gamma",
+      "option_type": "put",
+      "strike": 719.0,
+      "spot": 717.51,
+      "moneyness": 1.0021,
+      "contracts": 26582,
+      "session_volume": 26582,
+      "open_interest": 650,
+      "volume_oi_ratio": 40.895,
+      "volume_zscore": null,
+      "estimated_premium": 9197372.0,
+      "delta_notional": 1104141347.31,
+      "price_used": 3.46,
+      "spread_pct": 2.84,
+      "iv": 0.18409,
+      "iv_change_pct": null,
+      "aggressor": "sell",
+      "aggressor_confidence": 0.35,
+      "direction": "bullish",
+      "direction_evidence": "snapshot_last_near_bid",
+      "price_confirmed": false,
+      "repeat_count": 1,
+      "complex_suspected": false,
+      "oi_confirmation": {
+        "state": "confirmed",
+        "oi_delta": 1537,
+        "ratio": 0.058
+      },
+      "score": 40,
+      "score_cap": 69,
+      "data_quality": "snapshot",
+      "components": {
+        "size": 20,
+        "novelty": 15,
+        "direction": 8,
+        "persistence": 0,
+        "oi_confirmation": 0,
+        "iv_price_confirmation": 0,
+        "penalty": -3
+      },
+      "penalties": [
+        {
+          "reason": "first_snapshot_accumulated_volume",
+          "points": 3
+        }
+      ],
+      "abs_delta": 0.5789,
+      "delta_source": "black_scholes_approx"
     }
   ],
+  "long_dated_events": [],
   "positions": {
     "TQQQ": {
       "ticker": "TQQQ",
-      "direction": "mixed",
-      "score": 46,
-      "bullish_score": 42,
-      "bearish_score": 46,
+      "direction": "bearish",
+      "score": 59,
+      "bullish_score": 47,
+      "bearish_score": 59,
       "action": "watch",
       "sources": [
         "QQQ"
       ],
-      "confirming_sources": [],
+      "confirming_sources": [
+        "QQQ"
+      ],
       "data_quality": "snapshot",
       "score_cap": 69,
       "top_events": [
         {
           "id": "QQQ|2026-09-04|put|680.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
           "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
+          "status": "oi_confirmed",
           "source": "QQQ",
           "expiry": "2026-09-04",
           "dte": 17,
@@ -1332,10 +991,11 @@
           "repeat_count": 1,
           "complex_suspected": false,
           "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
+            "state": "confirmed",
+            "oi_delta": 14656,
+            "ratio": 0.944
           },
-          "score": 42,
+          "score": 57,
           "score_cap": 69,
           "data_quality": "snapshot",
           "components": {
@@ -1343,7 +1003,7 @@
             "novelty": 15,
             "direction": 8,
             "persistence": 0,
-            "oi_confirmation": 0,
+            "oi_confirmation": 15,
             "iv_price_confirmation": 5,
             "penalty": -3
           },
@@ -1354,14 +1014,70 @@
             }
           ],
           "abs_delta": 0.1397,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+          "delta_source": "black_scholes_approx"
+        },
+        {
+          "id": "QQQ|2026-09-18|call|755.0000",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
+          "event_date": "2026-08-18",
+          "status": "oi_confirmed",
+          "source": "QQQ",
+          "expiry": "2026-09-18",
+          "dte": 31,
+          "dte_bucket": "15-45d_swing",
+          "option_type": "call",
+          "strike": 755.0,
+          "spot": 717.51,
+          "moneyness": 1.0523,
+          "contracts": 12828,
+          "session_volume": 12828,
+          "open_interest": 19995,
+          "volume_oi_ratio": 0.642,
+          "volume_zscore": null,
+          "estimated_premium": 4194756.0,
+          "delta_notional": 173192993.72,
+          "price_used": 3.27,
+          "spread_pct": 2.42,
+          "iv": 0.179085,
+          "iv_change_pct": null,
+          "aggressor": "sell",
+          "aggressor_confidence": 0.35,
+          "direction": "bearish",
+          "direction_evidence": "snapshot_last_near_bid",
+          "price_confirmed": true,
+          "repeat_count": 1,
+          "complex_suspected": false,
+          "oi_confirmation": {
+            "state": "confirmed",
+            "oi_delta": 4652,
+            "ratio": 0.363
+          },
+          "score": 50,
+          "score_cap": 69,
+          "data_quality": "snapshot",
+          "components": {
+            "size": 17,
+            "novelty": 13,
+            "direction": 8,
+            "persistence": 0,
+            "oi_confirmation": 10,
+            "iv_price_confirmation": 5,
+            "penalty": -3
+          },
+          "penalties": [
+            {
+              "reason": "first_snapshot_accumulated_volume",
+              "points": 3
+            }
+          ],
+          "abs_delta": 0.1882,
+          "delta_source": "black_scholes_approx"
         },
         {
           "id": "QQQ|2026-08-19|put|717.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
           "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
+          "status": "oi_confirmed",
           "source": "QQQ",
           "expiry": "2026-08-19",
           "dte": 1,
@@ -1389,10 +1105,11 @@
           "repeat_count": 1,
           "complex_suspected": false,
           "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
+            "state": "confirmed",
+            "oi_delta": 16043,
+            "ratio": 0.28
           },
-          "score": 40,
+          "score": 45,
           "score_cap": 69,
           "data_quality": "snapshot",
           "components": {
@@ -1400,7 +1117,7 @@
             "novelty": 15,
             "direction": 8,
             "persistence": 0,
-            "oi_confirmation": 0,
+            "oi_confirmation": 5,
             "iv_price_confirmation": 0,
             "penalty": -3
           },
@@ -1411,65 +1128,7 @@
             }
           ],
           "abs_delta": 0.4652,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-        },
-        {
-          "id": "QQQ|2026-08-19|put|719.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
-          "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "QQQ",
-          "expiry": "2026-08-19",
-          "dte": 1,
-          "dte_bucket": "0-2d_gamma",
-          "option_type": "put",
-          "strike": 719.0,
-          "spot": 717.51,
-          "moneyness": 1.0021,
-          "contracts": 26582,
-          "session_volume": 26582,
-          "open_interest": 650,
-          "volume_oi_ratio": 40.895,
-          "volume_zscore": null,
-          "estimated_premium": 9197372.0,
-          "delta_notional": 1104141347.31,
-          "price_used": 3.46,
-          "spread_pct": 2.84,
-          "iv": 0.18409,
-          "iv_change_pct": null,
-          "aggressor": "sell",
-          "aggressor_confidence": 0.35,
-          "direction": "bullish",
-          "direction_evidence": "snapshot_last_near_bid",
-          "price_confirmed": false,
-          "repeat_count": 1,
-          "complex_suspected": false,
-          "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
-          },
-          "score": 40,
-          "score_cap": 69,
-          "data_quality": "snapshot",
-          "components": {
-            "size": 20,
-            "novelty": 15,
-            "direction": 8,
-            "persistence": 0,
-            "oi_confirmation": 0,
-            "iv_price_confirmation": 0,
-            "penalty": -3
-          },
-          "penalties": [
-            {
-              "reason": "first_snapshot_accumulated_volume",
-              "points": 3
-            }
-          ],
-          "abs_delta": 0.5789,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+          "delta_source": "black_scholes_approx"
         }
       ],
       "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
@@ -1477,16 +1136,15 @@
     "SOXL": {
       "ticker": "SOXL",
       "direction": "bearish",
-      "score": 47,
+      "score": 48,
       "bullish_score": 0,
-      "bearish_score": 47,
+      "bearish_score": 48,
       "action": "watch",
       "sources": [
         "SMH",
         "SOXX"
       ],
       "confirming_sources": [
-        "SMH",
         "SOXX"
       ],
       "data_quality": "snapshot",
@@ -1494,9 +1152,9 @@
       "top_events": [
         {
           "id": "SOXX|2026-09-18|call|560.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
           "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
+          "status": "oi_confirmed",
           "source": "SOXX",
           "expiry": "2026-09-18",
           "dte": 31,
@@ -1524,10 +1182,11 @@
           "repeat_count": 1,
           "complex_suspected": false,
           "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
+            "state": "confirmed",
+            "oi_delta": 2356,
+            "ratio": 0.923
           },
-          "score": 41,
+          "score": 56,
           "score_cap": 69,
           "data_quality": "snapshot",
           "components": {
@@ -1535,7 +1194,7 @@
             "novelty": 15,
             "direction": 8,
             "persistence": 0,
-            "oi_confirmation": 0,
+            "oi_confirmation": 15,
             "iv_price_confirmation": 5,
             "penalty": -3
           },
@@ -1546,206 +1205,31 @@
             }
           ],
           "abs_delta": 0.3778,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-        },
-        {
-          "id": "SMH|2026-10-16|put|470.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
-          "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "SMH",
-          "expiry": "2026-10-16",
-          "dte": 59,
-          "dte_bucket": "46-120d_institutional",
-          "option_type": "put",
-          "strike": 470.0,
-          "spot": 569.77,
-          "moneyness": 0.8249,
-          "contracts": 3994,
-          "session_volume": 3994,
-          "open_interest": 3985,
-          "volume_oi_ratio": 1.002,
-          "volume_zscore": null,
-          "estimated_premium": 2895650.0,
-          "delta_notional": 27610424.35,
-          "price_used": 7.25,
-          "spread_pct": 20.22,
-          "iv": 0.459966,
-          "iv_change_pct": null,
-          "aggressor": "buy",
-          "aggressor_confidence": 0.32,
-          "direction": "bearish",
-          "direction_evidence": "snapshot_last_near_ask",
-          "price_confirmed": true,
-          "repeat_count": 1,
-          "complex_suspected": false,
-          "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
-          },
-          "score": 40,
-          "score_cap": 69,
-          "data_quality": "snapshot",
-          "components": {
-            "size": 15,
-            "novelty": 15,
-            "direction": 8,
-            "persistence": 0,
-            "oi_confirmation": 0,
-            "iv_price_confirmation": 5,
-            "penalty": -3
-          },
-          "penalties": [
-            {
-              "reason": "first_snapshot_accumulated_volume",
-              "points": 3
-            }
-          ],
-          "abs_delta": 0.1213,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+          "delta_source": "black_scholes_approx"
         }
       ],
       "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
     },
     "DRAM": {
       "ticker": "DRAM",
-      "direction": "bearish",
+      "direction": "mixed",
       "score": 56,
-      "bullish_score": 44,
+      "bullish_score": 49,
       "bearish_score": 56,
       "action": "watch",
       "sources": [
         "MU",
         "SMH"
       ],
-      "confirming_sources": [
-        "MU",
-        "SMH"
-      ],
+      "confirming_sources": [],
       "data_quality": "snapshot",
       "score_cap": 69,
       "top_events": [
         {
-          "id": "MU|2026-08-19|put|960.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
-          "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "MU",
-          "expiry": "2026-08-19",
-          "dte": 1,
-          "dte_bucket": "0-2d_gamma",
-          "option_type": "put",
-          "strike": 960.0,
-          "spot": 940.76,
-          "moneyness": 1.0205,
-          "contracts": 5392,
-          "session_volume": 5392,
-          "open_interest": 909,
-          "volume_oi_ratio": 5.932,
-          "volume_zscore": null,
-          "estimated_premium": 14143216.0,
-          "delta_notional": 358235730.05,
-          "price_used": 26.23,
-          "spread_pct": 11.83,
-          "iv": 0.686527,
-          "iv_change_pct": null,
-          "aggressor": "buy",
-          "aggressor_confidence": 0.28,
-          "direction": "bearish",
-          "direction_evidence": "snapshot_last_near_ask",
-          "price_confirmed": true,
-          "repeat_count": 1,
-          "complex_suspected": false,
-          "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
-          },
-          "score": 45,
-          "score_cap": 69,
-          "data_quality": "snapshot",
-          "components": {
-            "size": 20,
-            "novelty": 15,
-            "direction": 8,
-            "persistence": 0,
-            "oi_confirmation": 0,
-            "iv_price_confirmation": 5,
-            "penalty": -3
-          },
-          "penalties": [
-            {
-              "reason": "first_snapshot_accumulated_volume",
-              "points": 3
-            }
-          ],
-          "abs_delta": 0.7062,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-        },
-        {
-          "id": "MU|2026-08-21|call|1000.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
-          "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "MU",
-          "expiry": "2026-08-21",
-          "dte": 3,
-          "dte_bucket": "3-14d_event",
-          "option_type": "call",
-          "strike": 1000.0,
-          "spot": 940.76,
-          "moneyness": 1.063,
-          "contracts": 21560,
-          "session_volume": 21560,
-          "open_interest": 9821,
-          "volume_oi_ratio": 2.195,
-          "volume_zscore": null,
-          "estimated_premium": 13151600.0,
-          "delta_notional": 382255841.97,
-          "price_used": 6.1,
-          "spread_pct": 4.84,
-          "iv": 0.730838,
-          "iv_change_pct": null,
-          "aggressor": "sell",
-          "aggressor_confidence": 0.29,
-          "direction": "bearish",
-          "direction_evidence": "snapshot_last_near_bid",
-          "price_confirmed": true,
-          "repeat_count": 1,
-          "complex_suspected": false,
-          "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
-          },
-          "score": 45,
-          "score_cap": 69,
-          "data_quality": "snapshot",
-          "components": {
-            "size": 20,
-            "novelty": 15,
-            "direction": 8,
-            "persistence": 0,
-            "oi_confirmation": 0,
-            "iv_price_confirmation": 5,
-            "penalty": -3
-          },
-          "penalties": [
-            {
-              "reason": "first_snapshot_accumulated_volume",
-              "points": 3
-            }
-          ],
-          "abs_delta": 0.1885,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-        },
-        {
           "id": "MU|2026-08-19|call|960.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
           "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
+          "status": "oi_confirmed",
           "source": "MU",
           "expiry": "2026-08-19",
           "dte": 1,
@@ -1773,10 +1257,11 @@
           "repeat_count": 1,
           "complex_suspected": false,
           "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
+            "state": "confirmed",
+            "oi_delta": 3033,
+            "ratio": 0.177
           },
-          "score": 45,
+          "score": 50,
           "score_cap": 69,
           "data_quality": "snapshot",
           "components": {
@@ -1784,7 +1269,7 @@
             "novelty": 15,
             "direction": 8,
             "persistence": 0,
-            "oi_confirmation": 0,
+            "oi_confirmation": 5,
             "iv_price_confirmation": 5,
             "penalty": -3
           },
@@ -1795,53 +1280,53 @@
             }
           ],
           "abs_delta": 0.3091,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+          "delta_source": "black_scholes_approx"
         },
         {
-          "id": "SMH|2026-10-16|put|470.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
+          "id": "MU|2026-08-19|call|965.0000",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
           "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "SMH",
-          "expiry": "2026-10-16",
-          "dte": 59,
-          "dte_bucket": "46-120d_institutional",
-          "option_type": "put",
-          "strike": 470.0,
-          "spot": 569.77,
-          "moneyness": 0.8249,
-          "contracts": 3994,
-          "session_volume": 3994,
-          "open_interest": 3985,
-          "volume_oi_ratio": 1.002,
+          "status": "oi_confirmed",
+          "source": "MU",
+          "expiry": "2026-08-19",
+          "dte": 1,
+          "dte_bucket": "0-2d_gamma",
+          "option_type": "call",
+          "strike": 965.0,
+          "spot": 940.76,
+          "moneyness": 1.0258,
+          "contracts": 5566,
+          "session_volume": 5566,
+          "open_interest": 512,
+          "volume_oi_ratio": 10.871,
           "volume_zscore": null,
-          "estimated_premium": 2895650.0,
-          "delta_notional": 27610424.35,
-          "price_used": 7.25,
-          "spread_pct": 20.22,
-          "iv": 0.459966,
+          "estimated_premium": 3061300.0,
+          "delta_notional": 137933870.1,
+          "price_used": 5.5,
+          "spread_pct": 7.02,
+          "iv": 0.741946,
           "iv_change_pct": null,
-          "aggressor": "buy",
-          "aggressor_confidence": 0.32,
+          "aggressor": "sell",
+          "aggressor_confidence": 0.35,
           "direction": "bearish",
-          "direction_evidence": "snapshot_last_near_ask",
+          "direction_evidence": "snapshot_last_near_bid",
           "price_confirmed": true,
           "repeat_count": 1,
           "complex_suspected": false,
           "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
+            "state": "confirmed",
+            "oi_delta": 673,
+            "ratio": 0.121
           },
-          "score": 40,
+          "score": 46,
           "score_cap": 69,
           "data_quality": "snapshot",
           "components": {
-            "size": 15,
+            "size": 16,
             "novelty": 15,
             "direction": 8,
             "persistence": 0,
-            "oi_confirmation": 0,
+            "oi_confirmation": 5,
             "iv_price_confirmation": 5,
             "penalty": -3
           },
@@ -1851,9 +1336,65 @@
               "points": 3
             }
           ],
-          "abs_delta": 0.1213,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+          "abs_delta": 0.2634,
+          "delta_source": "black_scholes_approx"
+        },
+        {
+          "id": "MU|2026-08-21|put|950.0000",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
+          "event_date": "2026-08-18",
+          "status": "oi_confirmed",
+          "source": "MU",
+          "expiry": "2026-08-21",
+          "dte": 3,
+          "dte_bucket": "3-14d_event",
+          "option_type": "put",
+          "strike": 950.0,
+          "spot": 940.76,
+          "moneyness": 1.0098,
+          "contracts": 6736,
+          "session_volume": 6736,
+          "open_interest": 3587,
+          "volume_oi_ratio": 1.878,
+          "volume_zscore": null,
+          "estimated_premium": 19096560.0,
+          "delta_notional": 346065282.92,
+          "price_used": 28.35,
+          "spread_pct": 6.9,
+          "iv": 0.704959,
+          "iv_change_pct": null,
+          "aggressor": "sell",
+          "aggressor_confidence": 0.29,
+          "direction": "bullish",
+          "direction_evidence": "snapshot_last_near_bid",
+          "price_confirmed": false,
+          "repeat_count": 1,
+          "complex_suspected": false,
+          "oi_confirmation": {
+            "state": "confirmed",
+            "oi_delta": 855,
+            "ratio": 0.127
+          },
+          "score": 45,
+          "score_cap": 69,
+          "data_quality": "snapshot",
+          "components": {
+            "size": 20,
+            "novelty": 15,
+            "direction": 8,
+            "persistence": 0,
+            "oi_confirmation": 5,
+            "iv_price_confirmation": 0,
+            "penalty": -3
+          },
+          "penalties": [
+            {
+              "reason": "first_snapshot_accumulated_volume",
+              "points": 3
+            }
+          ],
+          "abs_delta": 0.5461,
+          "delta_source": "black_scholes_approx"
         }
       ],
       "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
@@ -1861,9 +1402,9 @@
     "MULL": {
       "ticker": "MULL",
       "direction": "mixed",
-      "score": 51,
-      "bullish_score": 44,
-      "bearish_score": 51,
+      "score": 56,
+      "bullish_score": 49,
+      "bearish_score": 56,
       "action": "watch",
       "sources": [
         "MU"
@@ -1873,124 +1414,10 @@
       "score_cap": 69,
       "top_events": [
         {
-          "id": "MU|2026-08-19|put|960.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
-          "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "MU",
-          "expiry": "2026-08-19",
-          "dte": 1,
-          "dte_bucket": "0-2d_gamma",
-          "option_type": "put",
-          "strike": 960.0,
-          "spot": 940.76,
-          "moneyness": 1.0205,
-          "contracts": 5392,
-          "session_volume": 5392,
-          "open_interest": 909,
-          "volume_oi_ratio": 5.932,
-          "volume_zscore": null,
-          "estimated_premium": 14143216.0,
-          "delta_notional": 358235730.05,
-          "price_used": 26.23,
-          "spread_pct": 11.83,
-          "iv": 0.686527,
-          "iv_change_pct": null,
-          "aggressor": "buy",
-          "aggressor_confidence": 0.28,
-          "direction": "bearish",
-          "direction_evidence": "snapshot_last_near_ask",
-          "price_confirmed": true,
-          "repeat_count": 1,
-          "complex_suspected": false,
-          "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
-          },
-          "score": 45,
-          "score_cap": 69,
-          "data_quality": "snapshot",
-          "components": {
-            "size": 20,
-            "novelty": 15,
-            "direction": 8,
-            "persistence": 0,
-            "oi_confirmation": 0,
-            "iv_price_confirmation": 5,
-            "penalty": -3
-          },
-          "penalties": [
-            {
-              "reason": "first_snapshot_accumulated_volume",
-              "points": 3
-            }
-          ],
-          "abs_delta": 0.7062,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-        },
-        {
-          "id": "MU|2026-08-21|call|1000.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
-          "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
-          "source": "MU",
-          "expiry": "2026-08-21",
-          "dte": 3,
-          "dte_bucket": "3-14d_event",
-          "option_type": "call",
-          "strike": 1000.0,
-          "spot": 940.76,
-          "moneyness": 1.063,
-          "contracts": 21560,
-          "session_volume": 21560,
-          "open_interest": 9821,
-          "volume_oi_ratio": 2.195,
-          "volume_zscore": null,
-          "estimated_premium": 13151600.0,
-          "delta_notional": 382255841.97,
-          "price_used": 6.1,
-          "spread_pct": 4.84,
-          "iv": 0.730838,
-          "iv_change_pct": null,
-          "aggressor": "sell",
-          "aggressor_confidence": 0.29,
-          "direction": "bearish",
-          "direction_evidence": "snapshot_last_near_bid",
-          "price_confirmed": true,
-          "repeat_count": 1,
-          "complex_suspected": false,
-          "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
-          },
-          "score": 45,
-          "score_cap": 69,
-          "data_quality": "snapshot",
-          "components": {
-            "size": 20,
-            "novelty": 15,
-            "direction": 8,
-            "persistence": 0,
-            "oi_confirmation": 0,
-            "iv_price_confirmation": 5,
-            "penalty": -3
-          },
-          "penalties": [
-            {
-              "reason": "first_snapshot_accumulated_volume",
-              "points": 3
-            }
-          ],
-          "abs_delta": 0.1885,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
-        },
-        {
           "id": "MU|2026-08-19|call|960.0000",
-          "observed_at": "2026-08-19T03:48:38.805418+00:00",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
           "event_date": "2026-08-18",
-          "status": "monitoring_existing_burst",
+          "status": "oi_confirmed",
           "source": "MU",
           "expiry": "2026-08-19",
           "dte": 1,
@@ -2018,10 +1445,11 @@
           "repeat_count": 1,
           "complex_suspected": false,
           "oi_confirmation": {
-            "state": "pending",
-            "note": "open interest is confirmed after clearing on the next session"
+            "state": "confirmed",
+            "oi_delta": 3033,
+            "ratio": 0.177
           },
-          "score": 45,
+          "score": 50,
           "score_cap": 69,
           "data_quality": "snapshot",
           "components": {
@@ -2029,7 +1457,7 @@
             "novelty": 15,
             "direction": 8,
             "persistence": 0,
-            "oi_confirmation": 0,
+            "oi_confirmation": 5,
             "iv_price_confirmation": 5,
             "penalty": -3
           },
@@ -2040,8 +1468,121 @@
             }
           ],
           "abs_delta": 0.3091,
-          "delta_source": "black_scholes_approx",
-          "last_checked_at": "2026-08-19T03:50:24.555137+00:00"
+          "delta_source": "black_scholes_approx"
+        },
+        {
+          "id": "MU|2026-08-19|call|965.0000",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
+          "event_date": "2026-08-18",
+          "status": "oi_confirmed",
+          "source": "MU",
+          "expiry": "2026-08-19",
+          "dte": 1,
+          "dte_bucket": "0-2d_gamma",
+          "option_type": "call",
+          "strike": 965.0,
+          "spot": 940.76,
+          "moneyness": 1.0258,
+          "contracts": 5566,
+          "session_volume": 5566,
+          "open_interest": 512,
+          "volume_oi_ratio": 10.871,
+          "volume_zscore": null,
+          "estimated_premium": 3061300.0,
+          "delta_notional": 137933870.1,
+          "price_used": 5.5,
+          "spread_pct": 7.02,
+          "iv": 0.741946,
+          "iv_change_pct": null,
+          "aggressor": "sell",
+          "aggressor_confidence": 0.35,
+          "direction": "bearish",
+          "direction_evidence": "snapshot_last_near_bid",
+          "price_confirmed": true,
+          "repeat_count": 1,
+          "complex_suspected": false,
+          "oi_confirmation": {
+            "state": "confirmed",
+            "oi_delta": 673,
+            "ratio": 0.121
+          },
+          "score": 46,
+          "score_cap": 69,
+          "data_quality": "snapshot",
+          "components": {
+            "size": 16,
+            "novelty": 15,
+            "direction": 8,
+            "persistence": 0,
+            "oi_confirmation": 5,
+            "iv_price_confirmation": 5,
+            "penalty": -3
+          },
+          "penalties": [
+            {
+              "reason": "first_snapshot_accumulated_volume",
+              "points": 3
+            }
+          ],
+          "abs_delta": 0.2634,
+          "delta_source": "black_scholes_approx"
+        },
+        {
+          "id": "MU|2026-08-21|put|950.0000",
+          "observed_at": "2026-08-19T12:16:26.037127+00:00",
+          "event_date": "2026-08-18",
+          "status": "oi_confirmed",
+          "source": "MU",
+          "expiry": "2026-08-21",
+          "dte": 3,
+          "dte_bucket": "3-14d_event",
+          "option_type": "put",
+          "strike": 950.0,
+          "spot": 940.76,
+          "moneyness": 1.0098,
+          "contracts": 6736,
+          "session_volume": 6736,
+          "open_interest": 3587,
+          "volume_oi_ratio": 1.878,
+          "volume_zscore": null,
+          "estimated_premium": 19096560.0,
+          "delta_notional": 346065282.92,
+          "price_used": 28.35,
+          "spread_pct": 6.9,
+          "iv": 0.704959,
+          "iv_change_pct": null,
+          "aggressor": "sell",
+          "aggressor_confidence": 0.29,
+          "direction": "bullish",
+          "direction_evidence": "snapshot_last_near_bid",
+          "price_confirmed": false,
+          "repeat_count": 1,
+          "complex_suspected": false,
+          "oi_confirmation": {
+            "state": "confirmed",
+            "oi_delta": 855,
+            "ratio": 0.127
+          },
+          "score": 45,
+          "score_cap": 69,
+          "data_quality": "snapshot",
+          "components": {
+            "size": 20,
+            "novelty": 15,
+            "direction": 8,
+            "persistence": 0,
+            "oi_confirmation": 5,
+            "iv_price_confirmation": 0,
+            "penalty": -3
+          },
+          "penalties": [
+            {
+              "reason": "first_snapshot_accumulated_volume",
+              "points": 3
+            }
+          ],
+          "abs_delta": 0.5461,
+          "delta_source": "black_scholes_approx"
         }
       ],
       "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
@@ -2063,7 +1604,7 @@
       "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
     }
   },
-  "age_sec": 29542.4,
-  "stale": true,
-  "status": "stale"
+  "age_sec": 984.5,
+  "stale": false,
+  "status": "ready"
 }
