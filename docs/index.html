@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-19T12:33:03", "endpoints_ok": 127, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-19T13:03:03", "endpoints_ok": 127, "endpoints_fail": 1};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1649,6 +1649,39 @@ function renderOptAnalysis(opt, cardTicker = '') {
       ${urgIcon2} <b class="${urgCls2}">${eStock} 财报 T-${eDays}天</b> <small style="color:var(--muted)">(${eDate})${imText}${covText}</small>
     </div>`;
   }
+  // 新增期权流：与 wall/GEX 结构分开展示。snapshot 方向只是一种低置信
+  // quote-side 推断；score cap 会阻止它单独触发自动减仓。
+  const flow = opt.flow || null;
+  let flowBlock = '';
+  if (flow && (flow.score || 0) >= 40) {
+    const flowDirZh = {bullish:'看多', bearish:'看空', mixed:'多空分歧', neutral:'中性'}[flow.direction] || flow.direction;
+    const flowCls = flow.direction === 'bullish' ? 'ok' : (flow.direction === 'bearish' ? 'bad' : 'warn');
+    const flowActionZh = {
+      pause_buy:'暂停逆向加仓', watch_add:'观察加仓', reduce_candidate:'减仓候选',
+      add_candidate:'加仓候选', watch:'仅观察', none:'无动作'
+    }[flow.action] || flow.action;
+    const flowQuality = flow.data_quality === 'tape' ? '逐笔方向' : '期权链快照';
+    const flowEvents = (flow.top_events || []).slice(0, 3).map(e => {
+      const cp = e.option_type === 'put' ? 'P' : 'C';
+      const state = e.status === 'oi_confirmed' ? 'OI✓' : (e.status === 'oi_not_confirmed' ? 'OI×' : 'OI待确认');
+      const complex = e.complex_suspected ? ' · 疑似多腿' : '';
+      const evidence = e.direction_evidence || '-';
+      return `<div style="padding:3px 0; border-top:1px dashed var(--border); line-height:1.45">
+        <b>${e.source} ${e.expiry} ${e.strike}${cp}</b> · ${e.dte_bucket || ''} · ${e.score}/100<br>
+        <span style="color:var(--muted)">${fmtOI(e.contracts)}张 · 权利金 ${fmtNotional(e.estimated_premium)} · Delta敞口 ${fmtNotional(e.delta_notional)} · V/OI ${e.volume_oi_ratio == null ? '-' : e.volume_oi_ratio} · ${state}${complex}</span><br>
+        <span style="color:var(--muted)">方向依据 ${evidence}（快照推断，不等于确认的主动买单）</span>
+      </div>`;
+    }).join('');
+    flowBlock = `<div style="margin:0 0 6px; padding:5px 7px; background:rgba(163,113,247,0.08); border-left:3px solid #a371f7; border-radius:3px; font-size:10px; line-height:1.5">
+      <div style="display:flex; justify-content:space-between; gap:8px">
+        <span>🧭 <b>新增期权流</b> <span class="${flowCls}">${flowDirZh} ${flow.score}/100</span></span>
+        <span class="${flowCls}">${flowActionZh}</span>
+      </div>
+      <div style="color:var(--muted)">${(flow.confirming_sources || flow.sources || []).join('+')} · ${flowQuality} · 上限 ${flow.score_cap || 69}；结构墙与新增流量已分离</div>
+      ${flowEvents ? `<details style="margin-top:3px"><summary style="cursor:pointer; list-style:none; color:var(--muted)">查看异常合约 ▼</summary>${flowEvents}</details>` : ''}
+    </div>`;
+  }
+
   // ⚡ 通过期权判断 stock 风险与机会 (小白友好，不涉及期权买卖)
   const ga = opt.gex_analysis;
   let gexBlock = '';
@@ -1732,6 +1765,7 @@ function renderOptAnalysis(opt, cardTicker = '') {
 
   return `<div class="opt-analysis" style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10.5px; line-height:1.4">
     ${mappingBlock}
+    ${flowBlock}
     ${gexBlock}
     ${earningsBadge}
     <div style="display:flex; justify-content:space-between">
