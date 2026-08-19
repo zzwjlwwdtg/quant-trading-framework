@@ -19,7 +19,7 @@
         "hike_25": 22
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "slight_hawkish_lean"
     },
     {
       "date": "2026-12-09",
@@ -33,10 +33,10 @@
     }
   ],
   "implied_terminal_rate": "3.75-4.00",
-  "implied_terminal_date": "2026-Q4",
-  "data_snapshot_date": "2026-08-18",
-  "recent_event_impact": "8/12 July CPI cooled to 3.4% YoY and 8/13 July PPI was flat MoM/core +0.2%, lowering near-term hike odds; earlier 8/7 July payrolls were reported very weak, reinforcing the hold case.",
-  "commentary": "Data snapshot is 2026-08-18, after the 8/12 CPI and 8/13 PPI releases, so the latest inflation events appear reflected. Softer CPI/PPI and weak July payrolls reduced September hike pricing, but futures still imply a hawkish lean because the residual probability is for hikes rather than cuts.",
+  "implied_terminal_date": "2026-12-09",
+  "data_snapshot_date": "2026-08-18 15:55 EDT",
+  "recent_event_impact": "8/12 CPI: headline CPI +0.1% m/m、3.4% y/y，core CPI +0.2% m/m、2.5% y/y；8/13 PPI: final demand flat m/m、4.7% y/y，低于4.9%预期；8/7 NFP: payrolls -23K，弱就业与偏冷通胀压低近端加息概率，但市场仍保留9月约34%加息定价。",
+  "commentary": "数据 snapshot 为 2026-08-18 15:55 EDT，已晚于 8/12 CPI 与 8/13 PPI，因此这些通胀数据应已反映在定价中；8/19 FOMC minutes 若已发布，则本 snapshot 尚未反映。弱 NFP 与偏冷 CPI/PPI 使9月基准情形仍为 hold，但远端仍显示温和加息风险。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -44,23 +44,23 @@
     },
     {
       "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_replica"
+      "type": "fed_funds_futures_derived"
     },
     {
-      "url": "https://www.marketwatch.com/story/why-goldman-sachs-thinks-the-fed-wont-be-hiking-interest-rates-in-september-718275e7",
-      "type": "cme_fedwatch_recent_report"
+      "url": "https://rateprobability.com/fed",
+      "type": "snapshot_cross_check"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/",
-      "type": "economic_release_calendar"
+      "url": "https://www.stlouisfed.org/on-the-economy/2026/aug/flash-report-unemployment-payrolls-both-drop-in-july",
+      "type": "nfp_event"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-18T15:35:12+00:00",
+  "fetched_at": "2026-08-18T23:36:07+00:00",
   "_meta": {
-    "cached_at": "2026-08-19T00:35:12.884467",
-    "age_sec": 28671,
+    "cached_at": "2026-08-19T08:36:07.918854",
+    "age_sec": 1614,
     "stale": false,
     "refreshing": false
   }
