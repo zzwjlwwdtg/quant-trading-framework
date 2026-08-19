@@ -1,14 +1,14 @@
 {
-  "asof": "2026-08-20T03:25",
+  "asof": "2026-08-20T03:56",
   "yields": {
     "10y": {
-      "value": 4.657,
-      "chg_1d_bps": -4.9,
-      "chg_5d_bps": -2.5,
-      "chg_20d_bps": 0.0,
-      "z_score_20d": -1.16,
+      "value": 4.653,
+      "chg_1d_bps": -5.3,
+      "chg_5d_bps": -2.9,
+      "chg_20d_bps": -0.4,
+      "z_score_20d": -1.25,
       "history": [
-        4.657,
+        4.653,
         4.706,
         4.724,
         4.696,
@@ -34,13 +34,13 @@
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.355,
-      "chg_1d_bps": -1.2,
-      "chg_5d_bps": -2.0,
-      "chg_20d_bps": -5.2,
-      "z_score_20d": -0.28,
+      "value": 4.353,
+      "chg_1d_bps": -1.4,
+      "chg_5d_bps": -2.2,
+      "chg_20d_bps": -5.4,
+      "z_score_20d": -0.33,
       "history": [
-        4.355,
+        4.353,
         4.367,
         4.376,
         4.362,
@@ -66,13 +66,13 @@
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.199,
-      "chg_1d_bps": -8.6,
-      "chg_5d_bps": -4.8,
-      "chg_20d_bps": 5.2,
-      "z_score_20d": -1.99,
+      "value": 5.195,
+      "chg_1d_bps": -9.0,
+      "chg_5d_bps": -5.2,
+      "chg_20d_bps": 4.8,
+      "z_score_20d": -2.06,
       "history": [
-        5.199,
+        5.195,
         5.285,
         5.309,
         5.265,
@@ -98,13 +98,13 @@
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.705,
-      "chg_1d_bps": 0.0,
-      "chg_5d_bps": -0.2,
-      "chg_20d_bps": -4.0,
-      "z_score_20d": 0.0,
+      "value": 3.7,
+      "chg_1d_bps": -0.5,
+      "chg_5d_bps": -0.7,
+      "chg_20d_bps": -4.5,
+      "z_score_20d": -0.18,
       "history": [
-        3.705,
+        3.7,
         3.705,
         3.703,
         3.697,
@@ -203,15 +203,21 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.052,
-    "vs_tips_10y": -0.091,
+    "vs_10y": -0.072,
+    "vs_tips_10y": -0.079,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.091，对冲关系变弱"
+    "reason": "相关性 -0.079，对冲关系变弱"
   },
-  "anomalies": [],
+  "anomalies": [
+    {
+      "metric": "30y",
+      "reason": "30Y 国债 单日 -9.0 bps (2.1σ · 下探)",
+      "severity": "medium"
+    }
+  ],
   "_meta": {
-    "cached_at": "2026-08-20T03:25:57.710201",
-    "age_sec": 425,
+    "cached_at": "2026-08-20T03:56:58.035863",
+    "age_sec": 365,
     "stale": false,
     "refreshing": false
   }
