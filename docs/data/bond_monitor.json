@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-21T04:29",
+  "asof": "2026-08-21T05:00",
   "yields": {
     "10y": {
       "value": 4.696,
@@ -160,38 +160,6 @@
       "asof": "2026-08-18",
       "name": "2Y 国债",
       "source": "FRED DGS2"
-    },
-    "tips_10y": {
-      "value": 2.41,
-      "chg_1d_bps": -3.0,
-      "chg_5d_bps": -2.0,
-      "chg_20d_bps": 4.0,
-      "z_score_20d": -1.07,
-      "history": [
-        2.41,
-        2.44,
-        2.41,
-        2.39,
-        2.42,
-        2.43,
-        2.43,
-        2.4,
-        2.43,
-        2.41,
-        2.4,
-        2.43,
-        2.47,
-        2.41,
-        2.41,
-        2.41,
-        2.44,
-        2.43,
-        2.43,
-        2.39
-      ],
-      "asof": "2026-08-18",
-      "name": "10Y TIPS 实际利率",
-      "source": "FRED DFII10"
     }
   },
   "spreads": {
@@ -203,15 +171,14 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.106,
-    "vs_tips_10y": -0.038,
-    "regime": "weak_hedge",
-    "reason": "相关性 -0.038，对冲关系变弱"
+    "vs_10y": -0.102,
+    "regime": "unknown",
+    "reason": "数据不足无法计算"
   },
   "anomalies": [],
   "_meta": {
-    "cached_at": "2026-08-21T04:29:27.760004",
-    "age_sec": 217,
+    "cached_at": "2026-08-21T05:00:48.904541",
+    "age_sec": 137,
     "stale": false,
     "refreshing": false
   }
