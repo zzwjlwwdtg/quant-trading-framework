@@ -1,39 +1,39 @@
 {
   "ticker": "KIOXIA",
   "source_stock": "285A.T",
-  "direction": "上修",
-  "revision_type": "upward",
-  "magnitude": "大",
-  "last_update": "2026-08-03",
-  "next_earnings": "2026-11-14",
-  "guidance_note": "Q1 FY2027(4-6月)営収 ¥1.77兆 過去最高、Non-GAAP営業利益 ¥1.33兆(利益率75%、YoY 2.2x); Q2 営収ガイダンス ¥2.39兆 (QoQ +35.2%)、営業利益 ¥1.9兆; ¥8,000億自社株買い発表",
-  "revision_reason": "AI サーバー向け NAND 需要が super-cycle 局面入り、5月15日発表の FY2026通期実績が過去最高更新後、8月3日 Q1 決算で Q2 営収 ¥2.39兆(+35.2% QoQ)へ大幅上方修正し ¥8,000億買戻し併発、コンセンサス大きく上振れ",
-  "market_reaction": "高",
-  "confidence": "medium",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
+  "last_update": "2026-07-31",
+  "next_earnings": "2026-11-13",
+  "guidance_note": "未确认最近90日内有官方发布的通期業績予想；2026-07-31官方決算短信仅披露2027年3月期第2四半期会計期間見通し：売上収益2兆3,900億円、営業利益1兆8,900億円、親会社帰属利益1兆2,700億円、基本EPS 2,317.46円。",
+  "revision_reason": "未找到通期予想修正前后数值，因此无法核验通期売上/営業利益/純利益/EPS的具体变化；官方文本称因データセンター向け需要旺盛，2Q見通し相对1Q実績为売上収益1兆7,671→2兆3,900億円、営業利益1兆2,700→1兆8,900億円、親会社帰属利益8,422→1兆2,700億円。",
+  "market_reaction": "不明",
+  "confidence": "low",
   "source_verified": true,
-  "source_status": "claude_websearch",
-  "generated_at": "2026-08-17T08:48:42.392116+00:00",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-08-20T08:49:56.532256+00:00",
   "sources": [
     {
-      "url": "https://kabutan.jp/news/?b=k202602120374",
-      "type": "news",
-      "title": "キオクシアHD【285A】、非開示だった今期最終は4537億～5137億円へ"
+      "url": "https://www.release.tdnet.info/inbs/140120260731505265.pdf",
+      "type": "TDnet",
+      "title": "2027年３月期 第１四半期決算短信〔ＩＦＲＳ〕（連結）"
     }
   ],
-  "source_via": "claude_cli_websearch",
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 61840.0,
+    "current_price": 52950.0,
     "forward_eps": null,
-    "trailing_eps": 1010.31,
+    "trailing_eps": 1008.99,
     "eps_growth_pct": null,
     "forward_pe": null,
-    "trailing_pe": 61.21,
+    "trailing_pe": 52.48,
     "target_mean": 111431.25,
     "target_high": 200000.0,
     "target_low": 40000.0,
-    "target_upside_pct": 80.2,
+    "target_upside_pct": 110.4,
     "revenue_growth_pct": 415.5,
     "earnings_growth_pct": 4418.8,
     "next_earnings": "2026-10-30",
@@ -41,32 +41,32 @@
     "implied_pe_hold_upside": null,
     "peg_fair_price": null,
     "peg_ratio": null,
-    "hist_pe_median": 19.9,
-    "hist_pe_p25": 4.8,
-    "hist_pe_p75": 41.23,
-    "hist_pe_n_days": 337,
+    "hist_pe_median": 20.35,
+    "hist_pe_p25": 4.81,
+    "hist_pe_p75": 41.56,
+    "hist_pe_n_days": 340,
     "implied_hist_median": null,
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 5.17,
+    "peer_pe_median": 5.04,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "005930.KS",
-        "pe": 4.08
+        "pe": 4.03
       },
       {
         "ticker": "000660.KS",
-        "pe": 3.62
+        "pe": 3.72
       },
       {
         "ticker": "MU",
-        "pe": 6.27
+        "pe": 6.05
       },
       {
         "ticker": "WDC",
-        "pe": 16.05
+        "pe": 14.55
       }
     ],
     "implied_peer_median": null,
@@ -74,8 +74,8 @@
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-17T17:49:55.079355",
-    "age_sec": 258192,
+    "cached_at": "2026-08-20T17:50:46.253552",
+    "age_sec": 739,
     "stale": false,
     "refreshing": false
   }
