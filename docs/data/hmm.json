@@ -13,32 +13,32 @@
   "scope": "slow_macro_background",
   "warning": "慢周期背景，不是当前买入或加仓信号",
   "trading": {
-    "regime": "risk_off",
-    "regime_zh": "风险收缩（价格/板块急跌）",
-    "base_regime": "risk_off",
+    "regime": "neutral_chop",
+    "regime_zh": "中性震荡",
+    "base_regime": "neutral",
     "style": {
       "style": "chop",
       "style_zh": "横盘震荡",
-      "chop_score": 3,
+      "chop_score": 4,
       "is_choppy": true,
-      "reason": "10日趋势效率很低(0.14)；净涨跌小但路径反复",
+      "reason": "10日趋势效率很低(0.03)；10日涨跌反转5次；净涨跌小但路径反复",
       "metrics": {
-        "pct_5d": -0.4,
-        "pct_20d": 2.56,
-        "dist_ma20_pct": 1.16,
-        "dist_ma50_pct": 2.39,
-        "efficiency_10": 0.139,
-        "efficiency_20": 0.204,
-        "adx_14": 23.2,
-        "reversal_count_10d": 4,
+        "pct_5d": -0.44,
+        "pct_20d": 2.9,
+        "dist_ma20_pct": 1.22,
+        "dist_ma50_pct": 2.52,
+        "efficiency_10": 0.026,
+        "efficiency_20": 0.229,
+        "adx_14": 22.6,
+        "reversal_count_10d": 5,
         "ma20_crossings_10d": 0,
-        "atr_5_20_ratio": 0.638
+        "atr_5_20_ratio": 0.65
       },
       "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
-    "date": "2026-08-19",
+    "date": "2026-08-20",
     "expected_date": "2026-08-20",
-    "stale": true,
-    "ts": "2026-08-19T13:26:15.441972+00:00"
+    "stale": false,
+    "ts": "2026-08-20T12:30:57.894356+00:00"
   }
 }
