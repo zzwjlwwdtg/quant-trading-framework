@@ -4,13 +4,13 @@
   "state": "ready",
   "analyst_consensus": {
     "n_analysts": 13,
-    "recommendation": "hold",
+    "recommendation": "none",
     "current_price": 96.81,
     "forward_eps": 7.96,
-    "trailing_eps": 4.36,
-    "eps_growth_pct": 82.6,
+    "trailing_eps": 4.31,
+    "eps_growth_pct": 84.8,
     "forward_pe": 12.16,
-    "trailing_pe": 22.2,
+    "trailing_pe": 22.46,
     "target_mean": 90.77,
     "target_high": 105.0,
     "target_low": 66.0,
@@ -18,10 +18,10 @@
     "revenue_growth_pct": -4.2,
     "earnings_growth_pct": 255.6,
     "next_earnings": "2026-07-29",
-    "implied_pe_hold": 176.82,
-    "implied_pe_hold_upside": 82.6,
-    "peg_fair_price": 657.77,
-    "peg_ratio": 0.15,
+    "implied_pe_hold": 178.87,
+    "implied_pe_hold_upside": 84.8,
+    "peg_fair_price": 675.29,
+    "peg_ratio": 0.14,
     "hist_pe_median": 106.98,
     "hist_pe_p25": 93.58,
     "hist_pe_p75": 141.79,
@@ -43,7 +43,7 @@
       },
       {
         "ticker": "6981.T",
-        "pe": 30.33
+        "pe": 30.37
       },
       {
         "ticker": "NXPI",
@@ -60,36 +60,36 @@
     "forward_estimates": {
       "earnings": {
         "0q": {
-          "avg": 2.1076,
-          "low": 1.72,
+          "avg": 2.0693,
+          "low": 1.499,
           "high": 2.4,
           "yearAgoEps": 2.22,
-          "numberOfAnalysts": 12.0,
-          "growth": -0.0506
+          "numberOfAnalysts": 14.0,
+          "growth": -0.0679
         },
         "+1q": {
-          "avg": 2.1741,
+          "avg": 2.1619,
           "low": 1.83,
           "high": 2.49,
           "yearAgoEps": 2.17,
-          "numberOfAnalysts": 12.0,
-          "growth": 0.0019
+          "numberOfAnalysts": 14.0,
+          "growth": -0.0037
         },
         "0y": {
-          "avg": 7.6816,
-          "low": 6.89,
+          "avg": 7.5587,
+          "low": 6.518,
           "high": 8.4382,
           "yearAgoEps": 7.0,
-          "numberOfAnalysts": 14.0,
-          "growth": 0.0974
+          "numberOfAnalysts": 16.0,
+          "growth": 0.0798
         },
         "+1y": {
           "avg": 7.9634,
           "low": 6.71,
           "high": 8.9143,
-          "yearAgoEps": 7.6816,
+          "yearAgoEps": 7.5587,
           "numberOfAnalysts": 12.0,
-          "growth": 0.0367
+          "growth": 0.0535
         }
       },
       "revenue": {
@@ -128,25 +128,25 @@
       },
       "eps_trend": {
         "0q": {
-          "current": 2.1076,
-          "7daysAgo": 2.0187,
-          "30daysAgo": 1.9188,
+          "current": 2.0693,
+          "7daysAgo": 2.1076,
+          "30daysAgo": 1.8982,
           "60daysAgo": 1.9188,
-          "90daysAgo": 1.8987
+          "90daysAgo": 1.9014
         },
         "+1q": {
-          "current": 2.1741,
-          "7daysAgo": 2.2215,
+          "current": 2.1619,
+          "7daysAgo": 2.1741,
           "30daysAgo": 2.0889,
           "60daysAgo": 2.0889,
-          "90daysAgo": 2.0815
+          "90daysAgo": 2.0895
         },
         "0y": {
-          "current": 7.6816,
-          "7daysAgo": 7.4879,
-          "30daysAgo": 6.9002,
-          "60daysAgo": 6.9007,
-          "90daysAgo": 6.9985
+          "current": 7.5587,
+          "7daysAgo": 7.6816,
+          "30daysAgo": 6.8892,
+          "60daysAgo": 6.9002,
+          "90daysAgo": 6.9007
         },
         "+1y": {
           "current": 7.9634,
@@ -208,8 +208,8 @@
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 176.82,
-        "gap_pct": 82.6
+        "implied_price": 178.87,
+        "gap_pct": 84.8
       },
       {
         "key": "peer_pe",
@@ -220,21 +220,21 @@
     ],
     "median_gap_pct": 52.7,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -79.2,
-    "consensus_eps_growth_pct": 82.6,
-    "growth_cushion_pct": 161.8,
+    "required_eps_growth_pct": -79.0,
+    "consensus_eps_growth_pct": 84.8,
+    "growth_cushion_pct": 163.8,
     "rationale": [
       "多口径隐含价中位数高于现价 52.7%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -79.2%，共识为 +82.6%"
+      "历史 PE 口径要求 EPS 增长 -79.0%，共识为 +84.8%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-20T06:42:02.581944+00:00",
+  "fetched_at": "2026-08-20T12:42:32.515600+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-20T15:42:02.583450",
-    "age_sec": 21065,
+    "cached_at": "2026-08-20T21:42:32.516985",
+    "age_sec": 1232,
     "stale": false,
     "refreshing": false
   },
