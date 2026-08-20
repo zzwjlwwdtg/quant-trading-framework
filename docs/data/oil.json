@@ -1,20 +1,20 @@
 {
-  "ts": "2026-08-20T14:57:56.523466+00:00",
+  "ts": "2026-08-20T15:30:26.472031+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 1,
-      "value": "$86.09 (20d -6.6%)",
+      "value": "$86.32 (20d -6.4%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
-      "arrow": "▲",
+      "arrow": "·",
       "name": "Brent-WTI 价差",
-      "direction": "bullish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "$7.19 (Brent $93.28 - WTI $86.09)",
+      "value": "$6.99 (Brent $93.31 - WTI $86.32)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "bullish",
       "weight": 1,
-      "value": "XLE +8.5% vs SPY +3.9% (差 +4.6pp)",
+      "value": "XLE +8.6% vs SPY +3.9% (差 +4.7pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "98.81 (5d -1.2%)",
+      "value": "98.79 (5d -1.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -46,7 +46,7 @@
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "48.45 · 极高（>45），市场恐慌",
+      "value": "49.27 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -58,19 +58,19 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "bullish",
-  "score": 2,
+  "direction": "neutral",
+  "score": 1,
   "notes": [
-    "综合 score=+2，多因子分歧，观察后续"
+    "综合 score=+1，多因子分歧，观察后续"
   ],
-  "price": 86.09,
-  "pct_5d": 5.96,
-  "pct_20d": -6.62,
+  "price": 86.32,
+  "pct_5d": 6.24,
+  "pct_20d": -6.37,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-20T23:57:58.155742",
-    "age_sec": 305,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-21T00:30:30.738184",
+    "age_sec": 153,
+    "stale": false,
+    "refreshing": false
   }
 }
