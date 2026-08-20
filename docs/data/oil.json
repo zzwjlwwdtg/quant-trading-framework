@@ -1,20 +1,20 @@
 {
-  "ts": "2026-08-20T12:57:56.911920+00:00",
+  "ts": "2026-08-20T13:30:26.875395+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 1,
-      "value": "$86.9 (20d -5.7%)",
+      "value": "$86.5 (20d -6.2%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
-      "arrow": "·",
+      "arrow": "▲",
       "name": "Brent-WTI 价差",
-      "direction": "neutral",
+      "direction": "bullish",
       "weight": 1,
-      "value": "$6.98 (Brent $93.88 - WTI $86.9)",
+      "value": "$7.13 (Brent $93.63 - WTI $86.5)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "bullish",
       "weight": 1,
-      "value": "XLE +7.4% vs SPY +2.9% (差 +4.5pp)",
+      "value": "XLE +8.3% vs SPY +3.8% (差 +4.5pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,16 +30,8 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "98.77 (5d -1.2%)",
+      "value": "98.72 (5d -1.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
-    },
-    {
-      "arrow": "·",
-      "name": "美国汽油零售价",
-      "direction": "neutral",
-      "weight": 1,
-      "value": "$4.05/gal (4周 +1.2%)",
-      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
       "arrow": "▼",
@@ -58,19 +50,19 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "neutral",
-  "score": 1,
+  "direction": "bullish",
+  "score": 2,
   "notes": [
-    "综合 score=+1，多因子分歧，观察后续"
+    "综合 score=+2，多因子分歧，观察后续"
   ],
-  "price": 86.9,
-  "pct_5d": 6.95,
-  "pct_20d": -5.74,
+  "price": 86.5,
+  "pct_5d": 6.46,
+  "pct_20d": -6.17,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-20T21:57:58.558893",
-    "age_sec": 305,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-20T22:30:36.254132",
+    "age_sec": 148,
+    "stale": false,
+    "refreshing": false
   }
 }
