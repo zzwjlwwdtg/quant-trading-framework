@@ -1,0 +1,119 @@
+{
+  "ticker": "SHY",
+  "sector": "美国国债ETF/固定收益",
+  "business": "iShares 1-3 Year Treasury Bond ETF，追踪ICE美国短期国债指数，持有剩余期限1-3年的美国国债",
+  "upstream": [
+    {
+      "name": "美国财政部",
+      "ticker": null,
+      "note": "短期国债发行方，ETF底层资产唯一来源",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "BlackRock",
+      "ticker": "BLK",
+      "note": "ETF发行人与管理人，提供投资管理服务",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "State Street",
+      "ticker": "STT",
+      "note": "托管行，负责证券托管与清算",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "美联储",
+      "ticker": null,
+      "note": "通过货币政策影响短端利率与国债供需",
+      "weight": 50,
+      "confidence": "high"
+    },
+    {
+      "name": "授权参与商(APs)",
+      "ticker": null,
+      "note": "负责ETF份额申购赎回，维持价格与NAV一致",
+      "weight": 30,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "机构投资者/养老金",
+      "ticker": null,
+      "note": "用于现金管理与久期配置的短端替代",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "财务顾问/RIA",
+      "ticker": null,
+      "note": "为客户配置低风险固收核心持仓",
+      "weight": 30,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金",
+      "ticker": null,
+      "note": "用于流动性管理与利率对冲",
+      "weight": 15,
+      "confidence": "medium"
+    },
+    {
+      "name": "零售投资者",
+      "ticker": null,
+      "note": "通过券商买入作为现金类替代资产",
+      "weight": 10,
+      "confidence": "high"
+    },
+    {
+      "name": "企业财务部门",
+      "ticker": null,
+      "note": "闲置现金短期投资工具",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Vanguard Short-Term Treasury ETF",
+      "ticker": "VGSH",
+      "note": "同样追踪1-3年美国国债，费率更低",
+      "confidence": "high"
+    },
+    {
+      "name": "Schwab Short-Term U.S. Treasury ETF",
+      "ticker": "SCHO",
+      "note": "1-3年美国国债ETF，超低费率竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR Bloomberg 1-3 Month T-Bill ETF",
+      "ticker": "BIL",
+      "note": "更短端国债ETF，久期更低",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares 3-7 Year Treasury Bond ETF",
+      "ticker": "IEI",
+      "note": "中端久期国债ETF，同门产品",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares Short Treasury Bond ETF",
+      "ticker": "SHV",
+      "note": "1年内短端国债ETF，更贴近现金",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-08-06T02:06:06.121504+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-08-06T11:06:06.123012",
+    "age_sec": 1261617,
+    "stale": false,
+    "refreshing": false
+  }
+}

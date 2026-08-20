@@ -1,0 +1,243 @@
+{
+  "cache_schema": 1,
+  "source_stock": "QRVO",
+  "state": "ready",
+  "analyst_consensus": {
+    "n_analysts": 13,
+    "recommendation": "none",
+    "current_price": 96.81,
+    "forward_eps": 7.96,
+    "trailing_eps": 4.31,
+    "eps_growth_pct": 84.8,
+    "forward_pe": 12.16,
+    "trailing_pe": 22.46,
+    "target_mean": 90.77,
+    "target_high": 105.0,
+    "target_low": 66.0,
+    "target_upside_pct": -6.2,
+    "revenue_growth_pct": -4.2,
+    "earnings_growth_pct": 255.6,
+    "next_earnings": "2026-07-29",
+    "implied_pe_hold": 178.87,
+    "implied_pe_hold_upside": 84.8,
+    "peg_fair_price": 675.29,
+    "peg_ratio": 0.14,
+    "hist_pe_median": 106.98,
+    "hist_pe_p25": 93.58,
+    "hist_pe_p75": 141.79,
+    "hist_pe_n_days": 599,
+    "implied_hist_median": 851.92,
+    "implied_hist_p25": 745.21,
+    "implied_hist_p75": 1129.12,
+    "implied_hist_upside": 780.0,
+    "peer_pe_median": 18.56,
+    "peer_pe_n_peers": 5,
+    "peer_pe_details": [
+      {
+        "ticker": "SWKS",
+        "pe": 13.77
+      },
+      {
+        "ticker": "AVGO",
+        "pe": 18.56
+      },
+      {
+        "ticker": "6981.T",
+        "pe": 30.37
+      },
+      {
+        "ticker": "NXPI",
+        "pe": 12.49
+      },
+      {
+        "ticker": "MTSI",
+        "pe": 31.83
+      }
+    ],
+    "implied_peer_median": 147.8,
+    "implied_peer_upside": 52.7,
+    "source": "yfinance analyst aggregation",
+    "forward_estimates": {
+      "earnings": {
+        "0q": {
+          "avg": 2.0693,
+          "low": 1.499,
+          "high": 2.4,
+          "yearAgoEps": 2.22,
+          "numberOfAnalysts": 14.0,
+          "growth": -0.0679
+        },
+        "+1q": {
+          "avg": 2.1619,
+          "low": 1.83,
+          "high": 2.49,
+          "yearAgoEps": 2.17,
+          "numberOfAnalysts": 14.0,
+          "growth": -0.0037
+        },
+        "0y": {
+          "avg": 7.5587,
+          "low": 6.518,
+          "high": 8.4382,
+          "yearAgoEps": 7.0,
+          "numberOfAnalysts": 16.0,
+          "growth": 0.0798
+        },
+        "+1y": {
+          "avg": 7.9634,
+          "low": 6.71,
+          "high": 8.9143,
+          "yearAgoEps": 7.5587,
+          "numberOfAnalysts": 12.0,
+          "growth": 0.0535
+        }
+      },
+      "revenue": {
+        "0q": {
+          "avg": 919253850.0,
+          "low": 839600000.0,
+          "high": 995135000.0,
+          "yearAgoRevenue": 1058503000.0,
+          "numberOfAnalysts": 14.0,
+          "growth": -0.1316
+        },
+        "+1q": {
+          "avg": 933932320.0,
+          "low": 847312000.0,
+          "high": 1021000000.0,
+          "yearAgoRevenue": 992959000.0,
+          "numberOfAnalysts": 14.0,
+          "growth": -0.0594
+        },
+        "0y": {
+          "avg": 3502445150.0,
+          "low": 3311700000.0,
+          "high": 3607698500.0,
+          "yearAgoRevenue": 3678517000.0,
+          "numberOfAnalysts": 15.0,
+          "growth": -0.0479
+        },
+        "+1y": {
+          "avg": 3663085840.0,
+          "low": 3385031000.0,
+          "high": 4118370000.0,
+          "yearAgoRevenue": 3502445150.0,
+          "numberOfAnalysts": 12.0,
+          "growth": 0.0459
+        }
+      },
+      "eps_trend": {
+        "0q": {
+          "current": 2.0693,
+          "7daysAgo": 2.1076,
+          "30daysAgo": 1.8982,
+          "60daysAgo": 1.9188,
+          "90daysAgo": 1.9014
+        },
+        "+1q": {
+          "current": 2.1619,
+          "7daysAgo": 2.1741,
+          "30daysAgo": 2.0889,
+          "60daysAgo": 2.0889,
+          "90daysAgo": 2.0895
+        },
+        "0y": {
+          "current": 7.5587,
+          "7daysAgo": 7.6816,
+          "30daysAgo": 6.8892,
+          "60daysAgo": 6.9002,
+          "90daysAgo": 6.9007
+        },
+        "+1y": {
+          "current": 7.9634,
+          "7daysAgo": 7.8077,
+          "30daysAgo": 7.8291,
+          "60daysAgo": 7.8216,
+          "90daysAgo": 7.9227
+        }
+      },
+      "eps_revisions": {
+        "0q": {
+          "upLast7days": 1.0,
+          "upLast30days": 9.0,
+          "downLast30days": 2.0
+        },
+        "+1q": {
+          "upLast7days": 0.0,
+          "upLast30days": 8.0,
+          "downLast30days": 3.0
+        },
+        "0y": {
+          "upLast7days": 1.0,
+          "upLast30days": 13.0,
+          "downLast30days": 0.0
+        },
+        "+1y": {
+          "upLast7days": 1.0,
+          "upLast30days": 5.0,
+          "downLast30days": 2.0
+        }
+      },
+      "revision_summary": {
+        "period": "+1y",
+        "signal": "upward",
+        "trend_signal": "upward",
+        "breadth_signal": "upward",
+        "eps_current": 7.9634,
+        "eps_30d_ago": 7.8291,
+        "eps_trend_pct_30d": 1.72,
+        "up_30d": 5,
+        "down_30d": 2,
+        "net_30d": 3
+      }
+    }
+  },
+  "pricing": {
+    "classification": "underpriced",
+    "label": "市场预期偏低",
+    "tone": "ok",
+    "confidence": "high",
+    "anchor_count": 3,
+    "anchors": [
+      {
+        "key": "analyst_target",
+        "label": "分析师目标均值",
+        "implied_price": 90.77,
+        "gap_pct": -6.2
+      },
+      {
+        "key": "pe_hold",
+        "label": "前瞻 EPS × 当前估值",
+        "implied_price": 178.87,
+        "gap_pct": 84.8
+      },
+      {
+        "key": "peer_pe",
+        "label": "前瞻 EPS × 同行 PE 中位",
+        "implied_price": 147.8,
+        "gap_pct": 52.7
+      }
+    ],
+    "median_gap_pct": 52.7,
+    "revision_signal": "upward",
+    "required_eps_growth_pct": -79.0,
+    "consensus_eps_growth_pct": 84.8,
+    "growth_cushion_pct": 163.8,
+    "rationale": [
+      "多口径隐含价中位数高于现价 52.7%",
+      "近 30 天 EPS 共识上修",
+      "历史 PE 口径要求 EPS 增长 -79.0%，共识为 +84.8%"
+    ]
+  },
+  "official_guidance_status": "not_connected",
+  "fetched_at": "2026-08-20T12:42:32.515600+00:00",
+  "source": "yfinance analyst aggregation",
+  "_meta": {
+    "cached_at": "2026-08-20T21:42:32.516985",
+    "age_sec": 13833,
+    "stale": false,
+    "refreshing": false
+  },
+  "ticker": "QRVO",
+  "is_proxy": false
+}
