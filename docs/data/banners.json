@@ -8,33 +8,89 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "DOMESTIC_POLICY": 3,
-      "NOISE": 4,
-      "TARIFF": 1
+      "NOISE": 11,
+      "TARIFF": 2,
+      "DOMESTIC_POLICY": 17,
+      "DEAL": 1,
+      "MEDIA_ATTACK": 3,
+      "GEOPOLITICAL": 7,
+      "MARKET": 4
     },
     "breaking": [
       {
         "event_type": "TARIFF",
         "direction": "bullish",
-        "magnitude": "large",
+        "magnitude": "medium",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "TQQQ"
+        ],
+        "preview": "Today, I concluded a deal to substantially lower the price of ground beef for working American families. As everyone kno",
+        "verbatim": "allow up to 300,000 metric tons of product for ground beef to be imported with no out of quota tariff",
+        "post_time": "2026-08-21T10:52:55.535Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
         "confidence": 8,
         "tickers": [
           "SPY",
           "QQQ",
           "GLD"
         ],
-        "preview": "Today, I concluded a deal to substantially lower the price of ground beef for working American families. As everyone kno",
-        "verbatim": "the United States will allow up to 300,000 metric tons of product for ground beef to be imported with no out of quota tariff",
-        "post_time": "2026-08-21T10:52:55.535Z"
+        "preview": "Trump says he'll declare Strait of Hormuz a US territory after defeating Iran, during Long Island rally: https://nypost.",
+        "verbatim": "declare Strait of Hormuz a US territory after defeating Iran",
+        "post_time": "2026-08-21T17:14:50.688Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "SPY",
+          "GLD"
+        ],
+        "preview": "Bessent says US to apply measures never seen on Iran: https://www.reuters.com/world/middle-east/bessent-says-us-apply-me",
+        "verbatim": "US to apply measures never seen on Iran",
+        "post_time": "2026-08-21T17:08:10.598Z"
+      },
+      {
+        "event_type": "MARKET",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "SPY"
+        ],
+        "preview": "This Is the Best 'Hard Goods' Boom in Decades: https://www.realclearpolitics.com/articles/2026/08/20/this_is_the_best_ha",
+        "verbatim": "This Is the Best 'Hard Goods' Boom in Decades",
+        "post_time": "2026-08-21T17:22:10.538Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "small",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "GLD"
+        ],
+        "preview": "'ECONOMIC D-DAY': Trump Announces Unprecedented Operation To Crush Iran's Shadow Economy: https://www.dailywire.com/news",
+        "verbatim": "Trump Announces Unprecedented Operation To Crush Iran's Shadow Economy",
+        "post_time": "2026-08-21T17:22:25.384Z"
       }
     ],
     "summary": {
-      "text": "政策司法争议夹杂降牛肉价消息，市场情绪偏温和利好",
+      "text": "内政利好与人质获释提振信心，情绪偏正面。",
       "state": "cached",
       "post_ids": [
-        "117134194900118704",
-        "117133120342300539",
-        "117130287849451563"
+        "117135011934383556",
+        "117134908401668938",
+        "117134845877719345"
       ]
     }
   },
