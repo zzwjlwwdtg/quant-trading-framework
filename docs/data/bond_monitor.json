@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-21T20:29",
+  "asof": "2026-08-21T21:00",
   "yields": {
     "10y": {
       "value": 4.696,
@@ -128,96 +128,18 @@
       "asof": "2026-08-20",
       "name": "3M 短端",
       "source": "yfinance ^IRX"
-    },
-    "2y": {
-      "value": 4.19,
-      "chg_1d_bps": 0.0,
-      "chg_5d_bps": -1.0,
-      "chg_20d_bps": -12.0,
-      "z_score_20d": 0.0,
-      "history": [
-        4.19,
-        4.19,
-        4.19,
-        4.17,
-        4.15,
-        4.2,
-        4.22,
-        4.25,
-        4.19,
-        4.25,
-        4.18,
-        4.2,
-        4.25,
-        4.28,
-        4.23,
-        4.22,
-        4.26,
-        4.31,
-        4.33,
-        4.37
-      ],
-      "asof": "2026-08-19",
-      "name": "2Y 国债",
-      "source": "FRED DGS2"
-    },
-    "tips_10y": {
-      "value": 2.35,
-      "chg_1d_bps": -6.0,
-      "chg_5d_bps": -7.0,
-      "chg_20d_bps": -4.0,
-      "z_score_20d": -2.02,
-      "history": [
-        2.35,
-        2.41,
-        2.44,
-        2.41,
-        2.39,
-        2.42,
-        2.43,
-        2.43,
-        2.4,
-        2.43,
-        2.41,
-        2.4,
-        2.43,
-        2.47,
-        2.41,
-        2.41,
-        2.41,
-        2.44,
-        2.43,
-        2.43
-      ],
-      "asof": "2026-08-19",
-      "name": "10Y TIPS 实际利率",
-      "source": "FRED DFII10"
     }
   },
-  "spreads": {
-    "2s10s": {
-      "value": 0.5,
-      "chg_20d_bps": 14.0,
-      "regime": "正常",
-      "asof": "2026-08-20"
-    }
-  },
+  "spreads": {},
   "gld_correlation": {
     "vs_10y": -0.102,
-    "vs_tips_10y": -0.343,
-    "regime": "weak_hedge",
-    "reason": "相关性 -0.343，对冲关系变弱"
+    "regime": "unknown",
+    "reason": "数据不足无法计算"
   },
-  "anomalies": [
-    {
-      "metric": "tips_10y",
-      "reason": "10Y TIPS 实际利率 单日 -6.0 bps (2.0σ · 下探)",
-      "severity": "medium"
-    }
-  ],
+  "anomalies": [],
   "_meta": {
-    "cached_at": "2026-08-21T20:29:27.789353",
-    "age_sec": 217,
+    "cached_at": "2026-08-21T21:00:51.370156",
+    "age_sec": 132,
     "stale": false,
     "refreshing": false
   }
