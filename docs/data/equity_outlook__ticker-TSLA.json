@@ -5,23 +5,23 @@
   "analyst_consensus": {
     "n_analysts": 40,
     "recommendation": "buy",
-    "current_price": 345.13,
+    "current_price": 364.02,
     "forward_eps": 2.17,
     "trailing_eps": 1.07,
     "eps_growth_pct": 103.3,
-    "forward_pe": 158.68,
-    "trailing_pe": 322.55,
+    "forward_pe": 167.37,
+    "trailing_pe": 340.21,
     "target_mean": 395.34,
     "target_high": 600.0,
     "target_low": 125.0,
-    "target_upside_pct": 14.5,
+    "target_upside_pct": 8.6,
     "revenue_growth_pct": 25.5,
     "earnings_growth_pct": -3.0,
     "next_earnings": "2026-10-22",
-    "implied_pe_hold": 701.54,
+    "implied_pe_hold": 739.94,
     "implied_pe_hold_upside": 103.3,
     "peg_fair_price": 224.68,
-    "peg_ratio": 1.54,
+    "peg_ratio": 1.62,
     "hist_pe_median": 61.25,
     "hist_pe_p25": 48.88,
     "hist_pe_p75": 113.03,
@@ -29,8 +29,8 @@
     "implied_hist_median": 133.22,
     "implied_hist_p25": 106.31,
     "implied_hist_p75": 245.84,
-    "implied_hist_upside": -61.4,
-    "peer_pe_median": 25.96,
+    "implied_hist_upside": -63.4,
+    "peer_pe_median": 26.48,
     "peer_pe_n_peers": 3,
     "peer_pe_details": [
       {
@@ -39,15 +39,15 @@
       },
       {
         "ticker": "NIO",
-        "pe": 25.96
+        "pe": 26.48
       },
       {
         "ticker": "XPEV",
-        "pe": 31.34
+        "pe": 31.79
       }
     ],
-    "implied_peer_median": 56.46,
-    "implied_peer_upside": -83.6,
+    "implied_peer_median": 57.59,
+    "implied_peer_upside": -84.2,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -195,44 +195,44 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 395.34,
-        "gap_pct": 14.5
+        "gap_pct": 8.6
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 701.54,
+        "implied_price": 739.94,
         "gap_pct": 103.3
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 133.22,
-        "gap_pct": -61.4
+        "gap_pct": -63.4
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 56.46,
-        "gap_pct": -83.6
+        "implied_price": 57.59,
+        "gap_pct": -84.2
       }
     ],
-    "median_gap_pct": -23.4,
+    "median_gap_pct": -27.4,
     "revision_signal": "downward",
-    "required_eps_growth_pct": 426.6,
+    "required_eps_growth_pct": 455.4,
     "consensus_eps_growth_pct": 103.3,
-    "growth_cushion_pct": -323.3,
+    "growth_cushion_pct": -352.1,
     "rationale": [
-      "多口径隐含价中位数低于现价 23.4%",
+      "多口径隐含价中位数低于现价 27.4%",
       "近 30 天 EPS 共识下修",
-      "历史 PE 口径要求 EPS 增长 +426.6%，共识为 +103.3%"
+      "历史 PE 口径要求 EPS 增长 +455.4%，共识为 +103.3%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-21T12:44:31.170754+00:00",
+  "fetched_at": "2026-08-21T18:45:00.121555+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-21T21:44:31.171754",
-    "age_sec": 20915,
+    "cached_at": "2026-08-22T03:45:00.121556",
+    "age_sec": 1086,
     "stale": false,
     "refreshing": false
   },
