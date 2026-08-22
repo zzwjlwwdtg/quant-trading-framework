@@ -46,10 +46,10 @@
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-21 10:55 EDT",
-  "recent_event_impact": "8/7 NFP -23K、失业率4.1%，叠加8/12 CPI环比0.1%、核心CPI环比0.2%，削弱了此前油价冲击带来的立即加息定价；但8/13 PPI环比0.6%和8/19 FOMC纪要显示通胀担忧仍强，使9月25bp加息概率回升至39%。",
-  "commentary": "数据快照为2026-08-21 10:55 EDT，已晚于8/19 FOMC纪要和8/20 Musalem讲话；最近7天内无NFP/CPI/PPI正式发布，但纪要与官员讲话偏鹰。7月NFP转负和温和CPI压低近端加息紧迫性，而偏强PPI与FOMC内部加息倾向使远端曲线继续定价年内逐步上调。",
+  "implied_terminal_date": "2027-Q2/Q3",
+  "data_snapshot_date": "2026-08-21 19:05 EDT",
+  "recent_event_impact": "最近7天内无NFP/CPI/PPI正式发布；8/19 FOMC minutes已反映在8/21 snapshot中。较早的8/7 NFP -23K、8/12 CPI +0.1%、8/13 PPI 0.0%压低近端加息概率，但8/19 minutes显示通胀担忧升温，保留年内加息风险。",
+  "commentary": "数据snapshot为2026-08-21 19:05 EDT，晚于8/19 FOMC minutes，因此已反映近期FOMC事件。市场仍以9月按兵不动为基准，但8/7疲弱NFP与8/12-8/13偏软CPI/PPI削弱即时加息概率，8/19偏鹰minutes则使12月以后25bp加息成为更高概率路径。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -57,31 +57,27 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "fed_funds_futures_probability_backup"
+      "type": "fedwatch_based_rate_probabilities"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/empsit_08072026.htm",
-      "type": "nfp"
+      "url": "https://www.bls.gov/schedule/2026/08_sched.htm",
+      "type": "economic_release_calendar"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "type": "fomc_calendar"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/ppi_08132026.htm",
-      "type": "ppi"
-    },
-    {
-      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
-      "type": "current_target_range"
+      "url": "https://www.investing.com/news/economy-news/fed-policymakers-inflation-concerns-increased-at-july-meeting-minutes-show-4868029",
+      "type": "fomc_minutes_report"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-21T15:46:54+00:00",
+  "fetched_at": "2026-08-21T23:47:57+00:00",
   "_meta": {
-    "cached_at": "2026-08-22T00:46:54.879054",
-    "age_sec": 27970,
+    "cached_at": "2026-08-22T08:47:57.375965",
+    "age_sec": 6308,
     "stale": false,
     "refreshing": false
   }
