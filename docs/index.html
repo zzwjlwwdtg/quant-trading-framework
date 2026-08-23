@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-23T14:47:16", "endpoints_ok": 120, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-23T15:03:20", "endpoints_ok": 120, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1817,11 +1817,16 @@ function renderSignalOverview(t, optSrc = '') {
   const regimeCls = 'regime ' + (t.regime || 'neutral');
   const rsiTip = t.rsi < 30 ? '超卖（可能反弹）' : (t.rsi > 70 ? '超买（可能回调）' : '正常');
   const volTip = t.vol_ratio > 1.5 ? '放量' : (t.vol_ratio < 0.7 ? '缩量' : '正常');
-  const nameZh = t.name_zh && t.name_zh !== t.ticker ? ` · <span style="color:var(--fg); font-weight:normal">${t.name_zh}</span>` : '';
-  const meaningZh = t.meaning_zh ? `<div style="font-size:9px; color:var(--muted); margin-top:-2px; margin-bottom:3px" title="${t.meaning_zh}">${t.meaning_zh}</div>` : '';
+  // 中文标签（明显显示，独占一行）：紧跟 ticker 下方，避免被误认为空白
+  const nameZhBadge = t.name_zh && t.name_zh !== t.ticker
+    ? `<span style="font-size:12px; color:#58a6ff; margin-left:6px; font-weight:600" title="${t.meaning_zh || ''}">${t.name_zh}</span>`
+    : '';
+  const meaningZh = t.meaning_zh
+    ? `<div style="font-size:9.5px; color:var(--muted); margin:-3px 0 4px 0" title="${t.meaning_zh}">${t.meaning_zh}</div>`
+    : '';
   return `
     <div class="top-row">
-      <span class="ticker-name" title="标的代码 · ${t.meaning_zh || ''}">${t.ticker}${nameZh} ${optSrc}</span>
+      <span class="ticker-name" title="标的代码">${t.ticker}${nameZhBadge} ${optSrc}</span>
       <span class="price" title="当前价">$${fmt(t.price)}</span>
     </div>
     ${meaningZh}
