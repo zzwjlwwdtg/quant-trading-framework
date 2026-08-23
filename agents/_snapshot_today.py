@@ -86,7 +86,7 @@ def _start_watchdog() -> threading.Timer:
 
 
 def _snapshot_prompt(snapshot_text: str) -> str:
-    return f"""请基于下面这份 Trading Agents 快照，输出一份简洁但可执行的 Claude 分析。
+    return f"""请基于下面这份 Trading Agents 快照，输出一份简洁但可执行的 AI 分析。
 
 要求：
 1. 先给总判断：今天偏进攻、观望、还是防守。
@@ -104,7 +104,7 @@ def _snapshot_prompt(snapshot_text: str) -> str:
 def _run_ai_analysis() -> None:
     snapshot_text = "\n".join(SNAPSHOT_LINES).strip()
     if not snapshot_text:
-        p("[snapshot-ai] 无快照内容，跳过 Claude 分析。")
+        p("[snapshot-ai] 无快照内容，跳过 AI 分析。")
         return
 
     from config import SIGNALS_DIR
@@ -121,10 +121,10 @@ def _run_ai_analysis() -> None:
 
     p("")
     p("=" * 72)
-    p("  Claude 快照分析")
+    p("  AI 快照分析")
     p("=" * 72)
     p(f"[snapshot-ai] 快照保存: {snapshot_path}")
-    p("[snapshot-ai] 调用本地 Claude CLI（额度满时切 Codex CLI）...")
+    p("[snapshot-ai] 按统一 CLI 策略调用（默认 Codex，不自动消耗 Claude 额度）...")
 
     try:
         from ai_prompt import (
@@ -154,7 +154,7 @@ def _run_ai_analysis() -> None:
         encoding="utf-8",
     )
     if fallback_reason:
-        p(f"[snapshot-ai] Claude 不可用，已切 Codex: {fallback_reason}")
+        p(f"[snapshot-ai] 主 CLI 不可用，已按显式策略切换: {fallback_reason}")
     p("")
     p(f"{provider} 快照分析:")
     p("-" * 72)
@@ -171,16 +171,18 @@ def main() -> int:
     watchdog = _start_watchdog()
     try:
         from config import TICKERS
-        from decision_agent import get_decision, get_gold_decision
-        from events_watch import get_events_signal, get_gold_events_signal, generate_event_calendar_report
-        from futures_watch import get_futures_signal
+        from events_watch import generate_event_calendar_report
         from gold_macro import get_gold_macro_signal, format_gold_macro_banner
-        from market_watch import get_market_signal
         from option_walls import format_walls_report
         from strategy_engine import generate_today_signals
+        from strategy_runner import SignalStrategy, SCOPE_TRACKED
         from trump_signal import get_trump_signal_cached, format_trump_banner
 
         GOLD = "US.GLD"
+        # 统一 signal 入口（借鉴 FreqTrade IStrategy）—— 一次 emit_all 覆盖
+        # TICKERS + TRACKED_TICKERS (含 CBRS/USO/XLV/NVDA 等)，避免每次加新
+        # ticker 忘了 emit 导致 dashboard 卡片缺
+        strategy = SignalStrategy(gold_ticker=GOLD)
         p("=" * 72)
         p("  今日信号快照 (after-hours)")
         p("=" * 72)
@@ -225,57 +227,37 @@ def main() -> int:
             p(f"jp_social ERR: {e}")
         p("")
 
-        try:
-            ev_all = get_events_signal()
-        except Exception as e:
-            p(f"events_signal ERR: {e}")
-            ev_all = {}
-        try:
-            evg_all = get_gold_events_signal()
-        except Exception as e:
-            p(f"gold_events_signal ERR: {e}")
-            evg_all = {}
-
+        # 全 universe (TICKERS + TRACKED_TICKERS + GLD) 一次 emit：
+        #   - 各 ticker _latest.json 都会写（fix: 之前 TRACKED 不 emit）
+        #   - events 在 SignalStrategy 内部缓存复用，不会 per-ticker 重拉
+        #   - 单 ticker 失败不影响其它（内部 try/except）
         market_signals: dict = {}
-        # TICKERS = US.TQQQ / US.SOXL / US.MULL（核心循环）
-        for tk in TICKERS:
-            p(f"\n--- {tk} ---")
-            try:
-                m = get_market_signal(tk)
-                market_signals[tk] = m
-                dec = get_decision(m, ev_all)
-                p(
-                    f"  action = {dec.get('action', '?')}   "
-                    f"conf = {dec.get('confidence', '?')}   "
-                    f"regime = {dec.get('regime', '?')}   "
-                    f"engine = {dec.get('engine', '?')}"
-                )
-                close = m.get("close") if isinstance(m, dict) else None
-                chg = m.get("pct_chg") if isinstance(m, dict) else None
-                if close is not None:
-                    p(f"  close={close}  pct_chg={chg}")
-                for r in dec.get("reasons", [])[:8]:
-                    p(f"   - {r}")
-            except Exception as e:
-                p(f"  ERR: {e}")
-                traceback.print_exc()
+        signal_results = strategy.emit_all(scope=SCOPE_TRACKED)
+        # GLD 单独处理（scope=tracked 不包含 GLD，与 orchestrator 的 _gold_cycle 分离一致）
+        signal_results[GOLD] = strategy.emit_signal(GOLD)
 
-        p(f"\n--- {GOLD} ---")
-        try:
-            mg = get_futures_signal(GOLD)
-            market_signals[GOLD] = mg
-            decg = get_gold_decision(mg, evg_all)
+        for tk, res in signal_results.items():
+            p(f"\n--- {tk} ---")
+            if "error" in res:
+                p(f"  ERR: {res['error']}")
+                continue
+            m = res.get("market") or {}
+            dec = res.get("decision") or {}
+            market_signals[tk] = m
             p(
-                f"  action = {decg.get('action', '?')}   "
-                f"conf = {decg.get('confidence', '?')}   "
-                f"regime = {decg.get('regime', '?')}   "
-                f"engine = {decg.get('engine', '?')}"
+                f"  action = {dec.get('action', '?')}   "
+                f"conf = {dec.get('confidence', '?')}   "
+                f"regime = {dec.get('regime', '?')}   "
+                f"engine = {dec.get('engine', '?')}"
             )
-            for r in decg.get("reasons", [])[:8]:
+            close = m.get("close") if isinstance(m, dict) else None
+            chg = m.get("pct_chg") if isinstance(m, dict) else None
+            if close is not None:
+                p(f"  close={close}  pct_chg={chg}")
+            for r in dec.get("reasons", [])[:8]:
                 p(f"   - {r}")
-        except Exception as e:
-            p(f"  ERR: {e}")
-            traceback.print_exc()
+            if res.get("_emit_error"):
+                p(f"  warn: {res['_emit_error']}")
 
         p("\n" + "=" * 72)
         p("  今日信号实况 (多指标共振)")
