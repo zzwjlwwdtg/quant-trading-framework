@@ -1,90 +1,87 @@
 {
-  "current_target_range": "4.00-4.25",
+  "current_target_range": "3.50-3.75",
   "meetings": [
     {
       "date": "2026-09-16",
       "days_until": 24,
       "probabilities": {
-        "cut_50": 61.0,
-        "cut_25": 39.0
+        "hold": 61.0,
+        "hike_25": 39.0
       },
-      "most_likely": "cut_50",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 66,
       "probabilities": {
-        "cut_50": 47.0,
-        "cut_25": 44.1,
-        "hold": 9.0
+        "hold": 47.0,
+        "hike_25": 44.1,
+        "hike_50": 9.0
       },
-      "most_likely": "cut_50",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 108,
       "probabilities": {
-        "cut_50": 28.9,
-        "cut_25": 45.2,
-        "hold": 22.5,
-        "hike_25": 3.5
+        "hold": 28.9,
+        "hike_25": 45.2,
+        "hike_50": 26.0
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
       "days_until": 157,
       "probabilities": {
-        "cut_50": 22.7,
-        "cut_25": 41.7,
-        "hold": 27.4,
-        "hike_25": 7.5,
-        "hike_50": 0.7
+        "hold": 22.7,
+        "hike_25": 41.7,
+        "hike_50": 35.6
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "3.75-4.00",
-  "implied_terminal_date": "2027-01-27",
-  "data_snapshot_date": "2026-08-22 00:35 EDT",
-  "recent_event_impact": "7月NFP在2026-08-07发布为-23K且5-6月合计下修103K；7月CPI在2026-08-12发布，环比+0.1%、同比+3.4%、核心同比+2.5%；7月PPI在2026-08-13发布，最终需求环比持平、同比+4.7%。2026-08-19公布的7月FOMC会议纪要在数据快照之前，已反映在2026-08-22的期货定价中。",
-  "commentary": "数据快照为2026-08-22 00:35 EDT，晚于2026-08-19发布的7月FOMC会议纪要，也晚于8月7日NFP、8月12日CPI和8月13日PPI。弱就业和温和CPI压低加息预期，但PPI核心压力仍偏粘性，因此市场对9月和10月定价偏鸽，远端则保留少量重新上调利率的尾部概率。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-08-22",
+  "recent_event_impact": "8/7 NFP -23K且5-6月合计下修103K、8/12 CPI +0.1% MoM、8/13 PPI 0.0% MoM，削弱立即加息定价；但8/19 FOMC minutes 显示多名官员认为若通胀不回落仍需加息，保留年内加息风险。",
+  "commentary": "Data snapshot 为 2026-08-22 12:35AM EDT，已在8/7就业、8/12 CPI、8/13 PPI和8/19 FOMC minutes之后。软就业和温和CPI/PPI使9月仍以hold为主，但FOMC minutes的鹰派通胀表述让10月至2027年初逐步转向加息定价。",
   "sources": [
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
-      "type": "cme_fedwatch_based"
-    },
-    {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch_official"
+      "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_calendar"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
+      "type": "cme_fedwatch_derived"
     },
     {
       "url": "https://www.bls.gov/news.release/empsit.htm",
       "type": "nfp"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
+      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
       "type": "cpi"
     },
     {
       "url": "https://www.bls.gov/news.release/ppi.htm",
       "type": "ppi"
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomcminutes20260729.htm",
+      "type": "fomc_minutes"
     }
   ],
-  "confidence": "high",
+  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-22T23:52:11+00:00",
+  "fetched_at": "2026-08-23T07:53:48+00:00",
   "_meta": {
-    "cached_at": "2026-08-23T08:52:11.999705",
-    "age_sec": 22267,
+    "cached_at": "2026-08-23T16:53:48.292829",
+    "age_sec": 555,
     "stale": false,
     "refreshing": false
   }

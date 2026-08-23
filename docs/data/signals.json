@@ -1,30 +1,5 @@
 {
   "tickers": {
-    "GLD": {
-      "ticker": "GLD",
-      "name_zh": "黄金 ETF",
-      "meaning_zh": "SPDR Gold · 避险 + 通胀对冲",
-      "price": 423.36,
-      "rsi": 82.1,
-      "vol_ratio": 1.63,
-      "trend": "up",
-      "ts": "2026-08-23 14:42:54",
-      "display_profile": {
-        "card_group": "macro",
-        "asset_class": "commodity",
-        "asset_label_zh": "黄金大宗商品",
-        "show_options": false,
-        "show_fundamentals": false,
-        "show_forward_outlook": false,
-        "show_ai_analysis": false,
-        "show_supply_chain": false,
-        "fundamental_profile": "industrial"
-      },
-      "action_zh": "卖出",
-      "conf": 2,
-      "scale": 5,
-      "regime": "中性"
-    },
     "XLV": {
       "ticker": "XLV",
       "name_zh": "医疗 ETF",
@@ -33,32 +8,7 @@
       "rsi": 82.2,
       "vol_ratio": 1.06,
       "trend": "up",
-      "ts": "2026-08-23 14:42:53",
-      "display_profile": {
-        "card_group": "main",
-        "asset_class": "equity",
-        "asset_label_zh": "股票 / 股票 ETF",
-        "show_options": true,
-        "show_fundamentals": true,
-        "show_forward_outlook": true,
-        "show_ai_analysis": true,
-        "show_supply_chain": true,
-        "fundamental_profile": "industrial"
-      },
-      "action_zh": "卖出",
-      "conf": 2,
-      "scale": 5,
-      "regime": "中性"
-    },
-    "USO": {
-      "ticker": "USO",
-      "name_zh": "原油 ETF",
-      "meaning_zh": "WTI 原油 · 通胀 + 地缘政治",
-      "price": 134.64,
-      "rsi": 56.7,
-      "vol_ratio": 0.56,
-      "trend": "up",
-      "ts": "2026-08-23 14:42:53",
+      "ts": "2026-08-23 15:07:06",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -73,17 +23,19 @@
       "action_zh": "关注买入",
       "conf": 3,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 3,
+      "bear_count": 0
     },
-    "CBRS": {
-      "ticker": "CBRS",
-      "name_zh": "Cerebras",
-      "meaning_zh": "晶圆级 AI 芯片 · NVDA inference 竞品",
-      "price": 196.13,
-      "rsi": 49.4,
-      "vol_ratio": 1.03,
-      "trend": "down",
-      "ts": "2026-08-23 14:42:52",
+    "USO": {
+      "ticker": "USO",
+      "name_zh": "原油 ETF",
+      "meaning_zh": "WTI 原油 · 通胀 + 地缘政治",
+      "price": 134.64,
+      "rsi": 56.7,
+      "vol_ratio": 0.56,
+      "trend": "up",
+      "ts": "2026-08-23 15:07:05",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -98,17 +50,127 @@
       "action_zh": "关注买入",
       "conf": 4,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 2,
+      "bear_count": 0
     },
-    "LITE": {
-      "ticker": "LITE",
-      "name_zh": "Lumentum",
-      "meaning_zh": "400G/800G 光模块 · NVDA 光互联供应",
-      "price": 866.71,
-      "rsi": 60.3,
-      "vol_ratio": 0.69,
+    "TSLA": {
+      "ticker": "TSLA",
+      "name_zh": "特斯拉",
+      "meaning_zh": "EV + 自动驾驶 + Optimus 机器人",
+      "price": 362.86,
+      "rsi": 79.1,
+      "vol_ratio": 1.5,
       "trend": "up",
-      "ts": "2026-08-23 14:42:52",
+      "ts": "2026-08-23 15:07:04",
+      "display_profile": {
+        "card_group": "main",
+        "asset_class": "equity",
+        "asset_label_zh": "股票 / 股票 ETF",
+        "show_options": true,
+        "show_fundamentals": true,
+        "show_forward_outlook": true,
+        "show_ai_analysis": true,
+        "show_supply_chain": true,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "关注买入",
+      "conf": 4,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 3,
+      "bear_count": 0
+    },
+    "SHY": {
+      "ticker": "SHY",
+      "name_zh": "2Y 债 ETF",
+      "meaning_zh": "1-3Y 美债 · 短端利率",
+      "price": 82.0,
+      "rsi": 66.5,
+      "vol_ratio": 0.61,
+      "trend": "up",
+      "ts": "2026-08-23 15:07:03",
+      "display_profile": {
+        "card_group": "macro",
+        "asset_class": "fixed_income",
+        "asset_label_zh": "1–3 年美国国债",
+        "show_options": false,
+        "show_fundamentals": false,
+        "show_forward_outlook": false,
+        "show_ai_analysis": false,
+        "show_supply_chain": false,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "关注买入",
+      "conf": 3,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 2,
+      "bear_count": 0
+    },
+    "QRVO": {
+      "ticker": "QRVO",
+      "name_zh": "Qorvo",
+      "meaning_zh": "射频芯片 · 5G/WiFi/汽车 RF",
+      "price": 95.56,
+      "rsi": 62.5,
+      "vol_ratio": 0.44,
+      "trend": "up",
+      "ts": "2026-08-23 15:07:02",
+      "display_profile": {
+        "card_group": "main",
+        "asset_class": "equity",
+        "asset_label_zh": "股票 / 股票 ETF",
+        "show_options": true,
+        "show_fundamentals": true,
+        "show_forward_outlook": true,
+        "show_ai_analysis": true,
+        "show_supply_chain": true,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "关注买入",
+      "conf": 3,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 2,
+      "bear_count": 0
+    },
+    "NVDA": {
+      "ticker": "NVDA",
+      "name_zh": "英伟达",
+      "meaning_zh": "AI 芯片龙头 · 数据中心 GPU 独占",
+      "price": 214.72,
+      "rsi": 64.4,
+      "vol_ratio": 0.84,
+      "trend": "up",
+      "ts": "2026-08-23 15:07:01",
+      "display_profile": {
+        "card_group": "main",
+        "asset_class": "equity",
+        "asset_label_zh": "股票 / 股票 ETF",
+        "show_options": true,
+        "show_fundamentals": true,
+        "show_forward_outlook": true,
+        "show_ai_analysis": true,
+        "show_supply_chain": true,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "关注买入",
+      "conf": 3,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 2,
+      "bear_count": 1
+    },
+    "NBIS": {
+      "ticker": "NBIS",
+      "name_zh": "Nebius",
+      "meaning_zh": "AI 云 pure-play · 云端消费增长",
+      "price": 219.13,
+      "rsi": 56.0,
+      "vol_ratio": 0.71,
+      "trend": "up",
+      "ts": "2026-08-23 15:07:00",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -121,9 +183,65 @@
         "fundamental_profile": "industrial"
       },
       "action_zh": "持仓观望",
-      "conf": 2,
+      "conf": 1,
       "scale": 5,
-      "regime": "危机防御"
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
+    },
+    "MSFT": {
+      "ticker": "MSFT",
+      "name_zh": "微软",
+      "meaning_zh": "云 AI · Copilot · OpenAI 大股东",
+      "price": 483.24,
+      "rsi": 60.7,
+      "vol_ratio": 0.6,
+      "trend": "up",
+      "ts": "2026-08-23 15:07:00",
+      "display_profile": {
+        "card_group": "main",
+        "asset_class": "equity",
+        "asset_label_zh": "股票 / 股票 ETF",
+        "show_options": true,
+        "show_fundamentals": true,
+        "show_forward_outlook": true,
+        "show_ai_analysis": true,
+        "show_supply_chain": true,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "关注买入",
+      "conf": 3,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 2,
+      "bear_count": 0
+    },
+    "LITE": {
+      "ticker": "LITE",
+      "name_zh": "Lumentum",
+      "meaning_zh": "400G/800G 光模块 · NVDA 光互联供应",
+      "price": 866.71,
+      "rsi": 60.3,
+      "vol_ratio": 0.69,
+      "trend": "up",
+      "ts": "2026-08-23 15:06:59",
+      "display_profile": {
+        "card_group": "main",
+        "asset_class": "equity",
+        "asset_label_zh": "股票 / 股票 ETF",
+        "show_options": true,
+        "show_fundamentals": true,
+        "show_forward_outlook": true,
+        "show_ai_analysis": true,
+        "show_supply_chain": true,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "持仓观望",
+      "conf": 1,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
     },
     "IEI": {
       "ticker": "IEI",
@@ -133,7 +251,7 @@
       "rsi": 55.8,
       "vol_ratio": 0.66,
       "trend": "up",
-      "ts": "2026-08-23 14:42:52",
+      "ts": "2026-08-23 15:06:59",
       "display_profile": {
         "card_group": "macro",
         "asset_class": "fixed_income",
@@ -148,92 +266,19 @@
       "action_zh": "持仓观望",
       "conf": 1,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
     },
-    "SHY": {
-      "ticker": "SHY",
-      "name_zh": "2Y 债 ETF",
-      "meaning_zh": "1-3Y 美债 · 短端利率",
-      "price": 82.0,
-      "rsi": 66.5,
-      "vol_ratio": 0.61,
-      "trend": "up",
-      "ts": "2026-08-23 14:42:51",
-      "display_profile": {
-        "card_group": "macro",
-        "asset_class": "fixed_income",
-        "asset_label_zh": "1–3 年美国国债",
-        "show_options": false,
-        "show_fundamentals": false,
-        "show_forward_outlook": false,
-        "show_ai_analysis": false,
-        "show_supply_chain": false,
-        "fundamental_profile": "industrial"
-      },
-      "action_zh": "持仓观望",
-      "conf": 1,
-      "scale": 5,
-      "regime": "中性"
-    },
-    "NBIS": {
-      "ticker": "NBIS",
-      "name_zh": "Nebius",
-      "meaning_zh": "AI 云 pure-play · 云端消费增长",
-      "price": 219.13,
-      "rsi": 56.0,
-      "vol_ratio": 0.71,
-      "trend": "up",
-      "ts": "2026-08-23 14:42:51",
-      "display_profile": {
-        "card_group": "main",
-        "asset_class": "equity",
-        "asset_label_zh": "股票 / 股票 ETF",
-        "show_options": true,
-        "show_fundamentals": true,
-        "show_forward_outlook": true,
-        "show_ai_analysis": true,
-        "show_supply_chain": true,
-        "fundamental_profile": "industrial"
-      },
-      "action_zh": "关注买入",
-      "conf": 3,
-      "scale": 5,
-      "regime": "中性"
-    },
-    "AAPL": {
-      "ticker": "AAPL",
-      "name_zh": "苹果",
-      "meaning_zh": "QQQ 最大权重 · 消费电子龙头",
-      "price": 309.35,
-      "rsi": 50.7,
-      "vol_ratio": 0.88,
+    "CBRS": {
+      "ticker": "CBRS",
+      "name_zh": "Cerebras",
+      "meaning_zh": "晶圆级 AI 芯片 · NVDA inference 竞品",
+      "price": 196.13,
+      "rsi": 49.4,
+      "vol_ratio": 1.03,
       "trend": "down",
-      "ts": "2026-08-23 14:42:50",
-      "display_profile": {
-        "card_group": "main",
-        "asset_class": "equity",
-        "asset_label_zh": "股票 / 股票 ETF",
-        "show_options": true,
-        "show_fundamentals": true,
-        "show_forward_outlook": true,
-        "show_ai_analysis": true,
-        "show_supply_chain": true,
-        "fundamental_profile": "industrial"
-      },
-      "action_zh": "持仓观望",
-      "conf": 1,
-      "scale": 5,
-      "regime": "中性"
-    },
-    "MSFT": {
-      "ticker": "MSFT",
-      "name_zh": "微软",
-      "meaning_zh": "云 AI · Copilot · OpenAI 大股东",
-      "price": 483.24,
-      "rsi": 60.7,
-      "vol_ratio": 0.6,
-      "trend": "up",
-      "ts": "2026-08-23 14:42:50",
+      "ts": "2026-08-23 15:06:58",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -248,17 +293,19 @@
       "action_zh": "持仓观望",
       "conf": 2,
       "scale": 5,
-      "regime": "中性"
+      "regime": "危机防御",
+      "bull_count": 1,
+      "bear_count": 1
     },
-    "NVDA": {
-      "ticker": "NVDA",
-      "name_zh": "英伟达",
-      "meaning_zh": "AI 芯片龙头 · 数据中心 GPU 独占",
-      "price": 214.72,
-      "rsi": 64.4,
-      "vol_ratio": 0.84,
-      "trend": "up",
-      "ts": "2026-08-23 14:42:50",
+    "AAPL": {
+      "ticker": "AAPL",
+      "name_zh": "苹果",
+      "meaning_zh": "QQQ 最大权重 · 消费电子龙头",
+      "price": 309.35,
+      "rsi": 50.7,
+      "vol_ratio": 0.88,
+      "trend": "down",
+      "ts": "2026-08-23 15:06:57",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -270,10 +317,39 @@
         "show_supply_chain": true,
         "fundamental_profile": "industrial"
       },
-      "action_zh": "关注买入",
-      "conf": 3,
+      "action_zh": "持仓观望",
+      "conf": 2,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
+    },
+    "GLD": {
+      "ticker": "GLD",
+      "name_zh": "黄金 ETF",
+      "meaning_zh": "SPDR Gold · 避险 + 通胀对冲",
+      "price": 423.36,
+      "rsi": 82.1,
+      "vol_ratio": 1.63,
+      "trend": "up",
+      "ts": "2026-08-23 15:06:57",
+      "display_profile": {
+        "card_group": "macro",
+        "asset_class": "commodity",
+        "asset_label_zh": "黄金大宗商品",
+        "show_options": false,
+        "show_fundamentals": false,
+        "show_forward_outlook": false,
+        "show_ai_analysis": false,
+        "show_supply_chain": false,
+        "fundamental_profile": "industrial"
+      },
+      "action_zh": "卖出",
+      "conf": 2,
+      "scale": 5,
+      "regime": "中性",
+      "bull_count": 4,
+      "bear_count": 0
     },
     "MULL": {
       "ticker": "MULL",
@@ -283,7 +359,7 @@
       "rsi": 67.6,
       "vol_ratio": 0.4,
       "trend": "up",
-      "ts": "2026-08-23 14:42:49",
+      "ts": "2026-08-23 15:06:29",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -295,10 +371,12 @@
         "show_supply_chain": true,
         "fundamental_profile": "industrial"
       },
-      "action_zh": "关注买入",
-      "conf": 3,
+      "action_zh": "持仓观望",
+      "conf": 1,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
     },
     "DRAM": {
       "ticker": "DRAM",
@@ -308,7 +386,7 @@
       "rsi": 62.8,
       "vol_ratio": 0.41,
       "trend": "up",
-      "ts": "2026-08-23 14:42:49",
+      "ts": "2026-08-23 15:06:29",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -323,7 +401,9 @@
       "action_zh": "持仓观望",
       "conf": 1,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
     },
     "SOXL": {
       "ticker": "SOXL",
@@ -333,7 +413,7 @@
       "rsi": 52.8,
       "vol_ratio": 0.64,
       "trend": "down",
-      "ts": "2026-08-23 14:42:49",
+      "ts": "2026-08-23 15:06:28",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -348,7 +428,9 @@
       "action_zh": "持仓观望",
       "conf": 1,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 0,
+      "bear_count": 0
     },
     "TQQQ": {
       "ticker": "TQQQ",
@@ -358,7 +440,7 @@
       "rsi": 62.2,
       "vol_ratio": 0.76,
       "trend": "up",
-      "ts": "2026-08-23 14:42:48",
+      "ts": "2026-08-23 15:06:27",
       "display_profile": {
         "card_group": "main",
         "asset_class": "equity",
@@ -373,7 +455,9 @@
       "action_zh": "持仓观望",
       "conf": 1,
       "scale": 5,
-      "regime": "中性"
+      "regime": "中性",
+      "bull_count": 1,
+      "bear_count": 0
     }
   },
   "log_path": "run_20260823.log",
