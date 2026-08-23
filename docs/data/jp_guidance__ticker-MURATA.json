@@ -1,85 +1,78 @@
 {
   "ticker": "MURATA",
   "source_stock": "6981.T",
-  "direction": "上修",
-  "revision_type": "upward",
-  "magnitude": "中",
-  "last_update": "2026-07-31",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
+  "last_update": null,
   "next_earnings": "2026-10-30",
-  "guidance_note": "2027年3月期通期予想は売上収益 2兆1,100億円、営業利益 4,300億円、親会社帰属当期利益 3,380億円、EPS 185.68円。",
-  "revision_reason": "データセンター関連需要の高まりと円安進行を背景に、売上収益予想 1兆9,600億円 → 2兆1,100億円（+7.7%）、営業利益 3,800億円 → 4,300億円（+13.2%）、親会社帰属当期利益 2,930億円 → 3,380億円（+15.4%）、EPS 160.96円 → 185.68円へ上方修正。",
+  "guidance_note": "AI 返回 上修 但未附可核验来源，已拒收",
+  "revision_reason": null,
   "market_reaction": "不明",
-  "confidence": "high",
+  "confidence": "unverified",
   "source_verified": true,
-  "source_status": "codex_cli_websearch",
-  "generated_at": "2026-08-20T08:49:56.567600+00:00",
-  "sources": [
-    {
-      "url": "https://corporate.murata.com/ir/calendar?sc_lang=ja-JP",
-      "type": "IR",
-      "title": "IRイベント"
-    }
-  ],
-  "source_via": "codex_cli_websearch",
+  "source_status": "analyst_only",
+  "generated_at": "2026-08-23T08:51:10.974458+00:00",
+  "ai_error": "no_trusted_source",
   "analyst_consensus": {
     "n_analysts": 17,
     "recommendation": "strong_buy",
-    "current_price": 7205.0,
+    "current_price": 7091.0,
     "forward_eps": 237.27,
-    "trailing_eps": 127.56,
-    "eps_growth_pct": 86.0,
-    "forward_pe": 30.37,
-    "trailing_pe": 56.48,
+    "trailing_eps": 127.64,
+    "eps_growth_pct": 85.9,
+    "forward_pe": 29.89,
+    "trailing_pe": 55.55,
     "target_mean": 10485.29,
     "target_high": 15750.0,
     "target_low": 4200.0,
-    "target_upside_pct": 45.5,
+    "target_upside_pct": 47.9,
     "revenue_growth_pct": 20.7,
     "earnings_growth_pct": 66.5,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 13401.77,
-    "implied_pe_hold_upside": 86.0,
-    "peg_fair_price": 20405.22,
+    "implied_pe_hold": 13181.46,
+    "implied_pe_hold_upside": 85.9,
+    "peg_fair_price": 20381.49,
     "peg_ratio": 0.35,
     "hist_pe_median": 25.41,
     "hist_pe_p25": 21.15,
-    "hist_pe_p75": 29.38,
-    "hist_pe_n_days": 829,
+    "hist_pe_p75": 29.4,
+    "hist_pe_n_days": 830,
     "implied_hist_median": 6029.03,
     "implied_hist_p25": 5018.26,
-    "implied_hist_p75": 6970.99,
-    "implied_hist_upside": -16.3,
-    "peer_pe_median": 33.87,
+    "implied_hist_p75": 6975.74,
+    "implied_hist_upside": -15.0,
+    "peer_pe_median": 31.93,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "009150.KS",
-        "pe": 33.87
+        "pe": 31.93
       },
       {
         "ticker": "6976.T",
-        "pe": 51.38
+        "pe": 49.66
       },
       {
         "ticker": "6762.T",
-        "pe": 28.17
+        "pe": 28.45
       },
       {
         "ticker": "2327.TW",
-        "pe": 17.78
+        "pe": 17.53
       },
       {
         "ticker": "6971.T",
-        "pe": 39.85
+        "pe": 40.31
       }
     ],
-    "implied_peer_median": 8036.33,
-    "implied_peer_upside": 11.5,
+    "implied_peer_median": 7576.03,
+    "implied_peer_upside": 6.8,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-20T17:50:41.356892",
-    "age_sec": 256343,
+    "cached_at": "2026-08-23T17:51:52.947354",
+    "age_sec": 570,
     "stale": false,
     "refreshing": false
   }

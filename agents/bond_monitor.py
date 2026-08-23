@@ -36,17 +36,36 @@
 """
 from __future__ import annotations
 
+import math
 from datetime import datetime, timedelta
 from typing import Optional
 
 
-# yfinance 收益率 symbol 需缩放（^TNX 值为 yield ×10）
+# Yahoo Finance yield index Close is already a percentage value.
 _YF_YIELDS = {
-    "10y":  {"symbol": "^TNX", "scale": 0.1,  "name": "10Y 国债名义"},
-    "5y":   {"symbol": "^FVX", "scale": 0.1,  "name": "5Y 国债"},
-    "30y":  {"symbol": "^TYX", "scale": 0.1,  "name": "30Y 国债"},
+    "10y":  {"symbol": "^TNX", "scale": 1.0,  "name": "10Y 国债名义"},
+    "5y":   {"symbol": "^FVX", "scale": 1.0,  "name": "5Y 国债"},
+    "30y":  {"symbol": "^TYX", "scale": 1.0,  "name": "30Y 国债"},
     "3m":   {"symbol": "^IRX", "scale": 1.0,  "name": "3M 短端"},
 }
+
+
+def _is_finite_number(value) -> bool:
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def _json_safe(value):
+    """Recursively replace NaN/Inf so browsers always receive valid JSON."""
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
 
 
 def _fetch_yield_history(symbol: str, period_days: int = 60):
@@ -89,6 +108,7 @@ def _fetch_fred_series(series_id: str, days: int = 60) -> Optional[list]:
 
 def _compute_yield_metrics(values: list[float], asof: str = "") -> dict:
     """给 values (最新在 [0])，算今日/5d/20d 变化 (bps) + z-score."""
+    values = [float(value) for value in values if _is_finite_number(value)]
     if not values or len(values) < 2:
         return {"value": values[0] if values else None, "error": "insufficient_data"}
     v0 = values[0]
@@ -120,11 +140,18 @@ def _rolling_corr(a: list[float], b: list[float], window: int = 20) -> Optional[
     """简易 Pearson correlation. a[0] 是最新，b 同."""
     if not a or not b:
         return None
-    n = min(len(a), len(b), window)
+    pairs = []
+    for left, right in zip(a, b):
+        if not (_is_finite_number(left) and _is_finite_number(right)):
+            continue
+        pairs.append((float(left), float(right)))
+        if len(pairs) >= window:
+            break
+    n = len(pairs)
     if n < 5:
         return None
-    ax = a[:n]
-    bx = b[:n]
+    ax = [left for left, _ in pairs]
+    bx = [right for _, right in pairs]
     mean_a = sum(ax) / n
     mean_b = sum(bx) / n
     num = sum((ax[i] - mean_a) * (bx[i] - mean_b) for i in range(n))
@@ -132,7 +159,8 @@ def _rolling_corr(a: list[float], b: list[float], window: int = 20) -> Optional[
     den_b = sum((bx[i] - mean_b) ** 2 for i in range(n)) ** 0.5
     if den_a == 0 or den_b == 0:
         return None
-    return round(num / (den_a * den_b), 3)
+    result = num / (den_a * den_b)
+    return round(result, 3) if math.isfinite(result) else None
 
 
 def _spread_regime(spread: float) -> str:
@@ -146,7 +174,7 @@ def _spread_regime(spread: float) -> str:
 
 def _correlation_regime(corr: float | None) -> tuple[str, str]:
     """GLD vs TIPS 相关性 → regime + reason."""
-    if corr is None:
+    if corr is None or not _is_finite_number(corr):
         return ("unknown", "数据不足无法计算")
     if corr <= -0.5:
         return ("normal_hedge", f"TIPS 实际利率 vs GLD = {corr}，正常对冲关系（黄金按剧本涨跌）")
@@ -232,7 +260,7 @@ def get_bond_monitor() -> dict:
     gld_corr["regime"] = regime
     gld_corr["reason"] = reason
 
-    # 5) Anomaly detection: |z_score_20d| >= 2 = flag
+    # 5) Anomaly detection: |z_score_20d| >= 2 = flag (突发波动异常)
     anomalies = []
     for key, m in yields_out.items():
         if isinstance(m, dict) and m.get("z_score_20d"):
@@ -246,13 +274,63 @@ def get_bond_monitor() -> dict:
                     "severity": sev,
                 })
 
-    return {
+    # 6) 绝对水平 warnings (banner only — 不进 decision 评分)
+    # 参考区间：
+    #   10Y 名义 ≥ 4.5% = 限制性；≥ 5.0% = 高压
+    #   TIPS 10Y ≥ 2.0% = 实际利率高位 (历史股市承压)
+    #   30Y vs 10Y 20d 差 ≥ 5bps = 长端 duration selling (风险扩散)
+    #   2s10s 0-20bps = 刚脱离倒挂 (历史衰退临界)
+    warnings: list[dict] = []
+    def _warn(lvl: str, msg: str, key: str):
+        warnings.append({"level": lvl, "msg": msg, "key": key})
+
+    y10 = yields_out.get("10y", {})
+    if isinstance(y10, dict) and _is_finite_number(y10.get("value")):
+        v = y10["value"]
+        if v >= 5.0:
+            _warn("bad",  f"10Y {v:.2f}% 高压区 (>5%)", "10y_high")
+        elif v >= 4.5:
+            _warn("warn", f"10Y {v:.2f}% 限制性利率 (>4.5%)", "10y_restrictive")
+
+    tips = yields_out.get("tips_10y", {})
+    if isinstance(tips, dict) and _is_finite_number(tips.get("value")):
+        v = tips["value"]
+        if v >= 2.5:
+            _warn("bad",  f"实际利率 {v:.2f}% 极端高位", "tips_extreme")
+        elif v >= 2.0:
+            _warn("warn", f"实际利率 {v:.2f}% 股市历史承压区 (>2%)", "tips_high")
+
+    # 长端 duration selling: 30Y 20d 涨幅 vs 10Y 差 ≥5bps
+    y30 = yields_out.get("30y", {})
+    if (isinstance(y30, dict) and isinstance(y10, dict)
+            and _is_finite_number(y30.get("chg_20d_bps"))
+            and _is_finite_number(y10.get("chg_20d_bps"))):
+        d = y30["chg_20d_bps"] - y10["chg_20d_bps"]
+        if d >= 10:
+            _warn("warn", f"长端加速抛售: 30Y +{y30['chg_20d_bps']:+.1f}bps vs 10Y +{y10['chg_20d_bps']:+.1f}bps (20d)", "duration_selling")
+
+    # 2s10s 刚脱离倒挂: 0 ~ 20bps
+    s2s10 = spreads_out.get("2s10s", {})
+    if isinstance(s2s10, dict) and _is_finite_number(s2s10.get("value")):
+        v = s2s10["value"] * 100  # convert to bps
+        if 0 <= v <= 20:
+            _warn("info", f"2s10s {v:.0f}bps 刚脱离倒挂 (历史衰退临界期)", "curve_un_inverting")
+
+    # GLD hedge 失效 (bond-gold 常规负相关被打破)
+    corr_regime = gld_corr.get("regime")
+    if corr_regime in ("weak_hedge", "broken"):
+        corr_val = gld_corr.get("vs_tips_10y")
+        if _is_finite_number(corr_val):
+            _warn("warn", f"GLD/TIPS 对冲失效 (相关性 {corr_val:.2f}) — 通胀/流动性 regime 改变", "hedge_broken")
+
+    return _json_safe({
         "asof":            asof,
         "yields":          yields_out,
         "spreads":         spreads_out,
         "gld_correlation": gld_corr,
         "anomalies":       anomalies,
-    }
+        "warnings":        warnings,   # 新增：绝对水平警示 (banner 用)
+    })
 
 
 if __name__ == "__main__":

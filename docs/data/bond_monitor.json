@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-23T16:52",
+  "asof": "2026-08-23T18:01",
   "yields": {
     "10y": {
       "value": 4.738,
@@ -209,9 +209,26 @@
     "reason": "相关性 -0.331，对冲关系变弱"
   },
   "anomalies": [],
+  "warnings": [
+    {
+      "level": "warn",
+      "msg": "10Y 4.74% 限制性利率 (>4.5%)",
+      "key": "10y_restrictive"
+    },
+    {
+      "level": "warn",
+      "msg": "实际利率 2.35% 股市历史承压区 (>2%)",
+      "key": "tips_high"
+    },
+    {
+      "level": "warn",
+      "msg": "GLD/TIPS 对冲失效 (相关性 -0.33) — 通胀/流动性 regime 改变",
+      "key": "hedge_broken"
+    }
+  ],
   "_meta": {
-    "cached_at": "2026-08-23T16:52:12.271015",
-    "age_sec": 651,
+    "cached_at": "2026-08-23T18:01:20.572599",
+    "age_sec": 2,
     "stale": false,
     "refreshing": false
   }
