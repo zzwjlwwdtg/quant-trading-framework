@@ -323,13 +323,84 @@ def get_bond_monitor() -> dict:
         if _is_finite_number(corr_val):
             _warn("warn", f"GLD/TIPS 对冲失效 (相关性 {corr_val:.2f}) — 通胀/流动性 regime 改变", "hedge_broken")
 
+    # ── 7-9: 大投行 rate strategy desk 常用的 3 个宏观 stress 指标 ─────────
+    # 都是 banner-only，绝不进 decision scoring (回测证过 macro 注入退化 6-9%)
+    macro_context: dict = {}
+
+    # 7) Equity Risk Premium (Fed Model): SPX EPS yield vs TIPS 10Y
+    #    历史 1985+ ERP < 2% 只在 1987/2000/2007 出现，都是 major top
+    #    yfinance 已停返 forwardPE → 用 trailingPE (SPY/IVV/VOO 三候选)
+    try:
+        import yfinance as yf
+        pe = None
+        pe_type = None
+        for sym in ("SPY", "IVV", "VOO"):
+            try:
+                info = yf.Ticker(sym).info or {}
+                fpe = info.get("forwardPE")
+                tpe = info.get("trailingPE")
+                if fpe and 5 < float(fpe) < 100:
+                    pe, pe_type = float(fpe), "forward"
+                    break
+                if tpe and 5 < float(tpe) < 100:
+                    pe, pe_type = float(tpe), "trailing"
+                    # 继续找 forward，找到就替换
+            except Exception:
+                continue
+        if pe and isinstance(tips, dict) and _is_finite_number(tips.get("value")):
+            pe = round(pe, 2)
+            eps_yield = round(100.0 / pe, 2)
+            tips_v = tips["value"]
+            erp = round(eps_yield - tips_v, 2)
+            macro_context[f"spx_{pe_type}_pe"] = pe
+            macro_context["spx_eps_yield_pct"] = eps_yield
+            macro_context["erp_vs_tips_pct"] = erp
+            macro_context["erp_basis"] = pe_type
+            pe_label = "前瞻" if pe_type == "forward" else "尾随"
+            if erp < 1.0:
+                _warn("bad", f"ERP {erp:.2f}% 极端压缩 (SPX {pe_label} EPS yield {eps_yield}% − TIPS {tips_v}%) — 历史顶部区", "erp_extreme")
+            elif erp < 2.0:
+                _warn("warn", f"ERP {erp:.2f}% 股权风险溢价压缩到危险区 (SPX {pe_label} EPS yield {eps_yield}% − TIPS {tips_v}%，1985+ 仅 1987/2000/2007 出现过)", "erp_low")
+    except Exception:
+        pass
+
+    # 8) NFCI (Chicago Fed National Financial Conditions Index) — 大投行主用 FCI 之一
+    #    >0 = 金融条件紧于均值 (股市承压), <0 = 宽松
+    nfci_rows = _fetch_fred_series("NFCI", days=30)
+    if nfci_rows:
+        nfci_v, nfci_asof = nfci_rows[0][1], nfci_rows[0][0]
+        macro_context["nfci"] = {"value": round(nfci_v, 3), "asof": nfci_asof}
+        if nfci_v > 0.5:
+            _warn("bad", f"NFCI +{nfci_v:.2f} 金融条件明显收紧 ({nfci_asof})", "nfci_tight")
+        elif nfci_v > 0:
+            _warn("warn", f"NFCI +{nfci_v:.2f} 金融条件紧于均值 ({nfci_asof})", "nfci_above_avg")
+
+    # 9) Credit spreads — BAML IG + HY OAS (FRED 免费，卖方 credit desk 首选)
+    #    IG >120bps = 收紧, >150bps = stress
+    #    HY >400bps = 收紧, >500bps = risk-off
+    for label, sid, key_low, key_high, thr_low, thr_high in [
+        ("IG", "BAMLC0A0CM",     "ig_widening", "ig_stress",  120, 150),
+        ("HY", "BAMLH0A0HYM2",   "hy_widening", "hy_stress",  400, 500),
+    ]:
+        rows = _fetch_fred_series(sid, days=30)
+        if not rows:
+            continue
+        # FRED BAML OAS 单位是 %，乘 100 → bps
+        v_bps, asof_d = rows[0][1] * 100, rows[0][0]
+        macro_context[f"cdx_{label.lower()}_bps"] = round(v_bps, 1)
+        if v_bps > thr_high:
+            _warn("bad",  f"{label} 信用利差 {v_bps:.0f}bps (>{thr_high} = {'risk-off' if label=='HY' else 'stress'}, {asof_d})", key_high)
+        elif v_bps > thr_low:
+            _warn("warn", f"{label} 信用利差 {v_bps:.0f}bps (>{thr_low} = 收紧, {asof_d})", key_low)
+
     return _json_safe({
         "asof":            asof,
         "yields":          yields_out,
         "spreads":         spreads_out,
         "gld_correlation": gld_corr,
         "anomalies":       anomalies,
-        "warnings":        warnings,   # 新增：绝对水平警示 (banner 用)
+        "warnings":        warnings,
+        "macro_context":   macro_context,  # 新增：卖方 rate desk 指标原始值
     })
 
 

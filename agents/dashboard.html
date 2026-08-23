@@ -1371,6 +1371,42 @@ async function loadBondMonitor() {
       </div>`).join('')}
     </div>` : '';
 
+  // 卖方 rate desk 3 项 stress 指标（原始值即使不触发 warning 也显示，
+  // 便于判断"stress 是否已经传导"—— 债市高但 credit spread 未扩 = 未传导）
+  const mc = b.macro_context || {};
+  const mcHasData = mc.erp_vs_tips_pct != null || mc.nfci || mc.cdx_ig_bps != null || mc.cdx_hy_bps != null;
+  const mcColor = (val, warn_thr, bad_thr, inverse=false) => {
+    if (val == null) return 'muted';
+    if (inverse) { // ERP: 低 = 危险
+      if (val < bad_thr) return 'bad';
+      if (val < warn_thr) return 'warn';
+      return 'ok';
+    }
+    if (val > bad_thr) return 'bad';
+    if (val > warn_thr) return 'warn';
+    return 'ok';
+  };
+  const macroCtxHtml = mcHasData ? `
+    <div style="margin:6px 0; padding:5px 7px; background:rgba(88,166,255,0.04); border-left:2px solid #58a6ff; border-radius:2px">
+      <div style="font-size:10px; color:var(--muted); margin-bottom:3px">📊 <b style="color:#58a6ff">卖方 rate desk 指标</b> <small>(原始值 · 卖方 credit desk 首选 stress 指标)</small></div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:4px; font-size:10.5px">
+        ${mc.erp_vs_tips_pct != null ? `<span title="Fed Model ERP = SPX ${mc.erp_basis==='forward'?'前瞻':'尾随'} EPS yield ${mc.spx_eps_yield_pct}% − TIPS · 历史 <2% 为顶部区">
+          ERP <b class="${mcColor(mc.erp_vs_tips_pct, 2, 1, true)}">${mc.erp_vs_tips_pct.toFixed(2)}%</b>
+          <small style="color:var(--muted)">(P/E ${mc[`spx_${mc.erp_basis}_pe`] || '-'}x)</small>
+        </span>` : ''}
+        ${mc.nfci ? `<span title="Chicago Fed NFCI · >0 金融条件紧于均值 · asof ${mc.nfci.asof}">
+          NFCI <b class="${mcColor(mc.nfci.value, 0, 0.5)}">${mc.nfci.value > 0 ? '+' : ''}${mc.nfci.value.toFixed(2)}</b>
+          <small style="color:var(--muted)">(${mc.nfci.value < 0 ? '宽松' : '收紧'})</small>
+        </span>` : ''}
+        ${mc.cdx_ig_bps != null ? `<span title="BAML IG OAS · 卖方 credit stress 首指标 · >120 收紧 · >150 stress">
+          IG <b class="${mcColor(mc.cdx_ig_bps, 120, 150)}">${mc.cdx_ig_bps.toFixed(0)}bps</b>
+        </span>` : ''}
+        ${mc.cdx_hy_bps != null ? `<span title="BAML HY OAS · 高收益债 stress · >400 收紧 · >500 risk-off">
+          HY <b class="${mcColor(mc.cdx_hy_bps, 400, 500)}">${mc.cdx_hy_bps.toFixed(0)}bps</b>
+        </span>` : ''}
+      </div>
+    </div>` : '';
+
   // FRED PNG charts (直接嵌入官方图，每日自动更新，零维护)
   const fredCharts = `
     <details style="margin-top:6px; padding-top:5px; border-top:1px dashed var(--border)">
@@ -1404,6 +1440,7 @@ async function loadBondMonitor() {
 
   el.innerHTML = `
     ${warningsHtml}
+    ${macroCtxHtml}
     <div style="font-size:11px; color:var(--muted); margin-bottom:4px">
       收益率快照 · <span style="color:var(--muted); font-size:9px">asof ${b.asof || '-'}</span>
     </div>
