@@ -1404,6 +1404,9 @@ async function loadBondMonitor() {
         ${mc.cdx_hy_bps != null ? `<span title="BAML HY OAS · 高收益债 stress · >400 收紧 · >500 risk-off">
           HY <b class="${mcColor(mc.cdx_hy_bps, 400, 500)}">${mc.cdx_hy_bps.toFixed(0)}bps</b>
         </span>` : ''}
+        ${mc.term_spread_30_10_bps != null ? `<span title="30Y − 10Y term spread · >80bps 长端 term premium 定价上升 · 陡化增强 = duration risk 定价">
+          30s10s <b class="${mcColor(mc.term_spread_30_10_bps, 80, 120)}">${mc.term_spread_30_10_bps.toFixed(0)}bps</b>
+        </span>` : ''}
       </div>
     </div>` : '';
 

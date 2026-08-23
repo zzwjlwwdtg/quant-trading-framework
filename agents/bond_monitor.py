@@ -300,14 +300,32 @@ def get_bond_monitor() -> dict:
         elif v >= 2.0:
             _warn("warn", f"实际利率 {v:.2f}% 股市历史承压区 (>2%)", "tips_high")
 
-    # 长端 duration selling: 30Y 20d 涨幅 vs 10Y 差 ≥5bps
+    # 30Y 绝对水平: 长端超长久期资产折现率
+    #   历史 2010s 常在 3-4%, ≥5% = 明显偏高, ≥5.5% = 2007 以来罕见
     y30 = yields_out.get("30y", {})
+    if isinstance(y30, dict) and _is_finite_number(y30.get("value")):
+        v = y30["value"]
+        if v >= 5.5:
+            _warn("bad",  f"30Y {v:.2f}% 极端高位 (2007 以来罕见)", "30y_extreme")
+        elif v >= 5.0:
+            _warn("warn", f"30Y {v:.2f}% 长端偏高 (>5%, 长久期折现率压力)", "30y_high")
+
+    # 长端 duration selling: 30Y 20d 涨幅 vs 10Y 差 ≥10bps
     if (isinstance(y30, dict) and isinstance(y10, dict)
             and _is_finite_number(y30.get("chg_20d_bps"))
             and _is_finite_number(y10.get("chg_20d_bps"))):
         d = y30["chg_20d_bps"] - y10["chg_20d_bps"]
         if d >= 10:
             _warn("warn", f"长端加速抛售: 30Y +{y30['chg_20d_bps']:+.1f}bps vs 10Y +{y10['chg_20d_bps']:+.1f}bps (20d)", "duration_selling")
+
+    # 30s10s spread (30Y-10Y term spread): 陡化增强 = 长端 term premium 定价上升
+    # spread 稍后放进 macro_context, warning 在此触发
+    term_spread_30_10 = None
+    if (isinstance(y30, dict) and isinstance(y10, dict)
+            and _is_finite_number(y30.get("value")) and _is_finite_number(y10.get("value"))):
+        term_spread_30_10 = round((y30["value"] - y10["value"]) * 100, 1)  # bps
+        if term_spread_30_10 >= 80:
+            _warn("warn", f"30s10s 陡化到 {term_spread_30_10:.0f}bps (>80 = 长端 term premium 定价上升)", "term_spread_steep")
 
     # 2s10s 刚脱离倒挂: 0 ~ 20bps
     s2s10 = spreads_out.get("2s10s", {})
@@ -326,6 +344,8 @@ def get_bond_monitor() -> dict:
     # ── 7-9: 大投行 rate strategy desk 常用的 3 个宏观 stress 指标 ─────────
     # 都是 banner-only，绝不进 decision scoring (回测证过 macro 注入退化 6-9%)
     macro_context: dict = {}
+    if term_spread_30_10 is not None:
+        macro_context["term_spread_30_10_bps"] = term_spread_30_10
 
     # 7) Equity Risk Premium (Fed Model): SPX EPS yield vs TIPS 10Y
     #    历史 1985+ ERP < 2% 只在 1987/2000/2007 出现，都是 major top
