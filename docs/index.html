@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-23T14:33:04", "endpoints_ok": 124, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-23T14:47:16", "endpoints_ok": 120, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1817,11 +1817,14 @@ function renderSignalOverview(t, optSrc = '') {
   const regimeCls = 'regime ' + (t.regime || 'neutral');
   const rsiTip = t.rsi < 30 ? '超卖（可能反弹）' : (t.rsi > 70 ? '超买（可能回调）' : '正常');
   const volTip = t.vol_ratio > 1.5 ? '放量' : (t.vol_ratio < 0.7 ? '缩量' : '正常');
+  const nameZh = t.name_zh && t.name_zh !== t.ticker ? ` · <span style="color:var(--fg); font-weight:normal">${t.name_zh}</span>` : '';
+  const meaningZh = t.meaning_zh ? `<div style="font-size:9px; color:var(--muted); margin-top:-2px; margin-bottom:3px" title="${t.meaning_zh}">${t.meaning_zh}</div>` : '';
   return `
     <div class="top-row">
-      <span class="ticker-name" title="标的代码">${t.ticker} ${optSrc}</span>
+      <span class="ticker-name" title="标的代码 · ${t.meaning_zh || ''}">${t.ticker}${nameZh} ${optSrc}</span>
       <span class="price" title="当前价">$${fmt(t.price)}</span>
     </div>
+    ${meaningZh}
     <div class="top-row">
       <span class="${actionCls}" title="建议动作 + 置信度 (X/5)">${t.action_zh || '?'} <small>${t.conf||''}/${t.scale||''}</small></span>
       <span class="badge ${regimeCls}" title="实际交易前提：bull=日线偏多趋势（不是单独买点）/ neutral_chop=中性震荡 / risk_off=风险收缩 / crisis=危机">${t.regime || 'neutral'}</span>

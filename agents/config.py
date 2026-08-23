@@ -63,6 +63,7 @@ ASSET_CLASS_MAP = {
     "US.SOXL": "equity_leveraged",
     "US.MULL": "equity_leveraged",  # 2x MU
     "US.DRAM": "equity_single",
+    "US.XLV":  "equity_single",     # 医疗行业 ETF, 视为多元 equity
     # 剩余单股默认 equity_single（NVDA/MSFT/AAPL/NBIS/LITE 等）
 }
 DEFAULT_ASSET_CLASS = "equity_single"
@@ -74,9 +75,9 @@ def get_asset_class(ticker: str) -> str:
     tk = ticker if ticker.startswith("US.") else f"US.{ticker}"
     return ASSET_CLASS_MAP.get(tk, DEFAULT_ASSET_CLASS)
 
-# 无股票基本面的 ticker（商品/债券 ETF）—— yfinance quoteSummary 会返 404
+# 无股票基本面的 ticker（商品/债券/行业 ETF）—— yfinance quoteSummary 会返 404
 # 用于 webui.get_fundamental_stock() 单一源判定，避免每加一个 ETF 都要手动补 None
-NO_FUNDAMENTALS_TICKERS = {"GLD", "USO", "SHY", "IEI"}
+NO_FUNDAMENTALS_TICKERS = {"GLD", "USO", "SHY", "IEI", "XLV"}
 
 # 用其它股票作为基本面代理的杠杆/主题 ETF —— 显示 proxy 公司的基本面
 # 未列出的 ticker 默认用自身（NVDA→NVDA, LITE→LITE, CBRS→CBRS 等）
@@ -97,6 +98,52 @@ def get_fundamental_stock(ticker: str) -> str | None:
     if tk in NO_FUNDAMENTALS_TICKERS:
         return None
     return FUNDAMENTAL_PROXY.get(tk, tk)
+
+# ── 中文名 + 含义 (dashboard 显示在 ticker 旁的一句话) ─────────────────
+# 加新美股必须补一条，否则 dashboard 只显示英文 ticker
+# 格式：ticker -> (中文简称, 一句话说明)
+TICKER_NAME_ZH = {
+    # 3x 杠杆 ETF（核心 TICKERS）
+    "TQQQ": ("三倍纳指",  "3× QQQ · 科技股杠杆"),
+    "SOXL": ("三倍半导",  "3× SOX · 半导体杠杆"),
+    "DRAM": ("存储 ETF",  "Roundhill Memory · MU/SK 海力士/三星"),
+    "MULL": ("双倍美光",  "2× MU 单股杠杆 · 存储纯 beta"),
+    # 大宗商品/债券/行业 ETF
+    "GLD":  ("黄金 ETF",  "SPDR Gold · 避险 + 通胀对冲"),
+    "USO":  ("原油 ETF",  "WTI 原油 · 通胀 + 地缘政治"),
+    "SHY":  ("2Y 债 ETF", "1-3Y 美债 · 短端利率"),
+    "IEI":  ("5Y 债 ETF", "3-7Y 美债 · 中端利率"),
+    "XLV":  ("医疗 ETF",  "SPDR 医疗行业 · JNJ/UNH/LLY 权重"),
+    # AI/tech 权重股
+    "NVDA": ("英伟达",     "AI 芯片龙头 · 数据中心 GPU 独占"),
+    "MSFT": ("微软",       "云 AI · Copilot · OpenAI 大股东"),
+    "AAPL": ("苹果",       "QQQ 最大权重 · 消费电子龙头"),
+    "GOOGL":("谷歌",       "搜索/云/YouTube · Gemini AI"),
+    "TSLA": ("特斯拉",     "EV + 自动驾驶 + Optimus 机器人"),
+    "AMAT": ("应用材料",   "半导体设备三巨头 · WFE 龙头"),
+    "KLAC": ("科磊",       "半导体量测 · Process Control 龙头"),
+    "MU":   ("美光",       "DRAM/NAND 全球三巨头 (与三星/SK)"),
+    # 2026-Q3 thesis 新增
+    "NBIS": ("Nebius",     "AI 云 pure-play · 云端消费增长"),
+    # AI DC 光通信
+    "LITE": ("Lumentum",   "400G/800G 光模块 · NVDA 光互联供应"),
+    "CBRS": ("Cerebras",   "晶圆级 AI 芯片 · NVDA inference 竞品"),
+    # 半导体外围
+    "QRVO": ("Qorvo",      "射频芯片 · 5G/WiFi/汽车 RF"),
+    "SWKS": ("思佳讯",     "无线射频 · Apple 供应商"),
+    "STM":  ("意法半导",   "MCU/汽车/工业 · 欧洲半导体龙头"),
+    "MPWR": ("Monolithic", "电源管理 IC · AI 电源龙头"),
+    # 其它常见
+    "SPY":  ("标普 500",   "追踪 S&P 500 · 美股大盘代理"),
+    "QQQ":  ("纳指 100",   "追踪 Nasdaq 100 · 科技股大盘"),
+}
+
+def get_ticker_name_zh(ticker: str) -> tuple[str, str]:
+    """ticker → (中文简称, 一句话说明)。未收录返 (英文 ticker 原样, '')."""
+    if not ticker:
+        return ("", "")
+    tk = ticker.replace("US.", "").upper()
+    return TICKER_NAME_ZH.get(tk, (tk, ""))
 
 # 用户显式加入的跟踪标的。展示类型不决定交易资格：这里的每个美股/ETF
 # 都会参与 scan，并可在 SIMULATE 账户按统一信号和风控规则买入。
@@ -119,6 +166,8 @@ TRACKED_TICKERS = [
     "US.CBRS",   # Cerebras Systems — WSE 晶圆级芯片, AI inference 替代方案, 2025 IPO
     # 大宗商品（macro / inflation proxy）
     "US.USO",    # WTI 原油 ETF — 通胀 proxy + geopolitics gauge，也用于 gold_macro 输入
+    # 行业 ETF
+    "US.XLV",    # 医疗行业 ETF — 防御性板块 · JNJ/UNH/LLY/PFE 权重
 ]
 
 # 单一交易资格源：以后只需把标的加入 TICKERS 或 TRACKED_TICKERS，
@@ -154,7 +203,7 @@ FRED_API_KEY = _cfg("FRED_API_KEY", "")
 
 # --- Scheduler (日K交易者模式) ---
 # 每天 5 个 ET 时间窗口；trader 只在 TRADE_WINDOWS 里的几个下单
-# pre-open 仅做"选股 + evolver"不下单；pre-market 仅紧急减仓 (严门槛)
+# pre-open 仅做选股与固定技术形态回测，不下单；pre-market 仅紧急减仓 (严门槛)
 DAILY_WINDOWS_ET = [
     (8*60+30,  8*60+45,  "pre-market"), # 08:30-08:45 ET  盘前 (严门槛 + 大 buffer + RTH 外撮合)
     (9*60+20,  9*60+35,  "pre-open"),   # 09:20-09:35 ET  开盘前扫描 (选 picks 不交易)

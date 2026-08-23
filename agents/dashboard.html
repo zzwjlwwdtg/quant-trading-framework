@@ -146,10 +146,10 @@
 <dd>9+ 维技术指标投票（RSI/MA/CCI/量/BB/PSAR 等）。<span class="eg">多3 vs 空1 = 3 个指标看多，1 个看空</span></dd>
 
 <dt>Regime (市场状态)</dt>
-<dd>系统对当前市场的定性判断。<span class="eg">neutral 中性 · bull_low_vol 温和牛 · crisis 危机（单日≤-5%）· overheated 过热</span></dd>
+<dd>系统对当前交易环境的日线判断，不等同于 HMM 慢周期背景。<span class="eg">neutral 中性 · neutral_chop 中性震荡 · crisis 危机 · overheated 过热</span></dd>
 
 <dt>HMM Meta-Regime</dt>
-<dd>Hidden Markov Model 隐马尔可夫模型判定的市场大周期。相比即时 regime 更稳定。<span class="eg">bull_low_vol / volatile / crisis</span></dd>
+<dd>Hidden Markov Model 判定的 SPY 慢周期背景。它用于风险背景，不是当前买入或加仓信号。<span class="eg">长期偏多也可能同时处于短线震荡偏弱</span></dd>
 
 <dt>Confidence (置信度) X/5</dt>
 <dd>系统对信号的把握程度。5 分制（TECHNICAL_ONLY 模式）。<span class="eg">1/5=弱 · 3/5=中 · 5/5=强</span></dd>
@@ -187,18 +187,18 @@
 </div>
 </details>
 
-<!-- Row 0a: 系统自动挂单（最优先 —— 落地到实际价位的具体动作） -->
+<!-- Row 0a: 自动执行状态（broker 未结订单为事实源，AI 价位仅作参考） -->
 <div class="grid">
   <div class="card" style="border-left:3px solid #f85149; background:linear-gradient(180deg, rgba(248,81,73,0.03) 0%, transparent 60%)">
-    <h2 title="Claude 输出的结构化目标 → paper_trader 挂 GTC 限价 + broker SELL STOP。这是系统实际在执行的动作。">⚡ 系统自动挂单 · Auto Orders <small id="ai-targets-mtime"></small></h2>
+    <h2 title="最新规则决策决定是否交易；AI CLI 只提供价位参考；是否真的已挂单以 broker 未结订单为准。">⚡ 自动执行状态 · Auto Execution <small id="ai-targets-mtime"></small></h2>
     <div id="ai-targets"></div>
   </div>
 </div>
 
-<!-- Row 0b: Claude 综合分析（结构化 TL;DR） -->
+<!-- Row 0b: AI CLI 综合分析（结构化 TL;DR） -->
 <div class="grid">
   <div class="card" style="border-left:3px solid #58a6ff">
-    <h2 title="Claude CLI 综合解读 — 结构化 TL;DR + 可展开完整分析">🎯 Claude 综合分析 <small id="ai-mtime"></small></h2>
+    <h2 title="本地 AI CLI 综合解读（默认 Codex）— 结构化 TL;DR + 可展开完整分析">🎯 AI 综合分析 <small id="ai-mtime"></small></h2>
     <div id="ai-analysis"></div>
   </div>
 </div>
@@ -210,7 +210,7 @@
     <div id="nav-summary"></div>
   </div>
   <div class="card">
-    <h2 title="Hidden Markov Model 判定的市场大周期。bull_low_vol=温和牛 / crisis=危机">HMM Meta-Regime <small>市场大周期</small></h2>
+    <h2 title="宏观背景、日线前提和短线风格分开显示；慢周期偏多不代表现在适合加仓">市场环境 <small>分周期，不把宏观当买点</small></h2>
     <div id="hmm"></div>
   </div>
   <div class="card" style="grid-column: span 2">
@@ -269,10 +269,18 @@
   </div>
 </div>
 
+<!-- Row 3.5: 机构级组合风险与执行质量 -->
+<div class="grid owner-only">
+  <div class="card" style="border-left:3px solid #d29922">
+    <h2 title="统一组合账本：VaR/ES、压力测试、杠杆有效暴露、路径折损、流动性、成交短差和样本外验证">🏛 组合风险台 <small>Institutional Risk & Execution</small></h2>
+    <div id="institutional-risk"><small>加载中...</small></div>
+  </div>
+</div>
+
 <!-- Row 4: 每标的信号卡 -->
 <div class="grid">
   <div class="card">
-    <h2 title="股票与股票 ETF 的完整分析：技术信号、期权攻防、Claude、供应链和基本面">股票与股票 ETF <small>完整分析</small></h2>
+    <h2 title="股票与股票 ETF 的完整分析：技术信号、期权攻防、AI、供应链和基本面">股票与股票 ETF <small>完整分析</small></h2>
     <div id="signals" class="grid g3"></div>
   </div>
 </div>
@@ -324,7 +332,7 @@ const sideCls = a => {
 async function fetchJson(url) {
   if (window.STATIC_SNAPSHOT_MODE) {
     // 私人 endpoint 直接返 null（面板会显示 owner-only 或直接空）
-    const PRIVATE = ['/api/positions', '/api/trades', '/api/log', '/api/nav', '/api/trump_verify'];
+    const PRIVATE = ['/api/positions', '/api/trades', '/api/log', '/api/nav', '/api/trump_verify', '/api/institutional'];
     if (PRIVATE.some(p => url.startsWith(p))) return { error: 'owner_only' };
     // /api/xxx?ticker=Y&days=Z → data/xxx__Y__d10.json
     let path = url.replace(/^\//, '');
@@ -332,7 +340,8 @@ async function fetchJson(url) {
     const [route, query] = path.split('?');
     const fname = ['data', route + (query ? '__' + query.replace(/=/g,'-').replace(/&/g,'__') : '') + '.json'].join('/');
     try {
-      const r = await fetch(fname);
+      const snapshotVersion = (window.SNAPSHOT_META && window.SNAPSHOT_META.generated_at) || '';
+      const r = await fetch(fname + '?v=' + encodeURIComponent(snapshotVersion), {cache: 'no-store'});
       if (!r.ok) return { error: 'snapshot_missing_' + r.status };
       return await r.json();
     } catch (e) { return { error: 'snapshot_fetch_fail' }; }
@@ -618,14 +627,14 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
     const upside = ac.target_upside_pct;
     const upsideBadge = upside == null ? '' :
       `<span class="badge ${pctCls(upside)}" style="font-size:9px" title="距分析师平均目标价">目标 ${fmtPct(upside)}</span>`;
-    // divergence: Claude 官方指引方向 vs 分析师 rec (仅在两边都有意义时提示)
+    // divergence: AI 官方指引方向 vs 分析师 rec (仅在两边都有意义时提示)
     const claudeBull = ['上修','新指引'].includes(r.direction);
     const claudeBear = r.direction === '下修';
     const anaBull = ['strong_buy','buy'].includes(ac.recommendation);
     const anaBear = ['sell','underperform','strong_sell'].includes(ac.recommendation);
-    if (claudeBull && anaBear) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="Claude 上修但分析师看空">⚠ 背离</span>';
-    else if (claudeBear && anaBull) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="Claude 下修但分析师看多">⚠ 背离</span>';
-    else if ((claudeBull && anaBull) || (claudeBear && anaBear)) divergenceBadge = '<span class="badge ok" style="font-size:9px" title="Claude 方向与分析师一致">✓ 一致</span>';
+    if (claudeBull && anaBear) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="AI 上修但分析师看空">⚠ 背离</span>';
+    else if (claudeBear && anaBull) divergenceBadge = '<span class="badge bad" style="font-size:9px" title="AI 下修但分析师看多">⚠ 背离</span>';
+    else if ((claudeBull && anaBull) || (claudeBear && anaBear)) divergenceBadge = '<span class="badge ok" style="font-size:9px" title="AI 方向与分析师一致">✓ 一致</span>';
     // 前瞻 EPS 派生估值行 (3 种 PE 假设隐含价 + PEG)
     const valRows = [];
     if (ac.current_price != null) {
@@ -728,12 +737,12 @@ async function loadJPGuidanceOnDemand(ticker, containerId) {
       ${(r.sources && r.sources.length) ? `<div style="font-size:9px; color:var(--muted); margin:3px 0 4px 0; line-height:1.5">
         <b style="color:#58a6ff">🔗 出处</b>: ${r.sources.slice(0,4).map(s => `<a href="${s.url}" target="_blank" rel="noopener" title="${(s.title||'').replace(/"/g,'&quot;')}" style="color:#79c0ff; text-decoration:none; margin-right:6px">[${s.type||'src'}] ↗</a>`).join('')}
       </div>` : ''}
-      ${r.claude_error ? `<div style="font-size:9px; color:var(--warn); margin:2px 0" title="业绩预想 CLI 查询未成功；分析师共识仍可参考">⚠ CLI: ${r.claude_error.replace(/^(claude|codex)_/,'').slice(0,120)}</div>` : ''}
+      ${(r.ai_error || r.claude_error) ? `<div style="font-size:9px; color:var(--warn); margin:2px 0" title="业绩预想 CLI 查询未成功；分析师共识仍可参考">⚠ CLI: ${(r.ai_error || r.claude_error).replace(/^(claude|codex)_/,'').slice(0,120)}</div>` : ''}
       ${analystHtml}
       ${r.data_note ? `<div style="font-size:9px; color:var(--muted); margin:4px 0">${r.data_note}</div>` : ''}
       <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-top:5px">
         <span>指引生效: ${r.guidance_effective_date || r.last_update || '-'} · 来源材料: ${r.source_published_at || '-'} · ${eventLabel}</span>
-        <span>信頼度 ${confidenceLabel} ${r.source_via==='claude_cli_websearch'?'· 🤖 Claude+Web':(r.source_via==='codex_cli_websearch'?'· 🤖 Codex':'')}</span>
+        <span>信頼度 ${confidenceLabel} ${r.source_via==='claude_cli_websearch'?'· 🤖 Claude+Web':(r.source_via==='codex_cli_websearch'?'· 🤖 Codex+Web':'')}</span>
       </div>
     </div>
   `;
@@ -894,7 +903,7 @@ async function loadCapitalFlowOnDemand(ticker, containerId) {
         lines.push(`↩️ <b>反转形态</b>: ${reversal.down.date_short} <span class="bad">${reversal.down.day_chg_pct}%</span> 大跌 → ${reversal.up.date_short} <span class="ok">+${reversal.up.day_chg_pct}%</span> 反弹`);
       }
       return `<div style="margin:5px 0; padding:6px 8px; background:rgba(88,166,255,0.06); border-left:2px solid #58a6ff; border-radius:2px; font-size:10.5px; line-height:1.6">
-        <div style="font-size:9px; color:var(--muted); margin-bottom:3px">🤖 AI 综合读 (rule-based · 无 Claude 成本)</div>
+        <div style="font-size:9px; color:var(--muted); margin-bottom:3px">🤖 AI 综合读 (rule-based · 无 CLI 成本)</div>
         ${lines.join('<br>')}
       </div>`;
     };
@@ -1122,8 +1131,8 @@ async function loadNav() {
 }
 
 const HMM_LABELS = {
-  'bull_low_vol':       '温和牛市（低波动）',
-  'bull_normal':        '正常牛市',
+  'bull_low_vol':       '长期温和偏多（低波动）',
+  'bull_normal':        '长期偏多',
   'volatile_uncertain': '震荡不明',
   'bear_or_correction': '熊市/回调',
   'crisis':             '危机',
@@ -1144,13 +1153,18 @@ async function loadHmm() {
   const age = ageInDays(h.ts);
   const stale = age > 3;
   const staleWarn = stale ? `<span class="warn" style="font-size:11px" title="数据超过 3 天没重算，可能与实际市场脱节。运行 hmm_regime.py 或等 weekly.bat 重算">⚠ ${age}天前更新</span>` : `<span class="ok" style="font-size:11px">✓ ${age}天前更新</span>`;
+  const trading = h.trading || {};
+  const style = trading.style || {};
+  const tradingStale = trading.stale ? `<span class="warn" title="日线状态日期 ${trading.date || '?'}，预期 ${trading.expected_date || '?'}">⚠ 待刷新</span>` : '<span class="ok">✓ 当日</span>';
+  const styleCls = style.is_choppy ? 'warn' : ((style.style || '').includes('down') ? 'bad' : 'info');
   $('hmm').innerHTML = `
-    <div class="banner-num" style="text-align:center">
-      <span class="badge ${cls}" style="font-size:14px; padding:4px 12px" title="HMM 判定的 SPY 大盘状态（不是杠杆 ETF）">${h.label || '?'}</span>
+    <div style="padding:6px 8px; background:rgba(210,153,34,.08); border-left:3px solid var(--warn); border-radius:3px; font-size:11px; margin-bottom:7px">
+      <b>注意：</b>${h.warning || '慢周期背景，不是当前买入或加仓信号'}
     </div>
-    <div style="text-align:center; font-size:13px; color:var(--fg); margin: 4px 0">${zh}</div>
-    <div class="stat"><span class="k term" title="HMM 对当前状态的把握程度">置信度</span><span class="v">${((h.prob || 0) * 100).toFixed(0)}%</span></div>
-    <div class="stat"><span class="k">数据源</span><span class="v" title="HMM 用 SPY 日收益/波动率/VIX，反映大盘。杠杆 ETF 崩盘不一定触发换档" style="font-size:11px">SPY 大盘</span></div>
+    <div class="stat"><span class="k" title="约500日 SPY/VIX 状态模型；只描述背景">① 宏观背景</span><span class="v"><span class="badge ${cls}" title="${h.label || '?'} · 模型后验概率 ${((h.prob || 0) * 100).toFixed(0)}%">${zh || h.label || '?'}</span></span></div>
+    <div class="stat"><span class="k" title="日线方向与宏观输入共同形成的实际决策前提">② 波段前提</span><span class="v">${trading.regime_zh || '待刷新'} ${tradingStale}</span></div>
+    <div class="stat"><span class="k" title="趋势效率、ADX、反转次数、MA20穿越、净位移/路径、ATR共同计算">③ 短线风格</span><span class="v"><span class="badge ${styleCls}">${style.style_zh || '待刷新'}</span>${style.chop_score != null ? ` <small>震荡分 ${style.chop_score}</small>` : ''}</span></div>
+    <div style="font-size:10px; color:var(--muted); line-height:1.45; margin-top:6px">${style.policy_note || '短线风格尚未生成'}${style.reason ? `<br>依据：${style.reason}` : ''}</div>
     <div class="stat"><span class="k">数据新鲜度</span><span class="v">${staleWarn}</span></div>
   `;
 }
@@ -1224,15 +1238,15 @@ async function loadBanners() {
       <div style="color:var(--fg); margin-top:3px; line-height:1.4">${(it.preview||'').replace(/</g,'&lt;')}</div>
     </div>`;
   }).join('');
-  // Claude 一句话总结（最近 3 条推文）
+  // AI CLI 一句话总结（最近 3 条推文）
   const sum = t.summary || {};
   let summaryRow = '';
   if (sum.text) {
-    summaryRow = `<div style="margin: 6px 0; padding: 6px 8px; background: rgba(88,166,255,0.08); border-left: 2px solid #58a6ff; font-size: 11px; line-height: 1.4" title="Claude 对最近 3 条推文的一句话概括">
+    summaryRow = `<div style="margin: 6px 0; padding: 6px 8px; background: rgba(88,166,255,0.08); border-left: 2px solid #58a6ff; font-size: 11px; line-height: 1.4" title="AI CLI 对最近 3 条推文的一句话概括">
       <b style="color:#58a6ff">🤖 一句话摘要</b>：${sum.text.replace(/</g,'&lt;')}
     </div>`;
   } else if (sum.state === 'generating') {
-    summaryRow = `<div style="margin: 6px 0; text-align:center; color:var(--muted); font-size: 11px">🤖 Claude 生成中... (下次刷新可见)</div>`;
+    summaryRow = `<div style="margin: 6px 0; text-align:center; color:var(--muted); font-size: 11px">🤖 AI 生成中... (下次刷新可见)</div>`;
   }
   $('trump-banner').innerHTML = t.direction ? `
     <div class="banner-num ${dirColor}" style="text-align:center" title="bullish=利多风险资产 / bearish=利空 / neutral=中性">${t.direction} ${t.score >= 0 ? '+' : ''}${t.score}</div>
@@ -1370,7 +1384,7 @@ async function loadBondMonitor() {
   // Fed rate expectations (async 拉，先放 placeholder，稍后 loadFedWatch 填)
   const fedHtml = `
     <div style="margin-top:6px; padding-top:5px; border-top:1px dashed var(--border)">
-      <div style="font-size:10.5px; color:var(--muted)"><b style="color:#58a6ff">📅 CME FedWatch 加息/降息预期</b> <small>(Claude+Web, 缓存 2h)</small></div>
+      <div style="font-size:10.5px; color:var(--muted)"><b style="color:#58a6ff">📅 CME FedWatch 加息/降息预期</b> <small>(AI CLI+Web, 缓存 2h)</small></div>
       <div id="fed-watch-body" style="margin-top:3px; font-size:10px; color:var(--muted)">🔄 加载中...</div>
     </div>`;
 
@@ -1471,6 +1485,7 @@ function renderMiniWall(opt) {
   if (!opt || opt.error || !opt.distribution || !opt.distribution.length) return '';
   const dist = opt.distribution;
   const spot = opt.spot;
+  const source = opt.underlying || '';
   const H = 60;  // px
   const maxV = Math.max(...dist.map(d => Math.max(d.call_vol, d.put_vol)), 1);
   const barW = 100 / dist.length;
@@ -1480,6 +1495,11 @@ function renderMiniWall(opt) {
   const spotX = Math.max(0, Math.min(100, spotFrac * 100));
   const mpFrac = (opt.max_pain != null && maxS > minS) ? (opt.max_pain - minS) / (maxS - minS) : null;
   const mpX = mpFrac != null ? Math.max(0, Math.min(100, mpFrac * 100)) : null;
+  // Pin (gamma flip) —— 华尔街对冲盘中枢，本到期日范围有效
+  const pinStrike = opt.gex_analysis && opt.gex_analysis.gex ? opt.gex_analysis.gex.gamma_flip_strike : null;
+  const pinFrac = (pinStrike != null && maxS > minS) ? (pinStrike - minS) / (maxS - minS) : null;
+  const pinX = pinFrac != null ? Math.max(0, Math.min(100, pinFrac * 100)) : null;
+  const pinInRange = pinStrike != null && pinStrike >= minS && pinStrike <= maxS;
   const bars = dist.map((d, i) => {
     const cH = Math.round((d.call_vol / maxV) * (H * 0.45));
     const pH = Math.round((d.put_vol  / maxV) * (H * 0.45));
@@ -1502,9 +1522,16 @@ function renderMiniWall(opt) {
   return `<svg width="100%" height="${H}" style="display:block; margin-top:4px">
     <line x1="0" y1="${H/2}" x2="100%" y2="${H/2}" stroke="rgba(125,133,144,0.3)" stroke-width="1"/>
     ${bars}
-    <line x1="${spotX}%" y1="0" x2="${spotX}%" y2="${H}" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="3,3"><title>spot $${spot}</title></line>
-    ${mpX != null ? `<line x1="${mpX}%" y1="0" x2="${mpX}%" y2="${H}" stroke="#d29922" stroke-width="1" stroke-dasharray="2,4" opacity="0.7"><title>Max Pain $${opt.max_pain}</title></line>` : ''}
-  </svg>`;
+    <line x1="${spotX}%" y1="0" x2="${spotX}%" y2="${H}" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="3,3"><title>${source} 现价 $${spot}（底层期权链原价）</title></line>
+    ${mpX != null ? `<line x1="${mpX}%" y1="0" x2="${mpX}%" y2="${H}" stroke="#d29922" stroke-width="1" stroke-dasharray="2,4" opacity="0.7"><title>${source} Max Pain $${opt.max_pain} — 底层期权链原价</title></line>` : ''}
+    ${pinX != null && pinInRange ? `<line x1="${pinX}%" y1="0" x2="${pinX}%" y2="${H}" stroke="#a78bfa" stroke-width="1.3" stroke-dasharray="5,2"><title>${source} 关键中枢 pin $${pinStrike} — 底层期权链原价；下方另列杠杆 ETF 换算价</title></line>` : ''}
+    ${pinStrike != null && !pinInRange ? `<text x="${pinStrike < minS ? 2 : 98}%" y="10" fill="#a78bfa" font-size="9" text-anchor="${pinStrike < minS ? 'start' : 'end'}"><title>${source} pin $${pinStrike} 在图外 (${pinStrike < minS ? '左' : '右'}方)</title>pin${pinStrike < minS ? '←' : '→'}</text>` : ''}
+  </svg>
+  <div style="font-size:9px; color:var(--muted); margin-top:2px; display:flex; gap:8px; flex-wrap:wrap">
+    <span><span style="color:#58a6ff">━</span> ${source} 原始现价</span>
+    ${opt.max_pain != null ? `<span><span style="color:#d29922">┅</span> ${source} Max Pain</span>` : ''}
+    ${pinStrike != null ? `<span title="底层期权链的对冲盘中枢"><span style="color:#a78bfa">┅</span> ${source} Pin</span>` : ''}
+  </div>`;
 }
 
 function fmtNotional(n) {
@@ -1517,10 +1544,71 @@ function fmtNotional(n) {
 function fmtOI(n) { return n ? n.toLocaleString('en-US') : '-'; }
 function fmtPrem(p) { return p != null ? '$' + p.toFixed(2) : '-'; }
 
-function renderOptAnalysis(opt) {
+function renderOptAnalysis(opt, cardTicker = '') {
   if (!opt) return '<div class="opt-analysis" style="font-size:10px; color:var(--muted); padding:4px 0">🔄 期权数据加载中...</div>';
   if (opt.error) return `<div class="opt-analysis" style="font-size:10px; color:var(--muted); padding:4px 0" title="${opt.error}">期权数据不可用</div>`;
   const d = opt.defense || {}, o = opt.offense || {}, r = opt.squeeze_risk || {}, sm = opt.sentiment || {};
+  const lm = opt.leveraged_mapping || null;
+  const ap = opt.actionable_prices || null;
+  const actionableLevels = (ap && ap.levels) || {};
+  const isProxy = Boolean(cardTicker && opt.underlying && cardTicker !== opt.underlying);
+  const structureSource = lm ? lm.source : (isProxy ? opt.underlying : '');
+  const lmLevels = (lm && lm.levels) || {};
+  const mappedPrice = (key, raw) => {
+    const actionable = actionableLevels[key];
+    if (actionable && actionable.target && actionable.target.spot_anchored != null) {
+      const expiry = actionable.target.expiry_estimate != null
+        ? `<small style="display:block; color:var(--muted); padding-left:14px">到期路径估算 $${actionable.target.expiry_estimate} · 约 $${actionable.target.expiry_range_low}–$${actionable.target.expiry_range_high}（非挂单价）</small>`
+        : '';
+      return `<b>${actionable.target.ticker}≈$${actionable.target.spot_anchored}</b> <small style="color:var(--muted)">（源 ${actionable.source.ticker} $${actionable.source.strike} · ${actionable.basis}）</small>${expiry}`;
+    }
+    const m = lmLevels[key];
+    if (!lm || !m || m.spot_anchored_level == null) {
+      return isProxy
+        ? `<b>${opt.underlying} $${raw}</b> <small class="warn">（换算未就绪，不可直接挂单）</small>`
+        : `<b>$${raw}</b>`;
+    }
+    const expiry = m.expiry_estimate != null
+      ? `<small style="display:block; color:var(--muted); padding-left:14px">到期路径估算 $${m.expiry_estimate} · 约 $${m.expiry_range_low}–$${m.expiry_range_high}（非挂单价）</small>`
+      : '';
+    return `<b>${lm.ticker}≈$${m.spot_anchored_level}</b> <small style="color:var(--muted)">（源 ${lm.source} $${raw}）</small>${expiry}`;
+  };
+  const mappedMove = (key, fallback) => {
+    const actionable = actionableLevels[key];
+    if (actionable && actionable.target && actionable.target.move_pct != null) {
+      return actionable.target.move_pct;
+    }
+    const m = lmLevels[key];
+    return m && m.spot_anchored_move_pct != null ? m.spot_anchored_move_pct : fallback;
+  };
+  const actionableInline = (key, fallbackStrike) => {
+    const actionable = actionableLevels[key];
+    if (actionable && actionable.target && actionable.target.spot_anchored != null) {
+      return `${actionable.target.ticker}≈$${actionable.target.spot_anchored} <small>（${actionable.source.ticker} $${actionable.source.strike} · ${actionable.basis}）</small>`;
+    }
+    return lm
+      ? `${lm.ticker}≈$${(lmLevels[key] || {}).spot_anchored_level || '-'} <small>（${lm.source} $${fallbackStrike || '-'}）</small>`
+      : (isProxy
+          ? `${opt.underlying} $${fallbackStrike || '-'} <small class="warn">（原价，不可挂单）</small>`
+          : `$${fallbackStrike || '-'}`);
+  };
+  let mappingBlock = '';
+  if (lm) {
+    const decay = lm.decay || {};
+    const carry = decay.daily_carry_pct;
+    const decayText = decay.available
+      ? `${carry < 0 ? '历史日均折损' : '历史日均偏差'} ${carry >= 0 ? '+' : ''}${carry}%（${decay.sample_days} 个交易日样本）`
+      : '历史折损样本不足';
+    mappingBlock = `<div style="margin:0 0 6px; padding:5px 7px; background:rgba(88,166,255,0.08); border-left:3px solid #58a6ff; border-radius:3px; font-size:10px; line-height:1.55">
+      🔁 <b>${lm.source} 结构 → ${lm.ticker} 可执行价</b><br>
+      <span style="color:var(--muted)">${lm.source} $${lm.proxy_spot} / ${lm.ticker} $${lm.leveraged_spot} · ${lm.leverage}×即时锚定 · ${decayText}</span>
+      ${lm.long_horizon_warning ? `<small class="warn" style="display:block">⚠ ${lm.calendar_days} 天期限有每日重置和路径偏差；买入价使用即时换算，并在触发时重新计算。</small>` : ''}
+    </div>`;
+  } else if (isProxy) {
+    mappingBlock = `<div class="warn" style="margin:0 0 6px; padding:5px 7px; background:rgba(210,153,34,0.10); border-left:3px solid var(--warn); border-radius:3px; font-size:10px">
+      ⚠ ${opt.underlying} → ${cardTicker} 价格换算正在加载；当前只显示底层期权原价，禁止用作 ${cardTicker} 挂单价。
+    </div>`;
+  }
   const strCls = { '强':'bad', '中':'warn', '弱':'muted' };
   const dCls = strCls[d.strength] || '';
   const oCls = strCls[o.strength] || '';
@@ -1558,6 +1646,39 @@ function renderOptAnalysis(opt) {
       ${urgIcon2} <b class="${urgCls2}">${eStock} 财报 T-${eDays}天</b> <small style="color:var(--muted)">(${eDate})${imText}${covText}</small>
     </div>`;
   }
+  // 新增期权流：与 wall/GEX 结构分开展示。snapshot 方向只是一种低置信
+  // quote-side 推断；score cap 会阻止它单独触发自动减仓。
+  const flow = opt.flow || null;
+  let flowBlock = '';
+  if (flow && (flow.score || 0) >= 40) {
+    const flowDirZh = {bullish:'看多', bearish:'看空', mixed:'多空分歧', neutral:'中性'}[flow.direction] || flow.direction;
+    const flowCls = flow.direction === 'bullish' ? 'ok' : (flow.direction === 'bearish' ? 'bad' : 'warn');
+    const flowActionZh = {
+      pause_buy:'暂停逆向加仓', watch_add:'观察加仓', reduce_candidate:'减仓候选',
+      add_candidate:'加仓候选', watch:'仅观察', none:'无动作'
+    }[flow.action] || flow.action;
+    const flowQuality = flow.data_quality === 'tape' ? '逐笔方向' : '期权链快照';
+    const flowEvents = (flow.top_events || []).slice(0, 3).map(e => {
+      const cp = e.option_type === 'put' ? 'P' : 'C';
+      const state = e.status === 'oi_confirmed' ? 'OI✓' : (e.status === 'oi_not_confirmed' ? 'OI×' : 'OI待确认');
+      const complex = e.complex_suspected ? ' · 疑似多腿' : '';
+      const evidence = e.direction_evidence || '-';
+      return `<div style="padding:3px 0; border-top:1px dashed var(--border); line-height:1.45">
+        <b>${e.source} ${e.expiry} ${e.strike}${cp}</b> · ${e.dte_bucket || ''} · ${e.score}/100<br>
+        <span style="color:var(--muted)">${fmtOI(e.contracts)}张 · 权利金 ${fmtNotional(e.estimated_premium)} · Delta敞口 ${fmtNotional(e.delta_notional)} · V/OI ${e.volume_oi_ratio == null ? '-' : e.volume_oi_ratio} · ${state}${complex}</span><br>
+        <span style="color:var(--muted)">方向依据 ${evidence}（快照推断，不等于确认的主动买单）</span>
+      </div>`;
+    }).join('');
+    flowBlock = `<div style="margin:0 0 6px; padding:5px 7px; background:rgba(163,113,247,0.08); border-left:3px solid #a371f7; border-radius:3px; font-size:10px; line-height:1.5">
+      <div style="display:flex; justify-content:space-between; gap:8px">
+        <span>🧭 <b>新增期权流</b> <span class="${flowCls}">${flowDirZh} ${flow.score}/100</span></span>
+        <span class="${flowCls}">${flowActionZh}</span>
+      </div>
+      <div style="color:var(--muted)">${(flow.confirming_sources || flow.sources || []).join('+')} · ${flowQuality} · 上限 ${flow.score_cap || 69}；结构墙与新增流量已分离</div>
+      ${flowEvents ? `<details style="margin-top:3px"><summary style="cursor:pointer; list-style:none; color:var(--muted)">查看异常合约 ▼</summary>${flowEvents}</details>` : ''}
+    </div>`;
+  }
+
   // ⚡ 通过期权判断 stock 风险与机会 (小白友好，不涉及期权买卖)
   const ga = opt.gex_analysis;
   let gexBlock = '';
@@ -1582,20 +1703,20 @@ function renderOptAnalysis(opt) {
       <tr>
         <td style="padding:2px 4px; color:var(--muted); font-size:9.5px">${levelDot[r.level]} ${label}</td>
         <td style="padding:2px 4px; font-size:9.5px" class="${levelCls[r.level]}"><b>${r.level === 'high' ? '高' : r.level === 'mid' ? '中' : '低'}</b></td>
-        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${r.reason}</td>
+        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${structureSource ? `[${structureSource}结构] ` : ''}${r.reason}</td>
       </tr>`;
     const oppRow = (key, label, o) => `
       <tr>
         <td style="padding:2px 4px; color:var(--muted); font-size:9.5px">${oppDot[o.level]} ${label}</td>
         <td style="padding:2px 4px; font-size:9.5px" class="${oppCls[o.level]}"><b>${o.level === 'good' ? '好' : o.level === 'wait' ? '等' : '无'}</b></td>
-        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${o.reason}</td>
+        <td style="padding:2px 4px; font-size:9.5px; color:var(--fg); line-height:1.4">${structureSource ? `[${structureSource}结构] ` : ''}${o.reason}</td>
       </tr>`;
 
     gexBlock = `
     <div style="border-radius:4px; padding:6px 8px; margin-bottom:6px; background:${summaryBg}; border-left:3px solid ${summaryBorder}">
       ${staleBadge}
       <div style="font-size:11px; font-weight:600; color:var(--fg); margin-bottom:5px" title="通过期权结构判断你的 stock 该怎么办 (不涉及买期权)">
-        ⚡ 期权判读你的 stock: <span class="${sv.summary_cls || 'muted'}">${sv.summary || '-'}</span>
+        ⚡ 期权判读${lm ? ` ${lm.ticker}（结构源 ${lm.source}）` : (isProxy ? ` ${cardTicker}（结构源 ${opt.underlying}，换算待更新）` : '你的 stock')}: <span class="${sv.summary_cls || 'muted'}">${sv.summary || '-'}</span>
       </div>
 
       <div style="font-size:9px; color:var(--muted); margin-bottom:2px">🔴 三类风险 (高/中/低)</div>
@@ -1614,16 +1735,16 @@ function renderOptAnalysis(opt) {
 
       <div style="font-size:9px; color:var(--muted); margin-bottom:2px">📍 关键价位 · 记这几个数就够了</div>
       <div style="font-size:10px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.7">
-        ${kp.upper_resistance ? `<div>⬆ <b>上方阻力 $${kp.upper_resistance}</b> <span style="color:var(--muted); font-size:9.5px">— 涨到这里会遇到卖压（因为持有卖出期权的人会主动砸盘保护自己）</span></div>` : ''}
-        ${kp.pin ? `<div>🎯 <b class="ok">关键中枢 $${kp.pin}</b> <span style="color:var(--muted); font-size:9.5px">— 华尔街对冲盘想把股价固定在这个价，价格偏离就会被拉回来</span></div>` : ''}
-        ${kp.lower_support ? `<div>⬇ <b>下方支撑 $${kp.lower_support}</b> <span style="color:var(--muted); font-size:9.5px">— 跌到这里会有买盘接（因为持有买入期权的人会主动买入保护自己）</span></div>` : ''}
-        ${kp.break_watch ? `<div class="warn" style="margin-top:3px; padding:3px 5px; background:rgba(210,153,34,0.10); border-radius:2px">${kp.break_watch}</div>` : ''}
+        ${kp.upper_resistance ? `<div>⬆ 上方阻力 ${mappedPrice('upper_resistance', kp.upper_resistance)} <span style="color:var(--muted); font-size:9.5px">— 涨到这里会遇到卖压</span></div>` : ''}
+        ${kp.pin ? `<div>🎯 <span class="ok">关键中枢 ${mappedPrice('pin', kp.pin)}</span> <span style="color:var(--muted); font-size:9.5px">— 对冲盘引力中心</span></div>` : ''}
+        ${kp.lower_support ? `<div>⬇ 下方支撑 ${mappedPrice('lower_support', kp.lower_support)} <span style="color:var(--muted); font-size:9.5px">— 跌到这里可能有承接</span></div>` : ''}
+        ${kp.break_watch ? `<div class="warn" style="margin-top:3px; padding:3px 5px; background:rgba(210,153,34,0.10); border-radius:2px">${structureSource ? `底层 ${structureSource} 条件：` : ''}${kp.break_watch}</div>` : ''}
       </div>
 
       <details style="margin-top:5px">
         <summary style="cursor:pointer; font-size:9px; color:var(--muted); list-style:none">📊 底层数据 (GEX/IV/Skew 原始，看着学)</summary>
         <div style="font-size:9.5px; color:var(--muted); margin-top:4px; padding:4px 6px; background:rgba(0,0,0,0.15); border-radius:3px; line-height:1.6">
-          <div>📊 <b>GEX</b>: ${ga.gex?.regime_zh || '-'} · 总 ${(ga.gex?.total_gex_millions || 0) >= 0 ? '+' : ''}${ga.gex?.total_gex_millions || 0}M · flip $${ga.gex?.gamma_flip_strike || '-'} (spot vs flip ${(ga.gex?.spot_vs_flip_pct || 0) >= 0 ? '+' : ''}${ga.gex?.spot_vs_flip_pct || 0}%)</div>
+          <div>📊 <b>GEX</b>: ${ga.gex?.regime_zh || '-'} · 总 ${(ga.gex?.total_gex_millions || 0) >= 0 ? '+' : ''}${ga.gex?.total_gex_millions || 0}M · ${opt.underlying || ''} flip $${ga.gex?.gamma_flip_strike || '-'} (spot vs flip ${(ga.gex?.spot_vs_flip_pct || 0) >= 0 ? '+' : ''}${ga.gex?.spot_vs_flip_pct || 0}%)</div>
           <div>📈 <b>IV</b>: ${ga.iv?.regime_zh || '-'} · ATM IV ${ga.iv?.atm_iv_pct || 0}% vs 60d RV ${ga.iv?.realized_vol_60d_pct || '-'}% · premium ${(ga.iv?.iv_premium_pct || 0) >= 0 ? '+' : ''}${ga.iv?.iv_premium_pct || 0}%</div>
           <div>📉 <b>Skew</b>: ${ga.skew?.regime_zh || '-'} · OTM put IV ${ga.skew?.otm_put_iv_pct || 0}% - call IV ${ga.skew?.otm_call_iv_pct || 0}% = ${(ga.skew?.skew_pct || 0) >= 0 ? '+' : ''}${ga.skew?.skew_pct || 0}%</div>
           <div style="margin-top:4px; padding-top:4px; border-top:1px dashed var(--border)">
@@ -1640,18 +1761,20 @@ function renderOptAnalysis(opt) {
   }
 
   return `<div class="opt-analysis" style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10.5px; line-height:1.4">
+    ${mappingBlock}
+    ${flowBlock}
     ${gexBlock}
     ${earningsBadge}
     <div style="display:flex; justify-content:space-between">
-      <span>🛡 <b>防守</b> $${d.strike || '-'} <small>(${d.dist_pct > 0 ? '-' : '+'}${Math.abs(d.dist_pct||0).toFixed(1)}%)</small></span>
+      <span>🛡 <b>防守</b> ${actionableInline('put_wall', d.strike)} <small>(${mappedMove('put_wall', -(d.dist_pct||0)) >= 0 ? '+' : ''}${mappedMove('put_wall', -(d.dist_pct||0)).toFixed(1)}%)</small></span>
       <span class="${dCls}"><small>${d.strength || '-'} · 占 ${d.share || 0}%</small></span>
     </div>
     <div style="display:flex; justify-content:space-between">
-      <span>⚔ <b>进攻</b> $${o.strike || '-'} <small>(${o.dist_pct > 0 ? '+' : ''}${(o.dist_pct||0).toFixed(1)}%)</small></span>
+      <span>⚔ <b>进攻</b> ${actionableInline('call_wall', o.strike)} <small>(${mappedMove('call_wall', o.dist_pct||0) >= 0 ? '+' : ''}${mappedMove('call_wall', o.dist_pct||0).toFixed(1)}%)</small></span>
       <span class="${oCls}"><small>${o.strength || '-'} · 占 ${o.share || 0}%</small></span>
     </div>
     <div style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr 1.2fr; gap:2px; margin-top:4px; padding:2px 0; font-size:9px; color:var(--muted); border-bottom:1px solid var(--border)">
-      <span title="Call Wall 或 Put Wall 的行权价">Strike</span>
+      <span title="Call Wall 或 Put Wall 的原始行权价">${opt.underlying || ''} Strike（原价）</span>
       <span title="单手合约保费（bid/ask 中点）">保费</span>
       <span title="Open Interest：未平仓合约数（持仓量，非当日成交）">OI 仓位</span>
       <span title="名义敞口 = OI × 100 × 行权价">名义</span>
@@ -1660,7 +1783,7 @@ function renderOptAnalysis(opt) {
     ${tableRow('🛡 Put',  'bad', d)}
     <div style="margin-top:5px" title="${(r.detail || '').replace(/"/g,'&quot;')}">
       <span class="${urgCls}"><b>${urgIcon} ${RISK_ZH[r.type] || r.type}</b></span>
-      <small style="color:var(--muted); display:block; margin-top:1px">${(r.detail || '').slice(0,100)}${r.detail && r.detail.length > 100 ? '…' : ''}</small>
+      <small style="color:var(--muted); display:block; margin-top:1px">${structureSource ? `[底层 ${structureSource}] ` : ''}${(r.detail || '').slice(0,100)}${r.detail && r.detail.length > 100 ? '…' : ''}</small>
     </div>
     ${sm.cp_ratio != null ? `<details style="margin-top:3px" title="Call 总成交 / Put 总成交比值；点开看详细解读">
       <summary style="cursor:pointer; display:flex; justify-content:space-between; list-style:none">
@@ -1686,14 +1809,17 @@ function renderSignalOverview(t, optSrc = '') {
   const regimeCls = 'regime ' + (t.regime || 'neutral');
   const rsiTip = t.rsi < 30 ? '超卖（可能反弹）' : (t.rsi > 70 ? '超买（可能回调）' : '正常');
   const volTip = t.vol_ratio > 1.5 ? '放量' : (t.vol_ratio < 0.7 ? '缩量' : '正常');
+  const nameZh = t.name_zh && t.name_zh !== t.ticker ? ` · <span style="color:var(--fg); font-weight:normal">${t.name_zh}</span>` : '';
+  const meaningZh = t.meaning_zh ? `<div style="font-size:9px; color:var(--muted); margin-top:-2px; margin-bottom:3px" title="${t.meaning_zh}">${t.meaning_zh}</div>` : '';
   return `
     <div class="top-row">
-      <span class="ticker-name" title="标的代码">${t.ticker} ${optSrc}</span>
+      <span class="ticker-name" title="标的代码 · ${t.meaning_zh || ''}">${t.ticker}${nameZh} ${optSrc}</span>
       <span class="price" title="当前价">$${fmt(t.price)}</span>
     </div>
+    ${meaningZh}
     <div class="top-row">
       <span class="${actionCls}" title="建议动作 + 置信度 (X/5)">${t.action_zh || '?'} <small>${t.conf||''}/${t.scale||''}</small></span>
-      <span class="badge ${regimeCls}" title="市场状态：crisis=危机 / overheated=过热 / bull=温和牛 / neutral=中性">${t.regime || 'neutral'}</span>
+      <span class="badge ${regimeCls}" title="实际交易前提：bull=日线偏多趋势（不是单独买点）/ neutral_chop=中性震荡 / risk_off=风险收缩 / crisis=危机">${t.regime || 'neutral'}</span>
     </div>
     <div class="bar-container" title="共振多空条：绿=看多信号数，红=看空信号数">
       <div class="bar-bull" style="width:${bullPct}%"></div>
@@ -1785,15 +1911,15 @@ function renderTickerAI(t, context) {
   const src  = context.aiSrc[t.ticker];
   if (!body) {
     if (context.aiLiveState === 'generating') {
-      return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 Claude 即时分析生成中… （首次 30-60s，之后刷新秒开）</div>`;
+      return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 AI 即时分析生成中… （首次 30-60s，之后刷新秒开）</div>`;
     }
-    return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 Claude 分析：数据不足或 Claude CLI 不可用</div>`;
+    return `<div style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px; font-size:10px; color:var(--muted)">🤖 AI 分析：数据不足或 AI CLI 不可用</div>`;
   }
   const srcBadge = src === 'live'
     ? `<span style="color:#3fb950; font-size:9px" title="基于当前 signals+期权数据即时生成，${context.aiLiveMtime}">🟢 LIVE ${context.aiLiveMtime}</span>`
     : `<span style="color:var(--muted); font-size:9px" title="来自 orchestrator 定时快照 ${context.aiSnapMtime}">📸 SNAPSHOT ${context.aiSnapMtime}</span>`;
   return `<details data-details-key="ai-${t.ticker}" open style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this)">
-    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🤖 <b style="color:#58a6ff">Claude 分析</b> ${srcBadge} <span style="font-size:9px">▲折叠</span></summary>
+    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🤖 <b style="color:#58a6ff">AI 分析</b> ${srcBadge} <span style="font-size:9px">▲折叠</span></summary>
     <div class="analysis" style="font-size:11px; line-height:1.55">${(typeof marked !== 'undefined' ? marked.parse(body) : body.replace(/\n/g,'<br>'))}</div>
   </details>`;
 }
@@ -1815,7 +1941,7 @@ function renderSignalCard(t, context) {
     <span title="日线趋势方向">趋势 ${trendZh} · 技术简报</span>
   </div>` : '';
   const supplyChain = showSupplyChain ? `<details data-details-key="sc-${t.ticker}" style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this); if(this.open) loadSupplyChainOnDemand('${t.ticker}', 'sc-${t.ticker}')">
-    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🔗 <b style="color:#58a6ff">上下游供应链</b> <small style="font-size:9px">▼展开加载 (Claude 生成，缓存 14 天)</small></summary>
+    <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); margin-bottom:4px">🔗 <b style="color:#58a6ff">上下游供应链</b> <small style="font-size:9px">▼展开加载 (AI CLI 生成，缓存 30 天)</small></summary>
     <div id="sc-${t.ticker}"></div>
   </details>` : '';
   const capitalFlow = `<details data-details-key="cf-${t.ticker}" open style="border-top:1px dashed var(--border); margin-top:6px; padding-top:5px" ontoggle="rememberDetailsState(this); if(this.open) loadCapitalFlowOnDemand('${t.ticker}', 'cf-${t.ticker}')">
@@ -1834,7 +1960,7 @@ function renderSignalCard(t, context) {
     ${renderSignalOverview(t, optSrc)}
     ${macroMeta}
     ${showOptions ? renderMiniWall(opt) : ''}
-    ${showOptions ? renderOptAnalysis(opt) : ''}
+    ${showOptions ? renderOptAnalysis(opt, t.ticker) : ''}
     ${forwardOutlook}
     ${showAI ? renderTickerAI(t, context) : ''}
     ${capitalFlow}
@@ -1844,7 +1970,7 @@ function renderSignalCard(t, context) {
 }
 
 async function loadSignals() {
-  // 并行拉信号 + 股票标的期权 + 股票标的 Claude 分析
+  // 并行拉信号 + 股票标的期权 + 股票标的 AI 分析
   const [s, tOpts, tAI] = await Promise.all([
     fetchJson('/api/signals'),
     fetchJson('/api/ticker_options'),
@@ -1923,6 +2049,63 @@ async function loadPositions() {
   `;
 }
 
+async function loadInstitutional() {
+  const el = $('institutional-risk');
+  if (!el) return;
+  const r = await fetchJson('/api/institutional');
+  if (!r || r.refreshing || (r._meta && r._meta.refreshing)) {
+    el.innerHTML = '<small>正在同步持仓并计算6个月风险历史…</small>';
+    return;
+  }
+  if (r.error) {
+    el.innerHTML = `<small class="warn">风险报告暂不可用：${r.error}</small>`;
+    return;
+  }
+  const risk = r.risk || {};
+  const dq = r.data_quality || {};
+  const ex = r.execution_quality || {};
+  const stress = (r.stress_tests || []).slice().sort((a,b) => a.nav_impact_pct - b.nav_impact_pct);
+  const worst = stress[0] || {};
+  const flags = r.risk_flags || [];
+  const val = r.research_validation || [];
+  const bench = r.benchmark_attribution || {};
+  const riskContrib = ((r.factor_and_correlation_risk || {}).risk_contributions || [])[0] || {};
+  const pass = val.reduce((s,x) => s + (x.walk_forward_passed || 0), 0);
+  const rules = val.reduce((s,x) => s + (x.rules || 0), 0);
+  const statusCls = r.status === 'high_risk' ? 'bad' : (flags.length ? 'warn' : 'ok');
+  const positions = (r.positions || []).map(p => `<tr>
+    <td><b>${(p.ticker||'').replace('US.','')}</b></td>
+    <td>${(p.weight*100).toFixed(1)}%</td>
+    <td>${p.leverage.toFixed(1)}×</td>
+    <td>$${fmt(p.effective_exposure)}</td>
+    <td>${p.group}</td>
+  </tr>`).join('');
+  const pathRows = (r.leveraged_path_risk || []).map(p => {
+    const flat = (p.scenarios || []).find(x => x.name === '横盘高波动') || {};
+    return `<span class="badge warn" title="20日±4%交替路径下的日复位结果">${p.ticker} ${p.leverage}× 横盘折损 ${(flat.leveraged_return*100 || 0).toFixed(1)}%</span>`;
+  }).join(' ');
+  el.innerHTML = `
+    <div class="grid g4" style="gap:6px; margin-bottom:8px">
+      <div class="stat"><span class="k">有效总暴露</span><span class="v ${statusCls}">${(r.effective_gross_exposure_pct||0).toFixed(1)}%</span></div>
+      <div class="stat"><span class="k">1日 VaR 95%</span><span class="v">$${fmt(risk.var_95_1d)} <small>${(risk.var_95_1d_pct||0).toFixed(2)}%</small></span></div>
+      <div class="stat"><span class="k">最差压力</span><span class="v bad">${worst.name||'-'} ${(worst.nav_impact_pct||0).toFixed(1)}%</span></div>
+      <div class="stat"><span class="k">现金</span><span class="v">${(r.cash_pct||0).toFixed(1)}%</span></div>
+    </div>
+    ${flags.length ? `<div style="padding:5px; border-left:2px solid var(--bad); margin-bottom:6px">${flags.map(f=>'⚠ '+f.message).join(' · ')} <small>· SIM_ACTIVE 仅提示，不拦单</small></div>` : '<div class="ok" style="margin-bottom:6px">✓ 未触发组合风险提示 · SIM_ACTIVE 不设 VaR/压力限仓</div>'}
+    <div style="margin-bottom:6px">${pathRows || '<small>当前无杠杆ETF路径风险</small>'}</div>
+    <table><thead><tr><th>Ticker</th><th>NAV权重</th><th>杠杆</th><th>有效暴露</th><th>风险组</th></tr></thead><tbody>${positions}</tbody></table>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:7px; font-size:10px; color:var(--muted)">
+      <span>数据质量 <b class="${dq.status==='critical'?'bad':dq.status==='warning'?'warn':'ok'}">${dq.status||'unavailable'}</b> (${dq.checked_files||0})</span>
+      <span>实际成交率 <b>${ex.avg_fill_ratio == null ? '-' : (ex.avg_fill_ratio*100).toFixed(1)+'%'}</b></span>
+      <span>成交短差 <b>${ex.avg_shortfall_bps == null ? '-' : ex.avg_shortfall_bps.toFixed(1)+' bps'}</b></span>
+      <span>小资金执行 <b>不计理论点差/冲击/容量</b></span>
+      <span>Walk-forward通过 <b>${pass}/${rules}</b></span>
+      <span>VaR源 <b>${risk.source||'-'} · N=${risk.observations||0}</b></span>
+      <span>SPY Beta <b>${bench.available ? bench.beta.toFixed(2) : '-'}</b></span>
+      <span>最大风险贡献 <b>${riskContrib.ticker ? riskContrib.ticker.replace('US.','')+' '+riskContrib.pct.toFixed(1)+'%' : '-'}</b></span>
+    </div>`;
+}
+
 // 供应链懒加载 —— 展开卡时才 fetch，之后缓存 7 天
 function renderSupplyChain(sc, ticker) {
   const confCls = c => ({high:'ok', medium:'warn', low:'muted'}[c] || '');
@@ -1941,9 +2124,10 @@ function renderSupplyChain(sc, ticker) {
     const badge = p.fmp_verified ? ' ✓' : '';
     return `<span class="badge ${cls}" title="${(p.note||'').replace(/"/g,'&quot;')}${p.fmp_verified?' · FMP 已验证':''}" style="font-size:9px; margin:1px 2px">${p.name}${p.ticker?' ['+p.ticker+']':''}${badge}</span>`;
   }).join('');
-  const srcBadge = sc.source === 'claude+fmp'
-    ? '<span class="badge ok" style="font-size:8px">Claude+FMP ✓</span>'
-    : '<span class="badge muted" style="font-size:8px">Claude only</span>';
+  const srcLabel = sc.source === 'codex+fmp' ? 'Codex+FMP ✓'
+    : (sc.source === 'claude+fmp' ? 'Claude+FMP ✓'
+    : (sc.source === 'codex' ? 'Codex' : 'Claude'));
+  const srcBadge = `<span class="badge ${sc.source && sc.source.endsWith('+fmp') ? 'ok' : 'muted'}" style="font-size:8px">${srcLabel}</span>`;
   const graphBtn = ticker ? `
     <span style="margin-left:auto; display:flex; gap:4px">
       <button onclick="showSupplyChainGraph('${ticker}',1)" style="background:transparent; border:1px solid var(--blue); color:var(--blue); font-size:10px; padding:2px 8px; border-radius:4px; cursor:pointer" title="直接邻居（快）">🕸 1 层</button>
@@ -2164,7 +2348,7 @@ async function loadSupplyChainOnDemand(ticker, containerId) {
   if (!el || el.dataset.loaded === 'true') return;
   if (el.dataset.loading === 'true') return;
   el.dataset.loading = 'true';
-  el.innerHTML = '<small style="color:var(--muted); padding:8px; display:block">🔄 Claude 生成中… (首次 30-60s，之后缓存 7 天)</small>';
+  el.innerHTML = '<small style="color:var(--muted); padding:8px; display:block">🔄 AI CLI 生成中… (首次 30-60s，之后缓存 30 天)</small>';
   const r = await fetchJson(`/api/supply_chain?ticker=${encodeURIComponent(ticker)}`);
   el.dataset.loading = 'false';
   if (!r || r.error) {
@@ -2208,89 +2392,109 @@ async function loadLog() {
   el.scrollTop = el.scrollHeight;
 }
 
-// 系统自动挂单展示 —— 从 /api/ai_targets 读结构化 JSON, paper_trader 用此挂单
+// 自动执行展示：broker 未结订单是事实；AI JSON 只是价位计划。
 async function loadAITargets() {
   const el = document.getElementById('ai-targets');
   const mtimeEl = document.getElementById('ai-targets-mtime');
   if (!el) return;
   const t = await fetchJson('/api/ai_targets');
   if (!t || !t.exists) {
-    el.innerHTML = '<small style="color:var(--muted)">暂无自动挂单目标 (需 owner 端 snap.bat 运行)</small>';
+    el.innerHTML = '<small style="color:var(--muted)">当前没有系统未结订单，也没有可用的 AI 价位计划。</small>';
     return;
   }
-  if (mtimeEl) mtimeEl.textContent = '· 生成 ' + (t.ts || '').slice(5, 16);
+  if (mtimeEl) mtimeEl.textContent = '· 价位计划 ' + (t.ts || '').slice(5, 16);
 
   const ACT_META = {
-    watch_buy: { zh: '关注买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
-    buy:       { zh: '立即买入', color: '#3fb950', bg: 'rgba(63,185,80,0.18)', icon: '🟢' },
-    hold:      { zh: '维持',     color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
-    skip:      { zh: '不操作',   color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚫' },
-    sell:      { zh: '卖出',     color: '#f85149', bg: 'rgba(248,81,73,0.10)', icon: '🔴' },
-    reduce:    { zh: '减仓',     color: '#d29922', bg: 'rgba(210,153,34,0.10)', icon: '🟡' },
+    WATCH_BUY:       { zh: '关注买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
+    WATCH_BUY_PROBE: { zh: '试探买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
+    BUY:             { zh: '买入',     color: '#3fb950', bg: 'rgba(63,185,80,0.18)', icon: '🟢' },
+    HOLD:            { zh: '维持',     color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
+    SKIP:            { zh: '不操作',   color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚫' },
+    SELL:            { zh: '卖出',     color: '#f85149', bg: 'rgba(248,81,73,0.10)', icon: '🔴' },
+    REDUCE:          { zh: '减仓',     color: '#d29922', bg: 'rgba(210,153,34,0.10)', icon: '🟡' },
+    UNKNOWN:         { zh: '无新决策', color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
+  };
+  const STATUS_META = {
+    submitted:      { text: '已在 broker 挂单', color: '#3fb950' },
+    position_open:  { text: '已持仓，无未结单', color: '#58a6ff' },
+    candidate:      { text: '候选，尚未挂单', color: '#d29922' },
+    inactive_signal:{ text: '已被新决策停用', color: '#7d8590' },
+    inactive:       { text: '未触发', color: '#7d8590' },
   };
   const cleanTk = (raw) => (raw || '').replace(/^(US|JP|HK|SH|SZ)\./,'');
 
   const rows = (t.targets || []).map(tg => {
-    const act = ACT_META[tg.action] || ACT_META.hold;
-    const isActive = tg.entry_ref !== null && tg.action !== 'skip' && tg.action !== 'hold';
-    const potentialUpside = (tg.target_ref && tg.entry_ref)
-      ? ((tg.target_ref - tg.entry_ref) / tg.entry_ref * 100)
+    const act = ACT_META[tg.system_action] || ACT_META.UNKNOWN;
+    const status = STATUS_META[tg.execution_status] || STATUS_META.inactive;
+    const order = (tg.pending_orders || [])[0];
+    const entryRef = tg.effective_entry_ref;
+    const stopRef = tg.effective_stop_ref;
+    const targetRef = tg.effective_target_ref;
+    const hasPlan = entryRef !== null && entryRef !== undefined;
+    const potentialUpside = (targetRef && entryRef)
+      ? ((targetRef - entryRef) / entryRef * 100)
       : null;
-    const stopDist = (tg.stop_ref && tg.entry_ref)
-      ? ((tg.stop_ref - tg.entry_ref) / tg.entry_ref * 100)
+    const stopDist = (stopRef && entryRef)
+      ? ((stopRef - entryRef) / entryRef * 100)
       : null;
     const rr = (potentialUpside && stopDist) ? Math.abs(potentialUpside / stopDist) : null;
 
-    return `<div style="display:grid; grid-template-columns:auto 90px 100px 90px 90px 65px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
+    const actual = order
+      ? `<b style="color:#3fb950">${order.side} ${order.qty} @ $${order.price}</b><small style="display:block;color:var(--muted)">${order.status} · #${order.order_id}</small>`
+      : `<b style="color:${status.color}">${status.text}</b>${tg.position_qty ? `<small style="display:block;color:var(--muted)">持仓 ${tg.position_qty}</small>` : ''}`;
+    const sourceLabel = tg.effective_price_source === 'ai_target'
+      ? 'AI价位' : '当前系统价';
+
+    return `<div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
       <span style="min-width:70px"><b style="color:#79c0ff; font-size:12.5px">${cleanTk(tg.ticker)}</b></span>
       <span><span class="badge" style="font-size:9px; background:${act.color}; color:#0d1117">${act.icon} ${act.zh}</span></span>
-      <span title="限价挂单价 (等回踩到才买)">
-        ${isActive
-          ? `<b style="color:var(--fg); font-size:12px">$${tg.entry_ref}</b> <small style="color:var(--muted); font-size:9px">${tg.use_limit ? 'LIMIT' : 'MKT'}</small>`
-          : '<span class="muted">—</span>'}
+      <span title="当前系统入场参考；只有 broker 状态显示已挂单才代表真实订单">
+        ${hasPlan
+          ? `<b style="color:var(--fg); font-size:12px">$${entryRef}</b> <small style="color:var(--muted); font-size:9px">${sourceLabel}</small>`
+          : (tg.target_outdated ? '<span class="muted">旧计划已隐藏</span>' : '<span class="muted">—</span>')}
       </span>
-      <span title="broker 端 SELL STOP 触发价 (跌破自动止损)">
-        ${tg.stop_ref
-          ? `<b class="bad" style="font-size:11px">$${tg.stop_ref}</b> <small style="color:var(--muted); font-size:9px">${stopDist ? stopDist.toFixed(1) + '%' : ''}</small>`
+      <span title="broker 真实未结订单状态">${actual}</span>
+      <span title="止损参考；模拟账户不支持 broker STOP 时由软件风控每分钟巡检">
+        ${stopRef
+          ? `<b class="bad" style="font-size:11px">$${stopRef}</b> <small style="color:var(--muted); font-size:9px">${stopDist ? stopDist.toFixed(1) + '%' : ''}</small>`
           : '<span class="muted">—</span>'}
       </span>
       <span title="第一目标位 (参考, paper_trader 暂不用于自动止盈)">
-        ${tg.target_ref
-          ? `<b class="ok" style="font-size:11px">$${tg.target_ref}</b> <small style="color:var(--muted); font-size:9px">${potentialUpside ? '+' + potentialUpside.toFixed(1) + '%' : ''}</small>`
+        ${targetRef
+          ? `<b class="ok" style="font-size:11px">$${targetRef}</b> <small style="color:var(--muted); font-size:9px">${potentialUpside ? '+' + potentialUpside.toFixed(1) + '%' : ''}</small>`
           : '<span class="muted">—</span>'}
       </span>
-      <span title="风险回报比 (target 涨幅 / stop 跌幅)">
-        ${rr ? `<b style="color:${rr >= 2 ? '#3fb950' : (rr >= 1 ? '#d29922' : '#f85149')}">R:R ${rr.toFixed(1)}</b>` : '<span class="muted">—</span>'}
-      </span>
-      <span style="color:var(--muted); font-size:10px; line-height:1.4">${tg.notes || ''}</span>
+      <span style="color:var(--muted); font-size:10px; line-height:1.4">${tg.system_reason || tg.notes || ''}${rr ? `<small style="display:block">计划 R:R ${rr.toFixed(1)}</small>` : ''}</span>
     </div>`;
   }).join('');
 
-  const activeCount = (t.targets || []).filter(x => x.action !== 'skip' && x.action !== 'hold').length;
+  const activeCount = t.pending_count || 0;
   const totalCount = (t.targets || []).length;
+  const brokerNote = t.broker_status === 'ok'
+    ? `broker 已核对` : `<span class="warn">broker 暂不可用，状态未知</span>`;
 
   el.innerHTML = `
     <div style="font-size:10.5px; color:var(--muted); margin-bottom:6px">
-      <b class="ok">${activeCount}</b> / ${totalCount} 只挂单 · 数据源: <code style="font-size:9.5px">${t.path || ''}</code>
+      真实系统未结单 <b class="ok">${activeCount}</b> · ${brokerNote} · 价位计划: <code style="font-size:9.5px">${t.path || '无'}</code>
     </div>
-    <div style="display:grid; grid-template-columns:auto 90px 100px 90px 90px 65px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
+    <div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
       <span style="min-width:70px">Ticker</span>
-      <span>Action</span>
-      <span>入场价 (limit)</span>
-      <span>止损 (broker stop)</span>
+      <span>最新系统决策</span>
+      <span>当前入场参考</span>
+      <span>broker 实际状态</span>
+      <span>止损参考</span>
       <span>目标 (参考)</span>
-      <span>R:R</span>
-      <span>决策理由</span>
+      <span>当前系统理由</span>
     </div>
     ${rows}
     <div style="font-size:9px; color:var(--muted); margin-top:6px; padding:4px 6px; background:rgba(255,255,255,0.02); border-radius:2px">
-      <b>逻辑</b>: paper_trader 收到 orchestrator BUY/WATCH_BUY 信号 → 读此 JSON → 挂 <b>GTC 限价</b> @ 入场价（如挂 LIMIT）+ <b>broker SELL STOP</b> @ 止损价（orchestrator 离线也生效）。<code>skip/hold</code> 直接跳过。
+      <b>执行口径</b>: 最新规则/动量决策是下单开关；旧于当前决策的 AI 数字会隐藏。绿色“已在 broker 挂单”才代表真实未结单。模拟账户不支持原生 STOP 时，止损由后台软件风控每分钟执行。
     </div>
   `;
 }
 
-// 从 Claude ai_analysis markdown 提取结构化 TL;DR
-function parseClaudeAnalysis(rawContent) {
+// 从 AI CLI ai_analysis markdown 提取结构化 TL;DR
+function parseAIAnalysis(rawContent) {
   const clean = (rawContent || '').replace(/\x1b\[[0-9;]*m/g, '');
   // 全景 intro: 第一段 (在第一个 ## heading 之前，去掉两个 # 元数据 header)
   const introMatch = clean.match(/^(?:#[^\n]*\n\n){1,2}([\s\S]+?)(?=\n---|\n## \d)/);
@@ -2337,8 +2541,8 @@ async function loadAI() {
   }
   if (mtimeEl) mtimeEl.textContent = '· ' + (a.mtime || '').slice(5, 16);
 
-  const { intro, sections, raw } = parseClaudeAnalysis(a.content);
-  // 尝试匹配各类 section (Claude 输出格式变化时容错)
+  const { intro, sections, raw } = parseAIAnalysis(a.content);
+  // 尝试匹配各类 section (AI 输出格式变化时容错)
   const secByKey = (k) => Object.entries(sections).find(([n]) => n.includes(k))?.[1] || '';
   const secExec  = secByKey('执行建议');
   const secEvent = secByKey('事件') || secByKey('重大');
@@ -2404,6 +2608,11 @@ const SECTOR_REGIME_CLS = {
   neutral:'info', strong:'ok', overheated:'warn',
 };
 
+const STYLE_CLS = {
+  trend_up:'ok', trend_down:'bad', pullback:'warn', rebound:'info',
+  chop_bull:'warn', chop:'warn', chop_weak:'bad', mixed:'info', unknown:'info',
+};
+
 async function loadSectors() {
   const r = await fetchJson('/api/sectors');
   const sf = $('sectors-freshness');
@@ -2415,6 +2624,9 @@ async function loadSectors() {
     const p20cls = s.pct_20d === null ? '' : (s.pct_20d > 0 ? 'ok' : 'bad');
     const trendCls = s.trend === 'up' ? 'ok' : 'bad';
     const regimeCls = SECTOR_REGIME_CLS[s.regime] || '';
+    const styleCls = STYLE_CLS[s.style] || 'info';
+    const metrics = s.style_metrics || {};
+    const styleTitle = `${s.style_reason || ''}${metrics.efficiency_10 != null ? ` · 趋势效率=${metrics.efficiency_10}` : ''}${metrics.adx_14 != null ? ` · ADX=${metrics.adx_14}` : ''}`;
     return `
     <div class="signal-card">
       <div class="top-row">
@@ -2422,13 +2634,14 @@ async function loadSectors() {
         <span class="price">$${fmt(s.price)}</span>
       </div>
       <div class="top-row">
-        <span class="badge ${regimeCls==='bad'?'bad':(regimeCls==='ok'?'ok':(regimeCls==='warn'?'warn':'info'))}" style="font-size:11px" title="基于 5d 涨跌幅：≤-5% 危机 / ≤-2% 弱势 / ±2% 中性 / ≥+2% 强势 / ≥+5% 过热">${s.regime_zh || s.regime}</span>
+        <span class="badge ${styleCls}" style="font-size:11px" title="${styleTitle}">${s.style_zh || '短线待判'}${s.chop_score != null ? ` · 震荡${s.chop_score}` : ''}</span>
         <small class="${trendCls}" title="MA20 之上=up / 之下=down">${s.trend === 'up' ? '↑ 站上MA20' : '↓ 破MA20'}</small>
       </div>
       <div style="font-size:11px; display:flex; gap:12px; margin-top:6px">
         <span title="过去 5 天累积涨跌">5天 <b class="${p5cls}">${s.pct_5d !== null ? (s.pct_5d>0?'+':'') + s.pct_5d.toFixed(2) : '-'}%</b></span>
         <span title="过去 20 天累积涨跌">20天 <b class="${p20cls}">${s.pct_20d !== null ? (s.pct_20d>0?'+':'') + s.pct_20d.toFixed(2) : '-'}%</b></span>
       </div>
+      <div style="font-size:10px; color:var(--muted); margin-top:3px">中期方向：<span class="${regimeCls}">${s.regime_zh || s.regime}</span> · ${s.policy_note || ''}</div>
       <div style="font-size:10px; color:var(--muted); margin-top:4px" title="你的哪些仓位对应这个板块">你的仓位: ${s.linked}</div>
     </div>`;
   }).join('');
@@ -2526,14 +2739,29 @@ async function loadAll() {
   ];
   // Owner-only endpoints skip in static mode
   if (!window.STATIC_SNAPSHOT_MODE) {
-    promises.push(loadNav(), loadPositions(), loadTrades(), loadLog());
+    promises.push(loadNav(), loadPositions(), loadInstitutional(), loadTrades(), loadLog());
   }
   await Promise.all(promises);
 }
 
 loadAll();
-// Static mode: 快照本身已定型，不需要 30s 反复刷
-if (!window.STATIC_SNAPSHOT_MODE) setInterval(loadAll, 30000);
+if (!window.STATIC_SNAPSHOT_MODE) {
+  setInterval(loadAll, 30000);
+} else {
+  // 打开的 GitHub Pages 标签页也会检测新快照；只在版本真的变化时重载，
+  // 避免页面长期停留在旧 JS / 旧自动挂单价。
+  setInterval(async () => {
+    try {
+      const r = await fetch('data/_meta.json?_=' + Date.now(), {cache: 'no-store'});
+      if (!r.ok) return;
+      const latest = await r.json();
+      const loaded = window.SNAPSHOT_META && window.SNAPSHOT_META.generated_at;
+      if (latest.generated_at_local && loaded && latest.generated_at_local !== loaded) {
+        location.reload();
+      }
+    } catch (_) {}
+  }, 120000);
+}
 
 // Preview mode: URL ?expand=all → 展开所有 details 并触发 supply chain 加载（for README 截图）
 if (new URLSearchParams(location.search).get('expand') === 'all') {

@@ -11,6 +11,7 @@ API 端点：
   GET /api/health         → { orchestrator_alive, opend_alive, last_log_ts, uptime }
   GET /api/nav            → NAV 历史 + peak + dd_pct
   GET /api/positions      → moomoo 当前持仓（如可用）
+  GET /api/institutional  → 组合风险/压力/归因/杠杆路径/成交质量
   GET /api/trades?n=20    → 最近 N 笔 trade_log
   GET /api/log?n=100      → 当天 log 最后 N 行
   GET /api/benchmark      → 若有 signals/benchmark_report.md 则读
@@ -67,7 +68,7 @@ def _cached(name: str, ttl_sec: int, compute_fn, first_call_async: bool = False,
     过期时后台线程刷新，本次请求仍返回旧值（首次无缓存时同步计算）。
 
     first_call_async=True: 首次无缓存也走后台线程，本次返回 first_call_placeholder
-    （避免 Claude CLI 等慢查询把 HTTP handler 阻塞几十秒）。
+    （避免 AI CLI 等慢查询把 HTTP handler 阻塞几十秒）。
     """
     cache_path = _WEBUI_CACHE_DIR / f"{name}.json"
     now = time.time()
@@ -219,11 +220,11 @@ def ticker_display_profile(ticker: str) -> dict:
 
 
 def _trump_summary_recent3(items: list) -> dict:
-    """对最近 3 条推文调 Claude CLI 出一句话概括。缓存 by post_ids sha1。非阻塞。
+    """对最近 3 条推文调 AI CLI 出一句话概括。缓存 by post_ids sha1。非阻塞。
 
     返回 {"text": str|None, "state": "cached"|"generating"|"empty"|"error", "post_ids": [...]}
     - 命中缓存 → text 有值
-    - 未命中且未在生成 → 启动后台线程调 claude, 返回 state=generating text=None
+    - 未命中且未在生成 → 启动后台线程调 AI CLI, 返回 state=generating text=None
     - 已有其它总结在跑 → 返回 state=generating
     """
     import hashlib
@@ -240,7 +241,7 @@ def _trump_summary_recent3(items: list) -> dict:
         return {"text": cache_path.read_text(encoding="utf-8").strip(),
                 "state": "cached", "post_ids": ids}
 
-    # 未命中：启动后台线程调 Claude
+    # 未命中：启动后台线程调 AI CLI
     if not _refresh_flag.get(f"trump_summary_{key}"):
         def _bg():
             _refresh_flag[f"trump_summary_{key}"] = True
@@ -503,6 +504,97 @@ def api_trades(n: int = 20) -> dict:
     return {"trades": trades, "total": len(lines)}
 
 
+def _institutional_market_inputs(positions: list[dict]) -> tuple[dict, dict, dict]:
+    """Fetch 6m close history and 20d ADV for held names and leverage proxies."""
+    histories: dict[str, list[float]] = {}
+    proxy_histories: dict[str, list[float]] = {}
+    average_volume: dict[str, float] = {}
+    try:
+        import yfinance as yf
+        from leveraged_etf_risk import leveraged_profile
+    except Exception:
+        return histories, proxy_histories, average_volume
+    symbols = set()
+    proxies = {"SPY"}
+    for position in positions:
+        ticker = str(position.get("ticker") or "").replace("US.", "")
+        if not ticker or float(position.get("qty") or 0) <= 0:
+            continue
+        symbols.add(ticker)
+        profile = leveraged_profile(ticker)
+        if profile:
+            proxies.add(str(profile["proxy"]))
+    for symbol in sorted(symbols | proxies):
+        try:
+            history = yf.Ticker(symbol).history(period="6mo", interval="1d", auto_adjust=True)
+            if history is None or history.empty:
+                continue
+            closes = [float(x) for x in history["Close"].dropna().tolist()]
+            if symbol in symbols:
+                histories[symbol] = closes
+                if "Volume" in history:
+                    volume = history["Volume"].dropna().tail(20)
+                    if len(volume):
+                        average_volume[symbol] = float(volume.mean())
+            if symbol in proxies:
+                proxy_histories[symbol] = closes
+        except Exception:
+            continue
+    return histories, proxy_histories, average_volume
+
+
+def api_institutional() -> dict:
+    """Institutional measurement layer for the paper portfolio."""
+    def _compute():
+        from execution_analytics import summarize_execution_log
+        from portfolio_analytics import analyze_portfolio
+
+        position_payload = api_positions()
+        positions = [dict(p) for p in position_payload.get("positions", [])]
+        histories, proxy_histories, average_volume = _institutional_market_inputs(positions)
+        for position in positions:
+            symbol = str(position.get("ticker") or "").replace("US.", "")
+            if symbol in average_volume:
+                position["avg_daily_volume"] = average_volume[symbol]
+        nav = float(position_payload.get("current_nav") or 0)
+        market_value = sum(float(p.get("market_val") or 0) for p in positions)
+        report = analyze_portfolio(
+            positions,
+            nav=nav or market_value,
+            cash=(nav - market_value) if nav else 0.0,
+            histories=histories,
+            proxy_histories=proxy_histories,
+            benchmark_history=proxy_histories.get("SPY"),
+        )
+        quality_path = SIGNALS_DIR / "data_quality_report.json"
+        try:
+            report["data_quality"] = json.loads(quality_path.read_text(encoding="utf-8"))
+        except Exception:
+            report["data_quality"] = {"status": "unavailable", "checked_files": 0}
+        report["execution_quality"] = summarize_execution_log(
+            SIGNALS_DIR / "execution_ledger.jsonl"
+        )
+        validation = []
+        for path in sorted(SIGNALS_DIR.glob("backtest_*.json")):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                rules = payload.get("results") or []
+                validation.append({
+                    "ticker": payload.get("ticker") or path.stem.replace("backtest_", ""),
+                    "rules": len(rules),
+                    "walk_forward_passed": sum(
+                        1 for rule in rules if (rule.get("walk_forward") or {}).get("passed")
+                    ),
+                })
+            except Exception:
+                continue
+        report["research_validation"] = validation
+        report["position_sync_source"] = position_payload.get("sync_source")
+        return report
+
+    return _cached("institutional_live", ttl_sec=600, compute_fn=_compute, first_call_async=True)
+
+
 def api_log(n: int = 100) -> dict:
     path = _today_log_path()
     if not path.exists():
@@ -529,12 +621,43 @@ def api_benchmark() -> dict:
 
 
 def api_hmm() -> dict:
-    """HMM meta-regime 当前状态。"""
+    """多周期市场环境；HMM 只作为慢周期背景，绝非买入信号。"""
     path = SIGNALS_DIR / "hmm_state.json"
     if not path.exists():
         return {"exists": False}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
+        trading = {}
+        try:
+            from regime_today import get_today_info, _market_date
+            current = get_today_info()
+            state = current or get_today_info(allow_stale=True)
+            style = (state.get("short_style") or
+                     (state.get("inputs") or {}).get("short_style") or {})
+            regime_labels = {
+                "bull_trending": "日线趋势偏多",
+                "bull_extended": "日线趋势延伸",
+                "bull_pulling": "日线偏多但在回调",
+                "bull_chop": "偏多背景下震荡",
+                "neutral_chop": "中性震荡",
+                "risk_off": "风险收缩（价格/板块急跌）",
+                "overheated": "过热警戒",
+                "recession_risk": "衰退风险",
+                "crisis": "危机防御",
+                "neutral": "日线中性",
+            }
+            trading = {
+                "regime": state.get("regime") or "neutral",
+                "regime_zh": regime_labels.get(state.get("regime"), state.get("regime")),
+                "base_regime": state.get("base_regime"),
+                "style": style,
+                "date": state.get("date"),
+                "expected_date": _market_date(),
+                "stale": not bool(current),
+                "ts": state.get("ts"),
+            }
+        except Exception as exc:
+            trading = {"regime": "neutral", "regime_zh": "日线状态不可用", "error": str(exc)}
         return {
             "exists":     True,
             "label":      data.get("current_label"),
@@ -542,6 +665,9 @@ def api_hmm() -> dict:
             "state":      data.get("current_state"),
             "ts":         data.get("ts"),
             "state_probs":data.get("all_state_probs", {}),
+            "scope":      "slow_macro_background",
+            "warning":    "慢周期背景，不是当前买入或加仓信号",
+            "trading":    trading,
         }
     except Exception as e:
         return {"exists": False, "error": str(e)}
@@ -593,8 +719,15 @@ def api_signals() -> dict:
         if tk in seen:
             continue
         seen.add(tk)
+        try:
+            from config import get_ticker_name_zh
+            _name_zh, _meaning_zh = get_ticker_name_zh(tk)
+        except Exception:
+            _name_zh, _meaning_zh = tk, ""
         info = {
             "ticker":    tk,
+            "name_zh":   _name_zh,
+            "meaning_zh":_meaning_zh,
             "price":     float(m.group(2)),
             "rsi":       float(m.group(3)),
             "vol_ratio": float(m.group(4)),
@@ -779,7 +912,7 @@ def api_banners() -> dict:
                 } for it in breaking[:5]]
         except Exception:
             pass
-        # Claude 一句话总结（对最近 3 条推文）—— 缓存到 sha1(post_ids)，非阻塞
+        # AI CLI 一句话总结（对最近 3 条推文）—— 缓存到 sha1(post_ids)，非阻塞
         trump["summary"] = _trump_summary_recent3(items)
         banners["trump"] = trump
 
@@ -1032,13 +1165,15 @@ def _compute_oil() -> dict:
 
 def api_sectors() -> dict:
     """板块级 regime — 带 5min 后台缓存。"""
-    return _cached("sectors", ttl_sec=300, compute_fn=_compute_sectors)
+    # v2 避免旧版仅含方向标签的磁盘缓存掩盖新增 short_style 字段。
+    return _cached("sectors_v2_short_style", ttl_sec=300, compute_fn=_compute_sectors)
 
 
 def _compute_sectors() -> dict:
     """板块级 regime 概览 —— 用 yfinance 拉基准 ETF 最近走势，给 dashboard 板块卡。
 
-    每个板块返回：现价 / 5d% / 20d% / trend(vs MA20) / regime 标签
+    每个板块返回：方向 regime + 独立短线 style。短线 style 优先展示，
+    避免把中期仍向上误读为当前适合追涨。
     regime 判定（简版，不涉及 HMM）：
       · 5d ≤ -5% → 危机
       · 5d ≤ -2% → 弱势
@@ -1056,7 +1191,7 @@ def _compute_sectors() -> dict:
     out = []
     for s in SECTORS:
         try:
-            df = yf.Ticker(s["key"]).history(period="30d", interval="1d", auto_adjust=True)
+            df = yf.Ticker(s["key"]).history(period="3mo", interval="1d", auto_adjust=True)
             if df.empty:
                 continue
             close = df["Close"].astype(float)
@@ -1082,6 +1217,8 @@ def _compute_sectors() -> dict:
                 regime, regime_zh = "overheated", "过热"
             elif pct_5d is not None and pct_20d is not None and pct_5d >= 2 and pct_20d >= 2:
                 regime, regime_zh = "strong", "强势"
+            from market_style import analyze_price_style
+            style = analyze_price_style(close, df["High"], df["Low"])
             out.append({
                 "key":       s["key"],
                 "zh":        s["zh"],
@@ -1093,6 +1230,13 @@ def _compute_sectors() -> dict:
                 "trend":     trend,
                 "regime":    regime,
                 "regime_zh": regime_zh,
+                "style":     style.get("style"),
+                "style_zh":  style.get("style_zh"),
+                "chop_score": style.get("chop_score"),
+                "is_choppy": style.get("is_choppy"),
+                "style_reason": style.get("reason"),
+                "style_metrics": style.get("metrics") or {},
+                "policy_note": style.get("policy_note"),
             })
         except Exception as e:
             out.append({"key": s["key"], "zh": s["zh"], "linked": s["linked"], "error": str(e)})
@@ -1100,7 +1244,7 @@ def _compute_sectors() -> dict:
 
 
 def api_ai_analysis() -> dict:
-    """读最新 signals/ai_analysis_*.md 供 dashboard 展示 Claude 分析。
+    """读最新 signals/ai_analysis_*.md 供 dashboard 展示 AI 分析。
     覆盖：
       · ai_analysis_snapshot_<ts>.md（snap.bat / orchestrator 时间戳快照）
       · ai_analysis_morning_<date>.md / ai_analysis_review_<date>.md（每日覆盖版本）
@@ -1123,24 +1267,23 @@ def api_ai_analysis() -> dict:
 
 
 def api_supply_chain(ticker: str) -> dict:
-    """标的上下游供应链关联。Claude 生成（缓存 7 天），可选 FMP 交叉验证 peers。"""
+    """标的上下游供应链关联。AI CLI 生成（缓存 30 天），可选 FMP 交叉验证 peers。"""
     ticker = (ticker or "").upper().strip()
     if not ticker or len(ticker) > 8 or not ticker.replace(".", "").replace("-", "").isalnum():
         return {"error": "invalid ticker"}
-    # 14 天 TTL —— 供应链变动慢，无必要频繁调 Claude（用户 quota 保护）
-    # 30 天 TTL —— 供应链结构变化极慢（并购/剥离/新产线才变），Claude 成本敏感
+    # 30 天 TTL —— 供应链结构变化极慢（并购/剥离/新产线才变），避免重复消耗 AI CLI 额度
     return _cached(f"supply_chain_{ticker}", ttl_sec=30 * 24 * 3600,
                     compute_fn=lambda: _compute_supply_chain(ticker))
 
 
 def _compute_supply_chain(ticker: str) -> dict:
-    """调 Claude 生成结构化供应链 JSON，可选 FMP 交叉验证 peers。"""
+    """调统一 AI CLI 生成结构化供应链 JSON，可选 FMP 交叉验证 peers。"""
     try:
         from ai_prompt import query_ai_cli
     except Exception as e:
         return {"error": f"ai_prompt import: {e}", "ticker": ticker}
 
-    # JP 小盘冷门 ticker（如 TEKSCEND 429A / ARE 5857）Claude 单看短名认不出，
+    # JP 小盘冷门 ticker（如 TEKSCEND 429A / ARE 5857）模型单看短名认不出，
     # 从 JP_WATCH_LIST 补 symbol/name_zh/name_en/thesis 作为上下文
     ticker_context = f"Ticker: {ticker}"
     for entry in JP_WATCH_LIST:
@@ -1210,11 +1353,11 @@ def _compute_supply_chain(ticker: str) -> dict:
             if isinstance(fmp_data, list) and fmp_data:
                 fmp_peers = set(p.upper() for p in (fmp_data[0].get("peersList") or []))
             result["fmp_peers"] = sorted(fmp_peers)
-            # 标记 Claude 输出的 peers 是否被 FMP 覆盖
+            # 标记 AI 输出的 peers 是否被 FMP 覆盖
             for p in result["peers"]:
                 p_tk = (p.get("ticker") or "").upper()
                 p["fmp_verified"] = bool(p_tk and p_tk in fmp_peers)
-            result["source"] = "claude+fmp"
+            result["source"] = f"{provider.lower()}+fmp"
     except Exception as e:
         result["fmp_error"] = str(e)[:100]
 
@@ -1224,8 +1367,8 @@ def _compute_supply_chain(ticker: str) -> dict:
 def api_supply_chain_graph(ticker: str, depth: int = 2) -> dict:
     """多层供应链图（BFS）。返回 nodes/edges 供 D3 蜘蛛网渲染。
 
-    每条边带 `reason`（来自 Claude 输出的 note），供 hover 显示。
-    layer 记录节点到 root 的最短跳数。未 cache 的 ticker 触发后台 Claude 拉取，
+    每条边带 `reason`（来自 AI 输出的 note），供 hover 显示。
+    layer 记录节点到 root 的最短跳数。未 cache 的 ticker 触发后台 AI CLI 拉取，
     本次请求返 `pending: [...]`，前端可稍后再请求补图。
     """
     import threading
@@ -1259,7 +1402,7 @@ def api_supply_chain_graph(ticker: str, depth: int = 2) -> dict:
         if not cache_path.exists():
             if cur != root and cur not in pending:
                 pending.append(cur)
-                # 后台触发 Claude 拉取（非阻塞）
+                # 后台触发 AI CLI 拉取（非阻塞）
                 threading.Thread(
                     target=lambda t=cur: _compute_supply_chain(t), daemon=True
                 ).start()
@@ -1905,12 +2048,12 @@ def api_jp_guidance(ticker: str) -> dict:
         "direction": "查询中",
         "revision_type": "computing",
         "magnitude": "-",
-        "guidance_note": "Claude 正在联网查询业绩预想，30-90 秒后刷新可见（首次冷启动）",
+        "guidance_note": "AI CLI 正在联网查询业绩预想，30-90 秒后刷新可见（首次冷启动）",
         "confidence": "computing",
         "source_verified": False,
         "source_status": "computing",
     }
-    # 72h TTL —— 業績予想 除财报当天基本不变，且 Claude+WebSearch 单次 ~$0.20 成本敏感
+    # 72h TTL —— 業績予想 除财报当天基本不变，联网查询成本敏感
     # 财报日附近如需强制刷 → 手动 rm .webui_cache/jp_guidance_v2_<TK>.json
     return _cached(f"jp_guidance_v2_{tk}", ttl_sec=72 * 3600,
                     compute_fn=lambda: _compute_jp_guidance(tk, stock),
@@ -2480,8 +2623,8 @@ def _validate_guidance_sources(sources: list) -> list:
     return out
 
 
-def _fetch_jp_guidance_via_claude(tk: str, stock: str, name_zh: str, name_en: str) -> dict | None:
-    """Claude CLI + WebSearch 查最新業績予想；每数字必须带可信 URL 出处。
+def _fetch_jp_guidance_via_ai(tk: str, stock: str, name_zh: str, name_en: str) -> dict | None:
+    """AI CLI + live web search 查最新業績予想；每数字必须带可信 URL 出处。
 
     找不到 or URL 全部不可信 → 返 None（调用方保留 待核验 占位）。
     """
@@ -2527,7 +2670,9 @@ Target:
 }}
 """
     to = int(os.environ.get("JP_GUIDANCE_TIMEOUT", "240"))
-    out, status, provider, _ = query_ai_cli(prompt, timeout=to)
+    out, status, provider, _ = query_ai_cli(
+        prompt, timeout=to, web_search=True
+    )
     provider = provider.lower()
     if not out:
         return {"_error": f"{provider}_{status[:120]}"}
@@ -2568,7 +2713,7 @@ Target:
 
 
 def _compute_jp_guidance(tk: str, stock: str) -> dict:
-    """業績予想：Claude CLI+WebSearch 优先（每数字带 URL），失败回落 unverified；始终附 yfinance 共识。"""
+    """業績予想：AI CLI+WebSearch 优先（每数字带 URL），失败回落 unverified；始终附 yfinance 共识。"""
     result = {
         "ticker": tk,
         "source_stock": stock,
@@ -2593,9 +2738,12 @@ def _compute_jp_guidance(tk: str, stock: str) -> dict:
             name_zh = entry.get("name_zh", tk)
             name_en = entry.get("name_en", tk)
             break
-    # Claude CLI 查带 URL 出处的业绩预想
-    if os.environ.get("JP_GUIDANCE_CLAUDE", "1") != "0":
-        cg = _fetch_jp_guidance_via_claude(tk, stock, name_zh, name_en)
+    # AI CLI 查带 URL 出处的业绩预想；旧变量名保留兼容。
+    guidance_ai_enabled = os.environ.get(
+        "JP_GUIDANCE_AI", os.environ.get("JP_GUIDANCE_CLAUDE", "1")
+    )
+    if guidance_ai_enabled != "0":
+        cg = _fetch_jp_guidance_via_ai(tk, stock, name_zh, name_en)
         if cg and not cg.get("_error"):
             result.update({
                 "direction":        cg["direction"],
@@ -2610,15 +2758,15 @@ def _compute_jp_guidance(tk: str, stock: str) -> dict:
                 "sources":          cg["sources"],
                 "source_via":       cg["source_via"],
                 "source_verified":  bool(cg["sources"]),
-                "source_status":    "claude_websearch",
+                "source_status":    cg["source_via"],
             })
         elif cg and cg.get("_error"):
-            result["claude_error"] = cg["_error"]
+            result["ai_error"] = cg["_error"]
             if cg.get("raw_direction"):
-                # Claude 说了方向但没给可信 URL → 降级但标注
+                # AI 说了方向但没给可信 URL → 降级但标注
                 result["direction"] = "待核验"
-                result["guidance_note"] = f"Claude 返回 {cg['raw_direction']} 但未附可核验来源，已拒收"
-    # yfinance 分析师共识（独立于官方指引，无论 Claude 成败都附上）
+                result["guidance_note"] = f"AI 返回 {cg['raw_direction']} 但未附可核验来源，已拒收"
+    # yfinance 分析师共识（独立于官方指引，无论 AI 成败都附上）
     ac = _fetch_analyst_consensus(stock, ticker=tk)
     if ac and not ac.get("error"):
         result["analyst_consensus"] = ac
@@ -2652,23 +2800,175 @@ def api_tostnet_hits(ticker: str, days: int = 10) -> dict:
 
 
 def api_ai_targets() -> dict:
-    """读最新 signals/ai_targets_<date>.json — Claude 输出的结构化交易目标。
+    """AI 价位计划 + 最新规则决策 + broker 实际未结订单。
 
-    paper_trader 用这个数据自动挂 GTC 限价 + broker SELL STOP。
-    对外展示 = 让访客看到"系统实际在挂什么价"，比 markdown analysis 更直观。
+    旧实现只返回最近一份 AI JSON，页面因此会把已经被新规则决策覆盖的
+    价位计划误称为“实际挂单”。现在以 broker 未结订单为事实源；AI 只
+    提供 entry/stop/target 参考，规则引擎的最新 action 决定计划是否仍有效。
     """
     files = sorted(SIGNALS_DIR.glob("ai_targets_*.json"),
                    key=lambda p: p.stat().st_mtime, reverse=True)
-    if not files:
-        return {"exists": False}
-    latest = files[0]
+    latest = files[0] if files else None
     try:
-        content = json.loads(latest.read_text(encoding="utf-8"))
+        content = (
+            json.loads(latest.read_text(encoding="utf-8"))
+            if latest is not None else {"targets": []}
+        )
+        target_mtime = latest.stat().st_mtime if latest is not None else 0.0
+
+        # 只把 paper_trader 提交的订单算作“系统自动单”；手工单不混入。
+        submitted_ids: set[str] = set()
+        ledger_path = SIGNALS_DIR / "execution_ledger.jsonl"
+        if ledger_path.exists():
+            for line in ledger_path.read_text(encoding="utf-8", errors="replace").splitlines():
+                try:
+                    event = json.loads(line)
+                except Exception:
+                    continue
+                if event.get("event") == "submitted" and event.get("order_id"):
+                    submitted_ids.add(str(event["order_id"]))
+
+        pending_rows: list[dict] | None
+        try:
+            from moomoo import RET_OK
+            from paper_trader import _ctx_get, _TRADER_LOCK, ACC_ID, TRD_ENV
+            with _TRADER_LOCK:
+                ctx = _ctx_get()
+                ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+            if ret != RET_OK or orders is None:
+                pending_rows = None
+            else:
+                pending_statuses = {
+                    "SUBMITTED", "SUBMITTING", "WAITING_SUBMIT", "FILLED_PART",
+                }
+                pending_rows = []
+                for _, row in orders.iterrows():
+                    status = str(row.get("order_status") or "").upper()
+                    if status not in pending_statuses:
+                        continue
+                    oid = str(row.get("order_id") or "")
+                    pending_rows.append({
+                        "order_id": oid,
+                        "ticker": str(row.get("code") or ""),
+                        "side": str(row.get("trd_side") or ""),
+                        "qty": float(row.get("qty") or 0),
+                        "dealt_qty": float(row.get("dealt_qty") or 0),
+                        "price": float(row.get("price") or 0),
+                        "status": status,
+                        "system_managed": oid in submitted_ids,
+                    })
+        except Exception:
+            pending_rows = None
+
+        position_qty: dict[str, int] = {}
+        live_positions = _fetch_moomoo_live_positions()
+        if live_positions is not None:
+            position_qty = {p["code"]: int(p["qty"]) for p in live_positions}
+
+        raw_targets = content.get("targets") or []
+        targets_by_ticker = {
+            str(t.get("ticker") or ""): dict(t)
+            for t in raw_targets if isinstance(t, dict) and t.get("ticker")
+        }
+        system_pending = [
+            row for row in (pending_rows or []) if row.get("system_managed")
+        ]
+        # 即便 AI JSON 没列出某只票，也必须展示真实存在的系统未结单。
+        for row in system_pending:
+            targets_by_ticker.setdefault(row["ticker"], {
+                "ticker": row["ticker"], "action": "hold", "entry_ref": None,
+                "stop_ref": None, "target_ref": None, "use_limit": False,
+                "notes": "broker 中存在系统订单，但当前 AI 价位文件未包含该标的",
+            })
+
+        merged_targets = []
+        buy_actions = {"BUY", "WATCH_BUY", "WATCH_BUY_PROBE", "CRISIS_PROBE"}
+        for ticker, target in targets_by_ticker.items():
+            short = ticker.split(".")[-1]
+            signal_path = SIGNALS_DIR / f"{short}_latest.json"
+            signal = {}
+            signal_mtime = 0.0
+            if signal_path.exists():
+                try:
+                    signal = json.loads(signal_path.read_text(encoding="utf-8"))
+                    signal_mtime = signal_path.stat().st_mtime
+                except Exception:
+                    signal = {}
+            decision = signal.get("decision") or {}
+            market = signal.get("market") or {}
+            system_action = str(decision.get("action") or "UNKNOWN").upper()
+            ticker_orders = [r for r in system_pending if r.get("ticker") == ticker]
+            has_position = position_qty.get(ticker, 0) > 0
+            ai_action = str(target.get("action") or "hold").lower()
+            ai_buy_plan = ai_action in {"buy", "watch_buy"} and bool(target.get("entry_ref"))
+            target_outdated = bool(signal_mtime and target_mtime and signal_mtime > target_mtime)
+
+            if ticker_orders:
+                execution_status = "submitted"
+            elif has_position:
+                execution_status = "position_open"
+            elif system_action in buy_actions:
+                execution_status = "candidate"
+            elif ai_buy_plan and system_action not in buy_actions:
+                execution_status = "inactive_signal"
+            else:
+                execution_status = "inactive"
+
+            system_entry_ref = decision.get("entry_ref") or market.get("price")
+            # 一旦出现更新的规则决策，旧 AI 数字只留在原始审计字段中，
+            # 不再作为 dashboard/API 消费者的“当前可执行价”。
+            if system_action in buy_actions:
+                effective_entry_ref = (
+                    target.get("entry_ref") if not target_outdated and ai_buy_plan
+                    else system_entry_ref
+                )
+                effective_stop_ref = (
+                    target.get("stop_ref") if not target_outdated and ai_buy_plan
+                    else decision.get("stop_ref")
+                )
+                effective_target_ref = (
+                    target.get("target_ref") if not target_outdated and ai_buy_plan
+                    else decision.get("target_ref")
+                )
+            else:
+                effective_entry_ref = None
+                effective_stop_ref = None
+                effective_target_ref = None
+
+            target.update({
+                "system_action": system_action,
+                "system_confidence": decision.get("confidence"),
+                "system_reason": decision.get("reason"),
+                "system_ts": signal.get("ts"),
+                "target_outdated": target_outdated,
+                "execution_status": execution_status,
+                "effective_entry_ref": effective_entry_ref,
+                "effective_stop_ref": effective_stop_ref,
+                "effective_target_ref": effective_target_ref,
+                "effective_price_source": (
+                    "ai_target" if not target_outdated and ai_buy_plan
+                    else "latest_system_decision"
+                ),
+                "position_qty": position_qty.get(ticker, 0),
+                "pending_orders": ticker_orders,
+            })
+            merged_targets.append(target)
+
         return {
-            "exists":  True,
-            "path":    latest.name,
-            "mtime":   datetime.fromtimestamp(latest.stat().st_mtime).isoformat(),
+            "exists": bool(latest is not None or system_pending),
+            "path": latest.name if latest is not None else None,
+            "mtime": (
+                datetime.fromtimestamp(target_mtime).isoformat()
+                if target_mtime else None
+            ),
+            "broker_status": "ok" if pending_rows is not None else "unavailable",
+            "pending_count": len(system_pending),
+            "pending_orders": system_pending,
+            "manual_pending_count": len([
+                row for row in (pending_rows or []) if not row.get("system_managed")
+            ]),
             **content,
+            "targets": merged_targets,
         }
     except Exception as e:
         return {"exists": False, "error": str(e)}
@@ -2682,13 +2982,14 @@ def api_bond_monitor() -> dict:
             return get_bond_monitor()
         except Exception as e:
             return {"error": str(e)[:200]}
-    return _cached("bond_monitor", ttl_sec=900, compute_fn=_compute)
+    # v2 invalidates legacy cache files containing non-standard NaN tokens.
+    return _cached("bond_monitor_v2", ttl_sec=900, compute_fn=_compute)
 
 
 def api_fed_watch() -> dict:
-    """CME FedWatch 加息/降息预期。Claude CLI + WebFetch，缓存 2h。首次异步。"""
+    """CME FedWatch 加息/降息预期。AI CLI + live web search，缓存 8h。首次异步。"""
     placeholder = {
-        "commentary": "Fed rate expectations 正在联网查询（Claude + WebFetch，30-90s）…",
+        "commentary": "Fed rate expectations 正在联网查询（AI CLI + Web，30-90s）…",
         "meetings": [],
         "confidence": "computing",
     }
@@ -2698,7 +2999,7 @@ def api_fed_watch() -> dict:
             return get_fed_watch()
         except Exception as e:
             return {"error": str(e)[:200]}
-    # 8h TTL —— 加息预期几小时内基本不变，除 Powell 讲话/CPI 当天。省 Claude 成本。
+    # 8h TTL —— 加息预期几小时内基本不变，除 Powell 讲话/CPI 当天。节省 CLI 额度。
     return _cached("fed_watch", ttl_sec=8 * 3600,
                    compute_fn=_compute,
                    first_call_async=True,
@@ -2893,9 +3194,9 @@ def _ticker_ai_cache_key(ticker_rows: list[tuple]) -> str:
 
 
 def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
-    """一次 Claude 调用生成所有 tracked ticker 的即时分析。
+    """一次 AI CLI 调用生成所有 tracked ticker 的即时分析。
 
-    缓存 key = sha1(标的 + action + conf + spot + wall OI)。数据变才重跑 Claude。
+    缓存 key = sha1(标的 + action + conf + spot + wall OI)。数据变才重跑 AI CLI。
     非阻塞：无缓存时后台线程跑，本次请求返 state=generating。
     """
     if not signals and not options:
@@ -3002,7 +3303,7 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                             ratio = p_oi / c_oi
                             if ratio >= 3 or ratio <= 0.33:
                                 lines.append(f"  ⚠ Put OI/Call OI = {ratio:.1f}倍 严重失衡")
-                    # 基本面（若缓存里有 —— 不主动拉，避免拖慢 Claude 调用）
+                    # 基本面（若缓存里有 —— 不主动拉，避免拖慢 AI CLI 调用）
                     if fd:
                         latest = fd.get("latest", {})
                         lines.append(
@@ -3074,7 +3375,7 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
 
 
 def api_ticker_ai() -> dict:
-    """每标的 Claude 分析。优先 live（覆盖所有 tracked ticker），fallback 到 snapshot。"""
+    """每标的 AI 分析。优先 live（覆盖所有 tracked ticker），fallback 到 snapshot。"""
     signals   = api_signals().get("tickers", {}) or {}
     opt_data  = api_ticker_options().get("tickers", {}) or {}
     live      = _ticker_ai_live_all(signals, opt_data)
@@ -3127,6 +3428,7 @@ TICKER_TO_OPTION_SOURCE = {
     "LITE": "LITE",  # Lumentum 有 options chain
     "CBRS": "CBRS",  # Cerebras — 14 个到期日 (2026-08-21 起)
     "USO":  "USO",   # WTI 原油 ETF — 17 个到期日 (2026-08-19 起)
+    "XLV":  "XLV",   # 医疗行业 ETF — 12 个到期日 · 流动性充足
 }
 
 # 这些卡片用流动性更深的 1x ETF 期权链判断结构，但所有可执行价位必须
@@ -3671,10 +3973,25 @@ def _analyze_walls(spot, call_wall, put_wall, max_pain,
     return r
 
 
+def api_options_flow() -> dict:
+    """Latest small-universe option-flow scan; never performs network I/O."""
+    try:
+        from option_flow import load_option_flow_signal
+        return load_option_flow_signal()
+    except Exception as exc:
+        return {
+            "generated_at": None,
+            "events": [],
+            "positions": {},
+            "status": "unavailable",
+            "error": str(exc)[:160],
+        }
+
+
 def api_ticker_options() -> dict:
     """每个 tracked ticker 的期权墙 + 攻防位 + 挤压风险。10min 后台缓存。"""
     # 24h TTL —— 期权 wall/OI 日级变化就够，无必要秒级刷（拖累 yfinance + 间接
-    # 让 ticker_ai 的 Claude hash 每天最多变一次）
+    # 让 ticker_ai 的 AI hash 每天最多变一次）
     data = _cached(
         "ticker_options",
         ttl_sec=24 * 3600,
@@ -3686,6 +4003,10 @@ def api_ticker_options() -> dict:
     # Old cache files can still contain macro assets. Enforce the current
     # capability contract at the API boundary as well as during recomputation.
     if isinstance(data.get("tickers"), dict):
+        flow = api_options_flow()
+        flow_positions = flow.get("positions") if isinstance(flow, dict) else {}
+        if not isinstance(flow_positions, dict):
+            flow_positions = {}
         data["tickers"] = {
             tk: value for tk, value in data["tickers"].items()
             if ticker_display_profile(tk)["show_options"]
@@ -3702,6 +4023,13 @@ def api_ticker_options() -> dict:
             ) or value.get("actionable_prices")
             value["actionable_prices"] = actionable
             value["price_context"] = _option_price_context(tk, source, actionable)
+            value["flow"] = flow_positions.get(tk)
+        data["flow_meta"] = {
+            "generated_at": flow.get("generated_at") if isinstance(flow, dict) else None,
+            "status": flow.get("status") if isinstance(flow, dict) else "unavailable",
+            "age_sec": flow.get("age_sec") if isinstance(flow, dict) else None,
+            "stale": bool(flow.get("stale")) if isinstance(flow, dict) else True,
+        }
         data["api_contract_version"] = 2
     return data
 
@@ -4336,6 +4664,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.end_headers()
         self.wfile.write(body)
 
@@ -4355,6 +4686,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_nav(days=days))
             elif path == "/api/positions":
                 self._json(api_positions())
+            elif path == "/api/institutional":
+                self._json(api_institutional())
             elif path == "/api/trades":
                 self._json(api_trades(n=n))
             elif path == "/api/log":
@@ -4380,6 +4713,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_option_walls_chart())
             elif path == "/api/ticker_options":
                 self._json(api_ticker_options())
+            elif path == "/api/options_flow":
+                self._json(api_options_flow())
             elif path == "/api/ticker_ai":
                 self._json(api_ticker_ai())
             elif path == "/api/events":
