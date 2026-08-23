@@ -3,7 +3,7 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 24,
+      "days_until": 23,
       "probabilities": {
         "hold": 61.0,
         "hike_25": 39.0
@@ -13,7 +13,7 @@
     },
     {
       "date": "2026-10-28",
-      "days_until": 66,
+      "days_until": 65,
       "probabilities": {
         "hold": 47.0,
         "hike_25": 44.1,
@@ -24,32 +24,34 @@
     },
     {
       "date": "2026-12-09",
-      "days_until": 108,
+      "days_until": 107,
       "probabilities": {
         "hold": 28.9,
         "hike_25": 45.2,
-        "hike_50": 26.0
+        "hike_50": 22.5,
+        "hike_75_or_more": 3.5
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 157,
+      "days_until": 156,
       "probabilities": {
         "hold": 22.7,
         "hike_25": 41.7,
-        "hike_50": 35.6
+        "hike_50": 27.4,
+        "hike_75_or_more": 8.2
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-22",
-  "recent_event_impact": "8/7 NFP -23K且5-6月合计下修103K、8/12 CPI +0.1% MoM、8/13 PPI 0.0% MoM，削弱立即加息定价；但8/19 FOMC minutes 显示多名官员认为若通胀不回落仍需加息，保留年内加息风险。",
-  "commentary": "Data snapshot 为 2026-08-22 12:35AM EDT，已在8/7就业、8/12 CPI、8/13 PPI和8/19 FOMC minutes之后。软就业和温和CPI/PPI使9月仍以hold为主，但FOMC minutes的鹰派通胀表述让10月至2027年初逐步转向加息定价。",
+  "implied_terminal_date": "2027-Q2/Q3",
+  "data_snapshot_date": "2026-08-22 00:35 EDT",
+  "recent_event_impact": "最近7天内未发现新的NFP/CPI/PPI正式发布；8/19-8/20左右公布的7月FOMC会议纪要显示加息支持上升，但市场仍较一周前降低9月加息概率。7月NFP于2026-08-07发布，非农就业意外下降约23K；7月CPI于2026-08-12发布，CPI同比3.4%；7月PPI于2026-08-13发布，最终需求环比持平、同比4.7%。这些就业偏弱与通胀仍高的组合使市场保留加息尾部风险，但未完全定价9月加息。",
+  "commentary": "数据快照为2026-08-22 00:35 EDT，晚于最近一周的FOMC会议纪要发布时间，且7月NFP、CPI、PPI均已被该快照覆盖。市场对9月仍以按兵不动为主，但10月以后逐步转向加息路径，反映就业数据偏弱压低短端加息确定性、而CPI/PPI仍高使中期加息概率保持。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -57,14 +59,10 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
-      "type": "cme_fedwatch_derived"
+      "type": "cme_derived_backup"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
+      "url": "https://www.bls.gov/news.release/cpi.htm",
       "type": "cpi"
     },
     {
@@ -72,16 +70,16 @@
       "type": "ppi"
     },
     {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomcminutes20260729.htm",
-      "type": "fomc_minutes"
+      "url": "https://www.stlouisfed.org/on-the-economy/2026/aug/flash-report-unemployment-payrolls-both-drop-in-july",
+      "type": "nfp_context"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-23T07:53:48+00:00",
+  "fetched_at": "2026-08-23T15:55:03+00:00",
   "_meta": {
-    "cached_at": "2026-08-23T16:53:48.292829",
-    "age_sec": 27554,
+    "cached_at": "2026-08-24T00:55:03.171963",
+    "age_sec": 5880,
     "stale": false,
     "refreshing": false
   }
