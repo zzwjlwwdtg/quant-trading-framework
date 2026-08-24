@@ -1,0 +1,779 @@
+{
+  "ts": "2026-08-15T01:06:22.634266",
+  "market": {
+    "ticker": "AMAT",
+    "ts": "2026-08-15 01:06",
+    "price": 505.64,
+    "pct_chg": -5.41,
+    "rsi_14": 45.3,
+    "cci_20": -65.6,
+    "cci_zone": "neutral",
+    "ma20": 523.97,
+    "ma50": 558.18,
+    "vol_ratio": 1.02,
+    "is_new_52w_high": false,
+    "dist_from_high": -31.64,
+    "trend": "down",
+    "ma_stack": "bear",
+    "rsi_zone": "neutral",
+    "vol_zone": "normal",
+    "pct_chg_zone": "crash",
+    "pre_price": 498.61,
+    "pre_pct": -6.721,
+    "pre_volume": 359302.0,
+    "pre_date": "2026-08-14",
+    "pre_label": "今日盘前(已结束)",
+    "after_price": 507.63,
+    "after_pct": -5.034,
+    "after_volume": 2981012.0,
+    "after_date": "2026-08-13",
+    "after_label": "昨日盘后(已结束)",
+    "overnight_price": 506.84,
+    "overnight_pct": -5.182,
+    "overnight_volume": 87600.0,
+    "overnight_date": "2026-08-13",
+    "overnight_label": "昨夜夜盘(已结束)",
+    "now_et": "2026-08-14 12:06 ET",
+    "prev_session": {
+      "date": "2026-08-12",
+      "open": 548.0,
+      "close": 548.15,
+      "high": 553.75,
+      "low": 544.89,
+      "pct": 0.03
+    },
+    "prev_pct": 0.03,
+    "today_session": {
+      "date": "2026-08-14",
+      "open": 499.0,
+      "current": 505.64,
+      "pct": 1.33,
+      "status": "盘中进行中"
+    },
+    "today_not_yet_opened": null,
+    "ma_cross": "none",
+    "rsi_cross": "none",
+    "cci_cross": "none",
+    "cum_5d_pct": -4.14,
+    "cum_10d_pct": 0.77,
+    "dist_from_ma20_pct": -3.5,
+    "vol_20d_annual": 90.46,
+    "cci_top_divergence": null,
+    "cci_bot_divergence": null,
+    "rsi_top_divergence": null,
+    "rsi_bot_divergence": null,
+    "bb_pct": 0.346,
+    "bb_zone": "normal",
+    "bb_upper": 583.41,
+    "bb_lower": 464.52,
+    "psar_trend": 1,
+    "psar_signal": "none",
+    "macd_dif": -8.418,
+    "macd_dea": -9.878,
+    "macd_hist": 1.46,
+    "macd_zone": "bear",
+    "macd_signal": "none",
+    "adx_14": 20.2,
+    "adx_zone": "moderate"
+  },
+  "events": {
+    "ts": "2026-08-15 01:03",
+    "next_event": "NVDA Earnings (est) (2026-08-26)",
+    "next_event_name": "NVDA Earnings (est)",
+    "next_event_date": "2026-08-26",
+    "next_event_impact": "moderate",
+    "event_verify_src": "",
+    "days_to_event": 11,
+    "breaking_news": false,
+    "breaking_evidence": "",
+    "top_headlines": [
+      {
+        "title": "Cooling Inflation Likely to Aid These ETF Areas",
+        "url": "https://finance.yahoo.com/economy/policy/articles/cooling-inflation-likely-aid-etf-144100361.html?.tsrc=rss",
+        "desc": "Cooling inflation and weaker job data ease Fed hike bets, but Hormuz tensions increase oil risks. See how QQQ, IWM and TLT may respond."
+      },
+      {
+        "title": "Michael Burry Ramped Up His Bets Against Micron and the QQQ ETF. Is the ‘Big Short’ Investor Asking for Trouble?",
+        "url": "https://247wallst.com/investing/2026/08/14/michael-burry-ramped-up-his-bets-against-micron-and-the-qqq-etf-is-the-big-short-investor-asking-for-trouble/?.tsrc=rss",
+        "desc": "Michael Burry is doubling down on bets against Micron and the QQQ even as those positions bleed, convinced a larger market collapse is coming. With Wall Street overwhelmingly on the other side, the question is whether he is a contrarian genius or a cautionary tale in slow motion."
+      }
+    ],
+    "risk_level": "normal",
+    "trump_signal": {
+      "direction": "bearish",
+      "magnitude": "medium",
+      "score": -24,
+      "tariff_alert": true,
+      "silence_signal": false,
+      "posts_count": 28,
+      "n_signals_medium_plus": 1,
+      "fallback": false
+    },
+    "options_risk": {
+      "ts": "2026-08-15T01:04:56.473793",
+      "witching": {
+        "is_witching_day": false,
+        "days_to_witching": 35,
+        "phase": "far",
+        "next_witching_date": "2026-09-18"
+      },
+      "per_ticker": {
+        "TQQQ": {
+          "gex": {
+            "direction": "positive_pin",
+            "cp_oi_ratio": 1.63,
+            "weighted_max_pain_pct": 0.07,
+            "strength": "medium"
+          },
+          "spot": 76.31,
+          "walls_n": 3,
+          "underlying_adjusted": [
+            {
+              "proxy": "QQQ",
+              "label": "QQQ underlying",
+              "proxy_spot": 729.48,
+              "leveraged_ticker": "TQQQ",
+              "leveraged_spot": 76.31,
+              "leverage": 3.0,
+              "gex": {
+                "direction": "neutral",
+                "cp_oi_ratio": 0.98,
+                "weighted_max_pain_pct": 0.34,
+                "strength": "weak"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-14",
+                  "category": "0DTE",
+                  "days": -1,
+                  "call_wall": {
+                    "proxy_strike": 735.0,
+                    "proxy_pct": 0.76,
+                    "leveraged_level": 78.04,
+                    "leveraged_pct": 2.27,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 177076
+                  },
+                  "put_wall": {
+                    "proxy_strike": 730.0,
+                    "proxy_pct": 0.07,
+                    "leveraged_level": 76.47,
+                    "leveraged_pct": 0.21,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 213624
+                  },
+                  "max_pain": {
+                    "proxy_strike": 732.0,
+                    "proxy_pct": 0.35,
+                    "leveraged_level": 77.1,
+                    "leveraged_pct": 1.04,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 1256652,
+                  "total_put_vol": 1274374,
+                  "cp_ratio": 0.99
+                },
+                {
+                  "expiry": "2026-08-17",
+                  "category": "weekly",
+                  "days": 2,
+                  "call_wall": {
+                    "proxy_strike": 733.0,
+                    "proxy_pct": 0.48,
+                    "leveraged_level": 77.41,
+                    "leveraged_pct": 1.45,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 16793
+                  },
+                  "put_wall": {
+                    "proxy_strike": 730.0,
+                    "proxy_pct": 0.07,
+                    "leveraged_level": 76.47,
+                    "leveraged_pct": 0.21,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 17068
+                  },
+                  "max_pain": {
+                    "proxy_strike": 731.0,
+                    "proxy_pct": 0.21,
+                    "leveraged_level": 76.79,
+                    "leveraged_pct": 0.63,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 123224,
+                  "total_put_vol": 126643,
+                  "cp_ratio": 0.97
+                },
+                {
+                  "expiry": "2026-09-18",
+                  "category": "monthly",
+                  "days": 34,
+                  "call_wall": {
+                    "proxy_strike": 770.0,
+                    "proxy_pct": 5.55,
+                    "leveraged_level": 89.03,
+                    "leveraged_pct": 16.66,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 3493
+                  },
+                  "put_wall": {
+                    "proxy_strike": 595.0,
+                    "proxy_pct": -18.44,
+                    "leveraged_level": 34.11,
+                    "leveraged_pct": -55.31,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 3401
+                  },
+                  "max_pain": {
+                    "proxy_strike": 730.0,
+                    "proxy_pct": 0.07,
+                    "leveraged_level": 76.47,
+                    "leveraged_pct": 0.21,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 22327,
+                  "total_put_vol": 24850,
+                  "cp_ratio": 0.9
+                }
+              ]
+            }
+          ]
+        },
+        "SOXL": {
+          "gex": {
+            "direction": "neutral",
+            "cp_oi_ratio": 0.95,
+            "weighted_max_pain_pct": 1.63,
+            "strength": "weak"
+          },
+          "spot": 140.92,
+          "walls_n": 3,
+          "underlying_adjusted": [
+            {
+              "proxy": "SOXX",
+              "label": "SOXX underlying",
+              "proxy_spot": 545.38,
+              "leveraged_ticker": "SOXL",
+              "leveraged_spot": 140.92,
+              "leverage": 3.0,
+              "gex": {
+                "direction": "neutral",
+                "cp_oi_ratio": 1.12,
+                "weighted_max_pain_pct": 0.85,
+                "strength": "weak"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-14",
+                  "category": "0DTE",
+                  "days": -1,
+                  "call_wall": {
+                    "proxy_strike": 550.0,
+                    "proxy_pct": 0.85,
+                    "leveraged_level": 144.5,
+                    "leveraged_pct": 2.54,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 425
+                  },
+                  "put_wall": {
+                    "proxy_strike": 462.5,
+                    "proxy_pct": -15.2,
+                    "leveraged_level": 76.67,
+                    "leveraged_pct": -45.59,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 996
+                  },
+                  "max_pain": {
+                    "proxy_strike": 550.0,
+                    "proxy_pct": 0.85,
+                    "leveraged_level": 144.5,
+                    "leveraged_pct": 2.54,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 1264,
+                  "total_put_vol": 2242,
+                  "cp_ratio": 0.56
+                },
+                {
+                  "expiry": "2026-08-21",
+                  "category": "weekly",
+                  "days": 6,
+                  "call_wall": {
+                    "proxy_strike": 570.0,
+                    "proxy_pct": 4.51,
+                    "leveraged_level": 160.0,
+                    "leveraged_pct": 13.54,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 1536
+                  },
+                  "put_wall": {
+                    "proxy_strike": 495.0,
+                    "proxy_pct": -9.24,
+                    "leveraged_level": 101.87,
+                    "leveraged_pct": -27.71,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 333
+                  },
+                  "max_pain": {
+                    "proxy_strike": 550.0,
+                    "proxy_pct": 0.85,
+                    "leveraged_level": 144.5,
+                    "leveraged_pct": 2.54,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 2901,
+                  "total_put_vol": 1462,
+                  "cp_ratio": 1.98
+                },
+                {
+                  "expiry": "2026-09-18",
+                  "category": "monthly",
+                  "days": 34,
+                  "call_wall": null,
+                  "put_wall": {
+                    "proxy_strike": 500.0,
+                    "proxy_pct": -8.32,
+                    "leveraged_level": 105.74,
+                    "leveraged_pct": -24.96,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 1234
+                  },
+                  "max_pain": {
+                    "proxy_strike": 650.0,
+                    "proxy_pct": 19.18,
+                    "leveraged_level": 222.02,
+                    "leveraged_pct": 57.55,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 0,
+                  "total_put_vol": 2699,
+                  "cp_ratio": 0.0
+                }
+              ]
+            },
+            {
+              "proxy": "SMH",
+              "label": "SMH liquid proxy",
+              "proxy_spot": 583.99,
+              "leveraged_ticker": "SOXL",
+              "leveraged_spot": 140.92,
+              "leverage": 3.0,
+              "gex": {
+                "direction": "negative_squeeze",
+                "cp_oi_ratio": 0.53,
+                "weighted_max_pain_pct": 0.91,
+                "strength": "medium"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-14",
+                  "category": "0DTE",
+                  "days": -1,
+                  "call_wall": {
+                    "proxy_strike": 595.0,
+                    "proxy_pct": 1.89,
+                    "leveraged_level": 148.89,
+                    "leveraged_pct": 5.66,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 1219
+                  },
+                  "put_wall": {
+                    "proxy_strike": 590.0,
+                    "proxy_pct": 1.03,
+                    "leveraged_level": 145.27,
+                    "leveraged_pct": 3.09,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 2096
+                  },
+                  "max_pain": {
+                    "proxy_strike": 590.0,
+                    "proxy_pct": 1.03,
+                    "leveraged_level": 145.27,
+                    "leveraged_pct": 3.09,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 5127,
+                  "total_put_vol": 8702,
+                  "cp_ratio": 0.59
+                },
+                {
+                  "expiry": "2026-08-17",
+                  "category": "weekly",
+                  "days": 2,
+                  "call_wall": {
+                    "proxy_strike": 600.0,
+                    "proxy_pct": 2.74,
+                    "leveraged_level": 152.51,
+                    "leveraged_pct": 8.22,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 266
+                  },
+                  "put_wall": {
+                    "proxy_strike": 580.0,
+                    "proxy_pct": -0.68,
+                    "leveraged_level": 138.03,
+                    "leveraged_pct": -2.05,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 375
+                  },
+                  "max_pain": {
+                    "proxy_strike": 585.0,
+                    "proxy_pct": 0.17,
+                    "leveraged_level": 141.65,
+                    "leveraged_pct": 0.52,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 396,
+                  "total_put_vol": 1815,
+                  "cp_ratio": 0.22
+                },
+                {
+                  "expiry": "2026-09-18",
+                  "category": "monthly",
+                  "days": 34,
+                  "call_wall": {
+                    "proxy_strike": 665.0,
+                    "proxy_pct": 13.87,
+                    "leveraged_level": 199.56,
+                    "leveraged_pct": 41.62,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 1330
+                  },
+                  "put_wall": {
+                    "proxy_strike": 550.0,
+                    "proxy_pct": -5.82,
+                    "leveraged_level": 116.31,
+                    "leveraged_pct": -17.46,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 3331
+                  },
+                  "max_pain": {
+                    "proxy_strike": 610.0,
+                    "proxy_pct": 4.45,
+                    "leveraged_level": 159.75,
+                    "leveraged_pct": 13.36,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 3644,
+                  "total_put_vol": 12283,
+                  "cp_ratio": 0.3
+                }
+              ]
+            }
+          ]
+        },
+        "DRAM": {
+          "gex": {
+            "direction": "positive_pin",
+            "cp_oi_ratio": 2.35,
+            "weighted_max_pain_pct": -0.5,
+            "strength": "medium"
+          },
+          "spot": 57.0,
+          "walls_n": 3,
+          "underlying_adjusted": [
+            {
+              "proxy": "MU",
+              "label": "MU memory proxy",
+              "proxy_spot": 961.54,
+              "leveraged_ticker": "DRAM",
+              "leveraged_spot": 57.0,
+              "leverage": 1.0,
+              "gex": {
+                "direction": "positive_pin",
+                "cp_oi_ratio": 1.98,
+                "weighted_max_pain_pct": 0.07,
+                "strength": "medium"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-14",
+                  "category": "0DTE",
+                  "days": -1,
+                  "call_wall": {
+                    "proxy_strike": 1000.0,
+                    "proxy_pct": 4.0,
+                    "leveraged_level": 59.28,
+                    "leveraged_pct": 4.0,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 71153
+                  },
+                  "put_wall": {
+                    "proxy_strike": 950.0,
+                    "proxy_pct": -1.2,
+                    "leveraged_level": 56.32,
+                    "leveraged_pct": -1.2,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 20634
+                  },
+                  "max_pain": {
+                    "proxy_strike": 962.5,
+                    "proxy_pct": 0.1,
+                    "leveraged_level": 57.06,
+                    "leveraged_pct": 0.1,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 256011,
+                  "total_put_vol": 133679,
+                  "cp_ratio": 1.92
+                },
+                {
+                  "expiry": "2026-08-17",
+                  "category": "weekly",
+                  "days": 2,
+                  "call_wall": {
+                    "proxy_strike": 1050.0,
+                    "proxy_pct": 9.2,
+                    "leveraged_level": 62.24,
+                    "leveraged_pct": 9.2,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 7660
+                  },
+                  "put_wall": {
+                    "proxy_strike": 900.0,
+                    "proxy_pct": -6.4,
+                    "leveraged_level": 53.35,
+                    "leveraged_pct": -6.4,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 2303
+                  },
+                  "max_pain": {
+                    "proxy_strike": 960.0,
+                    "proxy_pct": -0.16,
+                    "leveraged_level": 56.91,
+                    "leveraged_pct": -0.16,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 39818,
+                  "total_put_vol": 15528,
+                  "cp_ratio": 2.56
+                },
+                {
+                  "expiry": "2026-09-18",
+                  "category": "monthly",
+                  "days": 34,
+                  "call_wall": {
+                    "proxy_strike": 1100.0,
+                    "proxy_pct": 14.4,
+                    "leveraged_level": 65.21,
+                    "leveraged_pct": 14.4,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 971
+                  },
+                  "put_wall": {
+                    "proxy_strike": 800.0,
+                    "proxy_pct": -16.8,
+                    "leveraged_level": 47.42,
+                    "leveraged_pct": -16.8,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true,
+                    "volume": 488
+                  },
+                  "max_pain": {
+                    "proxy_strike": 960.0,
+                    "proxy_pct": -0.16,
+                    "leveraged_level": 56.91,
+                    "leveraged_pct": -0.16,
+                    "mapping_method": "current_spot_daily_reset",
+                    "path_dependent": true
+                  },
+                  "total_call_vol": 5128,
+                  "total_put_vol": 3314,
+                  "cp_ratio": 1.55
+                }
+              ]
+            }
+          ]
+        },
+        "SPY": {
+          "gex": {
+            "direction": "neutral",
+            "cp_oi_ratio": 0.77,
+            "weighted_max_pain_pct": 0.07,
+            "strength": "weak"
+          },
+          "spot": 776.42,
+          "walls_n": 3
+        },
+        "QQQ": {
+          "gex": {
+            "direction": "neutral",
+            "cp_oi_ratio": 0.98,
+            "weighted_max_pain_pct": 0.34,
+            "strength": "weak"
+          },
+          "spot": 729.48,
+          "walls_n": 3
+        }
+      },
+      "summary": {
+        "max_risk": "low",
+        "reason": "距下次三巫日 35天"
+      }
+    },
+    "earnings_implied_move": {
+      "SOXL": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 11,
+        "ts": "2026-08-15T01:04:56.474792",
+        "spot": 225.44,
+        "expiry": "2026-08-28",
+        "atm_strike": 225.0,
+        "atm_call_mid": 7.55,
+        "atm_put_mid": 7.5,
+        "straddle_price": 15.05,
+        "implied_move_pct": 6.68,
+        "smoothed_straddle": 16.09,
+        "smoothed_implied_move_pct": 7.14,
+        "smoothed": true,
+        "atm_iv_call": 40.5,
+        "atm_iv_put": 42.7,
+        "call_volume_atm": 13260,
+        "put_volume_atm": 2777,
+        "cp_volume_ratio": 4.77,
+        "leverage": 3.0
+      },
+      "US.SOXL": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 11,
+        "ts": "2026-08-15T01:04:56.474792",
+        "spot": 225.44,
+        "expiry": "2026-08-28",
+        "atm_strike": 225.0,
+        "atm_call_mid": 7.55,
+        "atm_put_mid": 7.5,
+        "straddle_price": 15.05,
+        "implied_move_pct": 6.68,
+        "smoothed_straddle": 16.09,
+        "smoothed_implied_move_pct": 7.14,
+        "smoothed": true,
+        "atm_iv_call": 40.5,
+        "atm_iv_put": 42.7,
+        "call_volume_atm": 13260,
+        "put_volume_atm": 2777,
+        "cp_volume_ratio": 4.77,
+        "leverage": 3.0
+      },
+      "TQQQ": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 11,
+        "ts": "2026-08-15T01:04:56.474792",
+        "spot": 225.44,
+        "expiry": "2026-08-28",
+        "atm_strike": 225.0,
+        "atm_call_mid": 7.55,
+        "atm_put_mid": 7.5,
+        "straddle_price": 15.05,
+        "implied_move_pct": 6.68,
+        "smoothed_straddle": 16.09,
+        "smoothed_implied_move_pct": 7.14,
+        "smoothed": true,
+        "atm_iv_call": 40.5,
+        "atm_iv_put": 42.7,
+        "call_volume_atm": 13260,
+        "put_volume_atm": 2777,
+        "cp_volume_ratio": 4.77,
+        "leverage": 3.0
+      },
+      "US.TQQQ": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 11,
+        "ts": "2026-08-15T01:04:56.474792",
+        "spot": 225.44,
+        "expiry": "2026-08-28",
+        "atm_strike": 225.0,
+        "atm_call_mid": 7.55,
+        "atm_put_mid": 7.5,
+        "straddle_price": 15.05,
+        "implied_move_pct": 6.68,
+        "smoothed_straddle": 16.09,
+        "smoothed_implied_move_pct": 7.14,
+        "smoothed": true,
+        "atm_iv_call": 40.5,
+        "atm_iv_put": 42.7,
+        "call_volume_atm": 13260,
+        "put_volume_atm": 2777,
+        "cp_volume_ratio": 4.77,
+        "leverage": 3.0
+      }
+    }
+  },
+  "decision": {
+    "action": "HOLD",
+    "confidence": 1,
+    "reason": "no clear signal",
+    "stop_ref": null,
+    "score_breakdown": {
+      "bear_raw": 0,
+      "bull_raw": 0,
+      "tech_weighted_bull": 0,
+      "tech_weighted_bear": 0,
+      "quant_bear": 0,
+      "quant_bull": 0,
+      "calibrated": true
+    },
+    "engine": "rules",
+    "regime": "crisis",
+    "session": "open",
+    "confluence": {
+      "bull_signals": [],
+      "bear_signals": [],
+      "bull_count": 0,
+      "bear_count": 0,
+      "bull_weighted": 0,
+      "bear_weighted": 0,
+      "bull_keys": [],
+      "bear_keys": [],
+      "dropped_bull_keys": [],
+      "dropped_bear_keys": [
+        "trend_down",
+        "ma_stack_bear",
+        "pct_crash"
+      ],
+      "asset_class": "equity_single",
+      "calibrated": true,
+      "net": 0,
+      "strength": "无明确信号",
+      "stars": "─"
+    },
+    "m15_context": "[最新15m K线@2026-08-13 06:00:00] 短线无信号",
+    "m15_direction": "neutral"
+  }
+}

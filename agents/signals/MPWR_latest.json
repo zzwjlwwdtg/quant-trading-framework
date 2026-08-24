@@ -1,0 +1,690 @@
+{
+  "ts": "2026-08-04T21:35:08.072681",
+  "market": {
+    "ticker": "MPWR",
+    "ts": "2026-08-04 21:35",
+    "price": 1344.37,
+    "pct_chg": -5.73,
+    "rsi_14": 47.3,
+    "cci_20": 9.2,
+    "cci_zone": "neutral",
+    "ma20": 1337.56,
+    "ma50": 1440.36,
+    "vol_ratio": 1.29,
+    "is_new_52w_high": false,
+    "dist_from_high": -21.45,
+    "trend": "up",
+    "ma_stack": "bear",
+    "rsi_zone": "neutral",
+    "vol_zone": "expand",
+    "pct_chg_zone": "crash",
+    "pre_price": 1394.4467,
+    "pre_pct": 3.724,
+    "pre_volume": 3105.0,
+    "pre_date": "2026-08-04",
+    "pre_label": "今日盘前(进行中)",
+    "after_price": 1354.39,
+    "after_pct": 0.745,
+    "after_volume": 95400.0,
+    "after_date": "2026-08-03",
+    "after_label": "昨日盘后(已结束)",
+    "overnight_price": 1345.32,
+    "overnight_pct": 0.07,
+    "overnight_volume": 2789.0,
+    "overnight_date": "2026-08-03",
+    "overnight_label": "昨夜夜盘(已结束)",
+    "now_et": "2026-08-04 08:35 ET",
+    "prev_session": {
+      "date": "2026-07-31",
+      "open": 1499.0,
+      "close": 1426.03,
+      "high": 1568.21,
+      "low": 1405.96,
+      "pct": -4.87
+    },
+    "prev_pct": -4.87,
+    "today_session": null,
+    "today_not_yet_opened": "2026-08-04 今日尚未开盘（距 9:30 ET 还有 0h55m）",
+    "ma_cross": "none",
+    "rsi_cross": "none",
+    "cci_cross": "up_100",
+    "cum_5d_pct": 0.4,
+    "cum_10d_pct": 1.17,
+    "dist_from_ma20_pct": 0.51,
+    "vol_20d_annual": 67.07,
+    "cci_top_divergence": null,
+    "cci_bot_divergence": null,
+    "rsi_top_divergence": null,
+    "rsi_bot_divergence": null,
+    "bb_pct": 0.537,
+    "bb_zone": "normal",
+    "bb_upper": 1429.93,
+    "bb_lower": 1245.19,
+    "psar_trend": 1,
+    "psar_signal": "none",
+    "macd_dif": -23.109,
+    "macd_dea": -32.693,
+    "macd_hist": 9.584,
+    "macd_zone": "bear",
+    "macd_signal": "none",
+    "adx_14": 14.1,
+    "adx_zone": "weak"
+  },
+  "events": {
+    "ts": "2026-08-04 21:32",
+    "next_event": "NFP Release (2026-08-07)",
+    "next_event_name": "NFP Release",
+    "next_event_date": "2026-08-07",
+    "next_event_impact": "critical",
+    "event_verify_src": "",
+    "days_to_event": 3,
+    "breaking_news": false,
+    "breaking_evidence": "",
+    "top_headlines": [
+      {
+        "title": "Stock Market Today: Dow Rallies As Caterpillar, Palantir Soar On Earnings; SpaceX Earnings Next (Live Coverage)",
+        "url": "https://finance.yahoo.com/m/9e9492e8-dc43-3309-bb2e-9b428195c126/stock-market-today%3A-dow.html?.tsrc=rss",
+        "desc": "Stock Market Today: The Dow Jones index rallies Tuesday as Caterpillar and Palantir surge on earnings. SpaceX earnings are due late."
+      },
+      {
+        "title": "What IJR's Own History Says About Its Price Today",
+        "url": "https://www.trefis.com/articles/609832/what-ijrs-own-history-says-about-its-price-today/2026-08-04?.tsrc=rss",
+        "desc": "This popular small-cap fund is trading at a premium to its own history, forcing a hard look at whether the growth inside is enough to justify the price."
+      }
+    ],
+    "risk_level": "elevated",
+    "trump_signal": {
+      "direction": "neutral",
+      "magnitude": "small",
+      "score": 0,
+      "tariff_alert": false,
+      "silence_signal": false,
+      "posts_count": 46,
+      "n_signals_medium_plus": 0,
+      "fallback": false
+    },
+    "options_risk": {
+      "ts": "2026-08-04T21:34:16.921781",
+      "witching": {
+        "is_witching_day": false,
+        "days_to_witching": 45,
+        "phase": "far",
+        "next_witching_date": "2026-09-18"
+      },
+      "per_ticker": {
+        "TQQQ": {
+          "gex": {
+            "direction": "positive_pin",
+            "cp_oi_ratio": 1.82,
+            "weighted_max_pain_pct": -2.88,
+            "strength": "medium"
+          },
+          "spot": 67.96,
+          "walls_n": 2,
+          "underlying_adjusted": [
+            {
+              "proxy": "QQQ",
+              "label": "QQQ underlying",
+              "proxy_spot": 700.07,
+              "leveraged_ticker": "TQQQ",
+              "leveraged_spot": 67.96,
+              "leverage": 3.0,
+              "gex": {
+                "direction": "neutral",
+                "cp_oi_ratio": 0.9,
+                "weighted_max_pain_pct": -0.37,
+                "strength": "weak"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-04",
+                  "category": "0DTE",
+                  "days": 0,
+                  "call_wall": {
+                    "proxy_strike": 700.0,
+                    "proxy_pct": -0.01,
+                    "leveraged_level": 67.94,
+                    "leveraged_pct": -0.03,
+                    "volume": 51344
+                  },
+                  "put_wall": {
+                    "proxy_strike": 690.0,
+                    "proxy_pct": -1.44,
+                    "leveraged_level": 65.03,
+                    "leveraged_pct": -4.32,
+                    "volume": 38580
+                  },
+                  "max_pain": {
+                    "proxy_strike": 698.0,
+                    "proxy_pct": -0.3,
+                    "leveraged_level": 67.36,
+                    "leveraged_pct": -0.89
+                  },
+                  "total_call_vol": 333430,
+                  "total_put_vol": 373032,
+                  "cp_ratio": 0.89
+                },
+                {
+                  "expiry": "2026-08-05",
+                  "category": "0DTE",
+                  "days": 1,
+                  "call_wall": {
+                    "proxy_strike": 700.0,
+                    "proxy_pct": -0.01,
+                    "leveraged_level": 67.94,
+                    "leveraged_pct": -0.03,
+                    "volume": 24441
+                  },
+                  "put_wall": {
+                    "proxy_strike": 695.0,
+                    "proxy_pct": -0.72,
+                    "leveraged_level": 66.48,
+                    "leveraged_pct": -2.17,
+                    "volume": 10778
+                  },
+                  "max_pain": {
+                    "proxy_strike": 696.0,
+                    "proxy_pct": -0.58,
+                    "leveraged_level": 66.77,
+                    "leveraged_pct": -1.74
+                  },
+                  "total_call_vol": 113259,
+                  "total_put_vol": 123074,
+                  "cp_ratio": 0.92
+                },
+                {
+                  "expiry": "2026-08-21",
+                  "category": "monthly",
+                  "days": 17,
+                  "call_wall": {
+                    "proxy_strike": 750.0,
+                    "proxy_pct": 7.13,
+                    "leveraged_level": 82.5,
+                    "leveraged_pct": 21.4,
+                    "volume": 26548
+                  },
+                  "put_wall": {
+                    "proxy_strike": 680.0,
+                    "proxy_pct": -2.87,
+                    "leveraged_level": 62.12,
+                    "leveraged_pct": -8.6,
+                    "volume": 15028
+                  },
+                  "max_pain": {
+                    "proxy_strike": 700.0,
+                    "proxy_pct": -0.01,
+                    "leveraged_level": 67.94,
+                    "leveraged_pct": -0.03
+                  },
+                  "total_call_vol": 121898,
+                  "total_put_vol": 109016,
+                  "cp_ratio": 1.12
+                }
+              ]
+            }
+          ]
+        },
+        "SOXL": {
+          "gex": {
+            "direction": "positive_pin",
+            "cp_oi_ratio": 2.22,
+            "weighted_max_pain_pct": -5.75,
+            "strength": "medium"
+          },
+          "spot": 116.71,
+          "walls_n": 2,
+          "underlying_adjusted": [
+            {
+              "proxy": "SOXX",
+              "label": "SOXX underlying",
+              "proxy_spot": 507.68,
+              "leveraged_ticker": "SOXL",
+              "leveraged_spot": 116.71,
+              "leverage": 3.0,
+              "gex": {
+                "direction": "negative_squeeze",
+                "cp_oi_ratio": 0.37,
+                "weighted_max_pain_pct": 4.4,
+                "strength": "strong"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-07",
+                  "category": "weekly",
+                  "days": 3,
+                  "call_wall": {
+                    "proxy_strike": 520.0,
+                    "proxy_pct": 2.43,
+                    "leveraged_level": 125.21,
+                    "leveraged_pct": 7.28,
+                    "volume": 701
+                  },
+                  "put_wall": {
+                    "proxy_strike": 490.0,
+                    "proxy_pct": -3.48,
+                    "leveraged_level": 104.52,
+                    "leveraged_pct": -10.45,
+                    "volume": 2245
+                  },
+                  "max_pain": {
+                    "proxy_strike": 530.0,
+                    "proxy_pct": 4.4,
+                    "leveraged_level": 132.1,
+                    "leveraged_pct": 13.19
+                  },
+                  "total_call_vol": 2162,
+                  "total_put_vol": 5860,
+                  "cp_ratio": 0.37
+                },
+                {
+                  "expiry": "2026-08-21",
+                  "category": "monthly",
+                  "days": 17,
+                  "call_wall": {
+                    "proxy_strike": 520.0,
+                    "proxy_pct": 2.43,
+                    "leveraged_level": 125.21,
+                    "leveraged_pct": 7.28,
+                    "volume": 4933
+                  },
+                  "put_wall": {
+                    "proxy_strike": 500.0,
+                    "proxy_pct": -1.51,
+                    "leveraged_level": 111.41,
+                    "leveraged_pct": -4.54,
+                    "volume": 1379
+                  },
+                  "max_pain": {
+                    "proxy_strike": 500.0,
+                    "proxy_pct": -1.51,
+                    "leveraged_level": 111.41,
+                    "leveraged_pct": -4.54
+                  },
+                  "total_call_vol": 6246,
+                  "total_put_vol": 3062,
+                  "cp_ratio": 2.04
+                }
+              ]
+            },
+            {
+              "proxy": "SMH",
+              "label": "SMH liquid proxy",
+              "proxy_spot": 545.46,
+              "leveraged_ticker": "SOXL",
+              "leveraged_spot": 116.71,
+              "leverage": 3.0,
+              "gex": {
+                "direction": "negative_squeeze",
+                "cp_oi_ratio": 0.42,
+                "weighted_max_pain_pct": 0.4,
+                "strength": "medium"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-05",
+                  "category": "0DTE",
+                  "days": 1,
+                  "call_wall": {
+                    "proxy_strike": 585.0,
+                    "proxy_pct": 7.25,
+                    "leveraged_level": 142.09,
+                    "leveraged_pct": 21.75,
+                    "volume": 665
+                  },
+                  "put_wall": {
+                    "proxy_strike": 532.5,
+                    "proxy_pct": -2.38,
+                    "leveraged_level": 108.39,
+                    "leveraged_pct": -7.13,
+                    "volume": 2005
+                  },
+                  "max_pain": {
+                    "proxy_strike": 545.0,
+                    "proxy_pct": -0.08,
+                    "leveraged_level": 116.41,
+                    "leveraged_pct": -0.25
+                  },
+                  "total_call_vol": 4109,
+                  "total_put_vol": 14784,
+                  "cp_ratio": 0.28
+                },
+                {
+                  "expiry": "2026-08-07",
+                  "category": "weekly",
+                  "days": 3,
+                  "call_wall": {
+                    "proxy_strike": 575.0,
+                    "proxy_pct": 5.42,
+                    "leveraged_level": 135.67,
+                    "leveraged_pct": 16.25,
+                    "volume": 1675
+                  },
+                  "put_wall": {
+                    "proxy_strike": 500.0,
+                    "proxy_pct": -8.33,
+                    "leveraged_level": 87.53,
+                    "leveraged_pct": -25.0,
+                    "volume": 2565
+                  },
+                  "max_pain": {
+                    "proxy_strike": 550.0,
+                    "proxy_pct": 0.83,
+                    "leveraged_level": 119.62,
+                    "leveraged_pct": 2.5
+                  },
+                  "total_call_vol": 7871,
+                  "total_put_vol": 13433,
+                  "cp_ratio": 0.59
+                },
+                {
+                  "expiry": "2026-08-21",
+                  "category": "monthly",
+                  "days": 17,
+                  "call_wall": {
+                    "proxy_strike": 625.0,
+                    "proxy_pct": 14.58,
+                    "leveraged_level": 167.77,
+                    "leveraged_pct": 43.75,
+                    "volume": 2632
+                  },
+                  "put_wall": {
+                    "proxy_strike": 530.0,
+                    "proxy_pct": -2.83,
+                    "leveraged_level": 106.79,
+                    "leveraged_pct": -8.5,
+                    "volume": 5986
+                  },
+                  "max_pain": {
+                    "proxy_strike": 542.5,
+                    "proxy_pct": -0.54,
+                    "leveraged_level": 114.81,
+                    "leveraged_pct": -1.63
+                  },
+                  "total_call_vol": 16202,
+                  "total_put_vol": 18371,
+                  "cp_ratio": 0.88
+                }
+              ]
+            }
+          ]
+        },
+        "DRAM": {
+          "gex": {
+            "direction": "positive_pin",
+            "cp_oi_ratio": 2.31,
+            "weighted_max_pain_pct": -2.21,
+            "strength": "medium"
+          },
+          "spot": 51.13,
+          "walls_n": 2,
+          "underlying_adjusted": [
+            {
+              "proxy": "MU",
+              "label": "MU memory proxy",
+              "proxy_spot": 829.5,
+              "leveraged_ticker": "DRAM",
+              "leveraged_spot": 51.13,
+              "leverage": 1.0,
+              "gex": {
+                "direction": "positive_pin",
+                "cp_oi_ratio": 1.99,
+                "weighted_max_pain_pct": -2.91,
+                "strength": "medium"
+              },
+              "walls": [
+                {
+                  "expiry": "2026-08-05",
+                  "category": "0DTE",
+                  "days": 1,
+                  "call_wall": {
+                    "proxy_strike": 900.0,
+                    "proxy_pct": 8.5,
+                    "leveraged_level": 55.48,
+                    "leveraged_pct": 8.5,
+                    "volume": 9073
+                  },
+                  "put_wall": {
+                    "proxy_strike": 750.0,
+                    "proxy_pct": -9.58,
+                    "leveraged_level": 46.23,
+                    "leveraged_pct": -9.58,
+                    "volume": 3327
+                  },
+                  "max_pain": {
+                    "proxy_strike": 810.0,
+                    "proxy_pct": -2.35,
+                    "leveraged_level": 49.93,
+                    "leveraged_pct": -2.35
+                  },
+                  "total_call_vol": 72006,
+                  "total_put_vol": 37557,
+                  "cp_ratio": 1.92
+                },
+                {
+                  "expiry": "2026-08-07",
+                  "category": "weekly",
+                  "days": 3,
+                  "call_wall": {
+                    "proxy_strike": 900.0,
+                    "proxy_pct": 8.5,
+                    "leveraged_level": 55.48,
+                    "leveraged_pct": 8.5,
+                    "volume": 11016
+                  },
+                  "put_wall": {
+                    "proxy_strike": 700.0,
+                    "proxy_pct": -15.61,
+                    "leveraged_level": 43.15,
+                    "leveraged_pct": -15.61,
+                    "volume": 4421
+                  },
+                  "max_pain": {
+                    "proxy_strike": 800.0,
+                    "proxy_pct": -3.56,
+                    "leveraged_level": 49.31,
+                    "leveraged_pct": -3.56
+                  },
+                  "total_call_vol": 63449,
+                  "total_put_vol": 30530,
+                  "cp_ratio": 2.08
+                },
+                {
+                  "expiry": "2026-08-21",
+                  "category": "monthly",
+                  "days": 17,
+                  "call_wall": {
+                    "proxy_strike": 900.0,
+                    "proxy_pct": 8.5,
+                    "leveraged_level": 55.48,
+                    "leveraged_pct": 8.5,
+                    "volume": 1715
+                  },
+                  "put_wall": {
+                    "proxy_strike": 800.0,
+                    "proxy_pct": -3.56,
+                    "leveraged_level": 49.31,
+                    "leveraged_pct": -3.56,
+                    "volume": 2456
+                  },
+                  "max_pain": {
+                    "proxy_strike": 830.0,
+                    "proxy_pct": 0.06,
+                    "leveraged_level": 51.16,
+                    "leveraged_pct": 0.06
+                  },
+                  "total_call_vol": 8518,
+                  "total_put_vol": 11385,
+                  "cp_ratio": 0.75
+                }
+              ]
+            }
+          ]
+        },
+        "SPY": {
+          "gex": {
+            "direction": "neutral",
+            "cp_oi_ratio": 1.08,
+            "weighted_max_pain_pct": -0.22,
+            "strength": "weak"
+          },
+          "spot": 757.67,
+          "walls_n": 3
+        },
+        "QQQ": {
+          "gex": {
+            "direction": "neutral",
+            "cp_oi_ratio": 0.9,
+            "weighted_max_pain_pct": -0.37,
+            "strength": "weak"
+          },
+          "spot": 700.07,
+          "walls_n": 3
+        }
+      },
+      "summary": {
+        "max_risk": "low",
+        "reason": "距下次三巫日 45天"
+      }
+    },
+    "earnings_implied_move": {
+      "SOXL": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 22,
+        "ts": "2026-08-04T21:34:16.921781",
+        "spot": 206.64,
+        "expiry": "2026-08-28",
+        "atm_strike": 205.0,
+        "atm_call_mid": 10.95,
+        "atm_put_mid": 8.67,
+        "straddle_price": 19.62,
+        "implied_move_pct": 9.49,
+        "smoothed_straddle": 19.947,
+        "smoothed_implied_move_pct": 9.65,
+        "smoothed": true,
+        "atm_iv_call": 0.0,
+        "atm_iv_put": 0.8,
+        "call_volume_atm": 16098,
+        "put_volume_atm": 5607,
+        "cp_volume_ratio": 2.87,
+        "leverage": 3.0
+      },
+      "US.SOXL": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 22,
+        "ts": "2026-08-04T21:34:16.921781",
+        "spot": 206.64,
+        "expiry": "2026-08-28",
+        "atm_strike": 205.0,
+        "atm_call_mid": 10.95,
+        "atm_put_mid": 8.67,
+        "straddle_price": 19.62,
+        "implied_move_pct": 9.49,
+        "smoothed_straddle": 19.947,
+        "smoothed_implied_move_pct": 9.65,
+        "smoothed": true,
+        "atm_iv_call": 0.0,
+        "atm_iv_put": 0.8,
+        "call_volume_atm": 16098,
+        "put_volume_atm": 5607,
+        "cp_volume_ratio": 2.87,
+        "leverage": 3.0
+      },
+      "TQQQ": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 22,
+        "ts": "2026-08-04T21:34:16.921781",
+        "spot": 206.64,
+        "expiry": "2026-08-28",
+        "atm_strike": 205.0,
+        "atm_call_mid": 10.95,
+        "atm_put_mid": 8.67,
+        "straddle_price": 19.62,
+        "implied_move_pct": 9.49,
+        "smoothed_straddle": 19.947,
+        "smoothed_implied_move_pct": 9.65,
+        "smoothed": true,
+        "atm_iv_call": 0.0,
+        "atm_iv_put": 0.8,
+        "call_volume_atm": 16098,
+        "put_volume_atm": 5607,
+        "cp_volume_ratio": 2.87,
+        "leverage": 3.0
+      },
+      "US.TQQQ": {
+        "stock": "NVDA",
+        "earnings_date": "2026-08-26",
+        "days_to_earnings": 22,
+        "ts": "2026-08-04T21:34:16.921781",
+        "spot": 206.64,
+        "expiry": "2026-08-28",
+        "atm_strike": 205.0,
+        "atm_call_mid": 10.95,
+        "atm_put_mid": 8.67,
+        "straddle_price": 19.62,
+        "implied_move_pct": 9.49,
+        "smoothed_straddle": 19.947,
+        "smoothed_implied_move_pct": 9.65,
+        "smoothed": true,
+        "atm_iv_call": 0.0,
+        "atm_iv_put": 0.8,
+        "call_volume_atm": 16098,
+        "put_volume_atm": 5607,
+        "cp_volume_ratio": 2.87,
+        "leverage": 3.0
+      }
+    }
+  },
+  "decision": {
+    "action": "REDUCE",
+    "confidence": 1,
+    "reason": "downtrend confirmed",
+    "stop_ref": null,
+    "score_breakdown": {
+      "tech": 3,
+      "tech_weighted": 0.0,
+      "macro": 0,
+      "event": 1,
+      "raw": 3,
+      "event_in_total": 0,
+      "calibrated": true
+    },
+    "engine": "rules",
+    "regime": "crisis",
+    "session": "pre-market",
+    "confluence": {
+      "bull_signals": [
+        "价格站上MA20(价格1344.37 > MA20=1337.56)",
+        "放量上涨(量比=1.29，>1.5为放量，价量齐升)",
+        "[2026-08-04 今日盘前(进行中)] 涨+3.72%  → 开盘大概率跳空高开"
+      ],
+      "bear_signals": [
+        "均线空排(MA20=1337.56 < MA50=1440.36)",
+        "CCI进入超买(近3日上穿+100，当前=9)",
+        "当日暴跌(-5.7%，<-5%，恐慌信号，历史规则不适用)"
+      ],
+      "bull_count": 3,
+      "bear_count": 3,
+      "bull_weighted": 1.05,
+      "bear_weighted": 0.0,
+      "bull_keys": [
+        "trend_up",
+        "vol_expand_up"
+      ],
+      "bear_keys": [
+        "ma_stack_bear",
+        "cci_cross_up100",
+        "pct_crash"
+      ],
+      "calibrated": true,
+      "net": 0,
+      "strength": "多空均衡",
+      "stars": "─"
+    },
+    "h1_context": "最新K线@17:00  趋势:向下  RSI:23.7",
+    "m15_context": "[最新15m K线@2026-08-04 08:30:00] 短线无信号",
+    "m15_direction": "neutral"
+  }
+}

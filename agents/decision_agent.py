@@ -1207,6 +1207,10 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
     else:
         result["engine"] = "llm"
     result["regime"] = regime
+    # 把 confluence 塞进 result, 让下游 (UI / Claude gate / notifier) 能看到校准依据
+    # 之前只有 orchestrator._etf_cycle 会手动 attach, 单独 emit (strategy_runner) 缺这一步
+    if confluence:
+        result["confluence"] = confluence
     # MARKET_UNCERTAIN 保护：高事件不确定性下，低信心 BUY/WATCH_BUY 降级为 HOLD
     # Trump 信号也通过 ev 通道注入（_trump_score 加到 0-3 范围内）
     trump_sig = events.get("trump_signal")
