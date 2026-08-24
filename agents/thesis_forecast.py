@@ -209,6 +209,39 @@ def _classify_event(event_name: str) -> Optional[str]:
     return None
 
 
+def _load_cleveland_nowcast() -> Optional[dict]:
+    """加载 Cleveland Fed InflationNowcast (缓存 12h)."""
+    try:
+        from cleveland_nowcast import get_nowcast
+        return get_nowcast()
+    except Exception:
+        return None
+
+
+def _get_nowcast_probs(nowcast: Optional[dict], event_type: str) -> Optional[dict]:
+    """从 Cleveland Fed nowcast 派生 CPI/PCE 场景概率.
+    优于历史 prior, 因为反映真实经济学家模型预测."""
+    if not nowcast or not nowcast.get("current_month"):
+        return None
+    cm = nowcast["current_month"]
+    try:
+        from cleveland_nowcast import (
+            scenario_probabilities_from_nowcast,
+            CPI_RANGES, PCE_RANGES,
+        )
+    except Exception:
+        return None
+    if event_type == "CPI":
+        val = cm.get("cpi_mom")
+        if val is not None:
+            return scenario_probabilities_from_nowcast(val, CPI_RANGES)
+    elif event_type == "PCE":
+        val = cm.get("core_pce_mom")   # 用 Core PCE (Fed 首选指标)
+        if val is not None:
+            return scenario_probabilities_from_nowcast(val, PCE_RANGES)
+    return None
+
+
 def _load_fedwatch_cache() -> Optional[dict]:
     """尝试从 webui 缓存读 fed_watch 数据."""
     try:
@@ -311,6 +344,7 @@ def get_forecast(days_ahead: int = 45) -> dict:
 
     today = date.today()
     fed_watch = _load_fedwatch_cache()
+    nowcast = _load_cleveland_nowcast()
     events_out = []
     for ev in EQUITY_CALENDAR:
         try:
@@ -332,7 +366,10 @@ def get_forecast(days_ahead: int = 45) -> dict:
         deltas = [s["delta_pp"] for s in scenarios.values()]
         min_d = min(deltas); max_d = max(deltas)
 
-        # 概率: FOMC 用 CME FedWatch, 其它用 prior
+        # 概率数据源优先级:
+        #   FOMC: CME FedWatch → prior
+        #   CPI/PCE: Cleveland Fed nowcast → prior
+        #   其它 (NFP/PPI/Retail): prior (无实时 nowcast)
         prob_source = "prior"
         probs = _PRIOR_PROBS.get(event_type, {})
         if event_type == "FOMC":
@@ -340,6 +377,11 @@ def get_forecast(days_ahead: int = 45) -> dict:
             if fw_probs:
                 probs = fw_probs
                 prob_source = "cme_fedwatch"
+        elif event_type in ("CPI", "PCE"):
+            nc_probs = _get_nowcast_probs(nowcast, event_type)
+            if nc_probs:
+                probs = nc_probs
+                prob_source = "cleveland_fed_nowcast"
 
         # 每场景嵌入概率 (合并 scenarios + probs)
         scenarios_with_prob = {}
