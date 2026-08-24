@@ -57,9 +57,8 @@ _SECTOR_REGIME_CACHE = {"ts": 0, "data": {}}
 
 
 def _get_sector_regime(ticker: str) -> str | None:
-    """按 ticker → 板块基准 → 20d + 5d 涨跌算板块 regime。
-    返回：'sector_bear' / 'sector_weak' / 'sector_neutral' / 'sector_strong' / None。
-    仅做**单向收紧**（bear/weak → bull_thresh +1，绝不放宽）。
+    """按 ticker → 板块基准计算方向与短线震荡。
+    返回风险标签或 None；只做单向收紧，绝不因板块标签放宽买入。
     """
     import time
     import yfinance as yf
@@ -76,19 +75,22 @@ def _get_sector_regime(ticker: str) -> str | None:
         return _SECTOR_REGIME_CACHE["data"][sector]
 
     try:
-        df = yf.Ticker(sector).history(period="30d", interval="1d", auto_adjust=True)
+        df = yf.Ticker(sector).history(period="3mo", interval="1d", auto_adjust=True)
         if df.empty or len(df) < 21:
             return None
         close = df["Close"].astype(float)
         price = float(close.iloc[-1])
         p5  = ((price / float(close.iloc[-6])  - 1) * 100)
         p20 = ((price / float(close.iloc[-21]) - 1) * 100)
-        # 用与 dashboard /api/sectors 一致的判定
+        # 用与 dashboard /api/sectors 一致的方向阈值。
         if p20 <= -10:  regime = "sector_bear"
         elif p5 <= -5:  regime = "sector_crisis"
         elif p20 <= -5: regime = "sector_weak"
         elif p5 <= -2:  regime = "sector_pullback"
-        else:           regime = None   # 不收紧
+        else:
+            from market_style import analyze_price_style
+            style = analyze_price_style(close, df["High"], df["Low"])
+            regime = "sector_chop" if style.get("is_choppy") else None
     except Exception:
         regime = None
     _SECTOR_REGIME_CACHE["data"][sector] = regime
@@ -101,7 +103,7 @@ def _is_technical_only() -> bool:
 
     保留生效的是：
       · regime（VIX/F&G/yield/单日暴跌 — 都是技术/宏观指标，不是消息）
-      · confluence + quant_signal（K 线技术）
+      · confluence（K 线技术与动量共振）
       · earnings IM guard（期权市场隐含定价，不是新闻）
 
     默认 ON（env var TECHNICAL_ONLY=0 才关）。
@@ -509,6 +511,102 @@ def _apply_uncertain_guard(result: dict, ev: int) -> dict:
     }
 
 
+def _apply_options_flow_guard(
+    result: dict,
+    ticker: str,
+    market: dict,
+    events: dict,
+) -> dict:
+    """Apply deterministic option-flow risk without letting snapshots overtrade.
+
+    Snapshot-chain flow is capped below the automatic reduce/add threshold by
+    ``option_flow``.  It may pause a conflicting new BUY at 60+, but only an
+    authoritative future tape signal at 75+ *and* matching price momentum may
+    create REDUCE/WATCH_BUY_PROBE.  Option flow never creates a full SELL.
+    """
+    flow = events.get("options_flow") or {}
+    positions = flow.get("positions") if isinstance(flow, dict) else None
+    if not isinstance(positions, dict) or not ticker:
+        return result
+    short = ticker.upper().replace("US.", "")
+    position = positions.get(short) or positions.get(ticker)
+    if not isinstance(position, dict):
+        return result
+
+    score = int(position.get("score") or 0)
+    direction = position.get("direction", "neutral")
+    stale = bool(flow.get("stale"))
+    annotation = {
+        "direction": direction,
+        "score": score,
+        "action": position.get("action", "none"),
+        "sources": position.get("confirming_sources") or position.get("sources") or [],
+        "data_quality": position.get("data_quality", "snapshot"),
+        "score_cap": position.get("score_cap"),
+        "stale": stale,
+        "top_events": (position.get("top_events") or [])[:3],
+    }
+    enriched = {**result, "options_flow": annotation}
+    if stale or direction not in ("bullish", "bearish") or score < 60:
+        return enriched
+
+    action = result.get("action", "HOLD")
+    confidence = int(result.get("confidence") or 0)
+    reason = result.get("reason", "")
+    source_text = "+".join(annotation["sources"]) or "proxy"
+
+    # A strong bearish snapshot can prevent adding risk, but cannot sell an
+    # existing position because buy/sell and multi-leg classification is weak.
+    if direction == "bearish" and action in BUY_ACTIONS:
+        return {
+            **enriched,
+            "action": "HOLD",
+            "confidence": confidence,
+            "reason": (
+                f"options_flow_pause ({source_text} bearish {score}/100)"
+                + (f" + {reason}" if reason else "")
+            ),
+            "stop_ref": None,
+            "demoted_from": action,
+            "options_flow_guard": "pause_conflicting_buy",
+        }
+
+    pct_eff = _scaled_pct(market.get("pct_chg", 0) or 0, ticker)
+    trend = market.get("trend", "neutral")
+    bear_confirmed = pct_eff <= -1.0 or (pct_eff <= -0.5 and trend == "down")
+    bull_confirmed = pct_eff >= 1.0 or (pct_eff >= 0.5 and trend == "up")
+    authoritative = (
+        position.get("data_quality") == "tape"
+        and int(position.get("score_cap") or 0) >= 75
+    )
+
+    if (authoritative and score >= 75 and direction == "bearish"
+            and bear_confirmed and action not in ("SELL", "REDUCE")):
+        return {
+            **enriched,
+            "action": "REDUCE",
+            "confidence": max(confidence, max(1, round(_conf_scale() * 0.8))),
+            "reason": f"confirmed_option_flow ({source_text} bearish {score}/100 + price)",
+            "stop_ref": None,
+            "demoted_from": action,
+            "options_flow_guard": "confirmed_reduce",
+        }
+
+    if (authoritative and score >= 75 and direction == "bullish"
+            and bull_confirmed and action == "HOLD"):
+        return {
+            **enriched,
+            "action": "WATCH_BUY_PROBE",
+            "confidence": max(confidence, max(1, round(_conf_scale() * 0.6))),
+            "reason": f"confirmed_option_flow ({source_text} bullish {score}/100 + price)",
+            "stop_ref": _compute_buy_stop_ref(market),
+            "demoted_from": action,
+            "options_flow_guard": "confirmed_probe",
+        }
+
+    return enriched
+
+
 def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
     """关联个股财报临近时，按期权隐含 move 屏蔽 BUY/WATCH_BUY。
 
@@ -619,7 +717,7 @@ def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
 # ── ETF规则引擎 ───────────────────────────────────────────────────────────────
 
 def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
-               confluence: dict | None = None, quant: dict | None = None) -> dict:
+               confluence: dict | None = None) -> dict:
     rsi      = market.get("rsi_14") or 50
     vol_rat  = market.get("vol_ratio") or 1.0
     new_high = market.get("is_new_52w_high", False)
@@ -657,9 +755,6 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
     mb  = _macro_bear(macro)
     mbu = _macro_bull(macro)
     ev  = _event_score(days_ev, breaking, events.get("next_event_impact", "moderate"))
-    qb_bear = (quant or {}).get("sell_score", 0)
-    qb_bull = (quant or {}).get("buy_score",  0)
-
     # 追高强趋势 boost (用户 5-12 偏好补做)：
     #  A) strong trend + ma 多排时给 bull +1
     #  B) 当日 pct_chg ≥ 2% +1，≥ 5% +2
@@ -682,8 +777,8 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
             return weighted_tech
         return unweighted_total
     ev_in_total = 0 if tech_only else ev
-    bear = tb + mb + ev_in_total + qb_bear
-    bull = tbu + mbu + qb_bull + bull_boost
+    bear = tb + mb + ev_in_total
+    bull = tbu + mbu + bull_boost
 
     # 突发新闻 → 仅在技术面无明显方向时观望；极端技术信号优先于新闻
     if breaking and not tech_only:
@@ -800,6 +895,8 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
         "bull_extended":  (99, 99, 2), # 子类: 强动量延续 → REDUCE/CAUTION 全 disable，bull≥2 即买
         "bull_pulling":   (99, 99, 2), # 子类: 回调买入 bull → REDUCE 也 disable，dip 都是 BUY 机会
         "bull_chop":      (5, 3, 5),   # 子类: 波动放大 → 稍严，要求更高 bull conf
+        "neutral_chop":   (4, 2, 5),   # 中性震荡: 不追涨，需更多技术共振
+        "risk_off":       (3, 2, 5),   # 价格/板块风险收缩，不冒充宏观衰退
         "overheated":     (4, 3, 5),   # 过热：bear≥4 减仓，bull≥5 才买
         "recession_risk": (3, 2, 5),   # 衰退风险：快速减仓
         "crisis":         (2, 1, 6),   # 危机：极敏感，几乎不买
@@ -821,7 +918,7 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
     # ── 板块级 regime（比大盘更贴合具体标的）：单向收紧 bull_thresh ─────
     # 例：SOXL/DRAM/MULL 跟 SMH 半导体，半导体技术熊时 → bull_thresh +1
     sector_regime = _get_sector_regime(market.get("ticker", ""))
-    if sector_regime in ("sector_bear", "sector_crisis", "sector_weak"):
+    if sector_regime in ("sector_bear", "sector_crisis", "sector_weak", "sector_chop"):
         bull_thresh += 1
         caution_thresh = max(1, caution_thresh - 1)
 
@@ -848,8 +945,7 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
                         "reason": "bull_trending: REDUCE 信号但非极端，降级 CAUTION (反指标修复)",
                         "stop_ref": None,
                         "score_breakdown": {"tech": tb, "tech_weighted": tb_w,
-                                            "macro": mb, "event": ev,
-                                            "quant": qb_bear, "raw": bear,
+                                            "macro": mb, "event": ev, "raw": bear,
                                             "downgraded_from_REDUCE": True,
                                             "calibrated": calibrated}}
         reason = ("RSI extreme + vol shrink" if vol_rat < 0.80 and rsi > 82
@@ -860,7 +956,7 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
                 "confidence": _normalize_confidence(_conf_input(bear, tb_w), side="bear"),
                 "reason": reason, "stop_ref": None,
                 "score_breakdown": {"tech": tb, "tech_weighted": tb_w, "macro": mb,
-                                    "event": ev, "quant": qb_bear, "raw": bear,
+                                    "event": ev, "raw": bear,
                                     "event_in_total": ev_in_total, "calibrated": calibrated}}
 
     if bear >= caution_thresh and bear > bull:
@@ -876,7 +972,7 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
                 "confidence": _normalize_confidence(_conf_input(bear, tb_w), side="bear"),
                 "reason": reason, "stop_ref": None,
                 "score_breakdown": {"tech": tb, "tech_weighted": tb_w, "macro": mb,
-                                    "event": ev, "quant": qb_bear, "raw": bear,
+                                    "event": ev, "raw": bear,
                                     "event_in_total": ev_in_total, "calibrated": calibrated}}
 
     if days_ev <= 1 and risk_lvl == "high" and not tech_only:
@@ -897,7 +993,7 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
                 "reason": reason,
                 "stop_ref": _compute_buy_stop_ref(market),
                 "score_breakdown": {"tech": tbu, "tech_weighted": tbu_w,
-                                    "macro": mbu, "event": ev, "quant": qb_bull,
+                                    "macro": mbu, "event": ev,
                                     "boost": bull_boost, "raw": bull,
                                     "event_in_total": ev_in_total,
                                     "calibrated": calibrated}}
@@ -908,14 +1004,13 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
             "reason": "no clear signal", "stop_ref": None,
             "score_breakdown": {"bear_raw": bear, "bull_raw": bull,
                                 "tech_weighted_bull": tbu_w, "tech_weighted_bear": tb_w,
-                                "quant_bear": qb_bear, "quant_bull": qb_bull,
                                 "calibrated": calibrated}}
 
 
 # ── 黄金规则引擎 ──────────────────────────────────────────────────────────────
 
 def _gold_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
-                quant: dict | None = None) -> dict:
+                confluence: dict | None = None) -> dict:
     rsi      = market.get("rsi_14") or 50
     vol_rat  = market.get("vol_ratio") or 1.0
     new_high = market.get("is_new_52w_high", False)
@@ -935,21 +1030,27 @@ def _gold_rules(market: dict, events: dict, macro: dict, regime: str = "neutral"
     macd_zone   = market.get("macd_zone",   "neutral")
     adx_zone    = market.get("adx_zone",    "weak")
 
-    tb  = _tech_bear(rsi, vol_rat, trend, ma_stack, new_high, cci_zone, bb_zone, psar_signal,
-                     macd_signal, macd_zone, adx_zone)
-    tbu = _tech_bull(rsi, vol_rat, trend, ma_stack, cci_zone, bb_zone, psar_signal,
-                     macd_signal=macd_signal, macd_zone=macd_zone, adx_zone=adx_zone)
+    # 优先用 confluence 校准评分 (跟 _etf_rules 一致)
+    # 商品市场 rsi_overbought/cci_overbought 校准后权重=0 (历史命中率<50%)
+    # 用 _tech_bear 会把 RSI 82 硬编码算 bear=2, 触发假 SELL 信号
+    if confluence and confluence.get("calibrated"):
+        tb_raw = confluence.get("bear_count", 0)
+        tbu_raw = confluence.get("bull_count", 0)
+        tb = float(confluence.get("bear_weighted", tb_raw))
+        tbu = float(confluence.get("bull_weighted", tbu_raw))
+    else:
+        tb  = _tech_bear(rsi, vol_rat, trend, ma_stack, new_high, cci_zone, bb_zone, psar_signal,
+                         macd_signal, macd_zone, adx_zone)
+        tbu = _tech_bull(rsi, vol_rat, trend, ma_stack, cci_zone, bb_zone, psar_signal,
+                         macd_signal=macd_signal, macd_zone=macd_zone, adx_zone=adx_zone)
     mb  = _macro_bear(macro)
     mbu = _macro_bull(macro)
     ev  = _event_score(days_ev, breaking, events.get("next_event_impact", "moderate"))
-    qb_bear = (quant or {}).get("sell_score", 0)
-    qb_bull = (quant or {}).get("buy_score",  0)
-
     # 危机/衰退期黄金避险需求增加；风险偏好高时黄金承压
     regime_bull = 1 if regime in ("crisis", "recession_risk") else 0
     regime_bear = 1 if regime == "overheated" else 0
-    bear = tb + mb + ev + regime_bear + qb_bear
-    bull = tbu + mbu + regime_bull + qb_bull
+    bear = tb + mb + ev + regime_bear
+    bull = tbu + mbu + regime_bull
     # 注：gold_macro 评分注入已尝试 + 回测退化 -6~9%（_backtest_gold_macro.py）
     # 保留 events.gold_bias 来源升级（驱动自宏观），但不直接加 bull/bear 分
 
@@ -967,12 +1068,17 @@ def _gold_rules(market: dict, events: dict, macro: dict, regime: str = "neutral"
                 "reason": "breaking news — wait for direction",
                 "entry_ref": None, "stop_ref": None}
 
-    # 极强卖出
-    if rsi > 80 and vol_rat < 0.75:
+    # 极强卖出 (仅在无强多头共振时触发, 否则用 confluence 校准的 bull 权重优先)
+    # 若 confluence 校准后 bull_weighted >> bear_weighted, 说明技术面主流看多, 不 SELL
+    confluence_bull_dominant = (
+        confluence and confluence.get("calibrated")
+        and (tbu - tb) >= 1.0
+    )
+    if rsi > 80 and vol_rat < 0.75 and not confluence_bull_dominant:
         return {"action": "SELL", "confidence": min(bear + 1, 10),
                 "reason": "RSI extreme + vol divergence",
                 "entry_ref": price, "stop_ref": resist}
-    if rsi > 76 and new_high and bias != "bullish":
+    if rsi > 76 and new_high and bias != "bullish" and not confluence_bull_dominant:
         return {"action": "SELL", "confidence": bear,
                 "reason": "new high overbought, no bullish catalyst",
                 "entry_ref": price, "stop_ref": resist}
@@ -1060,12 +1166,11 @@ def _llm_call(system: str, market: dict, events: dict, macro: dict,
 # ── 公开API ───────────────────────────────────────────────────────────────────
 
 def get_decision(market: dict, events: dict, macro: dict | None = None,
-                 confluence: dict | None = None, quant: dict | None = None,
+                 confluence: dict | None = None,
                  board_regime: str | None = None) -> dict:
     """
     ETF风险信号: REDUCE / HOLD / CAUTION / WATCH_BUY。置信度 1-10。
     confluence:   共振模块输出（含 bull_count/bear_count），传入后作为主技术评分源。
-    quant:        进化规则共振（buy_score/sell_score 0-3），自动加载，可显式传入。
     board_regime: 当日板块级 regime（由 regime_today 算定）。**单一源**：
                   始终使用 board_regime，**唯一允许的 override** 是单股当日暴跌
                   ≤ -5%（杠杆缩放后）→ 该 ticker override 成 "crisis"，全局 board
@@ -1090,12 +1195,6 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
             confluence = get_confluence(market)
         except Exception:
             confluence = None
-    if quant is None:
-        try:
-            from quant_signal import evaluate as _eval_quant
-            quant = _eval_quant(market.get("ticker", "?"), market)
-        except Exception:
-            quant = None
     result = _llm_call(
         _ETF_SYSTEM, market, events, macro,
         m_keys=("ticker", "price", "pct_chg", "rsi_14", "vol_ratio",
@@ -1103,12 +1202,11 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
         e_keys=("next_event", "days_to_event", "breaking_news", "risk_level"),
     )
     if result is None:
-        result = _etf_rules(market, events, macro, regime, confluence, quant)
+        result = _etf_rules(market, events, macro, regime, confluence)
         result["engine"] = "rules"
     else:
         result["engine"] = "llm"
     result["regime"] = regime
-    result["quant"]  = quant
     # MARKET_UNCERTAIN 保护：高事件不确定性下，低信心 BUY/WATCH_BUY 降级为 HOLD
     # Trump 信号也通过 ev 通道注入（_trump_score 加到 0-3 范围内）
     trump_sig = events.get("trump_signal")
@@ -1121,11 +1219,14 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
     result = _apply_uncertain_guard(result, ev)
     result = _apply_earnings_guard(result, market.get("ticker", ""), events)
     result = _apply_trump_override(result, trump_sig)
+    result = _apply_options_flow_guard(
+        result, market.get("ticker", ""), market, events
+    )
     return result
 
 
 def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
-                      quant: dict | None = None, board_regime: str | None = None) -> dict:
+                      board_regime: str | None = None) -> dict:
     """黄金方向信号: BUY / SELL / HOLD。置信度1-10。
     board_regime: 同 get_decision；**单一源**，board≠None 时始终采用，唯一 override
                   是单股 ≤-5% 时 → crisis。"""
@@ -1141,12 +1242,12 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
         regime = "crisis" if pct_eff_t <= -5 else board_regime
     else:
         regime = get_regime(macro, market)
-    if quant is None:
-        try:
-            from quant_signal import evaluate as _eval_quant
-            quant = _eval_quant(market.get("ticker", "?"), market)
-        except Exception:
-            quant = None
+    # 先算 confluence (asset_class=commodity → rsi_overbought 等权重=0)
+    try:
+        from confluence import get_confluence
+        confluence = get_confluence(market)
+    except Exception:
+        confluence = None
     result = _llm_call(
         _GOLD_SYSTEM, market, events, macro,
         m_keys=("ticker", "price", "pct_chg", "rsi_14", "vol_ratio", "is_new_52w_high",
@@ -1154,12 +1255,14 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
         e_keys=("next_event", "days_to_event", "breaking_news", "risk_level", "gold_bias"),
     )
     if result is None:
-        result = _gold_rules(market, events, macro, regime, quant)
+        result = _gold_rules(market, events, macro, regime, confluence=confluence)
         result["engine"] = "rules"
     else:
         result["engine"] = "llm"
+    # 把 confluence 塞进结果, 让下游 (Claude gate / UI) 能看到校准依据
+    if confluence:
+        result["confluence"] = confluence
     result["regime"] = regime
-    result["quant"]  = quant
     # MARKET_UNCERTAIN 同样适用于黄金 BUY 信号；Trump 信号也注入 ev
     trump_sig = events.get("trump_signal")
     ev = min(
@@ -1170,4 +1273,7 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
     )
     result = _apply_uncertain_guard(result, ev)
     result = _apply_trump_override(result, trump_sig)
+    result = _apply_options_flow_guard(
+        result, market.get("ticker", ""), market, events
+    )
     return result
