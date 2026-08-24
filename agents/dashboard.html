@@ -1407,7 +1407,32 @@ async function loadBondMonitor() {
         ${mc.term_spread_30_10_bps != null ? `<span title="30Y − 10Y term spread · >80bps 长端 term premium 定价上升 · 陡化增强 = duration risk 定价">
           30s10s <b class="${mcColor(mc.term_spread_30_10_bps, 80, 120)}">${mc.term_spread_30_10_bps.toFixed(0)}bps</b>
         </span>` : ''}
+        ${mc.vix != null ? `<span title="CBOE VIX 30-day 隐含波动率 · <15 极静 / 15-25 正常 / >25 恐慌 / >40 危机">
+          VIX <b class="${mcColor(mc.vix, 25, 40)}">${mc.vix.toFixed(1)}</b>
+        </span>` : ''}
       </div>
+      ${mc.bbi_score != null ? `
+        <div style="margin-top:5px; padding:4px 6px; background:rgba(88,166,255,0.06); border-radius:2px">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span title="BofA Bull & Bear Indicator DIY: 4 项 stress z-score 平均 · 高=fear(可能反弹) 低=greed(可能回调) · Hartnett contrarian 指标">
+              🎯 <b>BBI</b> (Bull&Bear DIY):
+              <b class="${mc.bbi_score >= 3 ? 'ok' : (mc.bbi_score <= -3 ? 'bad' : 'muted')}" style="font-size:12px">${mc.bbi_score >= 0 ? '+' : ''}${mc.bbi_score.toFixed(1)}</b>
+              <small style="color:var(--muted); font-size:9px">
+                ${mc.bbi_score >= 6 ? '极度恐惧 (contrarian buy)'
+                  : mc.bbi_score >= 3 ? '偏恐惧'
+                  : mc.bbi_score >= -3 ? '中性'
+                  : mc.bbi_score >= -6 ? '偏贪婪'
+                  : '极度贪婪 (contrarian sell)'}
+              </small>
+            </span>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:2px; font-size:9px; color:var(--muted)">
+            ${Object.entries(mc.bbi_components || {}).map(([k,v]) => {
+              const cls = v >= 1 ? 'bad' : (v <= -1 ? 'ok' : 'muted');
+              return `<span title="${k.toUpperCase()} z-score vs 长期均值 · 正=stress 高">${k.toUpperCase()}: <b class="${cls}">${v >= 0 ? '+' : ''}${v}σ</b></span>`;
+            }).join('')}
+          </div>
+        </div>` : ''}
     </div>` : '';
 
   // FRED PNG charts (直接嵌入官方图，每日自动更新，零维护)

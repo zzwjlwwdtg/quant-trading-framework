@@ -413,6 +413,60 @@ def get_bond_monitor() -> dict:
         elif v_bps > thr_low:
             _warn("warn", f"{label} 信用利差 {v_bps:.0f}bps (>{thr_low} = 收紧, {asof_d})", key_low)
 
+    # 10) BofA Bull & Bear Indicator (BBI, DIY) — 4-factor composite contrarian gauge
+    #     参照 BofA Hartnett 的 BBI，用免费数据近似（原版含 flow+positioning 需付费）
+    #     4 项 z-score 平均（stress 越高 → BBI 越低 → contrarian bull）
+    #     Historical baseline (2015-2024 exclude COVID):
+    #       VIX:  mean 18, std 6
+    #       IG:   mean 130bps, std 35
+    #       HY:   mean 425bps, std 130
+    #       ERP:  mean 3.0%,  std 1.0%
+    try:
+        import yfinance as yf
+        vix_val = None
+        try:
+            vh = yf.Ticker("^VIX").history(period="5d")
+            if vh is not None and not vh.empty:
+                vix_val = round(float(vh["Close"].iloc[-1]), 2)
+        except Exception:
+            pass
+        # 拉 stress 因子（都已在上面算过或再拉）
+        ig_bps = macro_context.get("cdx_ig_bps")
+        hy_bps = macro_context.get("cdx_hy_bps")
+        erp_pct = macro_context.get("erp_vs_tips_pct")
+
+        # 4 项 z-score（正 = stress 高 = 熊）
+        components = {}
+        if vix_val is not None:
+            components["vix"] = round((vix_val - 18) / 6, 2)
+        if _is_finite_number(ig_bps):
+            components["ig"] = round((ig_bps - 130) / 35, 2)
+        if _is_finite_number(hy_bps):
+            components["hy"] = round((hy_bps - 425) / 130, 2)
+        if _is_finite_number(erp_pct):
+            # ERP 低 = stress 高 → 反转符号
+            components["erp"] = round((3.0 - erp_pct) / 1.0, 2)
+
+        if len(components) >= 3:  # 至少 3 个原料才算，避免噪音
+            avg_z = sum(components.values()) / len(components)
+            # BBI: -avg_z * 3 → -3..+3 (低 = fear/contrarian bull, 高 = greed/contrarian bear)
+            # 但为了直觉 (高 = 好, 低 = 差)，仍用 -avg_z 作为 BBI
+            bbi = round(-avg_z * 3, 2)
+            macro_context["vix"] = vix_val
+            macro_context["bbi_score"] = bbi
+            macro_context["bbi_components"] = components
+            # 判读 (Hartnett 逻辑: extreme 时 contrarian 交易)
+            if bbi <= -6:
+                _warn("bad",  f"BBI {bbi:+.1f} 极度贪婪 (contrarian sell equity, 5 项 stress 都极低)", "bbi_extreme_greed")
+            elif bbi >= 6:
+                _warn("info", f"BBI {bbi:+.1f} 极度恐惧 (contrarian buy equity, 历史反弹信号)", "bbi_extreme_fear")
+            elif bbi <= -3:
+                _warn("warn", f"BBI {bbi:+.1f} 偏贪婪 (stress 组件低于均值)", "bbi_greed")
+            elif bbi >= 3:
+                _warn("info", f"BBI {bbi:+.1f} 偏恐惧 (可能 contrarian 买点)", "bbi_fear")
+    except Exception:
+        pass
+
     return _json_safe({
         "asof":            asof,
         "yields":          yields_out,
