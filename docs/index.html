@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T12:03:05", "endpoints_ok": 117, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T12:11:14", "endpoints_ok": 117, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1304,6 +1304,106 @@ async function loadBanners() {
 }
 
 // 美债 + Fed policy path 卡渲染
+// 宏观传导链树状图 —— 13 节点 + 15 条箭头，AI 填色 + 打方向
+function renderMacroChain(r) {
+  const nodes = r.nodes || {};
+  const layout = {
+    fed:        { x: 400, y: 40,  label: '央行政策' },
+    rates:      { x: 150, y: 130, label: '名义利率' },
+    real_rates: { x: 400, y: 130, label: '实际利率' },
+    dxy:        { x: 650, y: 130, label: '美元指数' },
+    curve:      { x: 80,  y: 220, label: '曲线形态' },
+    erp:        { x: 275, y: 220, label: '股权溢价' },
+    nfci:       { x: 475, y: 220, label: '金融条件' },
+    stablecoin: { x: 700, y: 220, label: '稳定币' },
+    credit:     { x: 475, y: 310, label: '信用市场' },
+    em:         { x: 700, y: 310, label: '新兴市场' },
+    vol:        { x: 475, y: 400, label: '波动率' },
+    bbi:        { x: 400, y: 500, label: '散户情绪' },
+    equity:     { x: 400, y: 590, label: '美股反应' },
+  };
+  const edges = [
+    ['fed', 'rates'], ['fed', 'real_rates'], ['fed', 'dxy'],
+    ['rates', 'curve'], ['rates', 'erp'], ['real_rates', 'erp'],
+    ['real_rates', 'nfci'],
+    ['nfci', 'credit'], ['credit', 'vol'],
+    ['dxy', 'stablecoin'], ['dxy', 'em'],
+    ['vol', 'bbi'], ['em', 'bbi'],
+    ['bbi', 'equity'],
+  ];
+  // direction → color (green=好/calm, muted=中性, warn=偏差, bad=极端)
+  const dirColor = {
+    // green
+    loose:'#3fb950', calm:'#3fb950', normal:'#3fb950', resilient:'#3fb950',
+    outperforming:'#3fb950', low:'#3fb950', stable:'#3fb950', weak:'#3fb950',
+    cheap:'#3fb950', fear:'#3fb950',
+    // muted
+    neutral:'#8b949e', fair:'#8b949e', flat:'#8b949e', inverted:'#8b949e',
+    // yellow
+    elevated:'#d29922', compressed:'#d29922', weakening:'#d29922',
+    growing:'#d29922', strong:'#d29922', steep:'#d29922', greed:'#d29922',
+    widening:'#d29922', underperforming:'#d29922',
+    // red
+    extreme:'#f85149', stress:'#f85149', panic:'#f85149', tightening:'#f85149',
+    crashing:'#f85149', breaking:'#f85149', crisis:'#f85149', surging:'#f85149',
+    extreme_fear:'#f85149', tight:'#f85149',
+  };
+  const dirArrow = {
+    loose:'↓', calm:'→', normal:'→', resilient:'→', outperforming:'↑',
+    low:'↓', stable:'→', weak:'↓', cheap:'↓', fear:'↓',
+    neutral:'→', fair:'→', flat:'→', inverted:'⚠',
+    elevated:'↑', compressed:'↑', weakening:'↓', growing:'↑', strong:'↑',
+    steep:'↑', greed:'↑', widening:'↑', underperforming:'↓',
+    extreme:'↑↑', stress:'↑↑', panic:'↑↑', tightening:'↑↑',
+    crashing:'↓↓', breaking:'↓↓', crisis:'↓↓', surging:'↑↑',
+    extreme_fear:'↓↓', tight:'↑↑',
+  };
+  const blocked = r.chain_blocked_at;
+  const truncNote = (n, max=16) => {
+    if (!n) return '数据不足';
+    return n.length > max ? n.substring(0, max) + '…' : n;
+  };
+  const nodeSvg = Object.entries(layout).map(([key, pos]) => {
+    const node = nodes[key] || {};
+    const dir = node.direction;
+    const color = dirColor[dir] || '#484f58';
+    const arrow = dirArrow[dir] || '?';
+    const note = truncNote(node.note);
+    const isBlocked = key === blocked;
+    const stroke = isBlocked ? '#f85149' : color;
+    const strokeWidth = isBlocked ? 2.5 : 1.5;
+    const strokeDashAttr = isBlocked ? ' stroke-dasharray="5,3"' : '';
+    const fullNote = (node.note || '').replace(/"/g, '&quot;');
+    const dirLabel = dir || 'unknown';
+    return `
+      <g>
+        <title>${pos.label} · ${dirLabel} · ${fullNote}${isBlocked ? ' · 🛑 传导链在此断裂' : ''}</title>
+        <rect x="${pos.x - 72}" y="${pos.y - 18}" width="144" height="50" rx="5"
+              fill="rgba(22,27,34,0.92)" stroke="${stroke}" stroke-width="${strokeWidth}"${strokeDashAttr}/>
+        <text x="${pos.x}" y="${pos.y - 2}" text-anchor="middle" fill="#c9d1d9" font-size="11.5" font-weight="600">
+          ${pos.label} <tspan fill="${color}" font-size="13">${arrow}</tspan>
+        </text>
+        <text x="${pos.x}" y="${pos.y + 18}" text-anchor="middle" fill="#8b949e" font-size="9.5">${note}</text>
+        ${isBlocked ? `<text x="${pos.x + 78}" y="${pos.y - 20}" font-size="14">🛑</text>` : ''}
+      </g>`;
+  }).join('');
+  const edgeSvg = edges.map(([from, to]) => {
+    const f = layout[from], t = layout[to];
+    if (!f || !t) return '';
+    const y1 = f.y + 32; const y2 = t.y - 18;
+    return `<line x1="${f.x}" y1="${y1}" x2="${t.x}" y2="${y2}" stroke="#484f58" stroke-width="1.4" marker-end="url(#macroArrow)" opacity="0.55"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 800 640" style="width:100%; max-width:820px; height:auto; display:block; margin:0 auto">
+    <defs>
+      <marker id="macroArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#7d8590"/>
+      </marker>
+    </defs>
+    ${edgeSvg}
+    ${nodeSvg}
+  </svg>`;
+}
+
 async function loadBondAIInterpret() {
   const el = document.getElementById('macro-ai-body');
   if (!el) return;
@@ -1312,33 +1412,47 @@ async function loadBondAIInterpret() {
     el.innerHTML = `<div style="color:var(--muted)">🤖 AI 解读暂不可用${r && r.error ? ': ' + r.error : ''}</div>`;
     return;
   }
-  if (r.verdict === 'computing') {
-    el.innerHTML = `<div style="color:var(--muted)">🤖 ${r.one_liner || '正在计算…'}</div>`;
+  const verdict = r.chain_verdict || r.verdict;
+  if (verdict === 'computing') {
+    el.innerHTML = `<div style="color:var(--muted)">🤖 ${r.chain_summary || r.one_liner || '正在计算…'}</div>`;
     return;
   }
+  const summary = r.chain_summary || r.one_liner;
   const verdictCls = {
-    '看多股市': 'ok', '谨慎乐观': 'warn', '中性': 'muted',
-    '谨慎看空': 'bad', '看空股市': 'bad',
-  }[r.verdict] || 'muted';
+    '看多股市': 'ok', '看多': 'ok', '谨慎乐观': 'warn', '中性': 'muted',
+    '谨慎看空': 'bad', '看空股市': 'bad', '看空': 'bad',
+  }[verdict] || 'muted';
   const confCls = {high: 'ok', medium: 'warn', low: 'muted'}[r.confidence] || 'muted';
   const confZh = {high: '高', medium: '中', low: '低'}[r.confidence] || r.confidence;
   const sourceZh = (r._source || '').startsWith('ai_cli_')
     ? `AI: ${r._source.replace('ai_cli_', '')}`
-    : (r._source || '').startsWith('rules_fallback') ? '规则兜底（AI 不可用）' : '';
+    : (r._source || '').startsWith('rules_fallback') ? '规则兜底' : '';
+  const hasTree = r.nodes && Object.keys(r.nodes).length > 0;
+  const blockedNote = r.chain_blocked_at
+    ? `<small style="color:#f85149; margin-left:6px">🛑 传导链在 <b>${r.chain_blocked_at}</b> 处阻断</small>`
+    : '';
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; gap:6px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap">
       <span style="font-size:14px">
-        <b class="${verdictCls}">${r.verdict || '?'}</b>
+        <span class="badge ${verdictCls}" style="font-size:12px; padding:3px 10px">${verdict || '?'}</span>
         <small style="color:var(--muted); margin-left:6px">可信度 <b class="${confCls}">${confZh}</b></small>
+        ${blockedNote}
       </span>
       <small style="color:var(--muted); font-size:9px" title="${r.generated_at || ''}">${sourceZh}</small>
     </div>
-    <div style="font-size:13px; color:var(--fg); margin-bottom:6px; padding:6px 8px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:2px">
-      <b>🎯 ${r.one_liner || '暂无一句话总结'}</b>
+    <div style="font-size:13px; color:var(--fg); margin-bottom:8px; padding:8px 10px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:3px">
+      <b>🎯 ${summary || '暂无总结'}</b>
     </div>
-    ${r.reasoning ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">📖 为什么：</small><br>${r.reasoning}</div>` : ''}
-    ${r.who_agrees ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">🏦 卖方观点对照：</small><br><small>${r.who_agrees}</small></div>` : ''}
-    ${r.action_hint ? `<div style="padding:4px 8px; background:rgba(210,153,34,0.08); border-left:2px solid var(--warn); border-radius:2px; font-size:12px">
+    ${hasTree ? `
+      <div style="margin-bottom:8px; padding:6px 4px; background:rgba(13,17,23,0.4); border:1px solid var(--border); border-radius:4px">
+        <div style="font-size:10px; color:var(--muted); text-align:center; margin-bottom:4px">
+          📊 宏观传导链 <small>(节点颜色 = 状态，→ 平静 ↑ 上升 ↓ 下降 ⚠ 冲突 · 🛑 = 传导阻断)</small>
+        </div>
+        ${renderMacroChain(r)}
+      </div>` : ''}
+    ${r.reasoning && !hasTree ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">📖 为什么：</small><br>${r.reasoning}</div>` : ''}
+    ${r.who_agrees && !hasTree ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">🏦 卖方观点：</small><br><small>${r.who_agrees}</small></div>` : ''}
+    ${r.action_hint ? `<div style="padding:5px 10px; background:rgba(210,153,34,0.08); border-left:2px solid var(--warn); border-radius:2px; font-size:12px">
       <b>💡 操作建议</b>: ${r.action_hint}
     </div>` : ''}
     <div style="margin-top:6px; font-size:9px; color:var(--muted)">⚠ 本解读只是观察，不是预测。仅供参考不构成交易建议。</div>

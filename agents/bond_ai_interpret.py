@@ -14,25 +14,55 @@ from typing import Optional
 
 
 _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金融的用户解释当前美国债/股市宏观状态。
-输入是一堆卖方 rate desk 常用指标（10Y 收益率、TIPS、信用利差、VIX、BBI 等）和已触发的警示。
+输入是一堆卖方 rate desk 常用指标（10Y 收益率、TIPS、信用利差、VIX、BBI、DXY、EEM、稳定币等）和已触发的警示。
 
-输出要求（严格 JSON，无 markdown 围栏）：
+**你的任务**：填一个 13 节点的宏观传导链树状图。每个节点用一个方向 + 一句短评。
+系统会把这些标签渲染在 dashboard 的树状图上，用户一眼看清"链条哪断了、哪没传导过来"。
+
+**传导链结构**：
+  fed → rates / real_rates / dxy
+  real_rates + rates → erp (股权风险溢价)
+  rates → curve (曲线)
+  real_rates → nfci (金融条件)
+  nfci → credit (信用)
+  credit → vol (波动率)
+  dxy → em (新兴市场)
+  dxy → stablecoin (稳定币虹吸)
+  vol + em + credit → bbi (综合情绪)
+  bbi → equity (美股反应)
+
+**输出要求**（严格 JSON，无 markdown 围栏）：
 {
-  "one_liner": "40 字以内一句话总结当前宏观状态（普通人能懂，不用行话）",
-  "verdict": "看多股市" | "看空股市" | "中性" | "谨慎乐观" | "谨慎看空",
-  "reasoning": "3-5 句话解释为什么。举例：'长期利率高说明借钱成本贵，公司利润受压。但信用市场平静说明银行还没紧张，风险还没扩散。' 只用大白话，禁用 ERP/OAS/duration 这类术语（除非能同时用大白话解释）",
-  "who_agrees": "哪些卖方观点跟当前数据一致（如 Morgan Stanley Wilson 看空 = ERP 压缩证据；Goldman 谨慎乐观 = 信用平静）",
-  "action_hint": "对散户股民的操作建议一句话（'继续持有'/'减仓' 之类，不给具体标的）",
+  "chain_verdict": "看多" | "看空" | "中性" | "谨慎乐观" | "谨慎看空",
+  "chain_summary": "40 字总结整条传导链（普通人能懂）",
+  "chain_blocked_at": "节点 key，传导链在这里断了；如 'credit' 表示利率高但信用还没扩大。null 表示未阻断",
+  "nodes": {
+    "fed":        {"direction": "loose|neutral|tightening", "note": "≤15字大白话短评（禁用 RRP/TGA 术语）"},
+    "rates":      {"direction": "low|normal|elevated|extreme", "note": "≤15字"},
+    "real_rates": {"direction": "low|normal|elevated|extreme", "note": "≤15字"},
+    "dxy":        {"direction": "weak|normal|strong|extreme", "note": "≤15字"},
+    "erp":        {"direction": "cheap|fair|compressed|extreme", "note": "≤15字（股票贵/便宜）"},
+    "curve":      {"direction": "inverted|flat|normal|steep", "note": "≤15字"},
+    "nfci":       {"direction": "loose|neutral|tight", "note": "≤15字（金融条件）"},
+    "credit":     {"direction": "calm|widening|stress", "note": "≤15字（信用市场）"},
+    "stablecoin": {"direction": "shrinking|stable|growing|surging", "note": "≤15字"},
+    "vol":        {"direction": "calm|elevated|panic", "note": "≤15字（波动率）"},
+    "em":         {"direction": "outperforming|neutral|underperforming|crisis", "note": "≤15字"},
+    "bbi":        {"direction": "greed|neutral|fear|extreme_fear", "note": "≤15字（散户情绪）"},
+    "equity":     {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（美股实际反应）"}
+  },
+  "action_hint": "对散户操作建议一句话",
   "confidence": "high" | "medium" | "low"
 }
 
-判读原则：
-- **不预测**具体涨跌，只解释**当前状态和为什么**
-- **多角度**：如果有相反证据（如利率高但信用平静），必须提到
-- **禁用术语**（除非配大白话解释）：ERP、OAS、term premium、duration、hedge ratio、NFCI、DXY、RRP、TGA、EEM
-- **数字要有 anchor**：说"10Y 4.74%"没意义，要说"比过去 10 年平均高了差不多 1 个点"
-- 强调**这个观察是给你参考不是预测**
-- **全球视角**：如果数据显示美元太强/EM 崩跌/稳定币暴增/Fed 流动性抽干，必须提到这些**跨市场**信号对 US 股的传导（EM 危机 → risk-off → SPX 跌；稳定币抽美债 → 短端利率被压 → 曲线扭曲 等）
+**判读原则**：
+- **必须**填齐 13 个节点（数据缺失时 direction=null，note='数据不足'）
+- 每个 note 短、大白话，禁用 ERP/OAS/duration/NFCI/DXY/RRP/TGA/EEM/BBI/CDX 等术语
+  - 例：credit 说 "银行相互借钱正常" 不说 "IG 利差正常"
+  - 例：dxy 说 "美元近期走弱" 不说 "DXY z=-1.23σ"
+- direction 必须严格从枚举里选，system 依此上色
+- chain_blocked_at 判读：找**第一个未传导下去**的节点。例：如果 rates 高但 credit 平静 → blocked_at="credit"
+- **中英混杂 OK**（如 "EM 反而跑赢"），但不要出现纯行话短语
 """
 
 
@@ -101,36 +131,93 @@ def _make_prompt(bond_data: dict) -> str:
 
 
 def _fallback_from_rules(bond_data: dict) -> dict:
-    """AI CLI 挂时用规则拼一段简版解读。"""
+    """AI CLI 挂时用规则拼简版树状图输出。"""
     warnings = bond_data.get("warnings", [])
     mc = bond_data.get("macro_context", {})
-    bbi = mc.get("bbi_score")
-    yields_high = any(w["key"].startswith(("10y", "30y", "tips")) for w in warnings)
-    stress_absent = ((mc.get("cdx_ig_bps") or 999) < 100
-                     and (mc.get("cdx_hy_bps") or 999) < 350)
+    yields = bond_data.get("yields", {})
+    y10v = (yields.get("10y") or {}).get("value")
+    y30v = (yields.get("30y") or {}).get("value")
+    tipsv = (yields.get("tips_10y") or {}).get("value")
+    dxy_v = mc.get("dxy")
+    erp_v = mc.get("erp_vs_tips_pct")
+    ig_v = mc.get("cdx_ig_bps")
+    hy_v = mc.get("cdx_hy_bps")
+    vix_v = mc.get("vix")
+    nfci_v = (mc.get("nfci") or {}).get("value")
+    rrp_v = mc.get("rrp_bn")
+    tga_v = mc.get("tga_bn")
+    stable_v = mc.get("stablecoin_total_bn")
+    eem_pct = mc.get("eem_pct_20d")
+    eem_rel = mc.get("eem_vs_spx_20d")
+    bbi_v = mc.get("bbi_score")
+
+    def _cat(val, thresholds, labels):
+        """val + [t1<t2<t3] + [lo, mid_lo, mid_hi, hi] → label"""
+        if val is None:
+            return None
+        if val < thresholds[0]: return labels[0]
+        if val < thresholds[1]: return labels[1]
+        if val < thresholds[2]: return labels[2]
+        return labels[3]
+
+    nodes = {
+        "fed":        {"direction": ("tightening" if (rrp_v is not None and rrp_v < 100) or (tga_v is not None and tga_v > 900) else "neutral"),
+                       "note": f"流动性抽干 (RRP ${rrp_v}B)" if rrp_v is not None and rrp_v < 100 else "Fed 政策稳定"},
+        "rates":      {"direction": _cat(y10v, [4.0, 4.5, 5.0], ["low", "normal", "elevated", "extreme"]),
+                       "note": f"10Y {y10v}% 借钱贵" if y10v and y10v >= 4.5 else f"10Y {y10v}% 正常" if y10v else "数据不足"},
+        "real_rates": {"direction": _cat(tipsv, [1.0, 1.5, 2.0], ["low", "normal", "elevated", "extreme"]),
+                       "note": f"实际利率 {tipsv}% 高压" if tipsv and tipsv >= 2.0 else f"实际利率 {tipsv}%" if tipsv else "数据不足"},
+        "dxy":        {"direction": _cat(dxy_v, [95, 100, 105], ["weak", "normal", "strong", "extreme"]),
+                       "note": f"美元 {dxy_v} " + ("走弱" if dxy_v and dxy_v < 100 else "走强" if dxy_v and dxy_v > 100 else "中性") if dxy_v else "数据不足"},
+        "erp":        {"direction": ("compressed" if erp_v is not None and erp_v < 2 else "fair" if erp_v is not None and erp_v < 4 else "cheap" if erp_v else None),
+                       "note": f"股票比债券贵 (溢价 {erp_v}%)" if erp_v is not None and erp_v < 2 else f"股票合理 (溢价 {erp_v}%)" if erp_v else "数据不足"},
+        "curve":      {"direction": "normal", "note": "曲线正常"},  # 简化
+        "nfci":       {"direction": ("tight" if nfci_v is not None and nfci_v > 0 else "loose" if nfci_v is not None and nfci_v < 0 else "neutral"),
+                       "note": f"金融条件宽松 ({nfci_v})" if nfci_v is not None and nfci_v < 0 else f"金融条件收紧 ({nfci_v})" if nfci_v else "数据不足"},
+        "credit":     {"direction": ("stress" if hy_v is not None and hy_v > 500 else "widening" if hy_v is not None and hy_v > 400 else "calm" if hy_v else None),
+                       "note": f"银行不担心 (HY {hy_v}bps 低)" if hy_v is not None and hy_v < 400 else f"信用扩大 ({hy_v}bps)" if hy_v else "数据不足"},
+        "stablecoin": {"direction": ("surging" if stable_v is not None and stable_v > 250 else "growing" if stable_v is not None and stable_v > 150 else "stable" if stable_v else None),
+                       "note": f"影子美元 ${stable_v}B" if stable_v else "数据不足"},
+        "vol":        {"direction": ("panic" if vix_v and vix_v > 30 else "elevated" if vix_v and vix_v > 20 else "calm" if vix_v else None),
+                       "note": f"期权市场平静 (VIX {vix_v})" if vix_v and vix_v < 20 else f"波动上升 (VIX {vix_v})" if vix_v else "数据不足"},
+        "em":         {"direction": ("outperforming" if eem_rel is not None and eem_rel > 3 else "underperforming" if eem_rel is not None and eem_rel < -3 else "neutral" if eem_pct is not None else None),
+                       "note": f"EM 跑赢 SPX +{eem_rel}pp" if eem_rel is not None and eem_rel > 0 else f"EM 跑输 {eem_rel}pp" if eem_rel is not None else "数据不足"},
+        "bbi":        {"direction": ("fear" if bbi_v is not None and bbi_v >= 3 else "greed" if bbi_v is not None and bbi_v <= -3 else "neutral" if bbi_v is not None else None),
+                       "note": f"散户情绪 BBI {bbi_v}" if bbi_v is not None else "数据不足"},
+        "equity":     {"direction": "resilient", "note": "US 股仍在 up trend"},
+    }
+
+    yields_high = y10v and y10v >= 4.5
+    stress_absent = (ig_v or 999) < 100 and (hy_v or 999) < 350
     if yields_high and stress_absent:
         one_liner = "利率高但市场没在怕，谨慎观望"
         verdict = "谨慎乐观"
-        reasoning = "长期国债利率涨到 4.5% 以上说明借钱成本变贵，理论上对股市不利。但同时信用市场（银行相互借钱的利率）非常平静，说明大机构还没恐慌。"
         action = "持仓不动，别盲目加仓"
+        blocked = "credit"
     elif yields_high and not stress_absent:
         one_liner = "利率高 + 信用扩大，风险开始传导"
         verdict = "谨慎看空"
-        reasoning = "利率高的同时信用利差也开始扩大，说明风险正在从债市传导到股市。"
         action = "减仓部分风险高的持仓"
+        blocked = None
     else:
         one_liner = "宏观环境相对平静"
         verdict = "中性"
-        reasoning = "各类指标处于历史正常区间。"
         action = "按原计划操作"
+        blocked = None
+
     return {
-        "one_liner": one_liner,
-        "verdict": verdict,
-        "reasoning": reasoning,
-        "who_agrees": "规则版兜底（AI CLI 不可用），跟 Goldman/JPM 谨慎乐观 view 一致",
+        "chain_verdict": verdict,
+        "chain_summary": one_liner,
+        "chain_blocked_at": blocked,
+        "nodes": nodes,
         "action_hint": action,
         "confidence": "low",
         "_source": "rules_fallback",
+        # 兼容旧字段 (dashboard 老版本)
+        "one_liner": one_liner,
+        "verdict": verdict,
+        "reasoning": "规则版兜底解读，AI CLI 不可用。" + one_liner,
+        "who_agrees": "规则版兜底 (AI CLI 不可用)",
     }
 
 
@@ -176,10 +263,19 @@ def interpret_bond_context(bond_data: dict, timeout: int = 120) -> dict:
         result["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
         return result
 
-    # 兜底缺字段
-    for k, dflt in (("one_liner", ""), ("verdict", "中性"), ("reasoning", ""),
-                    ("who_agrees", ""), ("action_hint", ""), ("confidence", "low")):
+    # 兜底缺字段 (新旧字段都填)
+    for k, dflt in (
+        ("chain_verdict", "中性"), ("chain_summary", ""), ("chain_blocked_at", None),
+        ("nodes", {}), ("action_hint", ""), ("confidence", "low"),
+        # 兼容旧字段
+        ("verdict", "中性"), ("one_liner", ""), ("reasoning", ""), ("who_agrees", ""),
+    ):
         result.setdefault(k, dflt)
+    # 老 verdict/one_liner 未填 → 从 chain 版本迁移
+    if not result.get("verdict") or result["verdict"] == "中性":
+        result["verdict"] = result.get("chain_verdict", "中性")
+    if not result.get("one_liner"):
+        result["one_liner"] = result.get("chain_summary", "")
     result["_source"] = f"ai_cli_{provider.lower()}"
     result["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     return result
