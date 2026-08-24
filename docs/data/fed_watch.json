@@ -15,75 +15,74 @@
       "date": "2026-10-28",
       "days_until": 65,
       "probabilities": {
-        "hold": 36,
-        "hike_25": 64
+        "cut_25": 4,
+        "hold": 73,
+        "hike_25": 23
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 107,
       "probabilities": {
-        "hike_25": 76,
-        "hike_50": 24
+        "cut_25": 4,
+        "hold": 68,
+        "hike_25": 28
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2027-01-27",
       "days_until": 156,
       "probabilities": {
-        "hike_25": 76,
-        "hike_50": 24
+        "cut_25": 25,
+        "hold": 58,
+        "hike_25": 17
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "balanced"
     }
   ],
-  "implied_terminal_rate": "4.25-4.50",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-08-23 22:16 UTC",
-  "recent_event_impact": "最近7天内无NFP/CPI/PPI正式发布；8/19发布7/28-29 FOMC会议纪要，7月CPI为3.4% YoY、核心CPI为2.5% YoY，7月PPI终端需求环比+0.6%，7月NFP为-23K。通胀数据偏粘性压低降息定价，就业走弱限制更激进加息定价。",
-  "commentary": "数据快照为2026-08-23 22:16 UTC，已晚于8/19 FOMC纪要；未来3-4次会议市场从9月小幅偏向按兵不动，转为10月以后更偏向加息。7月NFP意外收缩本应压低加息概率，但7月CPI仍为3.4% YoY、PPI环比+0.6%使市场维持明显鹰派路径。",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2026-Q4",
+  "data_snapshot_date": "2026-08-24",
+  "recent_event_impact": "最近7天内无NFP/CPI/PPI/FOMC决定；7/28-29 FOMC minutes 于2026-08-19发布，显示加息讨论升温。此前2026-08-07 July NFP -23K、2026-08-12 CPI 3.4% y/y、2026-08-13 PPI发布后，疲弱就业压低激进加息概率，但通胀仍使25bp加息尾部风险保留。",
+  "commentary": "Snapshot为2026-08-24 close；数据已在2026-08-19 FOMC minutes之后，且未发现之后7天内有新的NFP/CPI/PPI/FOMC决定。July NFP -23K削弱紧缩必要性，但July CPI 3.4% y/y及PPI后的通胀粘性使市场仍给9月和12月较高的25bp加息概率。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.retiredasap.com/tools/fed-odds-watch",
-      "type": "fed_funds_futures_backup"
+      "url": "https://sessionopen.com/fed-watch",
+      "type": "fed_funds_futures_cme_derived"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
-      "type": "fomc_statement"
+      "url": "https://crowdwise.charlietrenorden.com/",
+      "type": "backup_prediction_market_crosscheck"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/2026-august.htm",
-      "type": "recent_event_calendar"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
+      "url": "https://www.bls.gov/news.release/cpi.htm",
       "type": "cpi"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/ppi_08132026.htm",
-      "type": "ppi"
-    },
-    {
-      "url": "https://www.stlouisfed.org/on-the-economy/2026/aug/flash-report-unemployment-payrolls-both-drop-in-july",
-      "type": "nfp"
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "type": "fomc_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-23T23:56:14+00:00",
+  "fetched_at": "2026-08-24T07:58:27+00:00",
   "_meta": {
-    "cached_at": "2026-08-24T08:56:14.287135",
-    "age_sec": 28805,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-24T16:58:27.976986",
+    "age_sec": 276,
+    "stale": false,
+    "refreshing": false
   }
 }
