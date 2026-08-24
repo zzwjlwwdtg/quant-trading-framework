@@ -16,14 +16,27 @@ from typing import Optional
 _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金融的用户解释当前美国债/股市宏观状态。
 输入是一堆卖方 rate desk 常用指标（10Y 收益率、TIPS、信用利差、VIX、BBI、DXY、EEM、油价、稳定币等）和已触发的警示。
 
-**用户 thesis (交易假设，10 月前有效)**：
-  "Trump 想逼 Fed 降息 → 会主动做坏金融市场 (VIX ↑ / credit ↑ / equity ↓) + 压油价 (通胀降 → Fed 有借口降息)"
-  你必须**每次评估这个 thesis 在当前数据下是否 playing out**，并明确指出：
-    - 哪些节点/数据支持 thesis (supporting_nodes)
-    - 哪些节点/数据反驳 thesis (contradicting_nodes)
-    - 综合判定 (thesis_status): playing_out (证据链在走) / mixed / against (证据反向)
-  典型支持: 油价跌、VIX 涨、credit 扩大、CPI 冷却、equity 跌 + tariff 消息
-  典型反驳: 油价涨、VIX 静、credit 平静、通胀继续高、equity resilient
+**用户 thesis (10 月前有效)** — 核心是**结果**不限**路径**:
+  核心目标: "Trump 想让 Fed 在 10 月前降息"
+  可能路径 (任何一条能达成就算):
+    · 主动做坏市场 (VIX ↑ / credit ↑ / equity ↓)
+    · 压油价降通胀
+    · 关税/政治施压 Powell
+    · 经济数据自然软化 (jobs 走弱 / CPI 冷却)
+    · USD 主动或被动走弱 → Fed 无需担心美元崩
+    · 任何能让 Fed 有借口降息的路径都算
+
+  你必须评估：**当前市场距离"Fed 10 月前降息" 有多近？**
+  不要过度关注 Trump 的具体机制 (那只是他可能选的手段之一)，
+  只要**任何**信号增加或减少了 "Fed 会在 10 月前降息" 的概率就算数。
+
+  supporting_nodes: 哪些数据/节点让降息**更可能** (任何路径)
+  contradicting_nodes: 哪些数据/节点让降息**更不可能**
+  thesis_status:
+    playing_out = 多个信号都在推 Fed 走向降息
+    mixed = 有推有拉
+    against = 数据不支持降息
+    no_evidence = 数据不足
 
 **你的任务**：填一个 18 节点的宏观传导链树状图。每个节点用一个方向 + 一句短评。
 系统会把这些标签渲染在 dashboard 的树状图上，用户一眼看清"链条哪断了、哪没传导过来"。
@@ -66,10 +79,13 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
   },
   "user_thesis_check": {
     "status": "playing_out" | "mixed" | "against" | "no_evidence",
-    "summary": "40 字总结当前 thesis 状态: '油价跌了 5% 支持 thesis, 但 VIX 静默 credit 平静 → thesis 尚未成型' 之类",
-    "supporting_nodes": ["oil", "vol", ...],
-    "contradicting_nodes": ["credit", "vix", ...],
-    "action_around_thesis": "10 月前操作建议一句话: '若 thesis playing_out → 减仓; 若 against → 继续持有防守' 之类"
+    "summary": "40 字总结: 'Fed 10 月前降息概率 X% (相比上周 ...) — 主要证据 / 主要阻力'",
+    "supporting_nodes": ["经济数据/节点 keys, 任何让降息更可能的信号"],
+    "contradicting_nodes": ["任何降低降息概率的信号"],
+    "cut_probability_pct": 0-100,  // 你估算的 "Fed 10 月前降息" 概率百分比
+    "primary_driver": "当前推 Fed 走向降息的最强因素一句话",
+    "primary_blocker": "阻碍降息的最主要因素一句话",
+    "action_around_thesis": "10 月前操作建议一句话"
   },
   "action_hint": "对散户操作建议一句话",
   "confidence": "high" | "medium" | "low"
@@ -162,6 +178,33 @@ def _make_prompt(bond_data: dict) -> str:
         ],
     }
 
+    # 补充：CME FedWatch 加息/降息预期 (如果已缓存)
+    try:
+        from pathlib import Path as _P
+        import json as _j
+        fw_cache = _P(__file__).parent / ".webui_cache" / "fed_watch.json"
+        if fw_cache.exists():
+            fw = _j.loads(fw_cache.read_text(encoding="utf-8"))
+            fw_data = fw.get("value") if isinstance(fw, dict) else None
+            if isinstance(fw_data, dict) and fw_data.get("meetings"):
+                # 只挑离 10 月最近的 1-2 次会议
+                facts["FedWatch 市场隐含降息概率"] = {
+                    "asof": fw_data.get("data_snapshot_date", "?"),
+                    "meetings": [
+                        {
+                            "date": m.get("date"),
+                            "days_until": m.get("days_until"),
+                            "probabilities": m.get("probabilities"),
+                            "most_likely": m.get("most_likely"),
+                        }
+                        for m in fw_data.get("meetings", [])[:2]
+                    ],
+                    "implied_terminal_rate": fw_data.get("implied_terminal_rate"),
+                    "commentary": fw_data.get("commentary", "")[:150],
+                }
+    except Exception:
+        pass
+
     return f"""{_SYSTEM_PROMPT}
 
 当前数据快照:
@@ -249,25 +292,59 @@ def _fallback_from_rules(bond_data: dict) -> dict:
                                      else "stable" if mc.get("oil_pct_20d") is not None else None),
                        "note": f"油价 20d {mc.get('oil_pct_20d'):+.1f}%" if mc.get("oil_pct_20d") is not None else "数据不足"},
     }
-    # 简版 thesis check
+    # 简版 thesis check (核心=降息, 路径不限)
     oil_pct = mc.get("oil_pct_20d")
+    dxy_v = mc.get("dxy")
     supporting = []
     contradicting = []
-    if oil_pct is not None:
-        (supporting if oil_pct <= -3 else contradicting).append("oil")
-    if vix_v is not None:
-        (supporting if vix_v >= 22 else contradicting).append("vol")
-    if hy_v is not None:
-        (supporting if hy_v >= 400 else contradicting).append("credit")
-    if cpi_yoy is not None:
-        (supporting if cpi_yoy <= 2.5 else contradicting).append("inflation")
-    thesis_status = "playing_out" if len(supporting) >= 3 else "against" if len(contradicting) >= 3 else "mixed"
+    cut_score = 50  # 起点 50%
+    # 支持降息的信号 (推概率升)
+    if cpi_yoy is not None and cpi_yoy < 3:
+        supporting.append("inflation"); cut_score += 10
+    elif cpi_yoy is not None and cpi_yoy < 2.5:
+        supporting.append("inflation"); cut_score += 15
+    if unrate is not None and unrate >= 4.5:
+        supporting.append("jobs"); cut_score += 8
+    if dxy_v is not None and dxy_v < 100:
+        supporting.append("dxy"); cut_score += 5
+    if oil_pct is not None and oil_pct <= -5:
+        supporting.append("oil"); cut_score += 5
+    if hy_v is not None and hy_v > 400:
+        supporting.append("credit"); cut_score += 10
+    if vix_v is not None and vix_v > 22:
+        supporting.append("vol"); cut_score += 5
+    # 反对降息的信号 (推概率降)
+    if cpi_yoy is not None and cpi_yoy >= 3.5:
+        contradicting.append("inflation"); cut_score -= 15
+    if unrate is not None and unrate <= 4.0:
+        contradicting.append("jobs"); cut_score -= 10
+    if hy_v is not None and hy_v < 300:
+        contradicting.append("credit"); cut_score -= 5
+    if vix_v is not None and vix_v < 18:
+        contradicting.append("vol"); cut_score -= 5
+    if y10v is not None and y10v > 4.7:
+        contradicting.append("rates"); cut_score -= 3
+    cut_score = max(5, min(cut_score, 95))
+    thesis_status = "playing_out" if cut_score >= 60 else "against" if cut_score <= 40 else "mixed"
+    primary_driver = ""
+    primary_blocker = ""
+    if supporting:
+        primary_driver = f"{supporting[0]} 数据推 Fed 走向降息"
+    if contradicting:
+        primary_blocker = f"{contradicting[0]} 数据阻碍降息"
     thesis_check = {
         "status": thesis_status,
-        "summary": (f"支持 {len(supporting)} 项 vs 反驳 {len(contradicting)} 项 → 规则版判定 {thesis_status}"),
+        "summary": f"规则版估算 Fed 10 月前降息概率 ~{cut_score}% (支持 {len(supporting)} vs 反驳 {len(contradicting)})",
         "supporting_nodes": supporting,
         "contradicting_nodes": contradicting,
-        "action_around_thesis": "10 月前继续观察, thesis 未成型别提前减仓" if thesis_status != "playing_out" else "thesis playing out, 逐步减仓风险高持仓",
+        "cut_probability_pct": cut_score,
+        "primary_driver": primary_driver or "无明显推动因素",
+        "primary_blocker": primary_blocker or "无明显阻碍",
+        "action_around_thesis": (
+            "thesis 明显在演, 逐步减仓风险高持仓" if cut_score >= 60
+            else "数据不支持降息, 别提前减仓" if cut_score <= 40
+            else "10 月前先按混合信号处理, 等更明确证据再动"
+        ),
     }
 
     yields_high = y10v and y10v >= 4.5

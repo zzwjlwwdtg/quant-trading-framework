@@ -1538,21 +1538,37 @@ async function loadBondAIInterpret() {
         const sm = statusMap[t.status] || statusMap['no_evidence'];
         const sup = (t.supporting_nodes || []).length;
         const con = (t.contradicting_nodes || []).length;
+        const cutPct = t.cut_probability_pct;
+        const cutPctColor = cutPct == null ? 'muted'
+          : cutPct >= 65 ? 'ok' : cutPct >= 45 ? 'warn' : 'bad';
         return `<div style="margin-bottom:6px; padding:8px 12px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:3px">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:5px">
             <div style="flex:1; min-width:280px">
               <small style="color:var(--muted); font-size:9.5px">🎯 用户 thesis (10 月前有效)</small>
               <div style="font-size:13.5px; color:#c9d1d9; font-weight:600; margin-top:2px; line-height:1.4">
-                Trump 逼 Fed 降息 → 做坏市场 + 压油价
+                Trump 想让 Fed 在 10 月前降息 <small style="color:var(--muted); font-weight:normal">(路径不限，任何能达成的方式都算)</small>
               </div>
             </div>
-            <span class="badge ${sm.cls}" style="font-size:10.5px; padding:3px 8px; white-space:nowrap" title="${sm.desc}">
-              ${sm.text} · 支持 ${sup} vs 反驳 ${con}
-            </span>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px">
+              <span class="badge ${sm.cls}" style="font-size:10.5px; padding:3px 8px; white-space:nowrap" title="${sm.desc}">
+                ${sm.text} · 支持 ${sup} vs 反驳 ${con}
+              </span>
+              ${cutPct != null ? `<span style="font-size:11px" title="AI 估算 Fed 10 月前降息的概率">
+                降息概率 <b class="${cutPctColor}" style="font-size:14px">${cutPct}%</b>
+              </span>` : ''}
+            </div>
           </div>
           <div style="font-size:11.5px; color:var(--fg); padding:3px 0">
             ${t.summary || ''}
           </div>
+          ${t.primary_driver || t.primary_blocker ? `<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:4px; font-size:10.5px">
+            ${t.primary_driver ? `<div style="padding:3px 6px; background:rgba(63,185,80,0.08); border-left:2px solid #3fb950; border-radius:2px">
+              <b style="color:#3fb950">▲ 主要推动</b>: ${t.primary_driver}
+            </div>` : '<div></div>'}
+            ${t.primary_blocker ? `<div style="padding:3px 6px; background:rgba(248,81,73,0.08); border-left:2px solid #f85149; border-radius:2px">
+              <b style="color:#f85149">▼ 主要阻力</b>: ${t.primary_blocker}
+            </div>` : '<div></div>'}
+          </div>` : ''}
           ${t.action_around_thesis ? `<div style="margin-top:4px; font-size:11px; color:#d29922">
             💡 <b>Thesis 相关操作</b>: ${t.action_around_thesis}
           </div>` : ''}
