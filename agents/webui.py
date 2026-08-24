@@ -2986,6 +2986,28 @@ def api_bond_monitor() -> dict:
     return _cached("bond_monitor_v2", ttl_sec=900, compute_fn=_compute)
 
 
+def api_bond_ai_interpret() -> dict:
+    """bond_monitor 数字 → AI CLI 大白话解读。缓存 6h（macro 变化慢）+ 首次异步。"""
+    placeholder = {
+        "one_liner": "AI 正在解读宏观数据（首次约 30-60s）…",
+        "verdict": "computing",
+        "reasoning": "",
+        "confidence": "computing",
+    }
+    def _compute():
+        try:
+            from bond_monitor import get_bond_monitor
+            from bond_ai_interpret import interpret_bond_context
+            bond = get_bond_monitor()
+            return interpret_bond_context(bond)
+        except Exception as e:
+            return {"error": str(e)[:200]}
+    return _cached("bond_ai_interpret", ttl_sec=6 * 3600,
+                   compute_fn=_compute,
+                   first_call_async=True,
+                   first_call_placeholder=placeholder)
+
+
 def api_fed_watch() -> dict:
     """CME FedWatch 加息/降息预期。AI CLI + live web search，缓存 8h。首次异步。"""
     placeholder = {
@@ -4749,6 +4771,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_ai_targets())
             elif path == "/api/bond_monitor":
                 self._json(api_bond_monitor())
+            elif path == "/api/bond_ai_interpret":
+                self._json(api_bond_ai_interpret())
             elif path == "/api/fed_watch":
                 self._json(api_fed_watch())
             else:

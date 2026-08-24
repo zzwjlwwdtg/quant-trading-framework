@@ -50,10 +50,12 @@ GLOBAL_ENDPOINTS = [
     "/api/banners",       # trump + gold sentiment banners (公开衍生信号)
     "/api/hmm",           # market regime detection (bull_low_vol/crisis/…) 公开市场信号
     "/api/bond_monitor",  # 美债 yields + TIPS + GLD 20d correlation + anomaly
-    "/api/fed_watch",     # CME FedWatch 加息预期 (Claude+WebFetch 抓)
+    "/api/bond_ai_interpret",  # AI CLI 大白话解读 bond_monitor 数字
+    "/api/fed_watch",     # CME FedWatch 加息预期 (AI CLI + live web search)
     "/api/ai_analysis",
-    "/api/ai_targets",    # Claude 结构化交易目标 (paper_trader 用来挂 GTC 限价 + SELL STOP)
+    "/api/ai_targets",    # AI CLI 结构化交易目标 (paper_trader 用来挂 GTC 限价 + SELL STOP)
     "/api/ticker_options",
+    "/api/options_flow",
     "/api/ticker_ai",
     "/api/events",
     "/api/jp_watch",
@@ -74,7 +76,7 @@ PER_TICKER_ENDPOINTS = {
 # 私人 endpoints — 明确跳过
 PRIVATE_ENDPOINTS = {
     "/api/nav", "/api/positions", "/api/trades", "/api/log",
-    "/api/benchmark", "/api/trump_verify",
+    "/api/benchmark", "/api/trump_verify", "/api/institutional",
 }
 
 
@@ -449,24 +451,34 @@ def main():
     p.add_argument("--force", action="store_true", help="强制运行，不管市场时段/上次时间")
     args = p.parse_args()
 
-    # 自适应频率：市场开 → 每 30 min；两个都关 → ≥2h 才跑
-    should, reason = _should_run_now(force=args.force)
-    if not should:
-        print(f"== snapshot SKIP {datetime.now().isoformat(timespec='seconds')} — {reason} ==")
-        return
+    try:
+        # 自适应频率：市场开 → 每 30 min；两个都关 → ≥2h 才跑
+        should, reason = _should_run_now(force=args.force)
+        if not should:
+            print(f"== snapshot SKIP {datetime.now().isoformat(timespec='seconds')} — {reason} ==")
+            return
 
-    print(f"== snapshot start {datetime.now().isoformat(timespec='seconds')} — {reason} ==")
-    meta = snapshot_all(only=args.only, skip_tickers=args.skip_tickers)
-    print(f"data: ok={meta['endpoints_ok']} fail={meta['endpoints_fail']} elapsed={meta['elapsed_sec']}s")
+        print(f"== snapshot start {datetime.now().isoformat(timespec='seconds')} — {reason} ==")
+        meta = snapshot_all(only=args.only, skip_tickers=args.skip_tickers)
+        print(f"data: ok={meta['endpoints_ok']} fail={meta['endpoints_fail']} elapsed={meta['elapsed_sec']}s")
 
-    if not args.no_html:
-        out = build_static_html(meta)
-        print(f"html: wrote {out}")
-        write_readme()
-        write_nojekyll()
+        if not args.no_html:
+            out = build_static_html(meta)
+            print(f"html: wrote {out}")
+            write_readme()
+            write_nojekyll()
 
-    _mark_run_completed()
-    print(f"== done. docs at {DOCS_DIR} ==")
+        _mark_run_completed()
+        print(f"== done. docs at {DOCS_DIR} ==")
+    finally:
+        # moomoo OpenQuoteContext owns worker threads. Explicitly close it so
+        # short-lived Task Scheduler jobs can return to snap_public.bat, finish
+        # git commit/push, and let the terminal close by itself.
+        try:
+            from moomoo_pool import close_quote_ctx
+            close_quote_ctx()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

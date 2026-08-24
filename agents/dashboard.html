@@ -1296,6 +1296,47 @@ async function loadBanners() {
 }
 
 // 美债 + Fed policy path 卡渲染
+async function loadBondAIInterpret() {
+  const el = document.getElementById('macro-ai-body');
+  if (!el) return;
+  const r = await fetchJson('/api/bond_ai_interpret');
+  if (!r || r.error) {
+    el.innerHTML = `<div style="color:var(--muted)">🤖 AI 解读暂不可用${r && r.error ? ': ' + r.error : ''}</div>`;
+    return;
+  }
+  if (r.verdict === 'computing') {
+    el.innerHTML = `<div style="color:var(--muted)">🤖 ${r.one_liner || '正在计算…'}</div>`;
+    return;
+  }
+  const verdictCls = {
+    '看多股市': 'ok', '谨慎乐观': 'warn', '中性': 'muted',
+    '谨慎看空': 'bad', '看空股市': 'bad',
+  }[r.verdict] || 'muted';
+  const confCls = {high: 'ok', medium: 'warn', low: 'muted'}[r.confidence] || 'muted';
+  const confZh = {high: '高', medium: '中', low: '低'}[r.confidence] || r.confidence;
+  const sourceZh = (r._source || '').startsWith('ai_cli_')
+    ? `AI: ${r._source.replace('ai_cli_', '')}`
+    : (r._source || '').startsWith('rules_fallback') ? '规则兜底（AI 不可用）' : '';
+  el.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; gap:6px">
+      <span style="font-size:14px">
+        <b class="${verdictCls}">${r.verdict || '?'}</b>
+        <small style="color:var(--muted); margin-left:6px">可信度 <b class="${confCls}">${confZh}</b></small>
+      </span>
+      <small style="color:var(--muted); font-size:9px" title="${r.generated_at || ''}">${sourceZh}</small>
+    </div>
+    <div style="font-size:13px; color:var(--fg); margin-bottom:6px; padding:6px 8px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:2px">
+      <b>🎯 ${r.one_liner || '暂无一句话总结'}</b>
+    </div>
+    ${r.reasoning ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">📖 为什么：</small><br>${r.reasoning}</div>` : ''}
+    ${r.who_agrees ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">🏦 卖方观点对照：</small><br><small>${r.who_agrees}</small></div>` : ''}
+    ${r.action_hint ? `<div style="padding:4px 8px; background:rgba(210,153,34,0.08); border-left:2px solid var(--warn); border-radius:2px; font-size:12px">
+      <b>💡 操作建议</b>: ${r.action_hint}
+    </div>` : ''}
+    <div style="margin-top:6px; font-size:9px; color:var(--muted)">⚠ 本解读只是观察，不是预测。仅供参考不构成交易建议。</div>
+  `;
+}
+
 async function loadBondMonitor() {
   const el = document.getElementById('bond-monitor');
   if (!el) return;
@@ -1474,7 +1515,7 @@ async function loadBondMonitor() {
       <div id="fed-watch-body" style="margin-top:3px; font-size:10px; color:var(--muted)">🔄 加载中...</div>
     </div>`;
 
-  // 顶部 Row 0a 宏观速览：把警示 + BBI 汇总推到页面最上方
+  // 顶部 Row 0a 宏观速览：AI CLI 大白话解读 + 支撑数字
   try {
     const macroCard = document.getElementById('macro-summary-card');
     const macroBody = document.getElementById('macro-summary-body');
@@ -1485,7 +1526,7 @@ async function loadBondMonitor() {
       const hasContent = nWarn > 0 || bbi != null;
       if (hasContent) {
         macroCard.style.display = 'block';
-        // 顶级严重度：警示里最重的一档 决定 border 颜色
+        // 边框色 = 最严重警示等级
         const worstLvl = warnings.reduce((acc, w) => {
           const pri = {bad:3, warn:2, info:1};
           return (pri[w.level]||0) > (pri[acc]||0) ? w.level : acc;
@@ -1493,52 +1534,44 @@ async function loadBondMonitor() {
         const borderMap = {bad:'var(--bad)', warn:'var(--warn)', info:'#58a6ff'};
         macroCard.style.borderLeftColor = borderMap[worstLvl] || 'var(--warn)';
         if (macroCount) {
-          const bbiLabel = bbi == null ? '' :
-            (bbi >= 6 ? '极度恐惧' : bbi >= 3 ? '偏恐惧' :
-             bbi <= -6 ? '极度贪婪' : bbi <= -3 ? '偏贪婪' : '中性');
-          macroCount.textContent = `${nWarn} 条警示 · BBI ${bbi != null ? (bbi >= 0 ? '+' : '') + bbi.toFixed(1) + ' ' + bbiLabel : 'N/A'}`;
+          macroCount.textContent = `${nWarn} 条警示`;
         }
-        // 一句话诊断
-        let verdict;
-        const stressAbsent = mc.cdx_ig_bps < 100 && mc.cdx_hy_bps < 350 && (mc.vix == null || mc.vix < 20);
-        const equityExpensive = mc.erp_vs_tips_pct != null && mc.erp_vs_tips_pct < 2.0;
-        const yieldsHigh = mc.term_spread_30_10_bps != null && (b.yields?.["10y"]?.value >= 4.5 || b.yields?.["tips_10y"]?.value >= 2.0);
-        if (yieldsHigh && equityExpensive && stressAbsent) {
-          verdict = `<b class="warn">📊 卖方 view: 利率高位 + 股权贵，但信用/波动率无压 → tactical cautious，不是 outright bearish</b>`;
-        } else if (yieldsHigh && !stressAbsent) {
-          verdict = `<b class="bad">🚨 利率高位 + 信用/波动率同步收紧 → risk-off 传导中</b>`;
-        } else if (stressAbsent && !yieldsHigh) {
-          verdict = `<b class="ok">✅ 宏观环境宽松，无明显 stress</b>`;
-        } else {
-          verdict = `<b class="muted">中性宏观环境</b>`;
-        }
-        // 关键数字条 (compact)
+        // 关键数字条 (compact, 作为支撑证据)
         const kn = (v, unit, cls='') => v == null ? '-' : `<b class="${cls}">${v}${unit}</b>`;
         const y10v = b.yields?.["10y"]?.value;
         const tipsv = b.yields?.["tips_10y"]?.value;
         const cls_gte = (v, thr, cls) => v != null && v >= thr ? cls : 'muted';
+        const numbersHtml = `
+          <details style="margin-top:6px">
+            <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted)">📊 <b style="color:#58a6ff">支撑数据</b> <small>▼ 展开看具体数字</small></summary>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:5px; font-size:11px; padding:6px 8px; margin-top:4px; background:rgba(88,166,255,0.04); border-radius:3px">
+              <span title="10Y 名义收益率">10Y ${kn(y10v, '%', cls_gte(y10v, 4.5, 'warn'))}</span>
+              <span title="10Y TIPS 实际利率">TIPS ${kn(tipsv, '%', cls_gte(tipsv, 2.0, 'warn'))}</span>
+              <span title="Equity Risk Premium">ERP ${kn(mc.erp_vs_tips_pct, '%', mc.erp_vs_tips_pct != null && mc.erp_vs_tips_pct < 2 ? 'warn' : 'muted')}</span>
+              <span title="Chicago Fed NFCI · <0 宽松">NFCI ${mc.nfci ? `<b class="${mc.nfci.value > 0 ? 'warn' : 'ok'}">${mc.nfci.value > 0 ? '+' : ''}${mc.nfci.value.toFixed(2)}</b>` : '-'}</span>
+              <span title="IG 信用利差">IG ${kn(mc.cdx_ig_bps, 'bps', cls_gte(mc.cdx_ig_bps, 120, 'warn'))}</span>
+              <span title="HY 信用利差">HY ${kn(mc.cdx_hy_bps, 'bps', cls_gte(mc.cdx_hy_bps, 400, 'warn'))}</span>
+              <span title="CBOE VIX">VIX ${kn(mc.vix, '', cls_gte(mc.vix, 25, 'warn'))}</span>
+              ${bbi != null ? `<span title="BofA-style Bull&Bear Indicator">🎯 BBI <b class="${bbi >= 3 ? 'ok' : bbi <= -3 ? 'bad' : 'muted'}">${bbi >= 0 ? '+' : ''}${bbi.toFixed(1)}</b></span>` : ''}
+            </div>
+            ${nWarn > 0 ? `
+              <div style="margin-top:6px; font-size:10.5px">
+                <b style="color:var(--warn)">${nWarn} 条具体警示</b>
+                <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px">
+                  ${warnings.slice(0, 6).map(w => `<span class="badge ${w.level === 'bad' ? 'bad' : (w.level === 'warn' ? 'warn' : 'muted')}" style="font-size:10px" title="${w.msg}">${warnIcon[w.level]||'·'} ${w.msg.substring(0, 28)}${w.msg.length > 28 ? '…' : ''}</span>`).join('')}
+                  ${warnings.length > 6 ? `<span class="badge muted" style="font-size:10px">+${warnings.length - 6}</span>` : ''}
+                </div>
+              </div>` : ''}
+          </details>`;
+        // 先塞数字 + placeholder，异步拉 AI 解读
         macroBody.innerHTML = `
-          <div style="margin-bottom:6px; font-size:12px">${verdict}</div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:5px; font-size:11px; padding:6px 8px; background:rgba(88,166,255,0.04); border-radius:3px">
-            <span title="10Y 名义收益率">10Y ${kn(y10v, '%', cls_gte(y10v, 4.5, 'warn'))}</span>
-            <span title="10Y TIPS 实际利率">TIPS ${kn(tipsv, '%', cls_gte(tipsv, 2.0, 'warn'))}</span>
-            <span title="Equity Risk Premium">ERP ${kn(mc.erp_vs_tips_pct, '%', mc.erp_vs_tips_pct != null && mc.erp_vs_tips_pct < 2 ? 'warn' : 'muted')}</span>
-            <span title="Chicago Fed NFCI · <0 宽松">NFCI ${mc.nfci ? `<b class="${mc.nfci.value > 0 ? 'warn' : 'ok'}">${mc.nfci.value > 0 ? '+' : ''}${mc.nfci.value.toFixed(2)}</b>` : '-'}</span>
-            <span title="IG 信用利差">IG ${kn(mc.cdx_ig_bps, 'bps', cls_gte(mc.cdx_ig_bps, 120, 'warn'))}</span>
-            <span title="HY 信用利差">HY ${kn(mc.cdx_hy_bps, 'bps', cls_gte(mc.cdx_hy_bps, 400, 'warn'))}</span>
-            <span title="CBOE VIX">VIX ${kn(mc.vix, '', cls_gte(mc.vix, 25, 'warn'))}</span>
-            ${bbi != null ? `<span title="BofA-style Bull&Bear Indicator">🎯 BBI <b class="${bbi >= 3 ? 'ok' : bbi <= -3 ? 'bad' : 'muted'}">${bbi >= 0 ? '+' : ''}${bbi.toFixed(1)}</b></span>` : ''}
+          <div id="macro-ai-body" style="font-size:12.5px; line-height:1.6; padding:8px; background:rgba(88,166,255,0.05); border-radius:4px; margin-bottom:6px">
+            <div style="color:var(--muted)">🤖 AI 正在解读宏观数据（首次约 30-60s，缓存 6h）…</div>
           </div>
-          ${nWarn > 0 ? `
-            <div style="margin-top:6px; font-size:10.5px">
-              <b style="color:var(--warn)">具体警示 ${nWarn} 条</b>
-              <small style="color:var(--muted)">(详情/图表见下方美债卡)</small>
-              <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px">
-                ${warnings.slice(0, 6).map(w => `<span class="badge ${w.level === 'bad' ? 'bad' : (w.level === 'warn' ? 'warn' : 'muted')}" style="font-size:10px" title="${w.msg}">${warnIcon[w.level]||'·'} ${w.msg.substring(0, 28)}${w.msg.length > 28 ? '…' : ''}</span>`).join('')}
-                ${warnings.length > 6 ? `<span class="badge muted" style="font-size:10px">+${warnings.length - 6}</span>` : ''}
-              </div>
-            </div>` : ''}
+          ${numbersHtml}
         `;
+        // 异步加载 AI 解读
+        loadBondAIInterpret();
       }
     }
   } catch (e) { /* macro summary optional, don't break bond monitor */ }
