@@ -79,10 +79,11 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
   },
   "user_thesis_check": {
     "status": "playing_out" | "mixed" | "against" | "no_evidence",
-    "summary": "40 字总结: 'Fed 10 月前降息概率 X% (相比上周 ...) — 主要证据 / 主要阻力'",
+    "summary": "40 字总结, 必须提到趋势方向: '概率 X% (30d 从 Y → 现在 X, 方向...) — 证据/阻力'",
     "supporting_nodes": ["经济数据/节点 keys, 任何让降息更可能的信号"],
     "contradicting_nodes": ["任何降低降息概率的信号"],
     "cut_probability_pct": 0-100,  // 你估算的 "Fed 10 月前降息" 概率百分比
+    "trend_direction": "rising" | "falling" | "flat",  // 30d 趋势方向 (基于历史)
     "primary_driver": "当前推 Fed 走向降息的最强因素一句话",
     "primary_blocker": "阻碍降息的最主要因素一句话",
     "action_around_thesis": "10 月前操作建议一句话"
@@ -177,6 +178,17 @@ def _make_prompt(bond_data: dict) -> str:
             {"level": w["level"], "msg": w["msg"]} for w in warnings
         ],
     }
+
+    # 补充：thesis 历史趋势 (最近 30/90 天概率演化 — 让 AI 判断"在朝哪个方向走")
+    try:
+        from thesis_history import get_trend_summary as _trend
+        facts["历史趋势 (Fed 降息概率演化)"] = {
+            "近 30 天": _trend(30),
+            "近 90 天": _trend(90),
+            "说明": "cut_prob_delta 正数 = 概率在升 (更接近降息) / 负数 = 在降 (远离降息)",
+        }
+    except Exception:
+        pass
 
     # 补充：CME FedWatch 加息/降息预期 (如果已缓存)
     try:

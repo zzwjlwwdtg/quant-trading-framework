@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T14:03:04", "endpoints_ok": 117, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T14:11:46", "endpoints_ok": 117, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1490,15 +1490,54 @@ function renderMacroChain(r, macroCtx) {
   </svg>`;
 }
 
+// 迷你降息概率趋势 SVG 图 (给 thesis banner 用)
+function renderCutProbTrend(rows) {
+  if (!rows || rows.length < 2) return '';
+  const w = 240, h = 60, pad = 4;
+  const values = rows.map(r => r.cut_probability_pct).filter(v => v != null);
+  if (values.length < 2) return '';
+  const minV = Math.min(...values, 30); const maxV = Math.max(...values, 70);
+  const range = Math.max(maxV - minV, 20);
+  const xStep = (w - 2 * pad) / (values.length - 1);
+  const yFor = v => h - pad - ((v - minV) / range) * (h - 2 * pad);
+  // Line path
+  const path = values.map((v, i) => `${i === 0 ? 'M' : 'L'} ${pad + i * xStep} ${yFor(v)}`).join(' ');
+  const areaPath = path + ` L ${pad + (values.length - 1) * xStep} ${h - pad} L ${pad} ${h - pad} Z`;
+  const latest = values[values.length - 1];
+  const first = values[0];
+  const delta = latest - first;
+  const dCls = delta > 5 ? 'ok' : delta < -5 ? 'bad' : 'muted';
+  const dSign = delta >= 0 ? '+' : '';
+  const first30Line = yFor(65); const first50Line = yFor(50); const first35Line = yFor(35);
+  return `<div style="display:flex; align-items:center; gap:8px; margin-top:5px; padding:4px 6px; background:rgba(13,17,23,0.4); border-radius:3px">
+    <div style="flex:0 0 auto; font-size:9.5px; color:var(--muted); line-height:1.2">
+      降息概率<br>${rows.length}d 演化
+    </div>
+    <svg width="${w}" height="${h}" style="flex:0 0 auto" title="cut_prob range ${minV}-${maxV}%, latest ${latest}%, delta ${dSign}${delta.toFixed(0)}pp">
+      <line x1="${pad}" y1="${first50Line}" x2="${w-pad}" y2="${first50Line}" stroke="rgba(139,148,158,0.3)" stroke-dasharray="2,3" stroke-width="0.6"/>
+      <text x="${w-pad}" y="${first50Line - 1}" text-anchor="end" fill="#8b949e" font-size="8">50</text>
+      <path d="${areaPath}" fill="rgba(88,166,255,0.15)"/>
+      <path d="${path}" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+      <circle cx="${pad + (values.length - 1) * xStep}" cy="${yFor(latest)}" r="2.5" fill="#58a6ff"/>
+    </svg>
+    <div style="flex:1; font-size:10px">
+      <div><b class="${dCls}" style="font-size:12px">${latest}%</b> <small style="color:var(--muted)">→ 现在</small></div>
+      <div style="color:var(--muted); font-size:9.5px">从 ${first}% <b class="${dCls}">${dSign}${delta.toFixed(0)}pp</b></div>
+    </div>
+  </div>`;
+}
+
 async function loadBondAIInterpret() {
   const el = document.getElementById('macro-ai-body');
   if (!el) return;
-  // 并发拉 AI 解读 + bond_monitor 原始数据 (为了拿 volume_confirm)
-  const [r, bond] = await Promise.all([
+  // 并发拉: AI 解读 + bond_monitor + thesis 历史
+  const [r, bond, history] = await Promise.all([
     fetchJson('/api/bond_ai_interpret'),
     fetchJson('/api/bond_monitor'),
+    fetchJson('/api/thesis_history?days=180'),
   ]);
   const macroCtx = (bond && bond.macro_context) || {};
+  const trendRows = (history && history.rows) || [];
   if (!r || r.error) {
     el.innerHTML = `<div style="color:var(--muted)">🤖 AI 解读暂不可用${r && r.error ? ': ' + r.error : ''}</div>`;
     return;
@@ -1580,6 +1619,7 @@ async function loadBondAIInterpret() {
           ${t.action_around_thesis ? `<div style="margin-top:4px; font-size:11px; color:#d29922">
             💡 <b>Thesis 相关操作</b>: ${t.action_around_thesis}
           </div>` : ''}
+          ${trendRows.length >= 5 ? renderCutProbTrend(trendRows) : ''}
         </div>`;
       })() : ''}
       <div style="margin-bottom:8px; padding:6px 4px; background:rgba(13,17,23,0.4); border:1px solid var(--border); border-radius:4px">

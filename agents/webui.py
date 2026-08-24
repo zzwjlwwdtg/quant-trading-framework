@@ -2998,7 +2998,13 @@ def api_bond_ai_interpret() -> dict:
         try:
             from bond_monitor import get_bond_monitor
             from bond_ai_interpret import interpret_bond_context
+            from thesis_history import append_snapshot as _append_hist
             bond = get_bond_monitor()
+            # 顺手追加一条 thesis 历史 (throttle 12h, 不会灌水)
+            try:
+                _append_hist(bond)
+            except Exception:
+                pass
             return interpret_bond_context(bond)
         except Exception as e:
             return {"error": str(e)[:200]}
@@ -3006,6 +3012,22 @@ def api_bond_ai_interpret() -> dict:
                    compute_fn=_compute,
                    first_call_async=True,
                    first_call_placeholder=placeholder)
+
+
+def api_thesis_history(days: int = 180) -> dict:
+    """近 N 天 thesis snapshot (cut probability + 关键指标演化)。给 dashboard mini chart 用。"""
+    try:
+        from thesis_history import load_history, get_trend_summary
+        rows = load_history(days=days)
+        return {
+            "days": days,
+            "count": len(rows),
+            "rows": rows,
+            "trend_30d": get_trend_summary(30),
+            "trend_90d": get_trend_summary(90),
+        }
+    except Exception as e:
+        return {"error": str(e)[:200]}
 
 
 def api_fed_watch() -> dict:
@@ -4773,6 +4795,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_bond_monitor())
             elif path == "/api/bond_ai_interpret":
                 self._json(api_bond_ai_interpret())
+            elif path == "/api/thesis_history":
+                # ?days=180 (default). qs 已在 do_GET 顶部解析
+                _days = 180
+                try:
+                    if "days" in qs: _days = int(qs["days"][0])
+                except Exception:
+                    pass
+                self._json(api_thesis_history(days=_days))
             elif path == "/api/fed_watch":
                 self._json(api_fed_watch())
             else:
