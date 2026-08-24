@@ -14,20 +14,30 @@ from typing import Optional
 
 
 _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金融的用户解释当前美国债/股市宏观状态。
-输入是一堆卖方 rate desk 常用指标（10Y 收益率、TIPS、信用利差、VIX、BBI、DXY、EEM、稳定币等）和已触发的警示。
+输入是一堆卖方 rate desk 常用指标（10Y 收益率、TIPS、信用利差、VIX、BBI、DXY、EEM、油价、稳定币等）和已触发的警示。
 
-**你的任务**：填一个 13 节点的宏观传导链树状图。每个节点用一个方向 + 一句短评。
+**用户 thesis (交易假设，10 月前有效)**：
+  "Trump 想逼 Fed 降息 → 会主动做坏金融市场 (VIX ↑ / credit ↑ / equity ↓) + 压油价 (通胀降 → Fed 有借口降息)"
+  你必须**每次评估这个 thesis 在当前数据下是否 playing out**，并明确指出：
+    - 哪些节点/数据支持 thesis (supporting_nodes)
+    - 哪些节点/数据反驳 thesis (contradicting_nodes)
+    - 综合判定 (thesis_status): playing_out (证据链在走) / mixed / against (证据反向)
+  典型支持: 油价跌、VIX 涨、credit 扩大、CPI 冷却、equity 跌 + tariff 消息
+  典型反驳: 油价涨、VIX 静、credit 平静、通胀继续高、equity resilient
+
+**你的任务**：填一个 18 节点的宏观传导链树状图。每个节点用一个方向 + 一句短评。
 系统会把这些标签渲染在 dashboard 的树状图上，用户一眼看清"链条哪断了、哪没传导过来"。
 
-**传导链结构** (17 节点)：
+**传导链结构** (18 节点)：
   inflation + jobs → fed (通胀/就业驱动 Fed 决策)
   fed → rates / real_rates / dxy
   real_rates + rates → erp
   rates → curve
   real_rates → nfci → credit → vol
   dxy → em / stablecoin
+  oil (独立: 通胀 driver, Trump 压油价 → 通胀降)
   vol + em + credit → bbi
-  bbi → us_equity / jp_equity / kr_equity (三大股市分开)
+  bbi → us_equity / jp_equity / kr_equity
 
 **输出要求**（严格 JSON，无 markdown 围栏）：
 {
@@ -51,7 +61,15 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
     "bbi":        {"direction": "greed|neutral|fear|extreme_fear", "note": "≤15字（散户情绪）"},
     "us_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（美股）·放量时必须点明"},
     "jp_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（日股 N225）·放量时必须点明"},
-    "kr_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（韩股 KOSPI）·放量时必须点明"}
+    "kr_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（韩股 KOSPI）·放量时必须点明"},
+    "oil":        {"direction": "crashing|falling|stable|rising|surging", "note": "≤15字（原油）·跌=支持 Trump 降息 thesis"}
+  },
+  "user_thesis_check": {
+    "status": "playing_out" | "mixed" | "against" | "no_evidence",
+    "summary": "40 字总结当前 thesis 状态: '油价跌了 5% 支持 thesis, 但 VIX 静默 credit 平静 → thesis 尚未成型' 之类",
+    "supporting_nodes": ["oil", "vol", ...],
+    "contradicting_nodes": ["credit", "vix", ...],
+    "action_around_thesis": "10 月前操作建议一句话: '若 thesis playing_out → 减仓; 若 against → 继续持有防守' 之类"
   },
   "action_hint": "对散户操作建议一句话",
   "confidence": "high" | "medium" | "low"
@@ -116,6 +134,11 @@ def _make_prompt(bond_data: dict) -> str:
         "黄金对冲": {
             "GLD vs TIPS 相关性": (bond_data.get("gld_correlation") or {}).get("vs_tips_10y"),
             "GLD hedge 状态": (bond_data.get("gld_correlation") or {}).get("regime"),
+        },
+        "油价 (Trump 降息 thesis 关键变量)": {
+            "USO 价格": f"${mc.get('oil_uso')}" if mc.get("oil_uso") else "N/A",
+            "USO 20d 变化": f"{mc.get('oil_pct_20d')}%" if mc.get("oil_pct_20d") is not None else "N/A",
+            "WTI 期货": f"${mc.get('oil_wti')}" if mc.get("oil_wti") else "N/A",
         },
         "全球美元流动性 + 稳定币虹吸": {
             "DXY 美元指数": mc.get("dxy") or "N/A",
@@ -219,6 +242,32 @@ def _fallback_from_rules(bond_data: dict) -> dict:
                        "note": (f"日股放量 (EWJ +{jp_eq_vol}σ)" if jp_eq_vol is not None and jp_eq_vol >= 1 else "日股平稳")},
         "kr_equity":  {"direction": "resilient",
                        "note": (f"韩股放量 (EWY +{kr_eq_vol}σ)" if kr_eq_vol is not None and kr_eq_vol >= 1 else "韩股平稳")},
+        "oil":        {"direction": ("crashing" if mc.get("oil_pct_20d") is not None and mc.get("oil_pct_20d") <= -10
+                                     else "falling" if mc.get("oil_pct_20d") is not None and mc.get("oil_pct_20d") <= -5
+                                     else "rising" if mc.get("oil_pct_20d") is not None and mc.get("oil_pct_20d") >= 5
+                                     else "surging" if mc.get("oil_pct_20d") is not None and mc.get("oil_pct_20d") >= 10
+                                     else "stable" if mc.get("oil_pct_20d") is not None else None),
+                       "note": f"油价 20d {mc.get('oil_pct_20d'):+.1f}%" if mc.get("oil_pct_20d") is not None else "数据不足"},
+    }
+    # 简版 thesis check
+    oil_pct = mc.get("oil_pct_20d")
+    supporting = []
+    contradicting = []
+    if oil_pct is not None:
+        (supporting if oil_pct <= -3 else contradicting).append("oil")
+    if vix_v is not None:
+        (supporting if vix_v >= 22 else contradicting).append("vol")
+    if hy_v is not None:
+        (supporting if hy_v >= 400 else contradicting).append("credit")
+    if cpi_yoy is not None:
+        (supporting if cpi_yoy <= 2.5 else contradicting).append("inflation")
+    thesis_status = "playing_out" if len(supporting) >= 3 else "against" if len(contradicting) >= 3 else "mixed"
+    thesis_check = {
+        "status": thesis_status,
+        "summary": (f"支持 {len(supporting)} 项 vs 反驳 {len(contradicting)} 项 → 规则版判定 {thesis_status}"),
+        "supporting_nodes": supporting,
+        "contradicting_nodes": contradicting,
+        "action_around_thesis": "10 月前继续观察, thesis 未成型别提前减仓" if thesis_status != "playing_out" else "thesis playing out, 逐步减仓风险高持仓",
     }
 
     yields_high = y10v and y10v >= 4.5
@@ -244,6 +293,7 @@ def _fallback_from_rules(bond_data: dict) -> dict:
         "chain_summary": one_liner,
         "chain_blocked_at": blocked,
         "nodes": nodes,
+        "user_thesis_check": thesis_check,
         "action_hint": action,
         "confidence": "low",
         "_source": "rules_fallback",

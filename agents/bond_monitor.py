@@ -434,6 +434,24 @@ def get_bond_monitor() -> dict:
             elif dxy_val >= 105:
                 _warn("warn", f"DXY {dxy_val} 强美元 (>105, EM 股市历史承压)", "dxy_high")
 
+        # 油价 (WTI + USO) — Trump 降息 thesis 关键变量之一 (压油价 → 通胀降 → Fed 有借口降息)
+        try:
+            oil_hist = yf.Ticker("USO").history(period="30d")  # WTI 原油 ETF
+            wti_hist = yf.Ticker("CL=F").history(period="5d")  # WTI 期货
+            if oil_hist is not None and not oil_hist.empty and len(oil_hist) >= 21:
+                uso_val = round(float(oil_hist["Close"].iloc[-1]), 2)
+                uso_pct_20d = round((float(oil_hist["Close"].iloc[-1]) / float(oil_hist["Close"].iloc[-21]) - 1) * 100, 2)
+                macro_context["oil_uso"] = uso_val
+                macro_context["oil_pct_20d"] = uso_pct_20d
+                if wti_hist is not None and not wti_hist.empty:
+                    macro_context["oil_wti"] = round(float(wti_hist["Close"].iloc[-1]), 2)
+                if uso_pct_20d <= -8:
+                    _warn("info", f"油价 20d {uso_pct_20d:+.1f}% 明显下跌 (Trump 压油价降通胀 thesis 支持)", "oil_falling")
+                elif uso_pct_20d >= 8:
+                    _warn("warn", f"油价 20d {uso_pct_20d:+.1f}% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)", "oil_rising")
+        except Exception:
+            pass
+
         # EEM 新兴市场股 (20d 表现 vs SPX 相对强弱)
         eem_hist = yf.Ticker("EEM").history(period="30d")
         spx_hist = yf.Ticker("SPY").history(period="30d")
@@ -502,6 +520,7 @@ def get_bond_monitor() -> dict:
         ("us_qqq",      "QQQ",  "Nasdaq 100 ETF"),
         ("jp_equity",   "EWJ",  "iShares JP ETF (代 N225)"),
         ("kr_equity",   "EWY",  "iShares KR ETF (代 KOSPI)"),
+        ("oil",         "USO",  "WTI 原油 ETF"),
     ]
     for key, sym, label in _vol_proxies:
         z = _vol_z_score(sym)
