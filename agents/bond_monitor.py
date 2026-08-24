@@ -467,6 +467,51 @@ def get_bond_monitor() -> dict:
         if tga_bn >= 900:
             _warn("info", f"Treasury 一般账户 (TGA) ${tga_bn}B (>900B, 债券发行/税收流入抽干流动性)", "tga_high")
 
+    # 各节点 ETF proxy 量能 z-score (20d) —— 价格信号的复证
+    # 价涨没量 = 假突破; 价跌没量 = 假恐慌; 价平量放大 = 蓄势待发
+    def _vol_z_score(sym: str, days: int = 25) -> Optional[float]:
+        try:
+            import yfinance as yf
+            h = yf.Ticker(sym).history(period=f"{days}d")
+            if h is None or h.empty or "Volume" not in h.columns or len(h) < 21:
+                return None
+            vols = h["Volume"].astype(float).tolist()
+            latest = vols[-1]
+            baseline = vols[-21:-1]  # 前 20 天
+            import statistics
+            mean_v = statistics.mean(baseline)
+            std_v = statistics.stdev(baseline) if len(baseline) > 1 else 0
+            if std_v <= 0:
+                return None
+            return round((latest - mean_v) / std_v, 2)
+        except Exception:
+            return None
+
+    volume_confirm: dict = {}
+    # 各节点 proxy ETF 映射
+    _vol_proxies = [
+        ("rates",       "TLT",  "20+Y 美债"),
+        ("real_rates",  "TIP",  "TIPS ETF"),
+        ("dxy",         "UUP",  "美元 ETF"),
+        ("credit_ig",   "LQD",  "投资级信用 ETF"),
+        ("credit_hy",   "HYG",  "高收益信用 ETF"),
+        ("vol",         "VXX",  "VIX 期货 ETF"),
+        ("em",          "EEM",  "新兴市场 ETF"),
+        ("equity",      "SPY",  "S&P 500 ETF"),
+    ]
+    for key, sym, label in _vol_proxies:
+        z = _vol_z_score(sym)
+        if z is not None:
+            volume_confirm[key] = {
+                "proxy": sym,
+                "label": label,
+                "vol_z_20d": z,
+                # confirmation: |z| >= 1 = 显著放量/缩量，值得关注
+                "notable": abs(z) >= 1.0,
+            }
+    if volume_confirm:
+        macro_context["volume_confirm"] = volume_confirm
+
     # 稳定币市值 (CoinGecko free API) - USDT + USDC 影子美元
     try:
         import urllib.request as _u, json as _j

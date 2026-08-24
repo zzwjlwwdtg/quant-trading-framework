@@ -1296,9 +1296,18 @@ async function loadBanners() {
 }
 
 // 美债 + Fed policy path 卡渲染
-// 宏观传导链树状图 —— 13 节点 + 15 条箭头，AI 填色 + 打方向
-function renderMacroChain(r) {
+// 宏观传导链树状图 —— 13 节点 + 15 条箭头，AI 填色 + 打方向 + 量能复证
+function renderMacroChain(r, macroCtx) {
   const nodes = r.nodes || {};
+  // 量能 proxy z-scores (bond_monitor.macro_context.volume_confirm)
+  const volConfirm = (macroCtx && macroCtx.volume_confirm) || {};
+  // 节点 key → 量能 key 映射 (有的节点有 proxy, 有的没有)
+  const volKeyMap = {
+    rates: 'rates', real_rates: 'real_rates', dxy: 'dxy',
+    credit: 'credit_hy',   // 用 HY 代表信用市场活跃度
+    vol: 'vol', em: 'em', equity: 'equity',
+    // fed/erp/curve/nfci/stablecoin/bbi 无 volume proxy
+  };
   const layout = {
     fed:        { x: 400, y: 40,  label: '央行政策' },
     rates:      { x: 150, y: 130, label: '名义利率' },
@@ -1367,15 +1376,44 @@ function renderMacroChain(r) {
     const strokeDashAttr = isBlocked ? ' stroke-dasharray="5,3"' : '';
     const fullNote = (node.note || '').replace(/"/g, '&quot;');
     const dirLabel = dir || 'unknown';
+    // 量能复证 badge (右上角)
+    const volKey = volKeyMap[key];
+    const volInfo = volKey ? volConfirm[volKey] : null;
+    let volBadge = '';
+    let volTooltip = '';
+    if (volInfo) {
+      const z = volInfo.vol_z_20d;
+      const proxy = volInfo.proxy;
+      const isBull = ['elevated','extreme','tightening','stress','panic','surging','crashing','breaking','underperforming'].includes(dir);
+      const isBear = ['calm','loose','low','normal','resilient','outperforming','stable'].includes(dir);
+      let icon = '';
+      let iconColor = '#8b949e';
+      if (Math.abs(z) < 1) {
+        icon = '·'; iconColor = '#484f58';  // 正常量能
+      } else if (z >= 1) {
+        icon = '⚡';  // 放量
+        // 判断是否复证价格方向
+        if (isBull) { iconColor = '#3fb950'; }  // 价升+放量 = 强复证
+        else if (isBear) { iconColor = '#d29922'; }  // 价平+放量 = 蓄势
+        else { iconColor = '#d29922'; }
+      } else {
+        icon = '↓';  // 缩量
+        if (isBull) { iconColor = '#f85149'; }  // 价升+缩量 = 假信号
+        else { iconColor = '#8b949e'; }
+      }
+      volTooltip = ` · 量能: ${proxy} z=${z >= 0 ? '+' : ''}${z}σ (${z >= 1 ? '放量' : z <= -1 ? '缩量' : '正常'})`;
+      volBadge = `<text x="${pos.x + 62}" y="${pos.y - 5}" font-size="11" fill="${iconColor}" font-weight="600" title="${proxy} volume z-score">${icon}</text>`;
+    }
     return `
       <g>
-        <title>${pos.label} · ${dirLabel} · ${fullNote}${isBlocked ? ' · 🛑 传导链在此断裂' : ''}</title>
+        <title>${pos.label} · ${dirLabel} · ${fullNote}${volTooltip}${isBlocked ? ' · 🛑 传导链在此断裂' : ''}</title>
         <rect x="${pos.x - 72}" y="${pos.y - 18}" width="144" height="50" rx="5"
               fill="rgba(22,27,34,0.92)" stroke="${stroke}" stroke-width="${strokeWidth}"${strokeDashAttr}/>
         <text x="${pos.x}" y="${pos.y - 2}" text-anchor="middle" fill="#c9d1d9" font-size="11.5" font-weight="600">
           ${pos.label} <tspan fill="${color}" font-size="13">${arrow}</tspan>
         </text>
         <text x="${pos.x}" y="${pos.y + 18}" text-anchor="middle" fill="#8b949e" font-size="9.5">${note}</text>
+        ${volBadge}
         ${isBlocked ? `<text x="${pos.x + 78}" y="${pos.y - 20}" font-size="14">🛑</text>` : ''}
       </g>`;
   }).join('');
@@ -1399,7 +1437,12 @@ function renderMacroChain(r) {
 async function loadBondAIInterpret() {
   const el = document.getElementById('macro-ai-body');
   if (!el) return;
-  const r = await fetchJson('/api/bond_ai_interpret');
+  // 并发拉 AI 解读 + bond_monitor 原始数据 (为了拿 volume_confirm)
+  const [r, bond] = await Promise.all([
+    fetchJson('/api/bond_ai_interpret'),
+    fetchJson('/api/bond_monitor'),
+  ]);
+  const macroCtx = (bond && bond.macro_context) || {};
   if (!r || r.error) {
     el.innerHTML = `<div style="color:var(--muted)">🤖 AI 解读暂不可用${r && r.error ? ': ' + r.error : ''}</div>`;
     return;
@@ -1438,9 +1481,11 @@ async function loadBondAIInterpret() {
     ${hasTree ? `
       <div style="margin-bottom:8px; padding:6px 4px; background:rgba(13,17,23,0.4); border:1px solid var(--border); border-radius:4px">
         <div style="font-size:10px; color:var(--muted); text-align:center; margin-bottom:4px">
-          📊 宏观传导链 <small>(节点颜色 = 状态，→ 平静 ↑ 上升 ↓ 下降 ⚠ 冲突 · 🛑 = 传导阻断)</small>
+          📊 宏观传导链
+          <small>· 节点色=状态 · → 平静 ↑上 ↓下 ⚠冲突 · 🛑 传导阻断
+          · <span style="color:#3fb950">⚡</span>放量复证 <span style="color:#f85149">↓</span>缩量假信号 · 悬停看详情</small>
         </div>
-        ${renderMacroChain(r)}
+        ${renderMacroChain(r, macroCtx)}
       </div>` : ''}
     ${r.reasoning && !hasTree ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">📖 为什么：</small><br>${r.reasoning}</div>` : ''}
     ${r.who_agrees && !hasTree ? `<div style="margin-bottom:5px"><small style="color:var(--muted)">🏦 卖方观点：</small><br><small>${r.who_agrees}</small></div>` : ''}

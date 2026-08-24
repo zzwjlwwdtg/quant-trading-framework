@@ -63,6 +63,11 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
 - direction 必须严格从枚举里选，system 依此上色
 - chain_blocked_at 判读：找**第一个未传导下去**的节点。例：如果 rates 高但 credit 平静 → blocked_at="credit"
 - **中英混杂 OK**（如 "EM 反而跑赢"），但不要出现纯行话短语
+- **量能复证**：数据里给了各节点 proxy ETF 量能 z-score (相对 20d 均值)。
+  - z >= +1σ 显著放量 = 信号有真金白银支持 (可信度更高)
+  - z <= -1σ 显著缩量 = 信号没资金支持 (可能是噪音/假动作)
+  - 如果价 direction=elevated/tightening 但量 z <= -1σ → note 里加 "价动量弱"
+  - 如果价 direction=calm 但量 z >= +1σ → note 里加 "低调放量" (蓄势)
 """
 
 
@@ -114,6 +119,13 @@ def _make_prompt(bond_data: dict) -> str:
             "Fed 逆回购 RRP": f"${mc.get('rrp_bn')}B (2023 峰值 $2500B)" if mc.get("rrp_bn") is not None else "N/A",
             "Treasury 一般账户 TGA": f"${mc.get('tga_bn')}B" if mc.get("tga_bn") is not None else "N/A",
             "稳定币总市值 (USDT+USDC)": f"${mc.get('stablecoin_total_bn')}B (USDT ${mc.get('usdt_bn')}B + USDC ${mc.get('usdc_bn')}B)" if mc.get("stablecoin_total_bn") else "N/A",
+        },
+        "各节点量能复证 (ETF proxy volume z-score, 相对最近 20 天均值)": {
+            "说明": "z>=+1σ = 显著放量 (信号有真金白银支持) · z<=-1σ = 显著缩量 (信号可能是噪音) · |z|<1 = 正常",
+            **{
+                f"{key} (proxy {info['proxy']} {info['label']})": f"{info['vol_z_20d']:+.2f}σ ({'放量' if info['vol_z_20d'] >= 1 else ('缩量' if info['vol_z_20d'] <= -1 else '正常')})"
+                for key, info in (mc.get("volume_confirm") or {}).items()
+            }
         },
         "已触发警示": [
             {"level": w["level"], "msg": w["msg"]} for w in warnings
