@@ -1,43 +1,51 @@
 {
   "chain_verdict": "谨慎看空",
-  "chain_summary": "利率和估值压力很大，但信用和波动还没坏。",
-  "chain_blocked_at": "nfci",
+  "chain_summary": "利率和估值压力很重，但信用和波动还没出事，股市暂未破防",
+  "chain_blocked_at": "credit",
   "nodes": {
+    "inflation": {
+      "direction": "elevated",
+      "note": "物价仍偏高"
+    },
+    "jobs": {
+      "direction": "healthy",
+      "note": "就业还稳"
+    },
     "fed": {
       "direction": "tightening",
-      "note": "钱变紧了"
+      "note": "降息空间小"
     },
     "rates": {
       "direction": "elevated",
-      "note": "长债利率偏高"
+      "note": "借钱成本高"
     },
     "real_rates": {
       "direction": "elevated",
-      "note": "真实借钱贵"
+      "note": "真钱回报高"
     },
     "dxy": {
       "direction": "weak",
       "note": "美元走弱缩量"
     },
     "erp": {
-      "direction": "extreme",
-      "note": "股票很贵"
+      "direction": "compressed",
+      "note": "股票偏贵"
     },
     "curve": {
-      "direction": "steep",
-      "note": "长期钱更贵"
+      "direction": "normal",
+      "note": "长债更贵钱"
     },
     "nfci": {
       "direction": "loose",
-      "note": "市场还不缺钱"
+      "note": "钱还不算紧"
     },
     "credit": {
       "direction": "calm",
-      "note": "借钱还顺畅"
+      "note": "借债市场平静"
     },
     "stablecoin": {
       "direction": "growing",
-      "note": "链上美元变多"
+      "note": "链上美元很大"
     },
     "vol": {
       "direction": "calm",
@@ -45,28 +53,36 @@
     },
     "em": {
       "direction": "outperforming",
-      "note": "新兴市场跑赢"
+      "note": "海外反而强"
     },
     "bbi": {
       "direction": "fear",
       "note": "散户偏谨慎"
     },
-    "equity": {
+    "us_equity": {
       "direction": "resilient",
-      "note": "美股还扛着"
+      "note": "美股暂扛住"
+    },
+    "jp_equity": {
+      "direction": "resilient",
+      "note": "日股信号缩量"
+    },
+    "kr_equity": {
+      "direction": "resilient",
+      "note": "韩股信号缩量"
     }
   },
-  "action_hint": "别追高，保留现金，等信用或波动真正变坏再大幅降仓。",
+  "action_hint": "别追高，仓位降到睡得着，等信用或波动真正变坏再大幅避险。",
   "confidence": "medium",
   "verdict": "谨慎看空",
-  "one_liner": "利率和估值压力很大，但信用和波动还没坏。",
+  "one_liner": "利率和估值压力很重，但信用和波动还没出事，股市暂未破防",
   "reasoning": "",
   "who_agrees": "",
   "_source": "ai_cli_codex",
-  "generated_at": "2026-08-24T03:21:54+00:00",
+  "generated_at": "2026-08-24T03:34:54+00:00",
   "_meta": {
-    "cached_at": "2026-08-24T12:21:54.342256",
-    "age_sec": 668,
+    "cached_at": "2026-08-24T12:34:54.060453",
+    "age_sec": 41,
     "stale": false,
     "refreshing": false
   }

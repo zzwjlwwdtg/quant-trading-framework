@@ -19,17 +19,15 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
 **你的任务**：填一个 13 节点的宏观传导链树状图。每个节点用一个方向 + 一句短评。
 系统会把这些标签渲染在 dashboard 的树状图上，用户一眼看清"链条哪断了、哪没传导过来"。
 
-**传导链结构**：
+**传导链结构** (17 节点)：
+  inflation + jobs → fed (通胀/就业驱动 Fed 决策)
   fed → rates / real_rates / dxy
-  real_rates + rates → erp (股权风险溢价)
-  rates → curve (曲线)
-  real_rates → nfci (金融条件)
-  nfci → credit (信用)
-  credit → vol (波动率)
-  dxy → em (新兴市场)
-  dxy → stablecoin (稳定币虹吸)
-  vol + em + credit → bbi (综合情绪)
-  bbi → equity (美股反应)
+  real_rates + rates → erp
+  rates → curve
+  real_rates → nfci → credit → vol
+  dxy → em / stablecoin
+  vol + em + credit → bbi
+  bbi → us_equity / jp_equity / kr_equity (三大股市分开)
 
 **输出要求**（严格 JSON，无 markdown 围栏）：
 {
@@ -37,6 +35,8 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
   "chain_summary": "40 字总结整条传导链（普通人能懂）",
   "chain_blocked_at": "节点 key，传导链在这里断了；如 'credit' 表示利率高但信用还没扩大。null 表示未阻断",
   "nodes": {
+    "inflation":  {"direction": "deflationary|cooling|target|elevated|hot", "note": "≤15字（通胀）"},
+    "jobs":       {"direction": "strong|healthy|softening|weak|recession", "note": "≤15字（就业）"},
     "fed":        {"direction": "loose|neutral|tightening", "note": "≤15字大白话短评（禁用 RRP/TGA 术语）"},
     "rates":      {"direction": "low|normal|elevated|extreme", "note": "≤15字"},
     "real_rates": {"direction": "low|normal|elevated|extreme", "note": "≤15字"},
@@ -49,7 +49,9 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
     "vol":        {"direction": "calm|elevated|panic", "note": "≤15字（波动率）"},
     "em":         {"direction": "outperforming|neutral|underperforming|crisis", "note": "≤15字"},
     "bbi":        {"direction": "greed|neutral|fear|extreme_fear", "note": "≤15字（散户情绪）"},
-    "equity":     {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（美股实际反应）"}
+    "us_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（美股）·放量时必须点明"},
+    "jp_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（日股 N225）·放量时必须点明"},
+    "kr_equity":  {"direction": "resilient|weakening|breaking|crashing", "note": "≤15字（韩股 KOSPI）·放量时必须点明"}
   },
   "action_hint": "对散户操作建议一句话",
   "confidence": "high" | "medium" | "low"
@@ -85,6 +87,11 @@ def _make_prompt(bond_data: dict) -> str:
 
     facts = {
         "asof": bond_data.get("asof", "?"),
+        "经济数据 (Fed 决策 input)": {
+            "CPI 通胀 YoY": f"{mc.get('cpi_yoy_pct')}% (asof {mc.get('cpi_asof')})" if mc.get("cpi_yoy_pct") is not None else "N/A",
+            "核心 CPI YoY": f"{mc.get('core_cpi_yoy_pct')}%" if mc.get("core_cpi_yoy_pct") is not None else "N/A",
+            "失业率": f"{mc.get('unemployment_pct')}% (asof {mc.get('unemployment_asof')})" if mc.get("unemployment_pct") is not None else "N/A",
+        },
         "利率水平": {
             "10Y 名义": f"{y10}%" if y10 else "N/A",
             "30Y 名义": f"{y30}%" if y30 else "N/A",
@@ -162,6 +169,12 @@ def _fallback_from_rules(bond_data: dict) -> dict:
     eem_pct = mc.get("eem_pct_20d")
     eem_rel = mc.get("eem_vs_spx_20d")
     bbi_v = mc.get("bbi_score")
+    cpi_yoy = mc.get("cpi_yoy_pct")
+    unrate = mc.get("unemployment_pct")
+    vc = mc.get("volume_confirm") or {}
+    us_eq_vol = (vc.get("us_equity") or {}).get("vol_z_20d")
+    jp_eq_vol = (vc.get("jp_equity") or {}).get("vol_z_20d")
+    kr_eq_vol = (vc.get("kr_equity") or {}).get("vol_z_20d")
 
     def _cat(val, thresholds, labels):
         """val + [t1<t2<t3] + [lo, mid_lo, mid_hi, hi] → label"""
@@ -196,7 +209,16 @@ def _fallback_from_rules(bond_data: dict) -> dict:
                        "note": f"EM 跑赢 SPX +{eem_rel}pp" if eem_rel is not None and eem_rel > 0 else f"EM 跑输 {eem_rel}pp" if eem_rel is not None else "数据不足"},
         "bbi":        {"direction": ("fear" if bbi_v is not None and bbi_v >= 3 else "greed" if bbi_v is not None and bbi_v <= -3 else "neutral" if bbi_v is not None else None),
                        "note": f"散户情绪 BBI {bbi_v}" if bbi_v is not None else "数据不足"},
-        "equity":     {"direction": "resilient", "note": "US 股仍在 up trend"},
+        "inflation":  {"direction": ("hot" if cpi_yoy is not None and cpi_yoy >= 4 else "elevated" if cpi_yoy is not None and cpi_yoy >= 3 else "target" if cpi_yoy is not None and cpi_yoy >= 2 else "cooling" if cpi_yoy is not None else None),
+                       "note": f"CPI +{cpi_yoy}% YoY" if cpi_yoy is not None else "数据不足"},
+        "jobs":       {"direction": ("weak" if unrate is not None and unrate >= 5 else "softening" if unrate is not None and unrate >= 4.5 else "healthy" if unrate is not None else None),
+                       "note": f"失业率 {unrate}%" if unrate is not None else "数据不足"},
+        "us_equity":  {"direction": "resilient",
+                       "note": (f"US 股放量 (SPY +{us_eq_vol}σ)" if us_eq_vol is not None and us_eq_vol >= 1 else "US 股扛着")},
+        "jp_equity":  {"direction": "resilient",
+                       "note": (f"日股放量 (EWJ +{jp_eq_vol}σ)" if jp_eq_vol is not None and jp_eq_vol >= 1 else "日股平稳")},
+        "kr_equity":  {"direction": "resilient",
+                       "note": (f"韩股放量 (EWY +{kr_eq_vol}σ)" if kr_eq_vol is not None and kr_eq_vol >= 1 else "韩股平稳")},
     }
 
     yields_high = y10v and y10v >= 4.5

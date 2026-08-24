@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-24T12:21",
+  "asof": "2026-08-24T12:34",
   "yields": {
     "10y": {
       "value": 4.738,
@@ -247,6 +247,11 @@
     },
     {
       "level": "info",
+      "msg": "CPI YoY +3.54% 通胀高于 Fed 目标 2%",
+      "key": "cpi_above_target"
+    },
+    {
+      "level": "info",
       "msg": "稳定币影子美元 $256.8B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
@@ -263,9 +268,9 @@
     },
     "cdx_ig_bps": 82.0,
     "cdx_hy_bps": 275.0,
-    "dxy": 98.83,
-    "dxy_pct_20d": -2.64,
-    "dxy_z_60d": -1.21,
+    "dxy": 98.82,
+    "dxy_pct_20d": -2.65,
+    "dxy_z_60d": -1.22,
     "eem_pct_20d": 5.98,
     "eem_vs_spx_20d": 2.35,
     "rrp_bn": 0.2,
@@ -313,13 +318,36 @@
         "vol_z_20d": -0.48,
         "notable": false
       },
-      "equity": {
+      "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
         "vol_z_20d": -0.6,
         "notable": false
+      },
+      "us_qqq": {
+        "proxy": "QQQ",
+        "label": "Nasdaq 100 ETF",
+        "vol_z_20d": -0.53,
+        "notable": false
+      },
+      "jp_equity": {
+        "proxy": "EWJ",
+        "label": "iShares JP ETF (代 N225)",
+        "vol_z_20d": -1.08,
+        "notable": true
+      },
+      "kr_equity": {
+        "proxy": "EWY",
+        "label": "iShares KR ETF (代 KOSPI)",
+        "vol_z_20d": -1.12,
+        "notable": true
       }
     },
+    "cpi_yoy_pct": 3.54,
+    "cpi_asof": "2026-07-01",
+    "core_cpi_yoy_pct": 2.79,
+    "unemployment_pct": 4.1,
+    "unemployment_asof": "2026-07-01",
     "stablecoin_total_bn": 256.8,
     "usdt_bn": 183.2,
     "usdc_bn": 73.6,
@@ -333,8 +361,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-08-24T12:21:23.795193",
-    "age_sec": 699,
+    "cached_at": "2026-08-24T12:34:35.393323",
+    "age_sec": 60,
     "stale": false,
     "refreshing": false
   }

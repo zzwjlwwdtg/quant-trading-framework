@@ -497,7 +497,11 @@ def get_bond_monitor() -> dict:
         ("credit_hy",   "HYG",  "高收益信用 ETF"),
         ("vol",         "VXX",  "VIX 期货 ETF"),
         ("em",          "EEM",  "新兴市场 ETF"),
-        ("equity",      "SPY",  "S&P 500 ETF"),
+        # 各国股市 volume proxy (^N225 / ^KS11 yahoo 不给 index volume, 用 US-listed ETF)
+        ("us_equity",   "SPY",  "S&P 500 ETF"),
+        ("us_qqq",      "QQQ",  "Nasdaq 100 ETF"),
+        ("jp_equity",   "EWJ",  "iShares JP ETF (代 N225)"),
+        ("kr_equity",   "EWY",  "iShares KR ETF (代 KOSPI)"),
     ]
     for key, sym, label in _vol_proxies:
         z = _vol_z_score(sym)
@@ -511,6 +515,32 @@ def get_bond_monitor() -> dict:
             }
     if volume_confirm:
         macro_context["volume_confirm"] = volume_confirm
+
+    # 通胀 (CPI) + 就业 (unemployment rate) - Fed 政策的核心 input
+    # 月度数据, 每月中旬更新一次
+    cpi_rows = _fetch_fred_series("CPIAUCSL", days=400)   # 头条 CPI (季调)
+    core_cpi_rows = _fetch_fred_series("CPILFESL", days=400)  # 核心 CPI (剔除食品能源)
+    if cpi_rows and len(cpi_rows) >= 13:
+        latest = cpi_rows[0][1]; ago_12m = cpi_rows[12][1]
+        cpi_yoy = round((latest / ago_12m - 1) * 100, 2)
+        macro_context["cpi_yoy_pct"] = cpi_yoy
+        macro_context["cpi_asof"] = cpi_rows[0][0]
+        if cpi_yoy >= 4.0:
+            _warn("warn", f"CPI YoY +{cpi_yoy}% 通胀偏高 (>4%, Fed 有加息压力)", "cpi_high")
+        elif cpi_yoy >= 3.0:
+            _warn("info", f"CPI YoY +{cpi_yoy}% 通胀高于 Fed 目标 2%", "cpi_above_target")
+    if core_cpi_rows and len(core_cpi_rows) >= 13:
+        latest = core_cpi_rows[0][1]; ago_12m = core_cpi_rows[12][1]
+        core_yoy = round((latest / ago_12m - 1) * 100, 2)
+        macro_context["core_cpi_yoy_pct"] = core_yoy
+
+    unrate_rows = _fetch_fred_series("UNRATE", days=90)   # 失业率
+    if unrate_rows:
+        unrate = round(unrate_rows[0][1], 1)
+        macro_context["unemployment_pct"] = unrate
+        macro_context["unemployment_asof"] = unrate_rows[0][0]
+        if unrate >= 5.0:
+            _warn("warn", f"失业率 {unrate}% 偏高 (>5%, 经济放缓信号)", "unemployment_high")
 
     # 稳定币市值 (CoinGecko free API) - USDT + USDC 影子美元
     try:
