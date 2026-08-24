@@ -1,0 +1,126 @@
+{
+  "ticker": "SOXL",
+  "sector": "半导体（3倍杠杆ETF，追踪ICE Semiconductor Index）",
+  "business": "Direxion Daily Semiconductor Bull 3X ETF，通过掉期合约提供半导体指数3倍日回报，底层为NVDA/AVGO/AMD等半导体龙头",
+  "upstream": [
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "指数最大权重成分股，AI GPU龙头",
+      "weight": 25,
+      "confidence": "high"
+    },
+    {
+      "name": "Broadcom",
+      "ticker": "AVGO",
+      "note": "指数第二大权重，AI ASIC与网络芯片",
+      "weight": 20,
+      "confidence": "high"
+    },
+    {
+      "name": "AMD",
+      "ticker": "AMD",
+      "note": "指数核心成分，CPU/GPU/AI加速器",
+      "weight": 10,
+      "confidence": "high"
+    },
+    {
+      "name": "Taiwan Semiconductor",
+      "ticker": "TSM",
+      "note": "指数成分，全球最大晶圆代工",
+      "weight": 8,
+      "confidence": "high"
+    },
+    {
+      "name": "Qualcomm",
+      "ticker": "QCOM",
+      "note": "指数成分，手机基带与AI边缘芯片",
+      "weight": 6,
+      "confidence": "high"
+    },
+    {
+      "name": "Applied Materials",
+      "ticker": "AMAT",
+      "note": "指数成分，半导体设备龙头",
+      "weight": 5,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "零售杠杆交易者",
+      "ticker": null,
+      "note": "Robinhood/富途散户短线追涨半导体β",
+      "weight": 45,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金/CTA",
+      "ticker": null,
+      "note": "用SOXL做半导体beta敞口或对冲SOXS",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "期权做市商",
+      "ticker": null,
+      "note": "SOXL期权流动性极高，delta对冲需求大",
+      "weight": 15,
+      "confidence": "high"
+    },
+    {
+      "name": "资产管理机构",
+      "ticker": null,
+      "note": "战术配置半导体主题短期敞口",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "程序化交易/量化",
+      "ticker": null,
+      "note": "日内动量与均值回归策略",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "SOXS Direxion半导体3X做空",
+      "ticker": "SOXS",
+      "note": "反向对手盘，同一指数-3X",
+      "confidence": "high"
+    },
+    {
+      "name": "SOXX iShares半导体ETF",
+      "ticker": "SOXX",
+      "note": "1X无杠杆同类，费率更低",
+      "confidence": "high"
+    },
+    {
+      "name": "SMH VanEck半导体ETF",
+      "ticker": "SMH",
+      "note": "1X无杠杆，市值加权更集中于TSM/NVDA",
+      "confidence": "high"
+    },
+    {
+      "name": "USD ProShares半导体2X",
+      "ticker": "USD",
+      "note": "2X杠杆同类，波动更低",
+      "confidence": "high"
+    },
+    {
+      "name": "TECL Direxion科技3X",
+      "ticker": "TECL",
+      "note": "更广义科技3X，含大量非半导体",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-07-29T08:49:48.776750+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-07-29T17:49:48.777749",
+    "age_sec": 2270425,
+    "stale": false,
+    "refreshing": false
+  }
+}

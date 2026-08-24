@@ -1,0 +1,126 @@
+{
+  "ticker": "MULL",
+  "sector": "电动车/新能源商用车",
+  "business": "Mullen Automotive 设计与生产电动商用车（EV Cargo Van/Class 3 卡车）及少量乘用电动车",
+  "upstream": [
+    {
+      "name": "宁德时代 CATL",
+      "ticker": "300750.SZ",
+      "note": "动力电池电芯供应",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Bollinger Motors",
+      "ticker": null,
+      "note": "Class 4-6 电动卡车平台（Mullen 控股子公司提供技术/整车）",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "ReVolt Systems",
+      "ticker": null,
+      "note": "增程式动力系统 (Range Extender) 技术合作",
+      "weight": 50,
+      "confidence": "medium"
+    },
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "车载智能座舱/驾驶辅助芯片方案",
+      "weight": 40,
+      "confidence": "low"
+    },
+    {
+      "name": "Enpower Greentech",
+      "ticker": null,
+      "note": "固态电池/半固态电池研发合作",
+      "weight": 35,
+      "confidence": "medium"
+    },
+    {
+      "name": "Randy Marion Automotive",
+      "ticker": null,
+      "note": "整车总装/上装改装合作伙伴（曾为大宗采购方兼装配方）",
+      "weight": 30,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Randy Marion Automotive Group",
+      "ticker": null,
+      "note": "美国大型车队经销商，批量采购 Class 3 EV Cargo Van",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "Papé Kenworth",
+      "ticker": null,
+      "note": "卡车经销网络，分销 Bollinger B4 商用车",
+      "weight": 50,
+      "confidence": "medium"
+    },
+    {
+      "name": "美国联邦/地方政府车队",
+      "ticker": null,
+      "note": "市政/邮政/公用事业电动化车队采购",
+      "weight": 40,
+      "confidence": "low"
+    },
+    {
+      "name": "最后一公里物流公司",
+      "ticker": null,
+      "note": "城市配送/冷链短途运输车队",
+      "weight": 35,
+      "confidence": "low"
+    },
+    {
+      "name": "租赁车队运营商",
+      "ticker": null,
+      "note": "商用车租赁运营，用于 EV 车队试点",
+      "weight": 25,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Workhorse Group",
+      "ticker": "WKHS",
+      "note": "同为美国电动商用/物流车厂商",
+      "confidence": "high"
+    },
+    {
+      "name": "Canoo",
+      "ticker": "GOEV",
+      "note": "电动 LDV/商用平台竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Xos Inc",
+      "ticker": "XOS",
+      "note": "Class 5-7 电动商用卡车直接对手",
+      "confidence": "high"
+    },
+    {
+      "name": "Nikola",
+      "ticker": "NKLA",
+      "note": "电动/氢能商用卡车竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Rivian",
+      "ticker": "RIVN",
+      "note": "电动商用 Van（EDV）在最后一公里领域竞争",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-07-29T08:52:39.877955+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-07-29T17:52:39.878961",
+    "age_sec": 2270254,
+    "stale": false,
+    "refreshing": false
+  }
+}
