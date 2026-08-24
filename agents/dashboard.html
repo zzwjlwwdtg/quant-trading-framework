@@ -1538,20 +1538,22 @@ async function loadBondAIInterpret() {
         const sm = statusMap[t.status] || statusMap['no_evidence'];
         const sup = (t.supporting_nodes || []).length;
         const con = (t.contradicting_nodes || []).length;
-        return `<div style="margin-bottom:6px; padding:6px 10px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:3px">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:3px">
-            <span style="font-size:11.5px">
-              <b>🎯 用户 thesis (10 月前有效)</b>:
-              <small style="color:var(--muted)">Trump 逼 Fed 降息 → 做坏市场 + 压油价</small>
-            </span>
-            <span class="badge ${sm.cls}" style="font-size:10px" title="${sm.desc}">
+        return `<div style="margin-bottom:6px; padding:8px 12px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:3px">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:5px">
+            <div style="flex:1; min-width:280px">
+              <small style="color:var(--muted); font-size:9.5px">🎯 用户 thesis (10 月前有效)</small>
+              <div style="font-size:13.5px; color:#c9d1d9; font-weight:600; margin-top:2px; line-height:1.4">
+                Trump 逼 Fed 降息 → 做坏市场 + 压油价
+              </div>
+            </div>
+            <span class="badge ${sm.cls}" style="font-size:10.5px; padding:3px 8px; white-space:nowrap" title="${sm.desc}">
               ${sm.text} · 支持 ${sup} vs 反驳 ${con}
             </span>
           </div>
-          <div style="font-size:11px; color:var(--fg)">
+          <div style="font-size:11.5px; color:var(--fg); padding:3px 0">
             ${t.summary || ''}
           </div>
-          ${t.action_around_thesis ? `<div style="margin-top:3px; font-size:10.5px; color:#d29922">
+          ${t.action_around_thesis ? `<div style="margin-top:4px; font-size:11px; color:#d29922">
             💡 <b>Thesis 相关操作</b>: ${t.action_around_thesis}
           </div>` : ''}
         </div>`;
