@@ -434,6 +434,62 @@ def get_bond_monitor() -> dict:
             elif dxy_val >= 105:
                 _warn("warn", f"DXY {dxy_val} 强美元 (>105, EM 股市历史承压)", "dxy_high")
 
+        # === 亚洲 cash indices 直接抓（EWJ/EWY 是 T+1 US-listed ETF, 抓不到当日 Asian close）===
+        asia_indices = [
+            ("N225",       "^N225",     "Nikkei 225 (日)"),
+            ("HSI",        "^HSI",      "Hang Seng (港)"),
+            ("SSE",        "000001.SS", "Shanghai Composite (沪)"),
+            ("SZSE",       "399001.SZ", "Shenzhen Composite (深)"),
+            ("KOSPI",      "^KS11",     "KOSPI (韩)"),
+        ]
+        asia_moves: dict = {}
+        for key, sym, label in asia_indices:
+            try:
+                h = yf.Ticker(sym).history(period="10d")
+                if h is None or h.empty or len(h) < 6:
+                    continue
+                last = float(h["Close"].iloc[-1])
+                prev = float(h["Close"].iloc[-2])
+                d5 = float(h["Close"].iloc[max(0, len(h) - 6)])
+                chg_1d = round((last / prev - 1) * 100, 2)
+                chg_5d = round((last / d5 - 1) * 100, 2)
+                asia_moves[key] = {
+                    "symbol": sym, "label": label,
+                    "close": round(last, 2), "chg_1d": chg_1d, "chg_5d_pct": chg_5d,
+                    "asof": h.index[-1].strftime("%Y-%m-%d"),
+                }
+                if chg_1d <= -3 or chg_5d <= -5:
+                    _warn("warn", f"{label} {chg_1d:+.1f}% (5d {chg_5d:+.1f}%) 明显走弱", f"asia_{key.lower()}_weak")
+            except Exception:
+                pass
+        if asia_moves:
+            macro_context["asia_indices"] = asia_moves
+
+        # === US futures (24h, 抓 Sunday 夜盘 → Monday 早盘 gap) ===
+        us_futures = [
+            ("es_f",    "ES=F", "S&P 500 futures"),
+            ("nq_f",    "NQ=F", "Nasdaq futures"),
+            ("cl_f",    "CL=F", "WTI crude futures"),
+            ("gc_f",    "GC=F", "Gold futures"),
+        ]
+        futures_moves: dict = {}
+        for key, sym, label in us_futures:
+            try:
+                h = yf.Ticker(sym).history(period="3d")
+                if h is None or h.empty or len(h) < 2:
+                    continue
+                last = float(h["Close"].iloc[-1])
+                prev = float(h["Close"].iloc[-2])
+                chg = round((last / prev - 1) * 100, 2)
+                futures_moves[key] = {
+                    "symbol": sym, "label": label,
+                    "price": round(last, 2), "chg_pct": chg,
+                }
+            except Exception:
+                pass
+        if futures_moves:
+            macro_context["us_futures"] = futures_moves
+
         # 油价 (WTI + USO) — Trump 降息 thesis 关键变量之一 (压油价 → 通胀降 → Fed 有借口降息)
         try:
             oil_hist = yf.Ticker("USO").history(period="30d")  # WTI 原油 ETF

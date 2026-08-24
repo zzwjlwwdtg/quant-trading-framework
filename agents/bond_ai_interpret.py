@@ -174,6 +174,14 @@ def _make_prompt(bond_data: dict) -> str:
                 for key, info in (mc.get("volume_confirm") or {}).items()
             }
         },
+        "亚洲 cash indices (直接抓, 不用 T+1 ETF)": {
+            k: f"{v['label']}: {v['close']} · 1d {v['chg_1d']:+.2f}% · 5d {v['chg_5d_pct']:+.2f}% ({v['asof']})"
+            for k, v in (mc.get("asia_indices") or {}).items()
+        },
+        "US futures (Sunday 夜盘 → Monday 早, 抓 gap)": {
+            k: f"{v['label']}: {v['price']} · {v['chg_pct']:+.2f}%"
+            for k, v in (mc.get("us_futures") or {}).items()
+        },
         "已触发警示": [
             {"level": w["level"], "msg": w["msg"]} for w in warnings
         ],

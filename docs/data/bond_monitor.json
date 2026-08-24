@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-24T14:28",
+  "asof": "2026-08-24T14:52",
   "yields": {
     "10y": {
       "value": 4.738,
@@ -237,6 +237,21 @@
     },
     {
       "level": "warn",
+      "msg": "Nikkei 225 (日) -0.6% (5d -5.2%) 明显走弱",
+      "key": "asia_n225_weak"
+    },
+    {
+      "level": "warn",
+      "msg": "Shenzhen Composite (深) -3.2% (5d -7.2%) 明显走弱",
+      "key": "asia_szse_weak"
+    },
+    {
+      "level": "warn",
+      "msg": "KOSPI (韩) -3.3% (5d -4.2%) 明显走弱",
+      "key": "asia_kospi_weak"
+    },
+    {
+      "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $0.2B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
     },
@@ -252,7 +267,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $256.7B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $256.7B (USDT $183B + USDC $73B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -268,9 +283,77 @@
     },
     "cdx_ig_bps": 82.0,
     "cdx_hy_bps": 275.0,
-    "dxy": 98.82,
-    "dxy_pct_20d": -2.65,
-    "dxy_z_60d": -1.27,
+    "dxy": 98.86,
+    "dxy_pct_20d": -2.61,
+    "dxy_z_60d": -1.23,
+    "asia_indices": {
+      "N225": {
+        "symbol": "^N225",
+        "label": "Nikkei 225 (日)",
+        "close": 65602.81,
+        "chg_1d": -0.63,
+        "chg_5d_pct": -5.23,
+        "asof": "2026-08-24"
+      },
+      "HSI": {
+        "symbol": "^HSI",
+        "label": "Hang Seng (港)",
+        "close": 25470.48,
+        "chg_1d": -2.07,
+        "chg_5d_pct": 0.07,
+        "asof": "2026-08-24"
+      },
+      "SSE": {
+        "symbol": "000001.SS",
+        "label": "Shanghai Composite (沪)",
+        "close": 3861.7,
+        "chg_1d": -1.11,
+        "chg_5d_pct": -3.04,
+        "asof": "2026-08-24"
+      },
+      "SZSE": {
+        "symbol": "399001.SZ",
+        "label": "Shenzhen Composite (深)",
+        "close": 13649.18,
+        "chg_1d": -3.16,
+        "chg_5d_pct": -7.18,
+        "asof": "2026-08-24"
+      },
+      "KOSPI": {
+        "symbol": "^KS11",
+        "label": "KOSPI (韩)",
+        "close": 6687.78,
+        "chg_1d": -3.26,
+        "chg_5d_pct": -4.16,
+        "asof": "2026-08-24"
+      }
+    },
+    "us_futures": {
+      "es_f": {
+        "symbol": "ES=F",
+        "label": "S&P 500 futures",
+        "price": 7680.5,
+        "chg_pct": -0.14
+      },
+      "nq_f": {
+        "symbol": "NQ=F",
+        "label": "Nasdaq futures",
+        "price": 29256.25,
+        "chg_pct": -0.45
+      },
+      "cl_f": {
+        "symbol": "CL=F",
+        "label": "WTI crude futures",
+        "price": 85.59,
+        "chg_pct": -1.69
+      },
+      "gc_f": {
+        "symbol": "GC=F",
+        "label": "Gold futures",
+        "price": 4690.2,
+        "chg_pct": 1.43
+      }
+    },
     "oil_uso": 134.64,
     "oil_pct_20d": -1.5,
     "oil_wti": 85.59,
@@ -370,8 +453,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-08-24T14:28:28.324451",
-    "age_sec": 275,
+    "cached_at": "2026-08-24T14:52:30.244307",
+    "age_sec": 308,
     "stale": false,
     "refreshing": false
   }
