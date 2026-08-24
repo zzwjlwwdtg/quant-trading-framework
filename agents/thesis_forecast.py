@@ -49,6 +49,37 @@ from typing import Optional
 # ── 事件反应规则表 ──────────────────────────────────────────────
 # 每个规则: (event_type_pattern, scenarios_dict)
 # scenarios_dict = {"dovish": {desc, delta_pp}, "base": {...}, "hawkish": {...}}
+# ── 先验概率 (基于最近历史 base rate + 数据分布) ─────────────────
+# 通胀环境: 通胀 3.5-4% 时 (当前) 数据更容易偏 hawkish (通胀粘性)
+# 就业环境: 失业率 4-4.5% 时 (当前偏低) 数据更容易 base/hawkish
+# 数字加起来 = 1.0 (规范化)
+_PRIOR_PROBS = {
+    # 当前通胀 3.7% (偏高), Fed 仍 restrictive → CPI 偏 hawkish 概率高
+    "CPI": {
+        "dovish": 0.10, "mild_dovish": 0.15, "base": 0.35,
+        "mild_hawkish": 0.25, "hawkish": 0.15
+    },
+    # NFP 就业强劲, 通常在 base/hawkish
+    "NFP": {
+        "dovish": 0.10, "mild_dovish": 0.15, "base": 0.45,
+        "hawkish": 0.20, "very_hawkish": 0.10
+    },
+    # PCE 是 Fed 首选指标, 相对 CPI 更贴近 target 2% (核心通胀粘性)
+    "PCE": {
+        "dovish": 0.15, "base": 0.45,
+        "hawkish": 0.25, "very_hawkish": 0.15
+    },
+    # PPI/Retail 分布类似 CPI/NFP 但影响较小
+    "PPI": {"dovish": 0.20, "base": 0.50, "hawkish": 0.30},
+    "Retail Sales": {"dovish": 0.20, "base": 0.55, "hawkish": 0.25},
+    # FOMC: 会被 CME FedWatch 覆盖. 默认 fallback: 大概率 hold
+    "FOMC": {
+        "surprise_cut": 0.05, "dovish_hold": 0.25, "base": 0.55,
+        "hawkish_hold": 0.12, "surprise_hike": 0.03
+    },
+}
+
+
 _RULES = {
     "CPI": {
         "dovish": {
@@ -178,6 +209,78 @@ def _classify_event(event_name: str) -> Optional[str]:
     return None
 
 
+def _load_fedwatch_cache() -> Optional[dict]:
+    """尝试从 webui 缓存读 fed_watch 数据."""
+    try:
+        from pathlib import Path
+        import json
+        p = Path(__file__).parent / ".webui_cache" / "fed_watch.json"
+        if not p.exists():
+            return None
+        d = json.loads(p.read_text(encoding="utf-8"))
+        return d.get("value") if isinstance(d, dict) else None
+    except Exception:
+        return None
+
+
+def _get_fomc_probabilities(fed_watch: Optional[dict], event_date: str) -> Optional[dict]:
+    """从 fed_watch 数据映射 CME FedWatch action probabilities → 我们的场景.
+
+    CME FedWatch actions: hike_25/hike_50 / hold / cut_25/cut_50
+    映射:
+      cut_50 (罕见)              → surprise_cut
+      cut_25                     → 部分 (取决于 dot plot 里 dovish 强度)
+      hold (majority)            → hold_dovish + base + hold_hawkish (需 disaggregate)
+      hike_25/50                 → surprise_hike
+    简化: 直接用 FedWatch 的 cut/hold/hike 概率, 手动 split hold 成 dovish/base/hawkish (30%/50%/20%).
+    """
+    if not fed_watch or not fed_watch.get("meetings"):
+        return None
+    meeting = None
+    for m in fed_watch["meetings"]:
+        if m.get("date", "").startswith(event_date[:7]):  # 同月
+            meeting = m
+            break
+    if not meeting:
+        return None
+    probs = meeting.get("probabilities") or {}
+    if not probs:
+        return None
+    p_hold = probs.get("hold", 0) / 100.0
+    p_cut25 = probs.get("cut_25", 0) / 100.0
+    p_cut50 = probs.get("cut_50", 0) / 100.0
+    p_hike25 = probs.get("hike_25", 0) / 100.0
+    p_hike50 = probs.get("hike_50", 0) / 100.0
+    # 归一化
+    total = p_hold + p_cut25 + p_cut50 + p_hike25 + p_hike50
+    if total <= 0:
+        return None
+    # Split hold 成 dovish/base/hawkish (30/50/20)
+    return {
+        "surprise_cut": round((p_cut25 + p_cut50) / total, 3),
+        "dovish_hold": round(p_hold * 0.30 / total, 3),
+        "base": round(p_hold * 0.50 / total, 3),
+        "hawkish_hold": round(p_hold * 0.20 / total, 3),
+        "surprise_hike": round((p_hike25 + p_hike50) / total, 3),
+    }
+
+
+def _compute_expected_delta(scenarios: dict, probs: dict) -> tuple[float, str]:
+    """Σ prob × delta_pp. 返回 (expected_pp, source)."""
+    total = 0.0
+    prob_sum = 0.0
+    for name, s in scenarios.items():
+        p = probs.get(name, 0)
+        total += p * s["delta_pp"]
+        prob_sum += p
+    if prob_sum <= 0.01:  # 概率没覆盖
+        return (0.0, "no_prob")
+    # 若不满 1.0 (只覆盖部分), normalize
+    if prob_sum < 0.99:
+        total = total / prob_sum
+    return (round(total, 2), "ok")
+
+
 def get_forecast(days_ahead: int = 45) -> dict:
     """
     返回未来 N 天的重大事件 + 每个事件的 3 场景预测.
@@ -207,6 +310,7 @@ def get_forecast(days_ahead: int = 45) -> dict:
         return {"error": f"events_watch import failed: {str(e)[:80]}"}
 
     today = date.today()
+    fed_watch = _load_fedwatch_cache()
     events_out = []
     for ev in EQUITY_CALENDAR:
         try:
@@ -227,15 +331,37 @@ def get_forecast(days_ahead: int = 45) -> dict:
         # 找 min/max delta 展示范围
         deltas = [s["delta_pp"] for s in scenarios.values()]
         min_d = min(deltas); max_d = max(deltas)
+
+        # 概率: FOMC 用 CME FedWatch, 其它用 prior
+        prob_source = "prior"
+        probs = _PRIOR_PROBS.get(event_type, {})
+        if event_type == "FOMC":
+            fw_probs = _get_fomc_probabilities(fed_watch, ev["date"])
+            if fw_probs:
+                probs = fw_probs
+                prob_source = "cme_fedwatch"
+
+        # 每场景嵌入概率 (合并 scenarios + probs)
+        scenarios_with_prob = {}
+        for name, s in scenarios.items():
+            scenarios_with_prob[name] = {
+                **s,
+                "probability": round(probs.get(name, 0), 3),
+            }
+
+        expected_pp, ev_source = _compute_expected_delta(scenarios, probs)
+
         events_out.append({
             "date": ev["date"],
             "days_until": days_until,
             "event": ev["event"],
             "impact": impact,
             "event_type": event_type,
-            "scenarios": scenarios,
+            "scenarios": scenarios_with_prob,
             "delta_range_pp": [min_d, max_d],
             "range_desc": f"({min_d:+d}pp ~ {max_d:+d}pp)",
+            "expected_delta_pp": expected_pp,          # 概率加权期望值
+            "probability_source": prob_source,          # "cme_fedwatch" | "prior"
         })
 
     events_out.sort(key=lambda x: x["days_until"])
@@ -255,8 +381,12 @@ if __name__ == "__main__":
     print(f"共 {r.get('count')} 条 forward-looking 事件 (未来 45 天):")
     print()
     for ev in r.get("events", []):
-        print(f"  📅 {ev['date']} ({ev['days_until']:>2}d) {ev['event']:<25s} {ev['range_desc']}")
+        exp = ev.get("expected_delta_pp", 0)
+        sign_exp = "+" if exp > 0 else ""
+        src = ev.get("probability_source", "?")
+        print(f"  📅 {ev['date']} ({ev['days_until']:>2}d) {ev['event']:<25s} {ev['range_desc']}  期望={sign_exp}{exp}pp [{src}]")
         for name, s in ev["scenarios"].items():
             sign = "+" if s["delta_pp"] > 0 else ""
-            print(f"      {name:<15s} → {sign}{s['delta_pp']:>3}pp · {s['desc']}")
+            p = s.get("probability", 0)
+            print(f"      {name:<15s} → {sign}{s['delta_pp']:>3}pp × {p*100:>4.1f}% = {p*s['delta_pp']:>5.2f}pp · {s['desc']}")
         print()

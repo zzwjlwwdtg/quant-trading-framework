@@ -109,7 +109,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T16:13:16", "endpoints_ok": 129, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T16:56:20", "endpoints_ok": 129, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1653,23 +1653,36 @@ async function loadBondAIInterpret() {
                   ${forecast.events.slice(0, 6).map(ev => {
                     const scEntries = Object.entries(ev.scenarios);
                     const impactCls = ev.impact === 'critical' ? 'bad' : 'warn';
+                    const exp = ev.expected_delta_pp;
+                    const expCls = exp > 0.5 ? 'ok' : exp < -0.5 ? 'bad' : 'muted';
+                    const src = ev.probability_source === 'cme_fedwatch' ? '📊 CME FedWatch' : '📈 历史 prior';
                     return `<div style="padding:5px 6px; margin-top:3px; background:rgba(88,166,255,0.03); border-left:2px solid #58a6ff; border-radius:2px">
-                      <div style="display:flex; gap:6px; align-items:center; margin-bottom:3px; font-size:11px">
+                      <div style="display:flex; gap:6px; align-items:center; margin-bottom:3px; font-size:11px; flex-wrap:wrap">
                         <span style="color:var(--muted); min-width:82px">${ev.date}</span>
                         <span class="badge ${impactCls}" style="font-size:9px; padding:0 5px">${ev.impact}</span>
                         <b>${ev.event}</b>
                         <small style="color:var(--muted)">${ev.days_until}d</small>
-                        <small style="color:var(--muted); margin-left:auto; font-size:9.5px">${ev.range_desc}</small>
+                        <small style="color:var(--muted); font-size:9.5px">${ev.range_desc}</small>
+                        <span style="margin-left:auto; font-size:10.5px" title="Σ 概率 × delta = 概率加权期望值 · 数据源: ${src}">
+                          期望 <b class="${expCls}">${exp >= 0 ? '+' : ''}${exp}pp</b>
+                          <small style="color:var(--muted); font-size:8.5px">${src}</small>
+                        </span>
                       </div>
-                      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:3px; font-size:10px">
+                      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:3px; font-size:10px">
                         ${scEntries.map(([sname, s]) => {
                           const isDove = sname.includes('dovish') || sname === 'surprise_cut';
                           const isHawk = sname.includes('hawkish') || sname === 'surprise_hike';
                           const cls = s.delta_pp > 0 ? 'ok' : s.delta_pp < 0 ? 'bad' : 'muted';
                           const bg = isDove ? 'rgba(63,185,80,0.06)' : isHawk ? 'rgba(248,81,73,0.06)' : 'rgba(139,148,158,0.05)';
-                          return `<div style="padding:3px 5px; background:${bg}; border-radius:2px" title="${s.desc} · ${s.prob_note}">
-                            <b class="${cls}">${s.delta_pp >= 0 ? '+' : ''}${s.delta_pp}pp</b>
-                            <small style="color:var(--muted); font-size:9px"> ${sname.replace('_', ' ')}</small>
+                          const p = s.probability || 0;
+                          const pPct = (p * 100).toFixed(0);
+                          const contrib = p * s.delta_pp;
+                          return `<div style="padding:3px 5px; background:${bg}; border-radius:2px" title="${s.desc} · ${s.prob_note} · 概率 ${pPct}% · 贡献 ${contrib >= 0 ? '+' : ''}${contrib.toFixed(2)}pp">
+                            <div><b class="${cls}">${s.delta_pp >= 0 ? '+' : ''}${s.delta_pp}pp</b>
+                              <small style="color:var(--muted); font-size:9px">×</small>
+                              <b>${pPct}%</b>
+                              <small style="color:var(--muted); font-size:9px"> ${sname.replace('_', ' ')}</small>
+                            </div>
                           </div>`;
                         }).join('')}
                       </div>
