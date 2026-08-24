@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T10:49:05", "endpoints_ok": 116, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T11:01:15", "endpoints_ok": 116, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -200,6 +200,14 @@
   <div class="card" style="border-left:3px solid #f85149; background:linear-gradient(180deg, rgba(248,81,73,0.03) 0%, transparent 60%)">
     <h2 title="最新规则决策决定是否交易；AI CLI 只提供价位参考；是否真的已挂单以 broker 未结订单为准。">⚡ 自动执行状态 · Auto Execution <small id="ai-targets-mtime"></small></h2>
     <div id="ai-targets"></div>
+  </div>
+</div>
+
+<!-- Row 0a: 宏观风险总览 (顶部速览，警示 + BBI 汇总，详情在 Row 1.7 美债卡) -->
+<div class="grid">
+  <div class="card" id="macro-summary-card" style="border-left:3px solid var(--warn); display:none">
+    <h2 title="顶部速览：警示 + BBI + 卖方 rate desk 指标 · 详情见下方美债卡">⚠ 宏观风险总览 <small id="macro-summary-count"></small></h2>
+    <div id="macro-summary-body"></div>
   </div>
 </div>
 
@@ -1473,6 +1481,75 @@ async function loadBondMonitor() {
       <div style="font-size:10.5px; color:var(--muted)"><b style="color:#58a6ff">📅 CME FedWatch 加息/降息预期</b> <small>(AI CLI+Web, 缓存 2h)</small></div>
       <div id="fed-watch-body" style="margin-top:3px; font-size:10px; color:var(--muted)">🔄 加载中...</div>
     </div>`;
+
+  // 顶部 Row 0a 宏观速览：把警示 + BBI 汇总推到页面最上方
+  try {
+    const macroCard = document.getElementById('macro-summary-card');
+    const macroBody = document.getElementById('macro-summary-body');
+    const macroCount = document.getElementById('macro-summary-count');
+    if (macroCard && macroBody) {
+      const nWarn = warnings.length;
+      const bbi = mc.bbi_score;
+      const hasContent = nWarn > 0 || bbi != null;
+      if (hasContent) {
+        macroCard.style.display = 'block';
+        // 顶级严重度：警示里最重的一档 决定 border 颜色
+        const worstLvl = warnings.reduce((acc, w) => {
+          const pri = {bad:3, warn:2, info:1};
+          return (pri[w.level]||0) > (pri[acc]||0) ? w.level : acc;
+        }, 'info');
+        const borderMap = {bad:'var(--bad)', warn:'var(--warn)', info:'#58a6ff'};
+        macroCard.style.borderLeftColor = borderMap[worstLvl] || 'var(--warn)';
+        if (macroCount) {
+          const bbiLabel = bbi == null ? '' :
+            (bbi >= 6 ? '极度恐惧' : bbi >= 3 ? '偏恐惧' :
+             bbi <= -6 ? '极度贪婪' : bbi <= -3 ? '偏贪婪' : '中性');
+          macroCount.textContent = `${nWarn} 条警示 · BBI ${bbi != null ? (bbi >= 0 ? '+' : '') + bbi.toFixed(1) + ' ' + bbiLabel : 'N/A'}`;
+        }
+        // 一句话诊断
+        let verdict;
+        const stressAbsent = mc.cdx_ig_bps < 100 && mc.cdx_hy_bps < 350 && (mc.vix == null || mc.vix < 20);
+        const equityExpensive = mc.erp_vs_tips_pct != null && mc.erp_vs_tips_pct < 2.0;
+        const yieldsHigh = mc.term_spread_30_10_bps != null && (b.yields?.["10y"]?.value >= 4.5 || b.yields?.["tips_10y"]?.value >= 2.0);
+        if (yieldsHigh && equityExpensive && stressAbsent) {
+          verdict = `<b class="warn">📊 卖方 view: 利率高位 + 股权贵，但信用/波动率无压 → tactical cautious，不是 outright bearish</b>`;
+        } else if (yieldsHigh && !stressAbsent) {
+          verdict = `<b class="bad">🚨 利率高位 + 信用/波动率同步收紧 → risk-off 传导中</b>`;
+        } else if (stressAbsent && !yieldsHigh) {
+          verdict = `<b class="ok">✅ 宏观环境宽松，无明显 stress</b>`;
+        } else {
+          verdict = `<b class="muted">中性宏观环境</b>`;
+        }
+        // 关键数字条 (compact)
+        const kn = (v, unit, cls='') => v == null ? '-' : `<b class="${cls}">${v}${unit}</b>`;
+        const y10v = b.yields?.["10y"]?.value;
+        const tipsv = b.yields?.["tips_10y"]?.value;
+        const cls_gte = (v, thr, cls) => v != null && v >= thr ? cls : 'muted';
+        macroBody.innerHTML = `
+          <div style="margin-bottom:6px; font-size:12px">${verdict}</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:5px; font-size:11px; padding:6px 8px; background:rgba(88,166,255,0.04); border-radius:3px">
+            <span title="10Y 名义收益率">10Y ${kn(y10v, '%', cls_gte(y10v, 4.5, 'warn'))}</span>
+            <span title="10Y TIPS 实际利率">TIPS ${kn(tipsv, '%', cls_gte(tipsv, 2.0, 'warn'))}</span>
+            <span title="Equity Risk Premium">ERP ${kn(mc.erp_vs_tips_pct, '%', mc.erp_vs_tips_pct != null && mc.erp_vs_tips_pct < 2 ? 'warn' : 'muted')}</span>
+            <span title="Chicago Fed NFCI · <0 宽松">NFCI ${mc.nfci ? `<b class="${mc.nfci.value > 0 ? 'warn' : 'ok'}">${mc.nfci.value > 0 ? '+' : ''}${mc.nfci.value.toFixed(2)}</b>` : '-'}</span>
+            <span title="IG 信用利差">IG ${kn(mc.cdx_ig_bps, 'bps', cls_gte(mc.cdx_ig_bps, 120, 'warn'))}</span>
+            <span title="HY 信用利差">HY ${kn(mc.cdx_hy_bps, 'bps', cls_gte(mc.cdx_hy_bps, 400, 'warn'))}</span>
+            <span title="CBOE VIX">VIX ${kn(mc.vix, '', cls_gte(mc.vix, 25, 'warn'))}</span>
+            ${bbi != null ? `<span title="BofA-style Bull&Bear Indicator">🎯 BBI <b class="${bbi >= 3 ? 'ok' : bbi <= -3 ? 'bad' : 'muted'}">${bbi >= 0 ? '+' : ''}${bbi.toFixed(1)}</b></span>` : ''}
+          </div>
+          ${nWarn > 0 ? `
+            <div style="margin-top:6px; font-size:10.5px">
+              <b style="color:var(--warn)">具体警示 ${nWarn} 条</b>
+              <small style="color:var(--muted)">(详情/图表见下方美债卡)</small>
+              <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px">
+                ${warnings.slice(0, 6).map(w => `<span class="badge ${w.level === 'bad' ? 'bad' : (w.level === 'warn' ? 'warn' : 'muted')}" style="font-size:10px" title="${w.msg}">${warnIcon[w.level]||'·'} ${w.msg.substring(0, 28)}${w.msg.length > 28 ? '…' : ''}</span>`).join('')}
+                ${warnings.length > 6 ? `<span class="badge muted" style="font-size:10px">+${warnings.length - 6}</span>` : ''}
+              </div>
+            </div>` : ''}
+        `;
+      }
+    }
+  } catch (e) { /* macro summary optional, don't break bond monitor */ }
 
   el.innerHTML = `
     ${warningsHtml}
