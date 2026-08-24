@@ -5,8 +5,8 @@
       "date": "2026-09-16",
       "days_until": 23,
       "probabilities": {
-        "hold": 61.0,
-        "hike_25": 39.0
+        "hold": 60,
+        "hike_25": 40
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -15,21 +15,18 @@
       "date": "2026-10-28",
       "days_until": 65,
       "probabilities": {
-        "hold": 47.0,
-        "hike_25": 44.1,
-        "hike_50": 9.0
+        "hold": 36,
+        "hike_25": 64
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-12-09",
       "days_until": 107,
       "probabilities": {
-        "hold": 28.9,
-        "hike_25": 45.2,
-        "hike_50": 22.5,
-        "hike_75_or_more": 3.5
+        "hike_25": 76,
+        "hike_50": 24
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
@@ -38,48 +35,54 @@
       "date": "2027-01-27",
       "days_until": 156,
       "probabilities": {
-        "hold": 22.7,
-        "hike_25": 41.7,
-        "hike_50": 27.4,
-        "hike_75_or_more": 8.2
+        "hike_25": 76,
+        "hike_50": 24
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q2/Q3",
-  "data_snapshot_date": "2026-08-22 00:35 EDT",
-  "recent_event_impact": "最近7天内未发现新的NFP/CPI/PPI正式发布；8/19-8/20左右公布的7月FOMC会议纪要显示加息支持上升，但市场仍较一周前降低9月加息概率。7月NFP于2026-08-07发布，非农就业意外下降约23K；7月CPI于2026-08-12发布，CPI同比3.4%；7月PPI于2026-08-13发布，最终需求环比持平、同比4.7%。这些就业偏弱与通胀仍高的组合使市场保留加息尾部风险，但未完全定价9月加息。",
-  "commentary": "数据快照为2026-08-22 00:35 EDT，晚于最近一周的FOMC会议纪要发布时间，且7月NFP、CPI、PPI均已被该快照覆盖。市场对9月仍以按兵不动为主，但10月以后逐步转向加息路径，反映就业数据偏弱压低短端加息确定性、而CPI/PPI仍高使中期加息概率保持。",
+  "implied_terminal_rate": "4.25-4.50",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-08-23 22:16 UTC",
+  "recent_event_impact": "最近7天内无NFP/CPI/PPI正式发布；8/19发布7/28-29 FOMC会议纪要，7月CPI为3.4% YoY、核心CPI为2.5% YoY，7月PPI终端需求环比+0.6%，7月NFP为-23K。通胀数据偏粘性压低降息定价，就业走弱限制更激进加息定价。",
+  "commentary": "数据快照为2026-08-23 22:16 UTC，已晚于8/19 FOMC纪要；未来3-4次会议市场从9月小幅偏向按兵不动，转为10月以后更偏向加息。7月NFP意外收缩本应压低加息概率，但7月CPI仍为3.4% YoY、PPI环比+0.6%使市场维持明显鹰派路径。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
-      "type": "cme_derived_backup"
+      "url": "https://www.retiredasap.com/tools/fed-odds-watch",
+      "type": "fed_funds_futures_backup"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
+      "type": "fomc_statement"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/2026-august.htm",
+      "type": "recent_event_calendar"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
       "type": "cpi"
     },
     {
-      "url": "https://www.bls.gov/news.release/ppi.htm",
+      "url": "https://www.bls.gov/news.release/archives/ppi_08132026.htm",
       "type": "ppi"
     },
     {
       "url": "https://www.stlouisfed.org/on-the-economy/2026/aug/flash-report-unemployment-payrolls-both-drop-in-july",
-      "type": "nfp_context"
+      "type": "nfp"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-23T15:55:03+00:00",
+  "fetched_at": "2026-08-23T23:56:14+00:00",
   "_meta": {
-    "cached_at": "2026-08-24T00:55:03.171963",
-    "age_sec": 27480,
+    "cached_at": "2026-08-24T08:56:14.287135",
+    "age_sec": 408,
     "stale": false,
     "refreshing": false
   }
