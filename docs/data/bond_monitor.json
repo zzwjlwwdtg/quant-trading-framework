@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-24T11:16",
+  "asof": "2026-08-24T11:31",
   "yields": {
     "10y": {
       "value": 4.738,
@@ -222,13 +222,44 @@
     },
     {
       "level": "warn",
+      "msg": "30Y 5.28% 长端偏高 (>5%, 长久期折现率压力)",
+      "key": "30y_high"
+    },
+    {
+      "level": "warn",
       "msg": "GLD/TIPS 对冲失效 (相关性 -0.33) — 通胀/流动性 regime 改变",
       "key": "hedge_broken"
+    },
+    {
+      "level": "warn",
+      "msg": "ERP 1.53% 股权风险溢价压缩到危险区 (SPX 尾随 EPS yield 3.88% − TIPS 2.35%，1985+ 仅 1987/2000/2007 出现过)",
+      "key": "erp_low"
     }
   ],
+  "macro_context": {
+    "term_spread_30_10_bps": 53.8,
+    "spx_trailing_pe": 25.79,
+    "spx_eps_yield_pct": 3.88,
+    "erp_vs_tips_pct": 1.53,
+    "erp_basis": "trailing",
+    "nfci": {
+      "value": -0.559,
+      "asof": "2026-08-14"
+    },
+    "cdx_ig_bps": 82.0,
+    "cdx_hy_bps": 275.0,
+    "vix": 15.13,
+    "bbi_score": 1.15,
+    "bbi_components": {
+      "vix": -0.48,
+      "ig": -1.37,
+      "hy": -1.15,
+      "erp": 1.47
+    }
+  },
   "_meta": {
-    "cached_at": "2026-08-24T11:16:19.007649",
-    "age_sec": 542,
+    "cached_at": "2026-08-24T11:31:26.551339",
+    "age_sec": 96,
     "stale": false,
     "refreshing": false
   }
