@@ -8,18 +8,49 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "DOMESTIC_POLICY": 1,
-      "NOISE": 1,
-      "MEDIA_ATTACK": 1
+      "NOISE": 3,
+      "TARIFF": 1,
+      "DOMESTIC_POLICY": 5,
+      "GEOPOLITICAL": 2,
+      "MEDIA_ATTACK": 3
     },
-    "breaking": [],
+    "breaking": [
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "President Trump eyes 'crushing' economic blockade to bring Iran to its knees: https://justthenews.com/government/diploma",
+        "verbatim": "Trump eyes 'crushing' economic blockade to bring Iran to its knees",
+        "post_time": "2026-08-24T02:50:48.525Z"
+      },
+      {
+        "event_type": "DOMESTIC_POLICY",
+        "direction": "bullish",
+        "magnitude": "small",
+        "confidence": 7,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "Trump EPA ends summer-gas rules early to lower U.S. pump prices: https://justthenews.com/nation/states/center-square/epa",
+        "verbatim": "Trump EPA ends summer-gas rules early to lower U.S. pump prices",
+        "post_time": "2026-08-24T02:48:53.810Z"
+      }
+    ],
     "summary": {
-      "text": "聚焦内政宣传与媒体攻击，市场情绪偏中性略负面",
+      "text": "税改利好与伊朗风险并存，整体情绪偏谨慎乐观。",
       "state": "cached",
       "post_ids": [
-        "117142893735691144",
-        "117141444922153076",
-        "117139411859970862"
+        "117148617954763691",
+        "117148614817419837",
+        "117148220406407911"
       ]
     }
   },

@@ -109,7 +109,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T16:03:21", "endpoints_ok": 117, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T16:13:16", "endpoints_ok": 129, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1535,12 +1535,13 @@ function renderCutProbTrend(rows) {
 async function loadBondAIInterpret() {
   const el = document.getElementById('macro-ai-body');
   if (!el) return;
-  // 并发拉: AI 解读 + bond_monitor + thesis 历史 + Trump 归因
-  const [r, bond, history, tattr] = await Promise.all([
+  // 并发拉: AI 解读 + bond_monitor + thesis 历史 + Trump 归因 + Forward forecast
+  const [r, bond, history, tattr, forecast] = await Promise.all([
     fetchJson('/api/bond_ai_interpret'),
     fetchJson('/api/bond_monitor'),
     fetchJson('/api/thesis_history?days=180'),
     fetchJson('/api/trump_attribution'),
+    fetchJson('/api/thesis_forecast?days=45'),
   ]);
   const macroCtx = (bond && bond.macro_context) || {};
   const trendRows = (history && history.rows) || [];
@@ -1635,6 +1636,52 @@ async function loadBondAIInterpret() {
             💡 <b>Thesis 相关操作</b>: ${t.action_around_thesis}
           </div>` : ''}
           ${trendRows.length >= 5 ? renderCutProbTrend(trendRows) : ''}
+          ${forecast && forecast.events && forecast.events.length ? (() => {
+            // 3 天内的高影响事件顶部预警
+            const soon = forecast.events.filter(e => e.days_until <= 3 && e.impact === 'critical');
+            const soonAlert = soon.length ? `
+              <div style="margin-top:6px; padding:5px 10px; background:rgba(248,81,73,0.12); border:1px solid #f85149; border-radius:3px; font-size:11.5px; font-weight:600; color:#f85149; animation: pulseGlow 1.8s ease-in-out infinite">
+                🚨 ${soon.length} 项 critical 事件 3 天内: ${soon.map(e => `${e.event} (${e.days_until}d)`).join(' · ')}
+              </div>` : '';
+            return `${soonAlert}
+              <details style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(139,148,158,0.2)" open>
+                <summary style="cursor:pointer; list-style:none; font-size:10.5px; color:var(--muted)">
+                  🔮 <b style="color:#58a6ff">未来 45 天事件场景预测</b>
+                  <small>· 每个事件按 dovish/base/hawkish 三档 预测 cut_prob 变化</small>
+                </summary>
+                <div style="margin-top:5px">
+                  ${forecast.events.slice(0, 6).map(ev => {
+                    const scEntries = Object.entries(ev.scenarios);
+                    const impactCls = ev.impact === 'critical' ? 'bad' : 'warn';
+                    return `<div style="padding:5px 6px; margin-top:3px; background:rgba(88,166,255,0.03); border-left:2px solid #58a6ff; border-radius:2px">
+                      <div style="display:flex; gap:6px; align-items:center; margin-bottom:3px; font-size:11px">
+                        <span style="color:var(--muted); min-width:82px">${ev.date}</span>
+                        <span class="badge ${impactCls}" style="font-size:9px; padding:0 5px">${ev.impact}</span>
+                        <b>${ev.event}</b>
+                        <small style="color:var(--muted)">${ev.days_until}d</small>
+                        <small style="color:var(--muted); margin-left:auto; font-size:9.5px">${ev.range_desc}</small>
+                      </div>
+                      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:3px; font-size:10px">
+                        ${scEntries.map(([sname, s]) => {
+                          const isDove = sname.includes('dovish') || sname === 'surprise_cut';
+                          const isHawk = sname.includes('hawkish') || sname === 'surprise_hike';
+                          const cls = s.delta_pp > 0 ? 'ok' : s.delta_pp < 0 ? 'bad' : 'muted';
+                          const bg = isDove ? 'rgba(63,185,80,0.06)' : isHawk ? 'rgba(248,81,73,0.06)' : 'rgba(139,148,158,0.05)';
+                          return `<div style="padding:3px 5px; background:${bg}; border-radius:2px" title="${s.desc} · ${s.prob_note}">
+                            <b class="${cls}">${s.delta_pp >= 0 ? '+' : ''}${s.delta_pp}pp</b>
+                            <small style="color:var(--muted); font-size:9px"> ${sname.replace('_', ' ')}</small>
+                          </div>`;
+                        }).join('')}
+                      </div>
+                    </div>`;
+                  }).join('')}
+                  ${forecast.events.length > 6 ? `<div style="text-align:center; font-size:9px; color:var(--muted); margin-top:3px">... 还有 ${forecast.events.length - 6} 个事件</div>` : ''}
+                  <div style="font-size:9px; color:var(--muted); margin-top:4px">
+                    💡 规则版预测, 数据发布时自动对照场景追加验证. FOMC 是最大权重 (-25 ~ +30pp)
+                  </div>
+                </div>
+              </details>`;
+          })() : ''}
           ${tattr && tattr.posts_analyzed >= 5 ? `
             <details style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(139,148,158,0.2)">
               <summary style="cursor:pointer; list-style:none; font-size:10.5px; color:var(--muted)">

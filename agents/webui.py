@@ -3043,6 +3043,17 @@ def api_trump_attribution() -> dict:
                    first_call_placeholder={"posts_analyzed": 0, "computing": True})
 
 
+def api_thesis_forecast(days_ahead: int = 45) -> dict:
+    """未来 N 天 forward-looking 事件 + 每事件 3 场景 (dovish/base/hawkish) 对 cut_prob 的规则版预测。"""
+    def _compute():
+        try:
+            from thesis_forecast import get_forecast
+            return get_forecast(days_ahead=days_ahead)
+        except Exception as e:
+            return {"error": str(e)[:200]}
+    return _cached(f"thesis_forecast_{days_ahead}", ttl_sec=6 * 3600, compute_fn=_compute)
+
+
 def api_fed_watch() -> dict:
     """CME FedWatch 加息/降息预期。AI CLI + live web search，缓存 8h。首次异步。"""
     placeholder = {
@@ -4810,6 +4821,13 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_bond_ai_interpret())
             elif path == "/api/trump_attribution":
                 self._json(api_trump_attribution())
+            elif path == "/api/thesis_forecast":
+                _da = 45
+                try:
+                    if "days" in qs: _da = int(qs["days"][0])
+                except Exception:
+                    pass
+                self._json(api_thesis_forecast(days_ahead=_da))
             elif path == "/api/thesis_history":
                 # ?days=180 (default). qs 已在 do_GET 顶部解析
                 _days = 180
