@@ -413,7 +413,78 @@ def get_bond_monitor() -> dict:
         elif v_bps > thr_low:
             _warn("warn", f"{label} 信用利差 {v_bps:.0f}bps (>{thr_low} = 收紧, {asof_d})", key_low)
 
-    # 10) BofA Bull & Bear Indicator (BBI, DIY) — 4-factor composite contrarian gauge
+    # 10) 全球美元流动性 + 稳定币虹吸 (阶段 1) —— AI 解读的宏观 context
+    #     不进决策评分，只加进 macro_context 让 AI 能看到"美元潮汐+稳定币"视角
+    try:
+        import yfinance as yf
+        # DXY 美元指数 (60d 用于 z-score + 20d 变化)
+        dxy_hist = yf.Ticker("DX-Y.NYB").history(period="90d")
+        if dxy_hist is not None and not dxy_hist.empty and len(dxy_hist) >= 21:
+            dxy_val = round(float(dxy_hist["Close"].iloc[-1]), 2)
+            dxy_20d_ago = float(dxy_hist["Close"].iloc[-21])
+            dxy_pct_20d = round((dxy_val / dxy_20d_ago - 1) * 100, 2)
+            dxy_mean = float(dxy_hist["Close"].mean())
+            dxy_std = float(dxy_hist["Close"].std())
+            dxy_z = round((dxy_val - dxy_mean) / dxy_std, 2) if dxy_std > 0 else 0
+            macro_context["dxy"] = dxy_val
+            macro_context["dxy_pct_20d"] = dxy_pct_20d
+            macro_context["dxy_z_60d"] = dxy_z
+            if dxy_val >= 108:
+                _warn("bad",  f"DXY {dxy_val} 极强美元 (2022 危机水平, EM 严重承压)", "dxy_extreme")
+            elif dxy_val >= 105:
+                _warn("warn", f"DXY {dxy_val} 强美元 (>105, EM 股市历史承压)", "dxy_high")
+
+        # EEM 新兴市场股 (20d 表现 vs SPX 相对强弱)
+        eem_hist = yf.Ticker("EEM").history(period="30d")
+        spx_hist = yf.Ticker("SPY").history(period="30d")
+        if (eem_hist is not None and not eem_hist.empty and len(eem_hist) >= 21
+                and spx_hist is not None and not spx_hist.empty and len(spx_hist) >= 21):
+            eem_20d = round((float(eem_hist["Close"].iloc[-1]) / float(eem_hist["Close"].iloc[-21]) - 1) * 100, 2)
+            spx_20d = round((float(spx_hist["Close"].iloc[-1]) / float(spx_hist["Close"].iloc[-21]) - 1) * 100, 2)
+            eem_rel_spx = round(eem_20d - spx_20d, 2)
+            macro_context["eem_pct_20d"] = eem_20d
+            macro_context["eem_vs_spx_20d"] = eem_rel_spx
+            if eem_20d <= -10:
+                _warn("bad",  f"EEM 20d {eem_20d:+.1f}% 恐慌抛售 (EM 股市剧烈跑输)", "em_panic")
+            elif eem_rel_spx <= -5:
+                _warn("warn", f"EEM 20d {eem_20d:+.1f}% 明显跑输 SPX {spx_20d:+.1f}% ({eem_rel_spx:+.1f}pp)", "em_underperform")
+    except Exception:
+        pass
+
+    # RRP + TGA (Fed 流动性抽干指标)
+    rrp_rows = _fetch_fred_series("RRPONTSYD", days=15)
+    if rrp_rows:
+        rrp_bn = round(rrp_rows[0][1], 1)  # 单位已是 billions USD
+        macro_context["rrp_bn"] = rrp_bn
+        if rrp_bn <= 100:
+            _warn("warn", f"Fed 逆回购 (RRP) 仅剩 ${rrp_bn}B (2023 峰值 $2500B, 流动性明显抽干)", "rrp_drained")
+
+    tga_rows = _fetch_fred_series("WTREGEN", days=15)
+    if tga_rows:
+        # WTREGEN 单位是 Millions of Dollars → 转 Billions
+        tga_bn = round(tga_rows[0][1] / 1000, 1)
+        macro_context["tga_bn"] = tga_bn
+        if tga_bn >= 900:
+            _warn("info", f"Treasury 一般账户 (TGA) ${tga_bn}B (>900B, 债券发行/税收流入抽干流动性)", "tga_high")
+
+    # 稳定币市值 (CoinGecko free API) - USDT + USDC 影子美元
+    try:
+        import urllib.request as _u, json as _j
+        _url = "https://api.coingecko.com/api/v3/simple/price?ids=tether,usd-coin&vs_currencies=usd&include_market_cap=true"
+        _req = _u.Request(_url, headers={"User-Agent": "Mozilla/5.0"})
+        with _u.urlopen(_req, timeout=10) as _r:
+            _sc = _j.loads(_r.read())
+        _usdt = (_sc.get("tether") or {}).get("usd_market_cap")
+        _usdc = (_sc.get("usd-coin") or {}).get("usd_market_cap")
+        if _usdt and _usdc:
+            stablecoin_bn = round((_usdt + _usdc) / 1e9, 1)
+            macro_context["stablecoin_total_bn"] = stablecoin_bn
+            macro_context["usdt_bn"] = round(_usdt / 1e9, 1)
+            macro_context["usdc_bn"] = round(_usdc / 1e9, 1)
+            if stablecoin_bn >= 250:
+                _warn("info", f"稳定币影子美元 ${stablecoin_bn}B (USDT ${round(_usdt/1e9,0):.0f}B + USDC ${round(_usdc/1e9,0):.0f}B, 抽血 EM 通胀国 + 压低美债短端)", "stablecoin_large")
+    except Exception:
+        pass
     #     参照 BofA Hartnett 的 BBI，用免费数据近似（原版含 flow+positioning 需付费）
     #     4 项 z-score 平均（stress 越高 → BBI 越低 → contrarian bull）
     #     Historical baseline (2015-2024 exclude COVID):

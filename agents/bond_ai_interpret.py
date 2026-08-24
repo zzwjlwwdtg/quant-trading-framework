@@ -29,9 +29,10 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
 判读原则：
 - **不预测**具体涨跌，只解释**当前状态和为什么**
 - **多角度**：如果有相反证据（如利率高但信用平静），必须提到
-- **禁用术语**（除非配大白话解释）：ERP、OAS、term premium、duration、hedge ratio、NFCI
+- **禁用术语**（除非配大白话解释）：ERP、OAS、term premium、duration、hedge ratio、NFCI、DXY、RRP、TGA、EEM
 - **数字要有 anchor**：说"10Y 4.74%"没意义，要说"比过去 10 年平均高了差不多 1 个点"
 - 强调**这个观察是给你参考不是预测**
+- **全球视角**：如果数据显示美元太强/EM 崩跌/稳定币暴增/Fed 流动性抽干，必须提到这些**跨市场**信号对 US 股的传导（EM 危机 → risk-off → SPX 跌；稳定币抽美债 → 短端利率被压 → 曲线扭曲 等）
 """
 
 
@@ -73,6 +74,16 @@ def _make_prompt(bond_data: dict) -> str:
         "黄金对冲": {
             "GLD vs TIPS 相关性": (bond_data.get("gld_correlation") or {}).get("vs_tips_10y"),
             "GLD hedge 状态": (bond_data.get("gld_correlation") or {}).get("regime"),
+        },
+        "全球美元流动性 + 稳定币虹吸": {
+            "DXY 美元指数": mc.get("dxy") or "N/A",
+            "DXY 20d 变化": f"{mc.get('dxy_pct_20d')}%" if mc.get("dxy_pct_20d") is not None else "N/A",
+            "DXY 60d z-score": f"{mc.get('dxy_z_60d')}σ" if mc.get("dxy_z_60d") is not None else "N/A",
+            "EEM 新兴市场股 20d": f"{mc.get('eem_pct_20d')}%" if mc.get("eem_pct_20d") is not None else "N/A",
+            "EEM vs SPX 20d": f"{mc.get('eem_vs_spx_20d')}pp" if mc.get("eem_vs_spx_20d") is not None else "N/A",
+            "Fed 逆回购 RRP": f"${mc.get('rrp_bn')}B (2023 峰值 $2500B)" if mc.get("rrp_bn") is not None else "N/A",
+            "Treasury 一般账户 TGA": f"${mc.get('tga_bn')}B" if mc.get("tga_bn") is not None else "N/A",
+            "稳定币总市值 (USDT+USDC)": f"${mc.get('stablecoin_total_bn')}B (USDT ${mc.get('usdt_bn')}B + USDC ${mc.get('usdc_bn')}B)" if mc.get("stablecoin_total_bn") else "N/A",
         },
         "已触发警示": [
             {"level": w["level"], "msg": w["msg"]} for w in warnings

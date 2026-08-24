@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-24T11:31",
+  "asof": "2026-08-24T11:40",
   "yields": {
     "10y": {
       "value": 4.738,
@@ -234,6 +234,21 @@
       "level": "warn",
       "msg": "ERP 1.53% 股权风险溢价压缩到危险区 (SPX 尾随 EPS yield 3.88% − TIPS 2.35%，1985+ 仅 1987/2000/2007 出现过)",
       "key": "erp_low"
+    },
+    {
+      "level": "warn",
+      "msg": "Fed 逆回购 (RRP) 仅剩 $0.2B (2023 峰值 $2500B, 流动性明显抽干)",
+      "key": "rrp_drained"
+    },
+    {
+      "level": "info",
+      "msg": "Treasury 一般账户 (TGA) $953.6B (>900B, 债券发行/税收流入抽干流动性)",
+      "key": "tga_high"
+    },
+    {
+      "level": "info",
+      "msg": "稳定币影子美元 $256.8B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "key": "stablecoin_large"
     }
   ],
   "macro_context": {
@@ -248,6 +263,16 @@
     },
     "cdx_ig_bps": 82.0,
     "cdx_hy_bps": 275.0,
+    "dxy": 98.81,
+    "dxy_pct_20d": -2.66,
+    "dxy_z_60d": -1.23,
+    "eem_pct_20d": 5.98,
+    "eem_vs_spx_20d": 2.35,
+    "rrp_bn": 0.2,
+    "tga_bn": 953.6,
+    "stablecoin_total_bn": 256.8,
+    "usdt_bn": 183.2,
+    "usdc_bn": 73.6,
     "vix": 15.13,
     "bbi_score": 1.15,
     "bbi_components": {
@@ -258,8 +283,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-08-24T11:31:26.551339",
-    "age_sec": 96,
+    "cached_at": "2026-08-24T11:40:30.962091",
+    "age_sec": 159,
     "stale": false,
     "refreshing": false
   }
