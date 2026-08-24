@@ -3030,6 +3030,19 @@ def api_thesis_history(days: int = 180) -> dict:
         return {"error": str(e)[:200]}
 
 
+def api_trump_attribution() -> dict:
+    """Trump 帖子对 cut_prob 的影响归因。缓存 6h (帖子分析不需要每次算)。"""
+    def _compute():
+        try:
+            from trump_thesis_attribution import analyze_attribution
+            return analyze_attribution(min_magnitude="medium", window_hours=48)
+        except Exception as e:
+            return {"error": str(e)[:200]}
+    return _cached("trump_attribution", ttl_sec=6 * 3600, compute_fn=_compute,
+                   first_call_async=True,
+                   first_call_placeholder={"posts_analyzed": 0, "computing": True})
+
+
 def api_fed_watch() -> dict:
     """CME FedWatch 加息/降息预期。AI CLI + live web search，缓存 8h。首次异步。"""
     placeholder = {
@@ -4795,6 +4808,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_bond_monitor())
             elif path == "/api/bond_ai_interpret":
                 self._json(api_bond_ai_interpret())
+            elif path == "/api/trump_attribution":
+                self._json(api_trump_attribution())
             elif path == "/api/thesis_history":
                 # ?days=180 (default). qs 已在 do_GET 顶部解析
                 _days = 180

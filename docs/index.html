@@ -101,10 +101,15 @@
   .static-footer { display: none; margin: 20px 0 40px 0; padding: 16px; text-align: center;
     color: var(--muted); font-size: 11px; border-top: 1px solid var(--border); }
   body.static-snapshot .static-footer { display: block; }
+  /* Thesis 警戒线闪烁 (cut_prob 突破 60% 或跌破 20%) */
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.72; }
+  }
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T14:57:40", "endpoints_ok": 117, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T16:03:21", "endpoints_ok": 117, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1530,11 +1535,12 @@ function renderCutProbTrend(rows) {
 async function loadBondAIInterpret() {
   const el = document.getElementById('macro-ai-body');
   if (!el) return;
-  // 并发拉: AI 解读 + bond_monitor + thesis 历史
-  const [r, bond, history] = await Promise.all([
+  // 并发拉: AI 解读 + bond_monitor + thesis 历史 + Trump 归因
+  const [r, bond, history, tattr] = await Promise.all([
     fetchJson('/api/bond_ai_interpret'),
     fetchJson('/api/bond_monitor'),
     fetchJson('/api/thesis_history?days=180'),
+    fetchJson('/api/trump_attribution'),
   ]);
   const macroCtx = (bond && bond.macro_context) || {};
   const trendRows = (history && history.rows) || [];
@@ -1588,7 +1594,16 @@ async function loadBondAIInterpret() {
         const cutPct = t.cut_probability_pct;
         const cutPctColor = cutPct == null ? 'muted'
           : cutPct >= 65 ? 'ok' : cutPct >= 45 ? 'warn' : 'bad';
-        return `<div style="margin-bottom:6px; padding:8px 12px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:3px">
+        // 警戒线: >60 (thesis 明显 playing_out, 减仓) / <20 (数据强反 thesis, 别提前减仓)
+        const cutAlarm = cutPct != null && (cutPct >= 60 || cutPct <= 20);
+        const alarmColor = cutPct != null && cutPct >= 60 ? '#f85149' : '#3fb950';
+        const alarmMsg = cutPct != null && cutPct >= 60
+          ? `🚨 降息概率破 60% → thesis playing_out, 建议减仓风险持仓`
+          : `✅ 降息概率跌破 20% → 数据强反 thesis, 别提前减仓`;
+        return `<div style="margin-bottom:6px; padding:8px 12px; background:rgba(88,166,255,0.06); border-left:3px solid ${cutAlarm ? alarmColor : '#58a6ff'}; border-radius:3px; ${cutAlarm ? `animation: pulseGlow 1.8s ease-in-out infinite; box-shadow: 0 0 12px ${alarmColor}40;` : ''}">
+          ${cutAlarm ? `<div style="margin-bottom:6px; padding:5px 8px; background:${alarmColor}20; border:1px solid ${alarmColor}80; border-radius:3px; font-size:12.5px; font-weight:600; color:${alarmColor}; text-align:center">
+            ${alarmMsg}
+          </div>` : ''}
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:5px">
             <div style="flex:1; min-width:280px">
               <small style="color:var(--muted); font-size:9.5px">🎯 用户 thesis (10 月前有效)</small>
@@ -1620,6 +1635,43 @@ async function loadBondAIInterpret() {
             💡 <b>Thesis 相关操作</b>: ${t.action_around_thesis}
           </div>` : ''}
           ${trendRows.length >= 5 ? renderCutProbTrend(trendRows) : ''}
+          ${tattr && tattr.posts_analyzed >= 5 ? `
+            <details style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(139,148,158,0.2)">
+              <summary style="cursor:pointer; list-style:none; font-size:10.5px; color:var(--muted)">
+                🔍 <b style="color:#58a6ff">Trump 事件归因</b>
+                <small>· 已分析 ${tattr.posts_analyzed} 条帖子 · 平均对 cut_prob 影响 (48h 窗口)</small>
+              </summary>
+              <div style="margin-top:5px; font-size:10.5px">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:4px; margin-bottom:4px">
+                  ${Object.entries(tattr.by_event_type || {})
+                    .sort((a,b) => Math.abs(b[1].avg_delta) - Math.abs(a[1].avg_delta))
+                    .map(([et, s]) => {
+                      const cls = s.avg_delta > 0.3 ? 'ok' : s.avg_delta < -0.3 ? 'bad' : 'muted';
+                      return `<span title="${s.count} 条帖子, 累计 ${s.sum_delta}pp">
+                        ${et}: <b class="${cls}">${s.avg_delta >= 0 ? '+' : ''}${s.avg_delta.toFixed(2)}pp</b>
+                        <small style="color:var(--muted)">×${s.count}</small>
+                      </span>`;
+                    }).join('')}
+                </div>
+                <div style="font-size:10px; color:var(--muted); margin-top:3px">
+                  ▲ Top 3 mover 帖子:
+                </div>
+                ${(tattr.top_movers || []).slice(0, 3).map(m => {
+                  const dCls = m.delta > 0 ? 'ok' : 'bad';
+                  return `<div style="padding:3px 6px; margin-top:2px; background:rgba(88,166,255,0.04); border-left:2px solid ${m.delta > 0 ? '#3fb950' : '#f85149'}; font-size:10px">
+                    <span style="color:var(--muted)">${m.post_time.substring(0,10)}</span>
+                    <span class="badge muted" style="font-size:9px; padding:0 4px">${m.event_type}</span>
+                    <b class="${dCls}">${m.delta >= 0 ? '+' : ''}${m.delta}pp</b>
+                    <div style="color:var(--muted); font-size:9.5px; margin-top:1px" title="${(m.preview||'').replace(/"/g,'&quot;')}">
+                      ${(m.preview || '').substring(0, 70)}${m.preview && m.preview.length > 70 ? '…' : ''}
+                    </div>
+                  </div>`;
+                }).join('')}
+                <div style="font-size:9px; color:var(--muted); margin-top:4px">
+                  ⚠ 相关性不是因果 — 同期可能有其它宏观事件叠加
+                </div>
+              </div>
+            </details>` : ''}
         </div>`;
       })() : ''}
       <div style="margin-bottom:8px; padding:6px 4px; background:rgba(13,17,23,0.4); border:1px solid var(--border); border-radius:4px">

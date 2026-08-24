@@ -3,7 +3,7 @@ Orchestrator — 日K交易者模式，每天5个时间窗口。
 
 架构:
   08:30 ET  盘前扫描   — 隔夜风险 + 日K主信号
-  09:20 ET  开盘前扫描 — 日K主信号 + 策略回测 + 规则进化
+  09:20 ET  开盘前扫描 — 日K主信号 + 固定技术规则回测
   10:00 ET  开盘后确认 — 开盘价格确认 + 日K主信号
   12:00 ET  午盘跟踪   — 日K主信号，确认方向是否有变
   15:45 ET  收盘前确认 — 日K主信号 + 60分钟K入场辅助
@@ -21,7 +21,7 @@ import threading
 import time
 import sys
 import atexit
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -38,13 +38,44 @@ from paper_trader import (
     execute as trade_execute,
     monitor_software_stops,
     refresh_nav_peak,
+    sync_pending_entries_from_latest_signals,
 )
 from claude_gate import apply_claude_gate
 from trading_contracts import ORDER_ACTIONS
+from atomic_io import atomic_write_json
+from data_quality import PointInTimeStore, audit_latest_signal_files
 
 ET = ZoneInfo("America/New_York")
 
 GOLD_TICKER = "US.GLD"
+SIGNALS_PATH = Path(__file__).parent / "signals"
+_PIT_MARKET_STORE = PointInTimeStore(SIGNALS_PATH / "point_in_time_market.jsonl")
+
+
+def _sync_auto_orders_after_ai_refresh(result: dict) -> None:
+    """新 AI 价位文件落盘后，立即把系统未成交限价同步到新版本。"""
+    if not result.get("targets_path"):
+        return
+    try:
+        changes = sync_pending_entries_from_latest_signals()
+        if changes:
+            logger.info(f"[auto-orders] AI 目标刷新后已同步: {changes}")
+        else:
+            logger.info("[auto-orders] AI 目标已刷新；当前无待改价/撤销的系统限价单")
+    except Exception as exc:
+        logger.exception(f"[auto-orders] AI 目标刷新后的挂单同步失败: {exc}")
+
+
+def _record_point_in_time_market(ticker: str, market: dict) -> None:
+    """Persist exactly what the system knew when a decision was made."""
+    try:
+        _PIT_MARKET_STORE.append(
+            source=f"market:{ticker}",
+            payload={"ticker": ticker, "market": market},
+            observed_at=datetime.now(timezone.utc),
+        )
+    except Exception as exc:
+        logger.warning(f"[data-quality] point-in-time snapshot skipped for {ticker}: {exc}")
 
 
 # ── B. 单实例锁 ────────────────────────────────────────────────────────────
@@ -116,7 +147,7 @@ def _release_lock() -> None:
 _CRITICAL_SOURCE_FILES = (
     "orchestrator.py", "paper_trader.py", "decision_agent.py",
     "trading_contracts.py", "claude_gate.py", "ai_prompt.py",
-    "config.py",   # TRACKED_TICKERS / TICKERS 变了要重启 orchestrator
+    "config.py", "option_flow.py",  # universe / option risk changes require reload
 )
 _STARTUP_MTIMES: dict[str, float] = {}
 
@@ -250,22 +281,9 @@ def _run_report(session_type: str) -> None:
     except Exception as exc:
         logger.error(t(f"报告生成失败: {exc}", f"レポート生成失敗: {exc}"))
 
-    # 开盘时运行策略回测 + 进化器
+    # 开盘时运行固定、可解释的技术形态回测。
+    # 随机交叉/进化规则已退出实时系统，避免过拟合数据干扰交易与 AI 解读。
     if session_type == "open":
-        try:
-            from strategy_engine import fetch_kline_history
-            from strategy_evolver import run_evolver
-            for tkr in TICKERS + [GOLD_TICKER]:
-                df = fetch_kline_history(tkr)
-                if df is not None and len(df) >= 80:
-                    survivors, _ = run_evolver(tkr, df, is_gold=(tkr == GOLD_TICKER))
-                    logger.info(t(
-                        f"  [{tkr.split('.')[-1]}] 规则进化完成: {len(survivors)} 条规则",
-                        f"  [{tkr.split('.')[-1]}] ルール進化完了: {len(survivors)} 件",
-                    ))
-        except Exception as exc:
-            logger.error(t(f"规则进化失败: {exc}", f"ルール進化失敗: {exc}"))
-
         # 技术形态胜率排行（历史回测视图）
         try:
             from strategy_engine import generate_pattern_leaderboard
@@ -386,33 +404,34 @@ def _run_report(session_type: str) -> None:
             logger.error(t(f"SOX PCA 分析失败: {exc}",
                            f"SOX PCA 解析失敗: {exc}"))
 
-        # === AI Brief 汇总：把 Claude 截尾后会漏看的"领先指标"集中重打印 ===
-        # 这块紧贴 Claude CLI 之前 → 100% 落在 trimmed 28K 内
+        # === AI Brief 汇总：把 CLI 上下文截尾后会漏看的"领先指标"集中重打印 ===
+        # 这块紧贴 AI CLI 之前 → 100% 落在 trimmed 28K 内
         # 包含：双时区时钟 + 夜盘期货 + 15min 短线 alert + Trump 关键信号
         try:
             _emit_ai_brief()
         except Exception as exc:
             logger.error(t(f"AI Brief 失败: {exc}", f"AI Brief 失敗: {exc}"))
 
-        # === 最后：Claude CLI 综合解读（基于上面所有数据"说人话"） ===
+        # === 最后：AI CLI 综合解读（基于上面所有数据"说人话"） ===
         # 必须放在最末——这样 ai_prompt 读 today log 时能看到完整结构化分析
         # 屏幕上也是用户最后看到的，重要总结不会被顶走
         try:
             from ai_prompt import auto_analyze, print_analysis
             from config import get_today_log_path
             logger.info("\n" + "█" * 64)
-            logger.info(t("█  Claude 综合解读（说人话）  █",
-                          "█  Claude 総合解読（わかりやすく）  █"))
+            logger.info(t("█  AI 综合解读（说人话）  █",
+                          "█  AI 総合解読（わかりやすく）  █"))
             logger.info("█" * 64)
-            logger.info(t("调用本地 Claude CLI 综合上述全部数据生成解读（额度满时切 Codex CLI）...",
-                          "ローカル Claude CLI で上記データを総合解読（上限時は Codex CLI）..."))
+            logger.info(t("调用本地 AI CLI 综合上述数据（默认 Codex，不自动回退 Claude）...",
+                          "ローカル AI CLI で上記データを総合解読（既定 Codex、Claude 自動切替なし）..."))
             r = auto_analyze("morning")
             if r.get("status") == "ok":
-                provider = r.get("provider", "Claude")
+                _sync_auto_orders_after_ai_refresh(r)
+                provider = r.get("provider", "Codex")
                 if r.get("fallback_reason"):
                     logger.info(t(
-                        f"  Claude 额度/限流不可用，已切换到 Codex CLI: {r['fallback_reason']}",
-                        f"  Claude の上限/制限で不可。Codex CLI に切替: {r['fallback_reason']}",
+                        f"  主 CLI 不可用，已按显式策略切换: {r['fallback_reason']}",
+                        f"  主 CLI が利用不可。明示設定に従い切替: {r['fallback_reason']}",
                     ))
                 header = t(f"{provider} 早盘策略", f"{provider} 寄付戦略")
                 logger.info(f"\n{'='*64}\n{header}:\n{'='*64}")
@@ -420,17 +439,17 @@ def _run_report(session_type: str) -> None:
                 logger.info(f"{'='*64}\n  " +
                             t(f"详见: {r['analysis_path']}",
                               f"詳細: {r['analysis_path']}"))
-            elif r.get("status") == "not_installed":
-                logger.info(t(f"  Claude CLI 未安装；提问稿: {r.get('prompt_path')}",
-                              f"  Claude CLI 未インストール；質問稿: {r.get('prompt_path')}"))
+            elif str(r.get("status", "")).endswith("not_installed"):
+                logger.info(t(f"  AI CLI 未安装；提问稿: {r.get('prompt_path')}",
+                              f"  AI CLI 未インストール；質問稿: {r.get('prompt_path')}"))
             else:
                 logger.info(t(
-                    f"  Claude CLI 调用失败 ({r.get('status')})；提问稿: {r.get('prompt_path')}",
-                    f"  Claude CLI 呼出失敗 ({r.get('status')})；質問稿: {r.get('prompt_path')}",
+                    f"  AI CLI 调用失败 ({r.get('status')})；提问稿: {r.get('prompt_path')}",
+                    f"  AI CLI 呼出失敗 ({r.get('status')})；質問稿: {r.get('prompt_path')}",
                 ))
         except Exception as exc:
-            logger.error(t(f"Claude 综合解读失败: {exc}",
-                           f"Claude 総合解読失敗: {exc}"))
+            logger.error(t(f"AI 综合解读失败: {exc}",
+                           f"AI 総合解読失敗: {exc}"))
 
     # 收盘时运行每日复盘
     if session_type == "close":
@@ -442,25 +461,26 @@ def _run_report(session_type: str) -> None:
         except Exception as exc:
             logger.error(t(f"每日复盘失败: {exc}", f"日次復盤失敗: {exc}"))
 
-        # === 最后：Claude CLI 综合复盘（基于上述全部数据"说人话"） ===
+        # === 最后：AI CLI 综合复盘（基于上述全部数据"说人话"） ===
         try:
             from ai_prompt import auto_analyze, print_analysis
             from config import get_today_log_path
             logger.info("\n" + "█" * 64)
-            logger.info(t("█  Claude 综合复盘（说人话）  █",
-                          "█  Claude 総合復盤（わかりやすく）  █"))
+            logger.info(t("█  AI 综合复盘（说人话）  █",
+                          "█  AI 総合復盤（わかりやすく）  █"))
             logger.info("█" * 64)
             logger.info(t(
-                "调用本地 Claude CLI 综合上述全部数据生成复盘（额度满时切 Codex CLI）...",
-                "ローカル Claude CLI で上記データを総合復盤（上限時は Codex CLI）...",
+                "调用本地 AI CLI 综合上述数据（默认 Codex，不自动回退 Claude）...",
+                "ローカル AI CLI で上記データを総合復盤（既定 Codex、Claude 自動切替なし）...",
             ))
             r = auto_analyze("review")
             if r.get("status") == "ok":
-                provider = r.get("provider", "Claude")
+                _sync_auto_orders_after_ai_refresh(r)
+                provider = r.get("provider", "Codex")
                 if r.get("fallback_reason"):
                     logger.info(t(
-                        f"  Claude 额度/限流不可用，已切换到 Codex CLI: {r['fallback_reason']}",
-                        f"  Claude の上限/制限で不可。Codex CLI に切替: {r['fallback_reason']}",
+                        f"  主 CLI 不可用，已按显式策略切换: {r['fallback_reason']}",
+                        f"  主 CLI が利用不可。明示設定に従い切替: {r['fallback_reason']}",
                     ))
                 header = t(f"{provider} 复盘总结", f"{provider} 復盤まとめ")
                 logger.info(f"\n{'='*64}\n{header}:\n{'='*64}")
@@ -468,10 +488,10 @@ def _run_report(session_type: str) -> None:
                 logger.info(f"{'='*64}\n  " +
                             t(f"详见: {r['analysis_path']}",
                               f"詳細: {r['analysis_path']}"))
-            elif r.get("status") == "not_installed":
+            elif str(r.get("status", "")).endswith("not_installed"):
                 logger.info(t(
-                    f"  Claude CLI 未安装；提问稿已生成: {r['prompt_path']}",
-                    f"  Claude CLI 未インストール；質問稿生成済: {r['prompt_path']}",
+                    f"  AI CLI 未安装；提问稿已生成: {r['prompt_path']}",
+                    f"  AI CLI 未インストール；質問稿生成済: {r['prompt_path']}",
                 ))
                 logger.info(t(
                     f"  剪贴板状态: {'已复制' if r.get('clip_ok') else '未复制'}",
@@ -479,8 +499,8 @@ def _run_report(session_type: str) -> None:
                 ))
             else:
                 logger.info(t(
-                    f"  Claude CLI 调用失败 ({r.get('status')})；提问稿: {r.get('prompt_path')}",
-                    f"  Claude CLI 呼出失敗 ({r.get('status')})；質問稿: {r.get('prompt_path')}",
+                    f"  AI CLI 调用失败 ({r.get('status')})；提问稿: {r.get('prompt_path')}",
+                    f"  AI CLI 呼出失敗 ({r.get('status')})；質問稿: {r.get('prompt_path')}",
                 ))
         except Exception as exc:
             logger.error(t(f"AI 复盘失败: {exc}",
@@ -488,17 +508,17 @@ def _run_report(session_type: str) -> None:
 
 
 def _emit_ai_brief() -> None:
-    """汇总"领先指标"在 Claude CLI 之前重打印一次，确保 trimmed 28K 一定包含。
+    """汇总"领先指标"在 AI CLI 之前重打印一次，确保 trimmed 28K 一定包含。
 
-    1. 双时区时钟（ET + JST）防 Claude 时区误读
+    1. 双时区时钟（ET + JST）防模型时区误读
     2. 夜盘期货 NQ/ES/GC 重打印（之前在 run_cycle 早期，会被 PCA 顶走）
     3. 15min 短线 alert / context 汇总（每只 ETF 一行）
     4. Trump signal 强信号复述（large/extreme 的 verbatim 证据）
     """
     from datetime import datetime as _dt, timezone as _tz, timedelta as _td
     logger.info("\n" + "█" * 64)
-    logger.info(t("█  AI Brief（领先指标汇总，给 Claude 看的）  █",
-                  "█  AI Brief（先行指標サマリー、Claude 用）  █"))
+    logger.info(t("█  AI Brief（领先指标汇总，给 AI CLI）  █",
+                  "█  AI Brief（先行指標サマリー、AI CLI 用）  █"))
     logger.info("█" * 64)
 
     # 1. 双时区时钟
@@ -510,8 +530,8 @@ def _emit_ai_brief() -> None:
             f"  時刻: ET {et.strftime('%Y-%m-%d %H:%M')} = JST {jst.strftime('%Y-%m-%d %H:%M')}",
         ))
         logger.info(t(
-            "  ⚠ log 里所有日期标签都按 ET 时区。Claude 解读时'今天'= ET 日期，不要按 JST 推断",
-            "  ⚠ log の日付ラベルは全て ET 時区。Claude の'今日'= ET 日付、JST で推測しない",
+            "  ⚠ log 里所有日期标签都按 ET 时区。AI 解读时'今天'= ET 日期，不要按 JST 推断",
+            "  ⚠ log の日付ラベルは全て ET 時区。AI の'今日'= ET 日付、JST で推測しない",
         ))
     except Exception:
         pass
@@ -622,6 +642,7 @@ def _etf_cycle(events_signal: dict, macro: dict, window: str | None = None,
     for ticker in iter_tickers:
         try:
             mkt      = get_market_signal(ticker)
+            _record_point_in_time_market(ticker, mkt)
             confl    = get_confluence(mkt)
             decision = get_decision(mkt, events_signal, macro,
                                     confluence=confl, board_regime=board_regime)
@@ -680,7 +701,13 @@ def _gold_cycle(macro: dict, window: str | None = None) -> None:
         board_regime = None
     try:
         events   = get_gold_events_signal()
+        try:
+            from option_flow import load_option_flow_signal
+            events["options_flow"] = load_option_flow_signal()
+        except Exception:
+            pass
         mkt      = get_futures_signal(GOLD_TICKER)
+        _record_point_in_time_market(GOLD_TICKER, mkt)
         decision = get_gold_decision(mkt, events, macro, board_regime=board_regime)
         decision["session"] = _session()
         decision["confluence"] = get_confluence(mkt)
@@ -711,7 +738,7 @@ def _gold_cycle(macro: dict, window: str | None = None) -> None:
 
 
 def _refresh_universe() -> None:
-    """pre-open: 算 regime → 选今日卫星池 → 给新 picks 跑 evolver → 调 trader.apply_universe。
+    """pre-open: 算 regime → 选今日卫星池 → 调 trader.apply_universe。
 
     架构原则（5-29 用户原话）：知道现在是哪种 regime，**根据这个为前提**给决策。
     """
@@ -750,31 +777,6 @@ def _refresh_universe() -> None:
         picks_result = pick_today_universe(regime=regime)
         for line in format_picks_report(picks_result):
             logger.info(line)
-
-        # 7c: 给"今日新 picks 但还没有 evolved_rules"的票跑一次 evolver
-        try:
-            from pathlib import Path
-            from config import SIGNALS_DIR
-            from strategy_evolver import run_evolver
-            from strategy_engine import fetch_kline_history
-            for p in (picks_result.get("picks") or []):
-                tk = p["ticker_full"]
-                rp = Path(SIGNALS_DIR) / f"evolved_rules_{tk.replace('.', '-')}.json"
-                if rp.exists():
-                    continue
-                logger.info(t(f"  [evolver] 新 pick {tk} 无规则，启动进化...",
-                              f"  [evolver] 新 pick {tk} ルールなし、進化開始..."))
-                df = fetch_kline_history(tk)
-                if df is None or len(df) < 80:
-                    logger.warning(t(f"  [evolver] {tk} K线不足，跳过",
-                                     f"  [evolver] {tk} K線不足、スキップ"))
-                    continue
-                survivors, _ = run_evolver(tk, df)
-                logger.info(t(f"  [evolver] {tk} 进化完成: {len(survivors)} 条规则",
-                              f"  [evolver] {tk} 進化完了: {len(survivors)} 件"))
-        except Exception as exc:
-            logger.error(t(f"[universe] evolver-on-new-picks 失败: {exc}",
-                           f"[universe] evolver-on-new-picks 失敗: {exc}"))
 
         try:
             r = apply_universe(picks_result)
@@ -819,6 +821,25 @@ def run_cycle(window: str | None = None) -> None:
         _ensure_current_regime()
     macro = _build_macro()
     equity_events = get_events_signal()
+    # The multi-expiry network scan runs in a daemon thread.  Decision cycles
+    # consume only the last atomically completed snapshot, so a slow provider
+    # can never delay risk checks or broker actions.
+    try:
+        from option_flow import load_option_flow_signal
+        options_flow = load_option_flow_signal()
+        equity_events["options_flow"] = options_flow
+        positions = options_flow.get("positions") or {}
+        active = [
+            f"{ticker}:{info.get('direction')} {info.get('score')}"
+            for ticker, info in positions.items()
+            if isinstance(info, dict) and int(info.get("score") or 0) >= 40
+        ]
+        logger.info(
+            "[options-flow] "
+            + (", ".join(active) if active else options_flow.get("status", "no active flow"))
+        )
+    except Exception as exc:
+        logger.warning(f"[options-flow] latest snapshot unavailable: {exc}")
     # 关联个股财报 implied move：MU 财报前 30 天内自动注入到 events，
     # decision_agent._apply_earnings_guard 据此屏蔽 DRAM/MULL（必要时还有 SOXL/TQQQ→NVDA）
     try:
@@ -890,6 +911,25 @@ def run_cycle(window: str | None = None) -> None:
         logger.error(t(f"卫星仓 cycle 失败: {exc}",
                        f"サテライト cycle 失敗: {exc}"))
 
+    # 全局数据质量审计仅做观测；逐笔 BUY 的硬门控在 paper_trader 内执行。
+    try:
+        quality = audit_latest_signal_files(SIGNALS_PATH)
+        atomic_write_json(SIGNALS_PATH / "data_quality_report.json", quality)
+        logger.info(
+            f"[data-quality] {quality['status']} checked={quality['checked_files']} "
+            f"critical={quality['critical_files']} warning={quality['warning_files']}"
+        )
+    except Exception as exc:
+        logger.warning(f"[data-quality] audit skipped: {exc}")
+
+    # 每 cycle 顺便追加 thesis_history 快照 (12h throttle, 不灌水)
+    try:
+        from bond_monitor import get_bond_monitor
+        from thesis_history import append_snapshot as _thesis_append
+        _thesis_append(get_bond_monitor())
+    except Exception as _exc:
+        logger.warning(f"[thesis_history] append skipped: {_exc}")
+
     # 检查是否到了报告生成时间
     trigger = _report_trigger()
     if trigger:
@@ -943,6 +983,7 @@ def _software_stop_tick() -> None:
 
 
 _software_stop_thread: threading.Thread | None = None
+_option_flow_thread: threading.Thread | None = None
 
 
 def _software_stop_loop() -> None:
@@ -964,6 +1005,48 @@ def _start_software_stop_monitor() -> threading.Thread:
     )
     _software_stop_thread.start()
     return _software_stop_thread
+
+
+def _option_flow_tick() -> None:
+    """Refresh the small-universe option monitor without blocking decisions."""
+    try:
+        from option_flow import refresh_option_flow, should_refresh_now
+        if not should_refresh_now():
+            return
+        result = refresh_option_flow()
+        active = [
+            f"{ticker}:{info.get('direction')} {info.get('score')}"
+            for ticker, info in (result.get("positions") or {}).items()
+            if isinstance(info, dict) and int(info.get("score") or 0) >= 40
+        ]
+        logger.info(
+            "[options-flow-refresh] complete"
+            + (f" active={'; '.join(active)}" if active else " active=none")
+        )
+    except Exception as exc:
+        logger.exception(f"[options-flow-refresh] failed: {exc}")
+
+
+def _option_flow_loop() -> None:
+    from option_flow import REFRESH_SEC
+    while True:
+        started = time.monotonic()
+        _option_flow_tick()
+        elapsed = time.monotonic() - started
+        threading.Event().wait(max(60.0, REFRESH_SEC - elapsed))
+
+
+def _start_option_flow_monitor() -> threading.Thread:
+    global _option_flow_thread
+    if _option_flow_thread is not None and _option_flow_thread.is_alive():
+        return _option_flow_thread
+    _option_flow_thread = threading.Thread(
+        target=_option_flow_loop,
+        name="option-flow-monitor",
+        daemon=True,
+    )
+    _option_flow_thread.start()
+    return _option_flow_thread
 
 
 def main() -> None:
@@ -1004,6 +1087,8 @@ def main() -> None:
 
     # 风控用独立守护线程，避免长扫描/Claude 调用阻塞一分钟巡检。
     _start_software_stop_monitor()
+    # 期权全期限扫描独立运行；默认每 30 分钟刷新小型代理池。
+    _start_option_flow_monitor()
 
     startup_window = _in_daily_window()
     if startup_window:

@@ -2,45 +2,71 @@
   "ticker": "5714.T",
   "flow": null,
   "anomaly": {
-    "detected": false,
-    "reason": "",
-    "score": 0.0,
-    "peak_bars": [],
-    "day_ratio": 0.95,
+    "detected": true,
+    "reason": "8/24 09:00 6.48× 均值 · 主动买 ¥15.83億 (@¥10360.0)",
+    "score": 0.36999999999999994,
+    "peak_bars": [
+      {
+        "time": "09:00",
+        "vol": 152800,
+        "ratio": 6.48,
+        "open": 10335.0,
+        "price": 10360.0,
+        "chg_pct": 0.24,
+        "direction": "buy",
+        "value_oku": 15.83,
+        "date": "2026-08-24",
+        "tier": "ratio_spike"
+      }
+    ],
+    "day_ratio": 1.17,
     "trading_date": "2026-08-24",
     "date_short": "8/24",
-    "net_bias": "neutral",
-    "buy_shares": 0,
+    "net_bias": "buy",
+    "buy_shares": 152800,
     "sell_shares": 0,
-    "buy_value_oku": 0,
+    "buy_value_oku": 15.83,
     "sell_value_oku": 0,
     "days": [
       {
         "trading_date": "2026-08-24",
         "date_short": "8/24",
-        "peak_bars": [],
+        "peak_bars": [
+          {
+            "time": "09:00",
+            "vol": 152800,
+            "ratio": 6.48,
+            "open": 10335.0,
+            "price": 10360.0,
+            "chg_pct": 0.24,
+            "direction": "buy",
+            "value_oku": 15.83,
+            "date": "2026-08-24",
+            "tier": "ratio_spike"
+          }
+        ],
         "slices": [],
-        "day_ratio": 0.95,
-        "day_chg_pct": -0.1,
+        "day_ratio": 1.17,
+        "day_chg_pct": -0.44,
         "day_open": 10335.0,
-        "day_close": 10325.0,
-        "net_bias": "neutral",
-        "buy_shares": 0,
+        "day_close": 10290.0,
+        "net_bias": "buy",
+        "buy_shares": 152800,
         "sell_shares": 0,
-        "buy_value_oku": 0,
+        "buy_value_oku": 15.83,
         "sell_value_oku": 0,
-        "full_bias": "neutral",
-        "full_up_shares": 271400,
-        "full_down_shares": 204000,
-        "full_up_value_oku": 28.23,
-        "full_down_value_oku": 21.14
+        "full_bias": "buy",
+        "full_up_shares": 351900,
+        "full_down_shares": 232100,
+        "full_up_value_oku": 36.56,
+        "full_down_value_oku": 24.03
       },
       {
         "trading_date": "2026-08-21",
         "date_short": "8/21",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 1.17,
+        "day_ratio": 1.15,
         "day_chg_pct": 3.28,
         "day_open": 9789.0,
         "day_close": 10110.0,
@@ -73,7 +99,7 @@
             "tier": "multi_bar"
           }
         ],
-        "day_ratio": 1.39,
+        "day_ratio": 1.37,
         "day_chg_pct": 0.48,
         "day_open": 9716.0,
         "day_close": 9763.0,
@@ -93,7 +119,7 @@
         "date_short": "8/19",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 1.02,
+        "day_ratio": 1.01,
         "day_chg_pct": -0.88,
         "day_open": 9407.0,
         "day_close": 9324.0,
@@ -113,7 +139,7 @@
         "date_short": "8/18",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.65,
+        "day_ratio": 0.64,
         "day_chg_pct": -1.62,
         "day_open": 9716.0,
         "day_close": 9559.0,
@@ -129,17 +155,32 @@
         "full_down_value_oku": 16.08
       }
     ],
-    "highlights": [],
+    "highlights": [
+      {
+        "time": "09:00",
+        "vol": 152800,
+        "ratio": 6.48,
+        "open": 10335.0,
+        "price": 10360.0,
+        "chg_pct": 0.24,
+        "direction": "buy",
+        "value_oku": 15.83,
+        "date": "2026-08-24",
+        "tier": "ratio_spike",
+        "_score": 102.58,
+        "date_short": "8/24"
+      }
+    ],
     "thresholds": {
       "ratio_min": 5.0,
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-08-24 14:35 JST",
+  "asof": "2026-08-24 15:20 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-08-24T14:54:21.854703",
-    "age_sec": 197,
+    "cached_at": "2026-08-24T16:00:05.108487",
+    "age_sec": 196,
     "stale": false,
     "refreshing": false
   }
