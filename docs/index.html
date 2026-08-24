@@ -104,7 +104,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-24T12:35:36", "endpoints_ok": 117, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-24T13:03:04", "endpoints_ok": 117, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1311,7 +1311,7 @@ function renderMacroChain(r, macroCtx) {
   const volKeyMap = {
     rates: 'rates', real_rates: 'real_rates', dxy: 'dxy',
     credit: 'credit_hy',
-    vol: 'vol', em: 'em',
+    vol: 'vol', em: 'em', oil: 'oil',
     us_equity: 'us_equity',   // SPY 量能
     jp_equity: 'jp_equity',   // EWJ 代 N225
     kr_equity: 'kr_equity',   // EWY 代 KOSPI
@@ -1332,9 +1332,10 @@ function renderMacroChain(r, macroCtx) {
     erp:        { x: 275, y: 310, label: '股权溢价' },
     nfci:       { x: 475, y: 310, label: '金融条件' },
     stablecoin: { x: 700, y: 310, label: '稳定币' },
-    // Row 4: credit + EM
+    // Row 4: credit + EM + oil (oil 独立 driver, Trump 压油价 thesis)
     credit:     { x: 475, y: 400, label: '信用市场' },
     em:         { x: 700, y: 400, label: '新兴市场' },
+    oil:        { x: 80,  y: 400, label: '油价' },
     // Row 5: volatility
     vol:        { x: 475, y: 490, label: '波动率' },
     // Row 6: BBI aggregate
@@ -1358,32 +1359,43 @@ function renderMacroChain(r, macroCtx) {
   ];
   // direction → color (green=好/calm, muted=中性, warn=偏差, bad=极端)
   const dirColor = {
-    // green
+    // green (good/calm)
     loose:'#3fb950', calm:'#3fb950', normal:'#3fb950', resilient:'#3fb950',
     outperforming:'#3fb950', low:'#3fb950', stable:'#3fb950', weak:'#3fb950',
     cheap:'#3fb950', fear:'#3fb950',
+    // economy: 好状态
+    healthy:'#3fb950', target:'#3fb950', cooling:'#3fb950',
     // muted
     neutral:'#8b949e', fair:'#8b949e', flat:'#8b949e', inverted:'#8b949e',
-    // yellow
+    softening:'#8b949e', deflationary:'#8b949e',
+    // yellow (warn)
     elevated:'#d29922', compressed:'#d29922', weakening:'#d29922',
     growing:'#d29922', strong:'#d29922', steep:'#d29922', greed:'#d29922',
-    widening:'#d29922', underperforming:'#d29922',
-    // red
+    widening:'#d29922', underperforming:'#d29922', rising:'#d29922',
+    falling:'#d29922',  // 油价 falling = 支持 thesis (中性偏警戒)
+    // red (bad)
     extreme:'#f85149', stress:'#f85149', panic:'#f85149', tightening:'#f85149',
     crashing:'#f85149', breaking:'#f85149', crisis:'#f85149', surging:'#f85149',
-    extreme_fear:'#f85149', tight:'#f85149',
+    extreme_fear:'#f85149', tight:'#f85149', hot:'#f85149', recession:'#f85149',
   };
   const dirArrow = {
     loose:'↓', calm:'→', normal:'→', resilient:'→', outperforming:'↑',
     low:'↓', stable:'→', weak:'↓', cheap:'↓', fear:'↓',
+    healthy:'→', target:'→', cooling:'↓',
     neutral:'→', fair:'→', flat:'→', inverted:'⚠',
+    softening:'↓', deflationary:'↓↓',
     elevated:'↑', compressed:'↑', weakening:'↓', growing:'↑', strong:'↑',
-    steep:'↑', greed:'↑', widening:'↑', underperforming:'↓',
+    steep:'↑', greed:'↑', widening:'↑', underperforming:'↓', rising:'↑',
+    falling:'↓',
     extreme:'↑↑', stress:'↑↑', panic:'↑↑', tightening:'↑↑',
     crashing:'↓↓', breaking:'↓↓', crisis:'↓↓', surging:'↑↑',
-    extreme_fear:'↓↓', tight:'↑↑',
+    extreme_fear:'↓↓', tight:'↑↑', hot:'↑↑', recession:'↓↓',
   };
   const blocked = r.chain_blocked_at;
+  // 用户 thesis 支持/反对节点 —— 添加左上角小标记
+  const thesis = r.user_thesis_check || {};
+  const thesisSupport = new Set(thesis.supporting_nodes || []);
+  const thesisAgainst = new Set(thesis.contradicting_nodes || []);
   const truncNote = (n, max=16) => {
     if (!n) return '数据不足';
     return n.length > max ? n.substring(0, max) + '…' : n;
@@ -1428,9 +1440,19 @@ function renderMacroChain(r, macroCtx) {
       volTooltip = ` · 量能: ${proxy} z=${z >= 0 ? '+' : ''}${z}σ (${z >= 1 ? '放量' : z <= -1 ? '缩量' : '正常'})`;
       volBadge = `<text x="${pos.x + 62}" y="${pos.y - 5}" font-size="11" fill="${iconColor}" font-weight="600" title="${proxy} volume z-score">${icon}</text>`;
     }
+    // Thesis 支持/反对小标记 (左上角)
+    let thesisMark = '';
+    let thesisTip = '';
+    if (thesisSupport.has(key)) {
+      thesisMark = `<text x="${pos.x - 66}" y="${pos.y - 8}" font-size="11" fill="#3fb950" font-weight="600">🎯</text>`;
+      thesisTip = ' · 🎯 支持 Trump 降息 thesis';
+    } else if (thesisAgainst.has(key)) {
+      thesisMark = `<text x="${pos.x - 66}" y="${pos.y - 8}" font-size="11" fill="#f85149">✕</text>`;
+      thesisTip = ' · ✕ 反驳 Trump 降息 thesis';
+    }
     return `
       <g>
-        <title>${pos.label} · ${dirLabel} · ${fullNote}${volTooltip}${isBlocked ? ' · 🛑 传导链在此断裂' : ''}</title>
+        <title>${pos.label} · ${dirLabel} · ${fullNote}${volTooltip}${thesisTip}${isBlocked ? ' · 🛑 传导链在此断裂' : ''}</title>
         <rect x="${pos.x - 72}" y="${pos.y - 18}" width="144" height="50" rx="5"
               fill="rgba(22,27,34,0.92)" stroke="${stroke}" stroke-width="${strokeWidth}"${strokeDashAttr}/>
         <text x="${pos.x}" y="${pos.y - 2}" text-anchor="middle" fill="#c9d1d9" font-size="11.5" font-weight="600">
@@ -1438,6 +1460,7 @@ function renderMacroChain(r, macroCtx) {
         </text>
         <text x="${pos.x}" y="${pos.y + 18}" text-anchor="middle" fill="#8b949e" font-size="9.5">${note}</text>
         ${volBadge}
+        ${thesisMark}
       </g>`;
   }).join('');
   // 边渲染：如果 target 是 blocked 节点 → 该边标红加粗（阻断在此发生）
@@ -1512,11 +1535,41 @@ async function loadBondAIInterpret() {
       <b>🎯 ${summary || '暂无总结'}</b>
     </div>
     ${hasTree ? `
+      ${r.user_thesis_check ? (() => {
+        const t = r.user_thesis_check;
+        const statusMap = {
+          'playing_out': {cls: 'bad',   text: '✓ Playing Out', desc: '证据链在走, thesis 成型中'},
+          'mixed':       {cls: 'warn',  text: '⚠ 分歧',        desc: '证据混杂, thesis 部分成立'},
+          'against':     {cls: 'ok',    text: '✕ 反驳',        desc: '数据反向, thesis 未成立'},
+          'no_evidence': {cls: 'muted', text: '· 无证据',      desc: '数据不足评估'},
+        };
+        const sm = statusMap[t.status] || statusMap['no_evidence'];
+        const sup = (t.supporting_nodes || []).length;
+        const con = (t.contradicting_nodes || []).length;
+        return `<div style="margin-bottom:6px; padding:6px 10px; background:rgba(88,166,255,0.06); border-left:3px solid #58a6ff; border-radius:3px">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:3px">
+            <span style="font-size:11.5px">
+              <b>🎯 用户 thesis (10 月前有效)</b>:
+              <small style="color:var(--muted)">Trump 逼 Fed 降息 → 做坏市场 + 压油价</small>
+            </span>
+            <span class="badge ${sm.cls}" style="font-size:10px" title="${sm.desc}">
+              ${sm.text} · 支持 ${sup} vs 反驳 ${con}
+            </span>
+          </div>
+          <div style="font-size:11px; color:var(--fg)">
+            ${t.summary || ''}
+          </div>
+          ${t.action_around_thesis ? `<div style="margin-top:3px; font-size:10.5px; color:#d29922">
+            💡 <b>Thesis 相关操作</b>: ${t.action_around_thesis}
+          </div>` : ''}
+        </div>`;
+      })() : ''}
       <div style="margin-bottom:8px; padding:6px 4px; background:rgba(13,17,23,0.4); border:1px solid var(--border); border-radius:4px">
         <div style="font-size:10px; color:var(--muted); text-align:center; margin-bottom:4px">
           📊 宏观传导链
-          <small>· 节点色=状态 · → 平静 ↑上 ↓下 ↑↑极端 · <span style="color:#f85149">红色虚线箭头</span>=传导阻断
-          · <span style="color:#3fb950">⚡</span>放量复证 <span style="color:#f85149">↓</span>缩量假信号 · 悬停看数字</small>
+          <small>· 节点色=状态 · → ↑ ↓ ↑↑ · <span style="color:#f85149">红虚线</span>=传导阻断
+          · <span style="color:#3fb950">⚡</span>放量 <span style="color:#f85149">↓</span>缩量
+          · <span style="color:#3fb950">🎯</span>支持 thesis <span style="color:#f85149">✕</span>反驳 · 悬停看详情</small>
         </div>
         ${renderMacroChain(r, macroCtx)}
       </div>` : ''}
