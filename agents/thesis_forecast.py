@@ -298,46 +298,119 @@ def _get_fomc_probabilities(fed_watch: Optional[dict], event_date: str) -> Optio
     }
 
 
+# ── 按事件类型 × 方向定义 具体受益/受损 资产列表 (金十数据风格) ──────────
+_ASSET_MAP = {
+    # 利率敏感事件: dovish (cut_prob 升) = 降息预期强 = 全 risk-on
+    "CPI_dovish": {
+        "利多": ["科技股/纳指 (QQQ/NVDA)", "长债 (TLT)", "黄金 (GLD)", "REITs", "growth 股"],
+        "利空": ["USD (UUP)", "银行股 (XLF)", "能源股 (通胀对冲失效)"],
+    },
+    "CPI_hawkish": {
+        "利空": ["科技股/纳指 (长久期最伤)", "长债 (TLT 收益率飙)", "REITs", "growth 股"],
+        "利多": ["USD (UUP)", "能源/大宗 (通胀受益)", "银行股 (利差扩)", "黄金 (通胀对冲)"],
+    },
+    "PCE_dovish": {
+        "利多": ["科技股/纳指", "长债", "黄金", "REITs"],
+        "利空": ["USD", "银行股"],
+    },
+    "PCE_hawkish": {
+        "利空": ["科技股", "长债", "REITs", "growth 股"],
+        "利多": ["USD", "能源/大宗", "银行股", "黄金 (通胀对冲)"],
+    },
+    "FOMC_dovish": {
+        "利多": ["全部风险资产 (股/加密/HY 债)", "长债", "黄金", "REITs"],
+        "利空": ["USD (美元指数)"],
+    },
+    "FOMC_hawkish": {
+        "利空": ["科技股 (估值杀)", "长债", "黄金", "REITs", "新兴市场"],
+        "利多": ["USD 强化", "银行股"],
+    },
+    # 增长敏感事件
+    "NFP_dovish": {  # 就业弱 = 衰退担忧
+        "利多": ["长债 (避险)", "黄金 (避险)", "防御股 (公用/医疗 XLV/XLU)"],
+        "利空": ["消费股 (XLY/XRT)", "工业股 (XLI)", "银行股", "小盘股 (IWM)"],
+    },
+    "NFP_hawkish": {  # 就业强 = 加息压力
+        "利多": ["消费股 (XLY/XRT)", "工业股", "小盘股", "USD"],
+        "利空": ["长债", "growth 股 (加息预期)", "REITs"],
+    },
+    "PPI_dovish": {
+        "利多": ["长债", "growth 股 (成本降利润升)", "消费股"],
+        "利空": ["能源/材料"],
+    },
+    "PPI_hawkish": {
+        "利多": ["能源/材料", "大宗商品 (USO/GLD)"],
+        "利空": ["制造业 (成本升)", "长债"],
+    },
+    "Retail_Sales_dovish": {  # 消费弱 = 衰退担忧
+        "利多": ["长债", "防御股", "黄金"],
+        "利空": ["消费股", "小盘股"],
+    },
+    "Retail_Sales_hawkish": {  # 消费强 = 加息压力
+        "利多": ["消费股", "银行股", "小盘股"],
+        "利空": ["长债"],
+    },
+}
+
+
 def _market_impact_from_expected(event_type: str, expected_pp: float) -> dict:
-    """把 cut_prob 期望 delta 翻译成对债市/股市的影响.
+    """把 cut_prob 期望 delta 翻译成对债市/股市 + 具体标的的影响 (金十数据风格).
 
     传导逻辑:
-    · 债市: 与 cut_prob 强相关 (降息概率升 → 收益率降 → 债价升). 1:1 direct.
-    · 股市: 分两类事件:
+    · 债市: 与 cut_prob 强相关 (概率升 → 收益率降 → 债价升). 1:1 direct.
+    · 股市: 分两类事件
         - 利率敏感 (CPI/PCE/FOMC): 与 cut_prob 同向 (discount rate 主导)
-        - 增长敏感 (NFP/Retail/PPI): 与 cut_prob 反向 (经济强 = 利率高但盈利好, 混合)
+        - 增长敏感 (NFP/Retail/PPI): 反向 (经济强 = 利率高但盈利好, 净效应弱化)
+    · 具体标的: 用 _ASSET_MAP 查表, 按 dovish/hawkish 方向输出受益+受损列表
     """
-    def _label(pp: float, strong_thr=3.0, weak_thr=0.5) -> str:
-        if pp >= strong_thr: return "强利多"
-        if pp >= weak_thr:   return "利多"
-        if pp <= -strong_thr: return "强利空"
-        if pp <= -weak_thr:  return "利空"
-        return "中性"
+    def _label(pp: float) -> str:
+        # 更细粒度阈值 (金十数据不用"中性"当兜底)
+        if pp >= 3.0:  return "强利多"
+        if pp >= 1.0:  return "利多"
+        if pp >= 0.3:  return "偏多"
+        if pp <= -3.0: return "强利空"
+        if pp <= -1.0: return "利空"
+        if pp <= -0.3: return "偏空"
+        return "无明显方向"
 
-    # 债市: 直接同向
+    # dovish (cut_prob 升) or hawkish (cut_prob 降) 方向
+    if expected_pp >= 0.3:
+        direction = "dovish"
+    elif expected_pp <= -0.3:
+        direction = "hawkish"
+    else:
+        direction = None  # 太平
+
     bond_label = _label(expected_pp)
 
     # 股市: 分利率敏感 vs 增长敏感
     rate_sensitive = event_type in ("CPI", "PCE", "FOMC")
     if rate_sensitive:
-        # 利率降 = 股票估值升 (同向)
         equity_label = _label(expected_pp)
         equity_channel = "利率驱动"
     else:
-        # 增长敏感: 数据软 = 债好但盈利差 → 股混合
-        # 打半折 + 加"混合"提示
+        # 增长敏感: 打半折 (对总大盘 SPX)
         soft_pp = expected_pp * 0.5
-        base = _label(soft_pp)
-        if base != "中性":
-            equity_label = f"{base}(增长+利率对冲)"
-        else:
-            equity_label = "中性"
-        equity_channel = "增长/利率混合"
+        equity_label = _label(soft_pp)
+        equity_channel = "增长/利率对冲"
+
+    # 查具体标的
+    favored: list[str] = []
+    hurt: list[str] = []
+    if direction:
+        # event_type + direction → key
+        key = f"{event_type.replace(' ','_')}_{direction}"
+        assets = _ASSET_MAP.get(key, {})
+        favored = assets.get("利多", [])
+        hurt = assets.get("利空", [])
 
     return {
         "bond": bond_label,
         "equity": equity_label,
         "equity_channel": equity_channel,
+        "direction": direction or "neutral",
+        "long_favored": favored,     # 利多标的列表 (金十风格)
+        "long_hurt": hurt,            # 利空标的列表
         # 数字估算 (rough): 每 1pp cut_prob → 10Y yield ~-3bp, SPX ~+0.15%
         "bond_yield_bps": round(-expected_pp * 3, 1),
         "spx_pct_est": round(expected_pp * (0.15 if rate_sensitive else 0.05), 2),

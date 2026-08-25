@@ -109,7 +109,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-25T11:11:27", "endpoints_ok": 132, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-25T11:15:17", "endpoints_ok": 132, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1667,6 +1667,9 @@ async function loadBondAIInterpret() {
                       if (label.startsWith('利空')) return 'bad';
                       return 'muted';
                     };
+                    const favored = (mi.long_favored || []).slice(0, 4);
+                    const hurt = (mi.long_hurt || []).slice(0, 4);
+                    const hasSpecific = favored.length || hurt.length;
                     return `<div style="padding:5px 6px; margin-top:3px; background:rgba(88,166,255,0.03); border-left:2px solid #58a6ff; border-radius:2px">
                       <div style="display:flex; gap:6px; align-items:center; margin-bottom:3px; font-size:11px; flex-wrap:wrap">
                         <span style="color:var(--muted); min-width:82px">${ev.date}</span>
@@ -1678,16 +1681,24 @@ async function loadBondAIInterpret() {
                           <span title="Σ 概率 × delta = 概率加权期望值 · 数据源: ${src}">
                             期望 <b class="${expCls}">${exp >= 0 ? '+' : ''}${exp}pp</b>
                           </span>
-                          <span style="color:var(--muted); font-size:9.5px">·</span>
                           <span title="债 10Y 收益率 delta ~${mi.bond_yield_bps || 0}bps">
-                            📉 <b>债</b> <b class="${impactColor(mi.bond)}">${mi.bond || '中性'}</b>
+                            · 📉 <b>债</b> <b class="${impactColor(mi.bond)}">${mi.bond || '中性'}</b>
                           </span>
                           <span title="SPX 估算 ${mi.spx_pct_est >= 0 ? '+' : ''}${mi.spx_pct_est || 0}% · ${mi.equity_channel || ''}">
-                            📈 <b>股</b> <b class="${impactColor(mi.equity)}">${mi.equity || '中性'}</b>
+                            · 📈 <b>股</b> <b class="${impactColor(mi.equity)}">${mi.equity || '中性'}</b>
                           </span>
                           <small style="color:var(--muted); font-size:8.5px">${src}</small>
                         </span>
                       </div>
+                      ${hasSpecific ? `
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:4px; font-size:10.5px">
+                          ${favored.length ? `<div style="padding:3px 6px; background:rgba(63,185,80,0.08); border-left:2px solid #3fb950; border-radius:2px">
+                            <b style="color:#3fb950">🎯 利多</b>: ${favored.join(' · ')}
+                          </div>` : '<div></div>'}
+                          ${hurt.length ? `<div style="padding:3px 6px; background:rgba(248,81,73,0.08); border-left:2px solid #f85149; border-radius:2px">
+                            <b style="color:#f85149">⚠ 利空</b>: ${hurt.join(' · ')}
+                          </div>` : '<div></div>'}
+                        </div>` : ''}
                       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:3px; font-size:10px">
                         ${scEntries.map(([sname, s]) => {
                           const isDove = sname.includes('dovish') || sname === 'surprise_cut';
