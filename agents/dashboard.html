@@ -1490,32 +1490,53 @@ function renderMacroChain(r, macroCtx) {
 // 迷你降息概率趋势 SVG 图 (给 thesis banner 用)
 function renderCutProbTrend(rows) {
   if (!rows || rows.length < 2) return '';
-  const w = 240, h = 60, pad = 4;
-  const values = rows.map(r => r.cut_probability_pct).filter(v => v != null);
-  if (values.length < 2) return '';
+  const w = 260, h = 74, pad = 4;
+  const chartH = h - 12;   // 底部留 12px 给 x 轴日期
+  // 只取有 cut_probability_pct 和 date 的行, 保持对齐
+  const pts = rows.filter(r => r.cut_probability_pct != null && r.date)
+                   .map(r => ({ v: r.cut_probability_pct, d: r.date }));
+  if (pts.length < 2) return '';
+  const values = pts.map(p => p.v);
+  const dates = pts.map(p => p.d);
   const minV = Math.min(...values, 30); const maxV = Math.max(...values, 70);
   const range = Math.max(maxV - minV, 20);
   const xStep = (w - 2 * pad) / (values.length - 1);
-  const yFor = v => h - pad - ((v - minV) / range) * (h - 2 * pad);
+  const xAt = i => pad + i * xStep;
+  const yFor = v => chartH - pad - ((v - minV) / range) * (chartH - 2 * pad);
   // Line path
-  const path = values.map((v, i) => `${i === 0 ? 'M' : 'L'} ${pad + i * xStep} ${yFor(v)}`).join(' ');
-  const areaPath = path + ` L ${pad + (values.length - 1) * xStep} ${h - pad} L ${pad} ${h - pad} Z`;
+  const path = values.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yFor(v)}`).join(' ');
+  const areaPath = path + ` L ${xAt(values.length - 1)} ${chartH - pad} L ${pad} ${chartH - pad} Z`;
   const latest = values[values.length - 1];
   const first = values[0];
   const delta = latest - first;
   const dCls = delta > 5 ? 'ok' : delta < -5 ? 'bad' : 'muted';
   const dSign = delta >= 0 ? '+' : '';
-  const first30Line = yFor(65); const first50Line = yFor(50); const first35Line = yFor(35);
+  const y50 = yFor(50);
+  // 日期 x 轴刻度: 首 / ~1/3 / ~2/3 / 末 (最多 4 个, 少于 4 行时降级)
+  const fmtDate = s => { const m = /^\d{4}-(\d{2})-(\d{2})/.exec(s); return m ? `${+m[1]}/${+m[2]}` : s.slice(5, 10); };
+  const nTicks = Math.min(4, values.length);
+  const tickIdx = Array.from({length: nTicks}, (_, i) =>
+    Math.round(i * (values.length - 1) / (nTicks - 1)));
+  const xLabels = tickIdx.map((idx, i) => {
+    const anchor = i === 0 ? 'start' : i === tickIdx.length - 1 ? 'end' : 'middle';
+    return `<text x="${xAt(idx)}" y="${h - 2}" text-anchor="${anchor}" fill="#7d8590" font-size="8">${fmtDate(dates[idx])}</text>`;
+  }).join('');
+  // 首/末 x 轴刻度小竖线 (提示端点)
+  const xTicks = tickIdx.map(idx =>
+    `<line x1="${xAt(idx)}" y1="${chartH - pad}" x2="${xAt(idx)}" y2="${chartH - pad + 2}" stroke="#7d8590" stroke-width="0.5"/>`
+  ).join('');
   return `<div style="display:flex; align-items:center; gap:8px; margin-top:5px; padding:4px 6px; background:rgba(13,17,23,0.4); border-radius:3px">
     <div style="flex:0 0 auto; font-size:9.5px; color:var(--muted); line-height:1.2">
-      降息概率<br>${rows.length}d 演化
+      降息概率<br>${values.length}d 演化
     </div>
-    <svg width="${w}" height="${h}" style="flex:0 0 auto" title="cut_prob range ${minV}-${maxV}%, latest ${latest}%, delta ${dSign}${delta.toFixed(0)}pp">
-      <line x1="${pad}" y1="${first50Line}" x2="${w-pad}" y2="${first50Line}" stroke="rgba(139,148,158,0.3)" stroke-dasharray="2,3" stroke-width="0.6"/>
-      <text x="${w-pad}" y="${first50Line - 1}" text-anchor="end" fill="#8b949e" font-size="8">50</text>
+    <svg width="${w}" height="${h}" style="flex:0 0 auto" title="cut_prob ${minV}-${maxV}%, latest ${latest}%, delta ${dSign}${delta.toFixed(0)}pp, ${dates[0]} → ${dates[dates.length-1]}">
+      <line x1="${pad}" y1="${y50}" x2="${w-pad}" y2="${y50}" stroke="rgba(139,148,158,0.3)" stroke-dasharray="2,3" stroke-width="0.6"/>
+      <text x="${w-pad}" y="${y50 - 1}" text-anchor="end" fill="#8b949e" font-size="8">50</text>
       <path d="${areaPath}" fill="rgba(88,166,255,0.15)"/>
       <path d="${path}" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
-      <circle cx="${pad + (values.length - 1) * xStep}" cy="${yFor(latest)}" r="2.5" fill="#58a6ff"/>
+      <circle cx="${xAt(values.length - 1)}" cy="${yFor(latest)}" r="2.5" fill="#58a6ff"/>
+      ${xTicks}
+      ${xLabels}
     </svg>
     <div style="flex:1; font-size:10px">
       <div><b class="${dCls}" style="font-size:12px">${latest}%</b> <small style="color:var(--muted)">→ 现在</small></div>
