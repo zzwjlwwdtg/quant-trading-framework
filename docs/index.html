@@ -109,7 +109,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-25T12:03:03", "endpoints_ok": 132, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-25T12:33:03", "endpoints_ok": 132, "endpoints_fail": 1};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1535,13 +1535,14 @@ function renderCutProbTrend(rows) {
 async function loadBondAIInterpret() {
   const el = document.getElementById('macro-ai-body');
   if (!el) return;
-  // 并发拉: AI 解读 + bond_monitor + thesis 历史 + Trump 归因 + Forward forecast
-  const [r, bond, history, tattr, forecast] = await Promise.all([
+  // 并发拉: AI 解读 + bond_monitor + thesis 历史 + Trump 归因 + Forward forecast + 政策工具箱
+  const [r, bond, history, tattr, forecast, toolkit] = await Promise.all([
     fetchJson('/api/bond_ai_interpret'),
     fetchJson('/api/bond_monitor'),
     fetchJson('/api/thesis_history'),
     fetchJson('/api/trump_attribution'),
     fetchJson('/api/thesis_forecast'),
+    fetchJson('/api/policy_toolkit'),
   ]);
   const macroCtx = (bond && bond.macro_context) || {};
   const trendRows = (history && history.rows) || [];
@@ -1725,6 +1726,82 @@ async function loadBondAIInterpret() {
                   </div>
                 </div>
               </details>`;
+          })() : ''}
+          ${toolkit && Array.isArray(toolkit.tools) && toolkit.tools.length ? (() => {
+            const tools = toolkit.tools;
+            const active = tools.filter(t => t.status === '已用');
+            const verbal = tools.filter(t => t.status === '口头/待发');
+            const opposed = tools.filter(t => t.status === '被否');
+            const idle = tools.filter(t => t.status === '观察');
+            const feasZh = {high: '高', medium: '中', low: '低'};
+            const feasCls = {high: 'ok', medium: 'warn', low: 'bad'};
+            const statusBadge = s => {
+              const cls = {'已用':'bad','口头/待发':'warn','被否':'muted','观察':'muted'}[s] || 'muted';
+              return `<span class="badge ${cls}" style="font-size:9px; padding:0 5px">${s}</span>`;
+            };
+            const bpCell = bp => {
+              if (bp == null) return '<span style="color:var(--muted)">—</span>';
+              const cls = bp < -2 ? 'ok' : bp > 2 ? 'bad' : 'muted';
+              return `<b class="${cls}">${bp >= 0 ? '+' : ''}${bp}bp</b>`;
+            };
+            const toolRow = t => {
+              const la = t.last_action || {};
+              const yr = t.yield_reaction_30y || {};
+              const yrBlock = (yr.t0_bp != null || yr.t1d_bp != null)
+                ? `<div style="font-size:9.5px; margin-top:2px">
+                     <span title="事件当日 30Y 收益率变化: 负=债市短期涨">30Y T+0 ${bpCell(yr.t0_bp)}</span>
+                     · <span title="次日 30Y 收益率变化: 常常出现反弹, 说明工具失效">T+1d ${bpCell(yr.t1d_bp)}</span>
+                     ${yr.yield_at_close ? `<span style="color:var(--muted)"> · 收 ${yr.yield_at_close}%</span>` : ''}
+                   </div>` : '';
+              const laBlock = la.date
+                ? `<div style="font-size:10px; color:var(--fg); margin-top:2px">
+                     <span style="color:var(--muted)">${la.date}</span>
+                     ${la.actor ? `<b style="color:#58a6ff"> · ${la.actor}</b>` : ''}
+                     ${la.amount_desc ? `<span> · ${la.amount_desc}</span>` : ''}
+                     ${la.url ? `<a href="${la.url}" target="_blank" style="color:var(--muted); margin-left:3px" title="打开原文">🔗</a>` : ''}
+                   </div>
+                   <div style="font-size:10px; color:var(--muted); margin-top:1px; line-height:1.4">${la.commentary || ''}</div>`
+                : '<div style="font-size:10px; color:var(--muted); margin-top:2px">近 180 天无相关新闻</div>';
+              return `<div style="padding:5px 7px; margin-top:3px; background:rgba(88,166,255,0.03); border-left:2px solid ${t.status === '已用' ? '#f85149' : t.status === '口头/待发' ? '#d29922' : '#7d8590'}; border-radius:2px">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap">
+                  <span style="font-size:11px">
+                    ${statusBadge(t.status)}
+                    <b>${t.zh}</b>
+                    <small style="color:var(--muted); font-size:9.5px"> ${t.owner} · 可行性 <b class="${feasCls[t.feasibility]||'muted'}">${feasZh[t.feasibility]||t.feasibility}</b> · 近180d ${t.event_count_180d}次</small>
+                  </span>
+                </div>
+                <div style="font-size:9.5px; color:var(--muted); margin-top:2px" title="${t.canonical_desc}">${t.canonical_desc}</div>
+                ${laBlock}
+                ${yrBlock}
+                ${t.invalidation ? `<div style="font-size:9.5px; color:#d29922; margin-top:3px; padding:2px 5px; background:rgba(210,153,34,0.06); border-radius:2px" title="为什么这个工具通常压不住长端收益率">⚠ 失效根因: ${t.invalidation}</div>` : ''}
+              </div>`;
+            };
+            const summary = `${active.length}已用 · ${verbal.length}待发/口头 · ${opposed.length}被否 · ${idle.length}观察`;
+            const staleWarn = toolkit.stale ? `<span class="warn" style="font-size:9.5px" title="上次刷新 ${toolkit.age_hours}h 前, 后台正在更新"> · 数据 ${toolkit.age_hours}h 前</span>` : '';
+            const asOf = toolkit.as_of ? toolkit.as_of.substring(0, 16).replace('T', ' ') : '';
+            return `<details style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(139,148,158,0.2)" open>
+              <summary style="cursor:pointer; list-style:none; font-size:10.5px; color:var(--muted)">
+                🛠 <b style="color:#f85149">美债救援政策工具追踪</b>
+                <small>· ${summary} · 30Y 反应 (T+0/T+1d)</small>
+                <small style="color:var(--muted)"> · ${asOf}${staleWarn}</small>
+              </summary>
+              <div style="margin-top:5px">
+                ${active.map(toolRow).join('')}
+                ${verbal.map(toolRow).join('')}
+                ${opposed.map(toolRow).join('')}
+                ${idle.length ? `<details style="margin-top:5px">
+                  <summary style="cursor:pointer; list-style:none; font-size:10px; color:var(--muted); padding:3px 0">
+                    ▼ 展开未启用的 ${idle.length} 个工具 (无近期新闻)
+                  </summary>
+                  ${idle.map(toolRow).join('')}
+                </details>` : ''}
+                <div style="font-size:9px; color:var(--muted); margin-top:5px; line-height:1.5">
+                  💡 数据源: Google News RSS (Reuters/Bloomberg/CNBC/WSJ 等) + Fed 官方. CLI 结构化为 tool_key/action_type,
+                  匹配预定义 11 工具. 30Y 反应: 用 ^TYX 算事件当日 close - 前日 close (T+0), 次日 close - 事件日 close (T+1d).
+                  <b>典型模式</b>: T+0 是负的 (债涨), T+1d 反弹回来 = 工具失效. 若 T+1d 也是负的 = 真正压住了.
+                </div>
+              </div>
+            </details>`;
           })() : ''}
           ${tattr && tattr.posts_analyzed >= 5 ? `
             <details style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(139,148,158,0.2)">
