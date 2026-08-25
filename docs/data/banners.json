@@ -8,18 +8,48 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "NOISE": 4,
-      "MEDIA_ATTACK": 6,
-      "TARIFF": 2,
-      "DOMESTIC_POLICY": 3,
-      "GEOPOLITICAL": 6
+      "MEDIA_ATTACK": 5,
+      "NOISE": 5,
+      "TARIFF": 3,
+      "DOMESTIC_POLICY": 11,
+      "GEOPOLITICAL": 7,
+      "DEAL": 2,
+      "MARKET": 3
     },
     "breaking": [
       {
         "event_type": "GEOPOLITICAL",
-        "direction": "bearish",
+        "direction": "bullish",
         "magnitude": "medium",
         "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "I have just been informed by the United States Navy that all mines have been removed and/or detonated from within the In",
+        "verbatim": "all mines have been removed and/or detonated from within the International Waters of the Strait of Hormuz",
+        "post_time": "2026-08-25T14:30:27.759Z"
+      },
+      {
+        "event_type": "MARKET",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "TQQQ"
+        ],
+        "preview": "RT @realwayneroot\"US BUSINESS IS BOOMING.\" My great friend & financial advisor Kip Herriage of VRAinsider called this fi",
+        "verbatim": "US BUSINESS IS BOOMING... Big stocks are booming to all time highs, profits all time highs, earnings all time highs",
+        "post_time": "2026-08-25T15:40:43.380Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
+        "confidence": 7,
         "tickers": [
           "SPY",
           "QQQ",
@@ -28,15 +58,41 @@
         "preview": "The failing Islamic Republic of Iran is not paying large segments of their military, while at the same time killing prot",
         "verbatim": "The failing Islamic Republic of Iran... killing protesters... It is a humanitarian crisis of epic proportions, and must be stopped, NOW.",
         "post_time": "2026-08-25T11:09:42.859Z"
+      },
+      {
+        "event_type": "DEAL",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "SPY"
+        ],
+        "preview": "Reigniting the American dream: Donald Trump, Dave McCormick, and Jamie Dimon unveil a massive manufacturing push in Penn",
+        "verbatim": "unveil a massive manufacturing push in Pennsylvania",
+        "post_time": "2026-08-25T15:37:21.721Z"
+      },
+      {
+        "event_type": "MARKET",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "QQQ",
+          "NVDA",
+          "SOXL"
+        ],
+        "preview": "America must put AI to work defending our critical infrastructure: https://www.washingtonexaminer.com/restoring-america/",
+        "verbatim": "America must put AI to work defending our critical infrastructure",
+        "post_time": "2026-08-25T15:40:09.563Z"
       }
     ],
     "summary": {
-      "text": "关税与地缘言论强化对抗姿态，市场情绪偏谨慎避险。",
-      "state": "cached",
+      "text": null,
+      "state": "generating",
       "post_ids": [
-        "117156429202842827",
-        "117156395248393739",
-        "117155941181023687"
+        "117156905235945389",
+        "117156902282061140",
+        "117156901249242368"
       ]
     }
   },
