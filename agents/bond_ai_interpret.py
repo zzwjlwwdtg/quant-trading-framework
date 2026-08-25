@@ -168,18 +168,27 @@ def _make_prompt(bond_data: dict) -> str:
             "稳定币总市值 (USDT+USDC)": f"${mc.get('stablecoin_total_bn')}B (USDT ${mc.get('usdt_bn')}B + USDC ${mc.get('usdc_bn')}B)" if mc.get("stablecoin_total_bn") else "N/A",
         },
         "各节点量能复证 (ETF proxy volume z-score, 相对最近 20 天均值)": {
-            "说明": "z>=+1σ = 显著放量 (信号有真金白银支持) · z<=-1σ = 显著缩量 (信号可能是噪音) · |z|<1 = 正常",
+            "说明": "z>=+1σ = 显著放量 · z<=-1σ = 显著缩量 · |z|<1 = 正常",
             **{
-                f"{key} (proxy {info['proxy']} {info['label']})": f"{info['vol_z_20d']:+.2f}σ ({'放量' if info['vol_z_20d'] >= 1 else ('缩量' if info['vol_z_20d'] <= -1 else '正常')})"
+                f"{key} (proxy {info.get('proxy','?')} {info.get('label','?')})": (
+                    f"{info['vol_z_20d']:+.2f}σ ({'放量' if info['vol_z_20d'] >= 1 else ('缩量' if info['vol_z_20d'] <= -1 else '正常')})"
+                    if info.get("vol_z_20d") is not None else "数据不足"
+                )
                 for key, info in (mc.get("volume_confirm") or {}).items()
             }
         },
         "亚洲 cash indices (直接抓, 不用 T+1 ETF)": {
-            k: f"{v['label']}: {v['close']} · 1d {v['chg_1d']:+.2f}% · 5d {v['chg_5d_pct']:+.2f}% ({v['asof']})"
+            k: (
+                f"{v.get('label','?')}: {v.get('close','?')} · 1d {v['chg_1d']:+.2f}% · 5d {v['chg_5d_pct']:+.2f}% ({v.get('asof','?')})"
+                if v.get('chg_1d') is not None and v.get('chg_5d_pct') is not None else f"{v.get('label','?')}: 数据不足"
+            )
             for k, v in (mc.get("asia_indices") or {}).items()
         },
         "US futures (Sunday 夜盘 → Monday 早, 抓 gap)": {
-            k: f"{v['label']}: {v['price']} · {v['chg_pct']:+.2f}%"
+            k: (
+                f"{v.get('label','?')}: {v.get('price','?')} · {v['chg_pct']:+.2f}%"
+                if v.get('chg_pct') is not None else f"{v.get('label','?')}: 数据不足"
+            )
             for k, v in (mc.get("us_futures") or {}).items()
         },
         "已触发警示": [
