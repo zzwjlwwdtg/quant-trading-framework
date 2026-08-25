@@ -3054,6 +3054,49 @@ def api_thesis_forecast(days_ahead: int = 45) -> dict:
     return _cached(f"thesis_forecast_{days_ahead}", ttl_sec=6 * 3600, compute_fn=_compute)
 
 
+def api_policy_toolkit() -> dict:
+    """美债救援政策工具追踪。RSS + CLI 结构化, 12h TTL, 首次异步刷新。
+
+    优先读 tracker 落盘的 signals/policy_toolkit_latest.json (跨进程共享);
+    过期时后台异步刷新, 返回上次的落盘结果。
+    """
+    placeholder = {
+        "as_of": None,
+        "tools": [],
+        "computing": True,
+        "status": "首次抓取 RSS + CLI 结构化中 (2-3 分钟)",
+    }
+    def _compute():
+        try:
+            from policy_toolkit_tracker import build_policy_toolkit
+            return build_policy_toolkit()
+        except Exception as e:
+            return {"error": str(e)[:200], "tools": []}
+    # 先看 tracker 落盘文件, 有的话直接用 (跨进程 / snapshot 复用)
+    try:
+        from policy_toolkit_tracker import LATEST_PATH, load_latest
+        if LATEST_PATH.exists():
+            age_h = (datetime.now().timestamp() - LATEST_PATH.stat().st_mtime) / 3600
+            existing = load_latest()
+            if existing.get("tools") and age_h < 12:
+                return existing
+            # 过期或空 → 触发后台刷新, 立即返回旧数据 (有则用) 否则 placeholder
+            _cached("policy_toolkit", ttl_sec=12 * 3600,
+                    compute_fn=_compute,
+                    first_call_async=True,
+                    first_call_placeholder=placeholder)
+            if existing.get("tools"):
+                existing["stale"] = True
+                existing["age_hours"] = round(age_h, 1)
+                return existing
+    except Exception:
+        pass
+    return _cached("policy_toolkit", ttl_sec=12 * 3600,
+                   compute_fn=_compute,
+                   first_call_async=True,
+                   first_call_placeholder=placeholder)
+
+
 def api_fed_watch() -> dict:
     """CME FedWatch 加息/降息预期。AI CLI + live web search，缓存 8h。首次异步。"""
     placeholder = {
@@ -4838,6 +4881,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_thesis_history(days=_days))
             elif path == "/api/fed_watch":
                 self._json(api_fed_watch())
+            elif path == "/api/policy_toolkit":
+                self._json(api_policy_toolkit())
             else:
                 self.send_error(404, f"route not found: {path}")
         except Exception as e:
