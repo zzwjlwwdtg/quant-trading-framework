@@ -47,7 +47,26 @@
       ],
       "range_desc": "(-6pp ~ +5pp)",
       "expected_delta_pp": -0.4,
-      "probability_source": "prior"
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "偏空",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "hawkish",
+        "long_favored": [
+          "消费股 (XLY/XRT)",
+          "工业股",
+          "小盘股",
+          "USD"
+        ],
+        "long_hurt": [
+          "长债",
+          "growth 股 (加息预期)",
+          "REITs"
+        ],
+        "bond_yield_bps": 1.2,
+        "spx_pct_est": -0.02
+      }
     },
     {
       "date": "2026-09-09",
@@ -93,7 +112,27 @@
       ],
       "range_desc": "(-8pp ~ +8pp)",
       "expected_delta_pp": -7.88,
-      "probability_source": "cleveland_fed_nowcast"
+      "probability_source": "cleveland_fed_nowcast",
+      "market_impact": {
+        "bond": "强利空",
+        "equity": "强利空",
+        "equity_channel": "利率驱动",
+        "direction": "hawkish",
+        "long_favored": [
+          "USD (UUP)",
+          "能源/大宗 (通胀受益)",
+          "银行股 (利差扩)",
+          "黄金 (通胀对冲)"
+        ],
+        "long_hurt": [
+          "科技股/纳指 (长久期最伤)",
+          "长债 (TLT 收益率飙)",
+          "REITs",
+          "growth 股"
+        ],
+        "bond_yield_bps": 23.6,
+        "spx_pct_est": -1.18
+      }
     },
     {
       "date": "2026-09-10",
@@ -127,7 +166,23 @@
       ],
       "range_desc": "(-3pp ~ +3pp)",
       "expected_delta_pp": -0.3,
-      "probability_source": "prior"
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "偏空",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "hawkish",
+        "long_favored": [
+          "能源/材料",
+          "大宗商品 (USO/GLD)"
+        ],
+        "long_hurt": [
+          "制造业 (成本升)",
+          "长债"
+        ],
+        "bond_yield_bps": 0.9,
+        "spx_pct_est": -0.01
+      }
     },
     {
       "date": "2026-09-15",
@@ -161,7 +216,17 @@
       ],
       "range_desc": "(-2pp ~ +3pp)",
       "expected_delta_pp": 0.1,
-      "probability_source": "prior"
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "无明显方向",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "neutral",
+        "long_favored": [],
+        "long_hurt": [],
+        "bond_yield_bps": -0.3,
+        "spx_pct_est": 0.01
+      }
     },
     {
       "date": "2026-09-15",
@@ -207,7 +272,24 @@
       ],
       "range_desc": "(-25pp ~ +30pp)",
       "expected_delta_pp": 1.79,
-      "probability_source": "prior"
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "利多",
+        "equity": "利多",
+        "equity_channel": "利率驱动",
+        "direction": "dovish",
+        "long_favored": [
+          "全部风险资产 (股/加密/HY 债)",
+          "长债",
+          "黄金",
+          "REITs"
+        ],
+        "long_hurt": [
+          "USD (美元指数)"
+        ],
+        "bond_yield_bps": -5.4,
+        "spx_pct_est": 0.27
+      }
     },
     {
       "date": "2026-09-26",
@@ -247,7 +329,27 @@
       ],
       "range_desc": "(-8pp ~ +5pp)",
       "expected_delta_pp": -3.07,
-      "probability_source": "cleveland_fed_nowcast"
+      "probability_source": "cleveland_fed_nowcast",
+      "market_impact": {
+        "bond": "强利空",
+        "equity": "强利空",
+        "equity_channel": "利率驱动",
+        "direction": "hawkish",
+        "long_favored": [
+          "USD",
+          "能源/大宗",
+          "银行股",
+          "黄金 (通胀对冲)"
+        ],
+        "long_hurt": [
+          "科技股",
+          "长债",
+          "REITs",
+          "growth 股"
+        ],
+        "bond_yield_bps": 9.2,
+        "spx_pct_est": -0.46
+      }
     },
     {
       "date": "2026-10-02",
@@ -293,14 +395,33 @@
       ],
       "range_desc": "(-6pp ~ +5pp)",
       "expected_delta_pp": -0.4,
-      "probability_source": "prior"
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "偏空",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "hawkish",
+        "long_favored": [
+          "消费股 (XLY/XRT)",
+          "工业股",
+          "小盘股",
+          "USD"
+        ],
+        "long_hurt": [
+          "长债",
+          "growth 股 (加息预期)",
+          "REITs"
+        ],
+        "bond_yield_bps": 1.2,
+        "spx_pct_est": -0.02
+      }
     }
   ],
-  "generated_at": "2026-08-25T11:15:16",
+  "generated_at": "2026-08-25T11:30:05",
   "note": "Scenarios 是规则版预测. 实际数据发布时,系统会自动对照到最近的 scenario 追加 thesis_history 验证.",
   "_meta": {
-    "cached_at": "2026-08-25T11:15:16.989668",
-    "age_sec": 0,
+    "cached_at": "2026-08-25T11:30:05.558863",
+    "age_sec": 8,
     "stale": false,
     "refreshing": false
   }
