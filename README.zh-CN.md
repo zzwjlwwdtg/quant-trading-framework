@@ -5,24 +5,22 @@
 
 **语言 / Language**：[English](README.md) · **简体中文**
 
-多策略量化信号 + Claude CLI 综合解读 + moomoo 模拟仓自动下单系统。
+多策略量化信号 + Codex 优先的本地 AI CLI 综合解读 + moomoo 模拟仓自动下单系统。
 
-针对 **TQQQ / SOXL / DRAM / MULL / GLD** 等核心 ETF，日 K 主信号 + 15min K 辅助，结合
-进化规则共振、Trump Truth Social 实时解析、黄金宏观因子、期权 gamma 盯盘，给出可操作
-决策并通过 paper_trader 在 moomoo SIMULATE 账户落地。
+覆盖 **杠杆 ETF + 权重股 + 债券对冲 + 宏观 proxy**（TQQQ / SOXL / DRAM / MULL / GLD / NBIS / SHY / IEI / LITE / CBRS / USO / XLV / NVDA / MSFT / AAPL）+ 卫星单股。以日 K 动量为主信号、15min K 为辅助，结合聪明钱/期权信息、Trump Truth Social CLI 解析、黄金宏观因子、债市监控 + 期权 GEX/IV/Skew 完整解读。**宏观预测层 (v0.4)**：未来 45 天事件场景预测（Cleveland Fed nowcast + CME FedWatch）+ 金十数据风格债/股影响 label + 具体标的清单 + 美债救援政策工具追踪（11 工具 × 30Y 收益率反应）。决策通过 paper_trader 在 moomoo SIMULATE 账户落地（永不实盘）。
 
 ## Dashboard 预览
 
 WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单页 dashboard，
-覆盖 NAV / 板块 regime / Trump 情绪 / 黄金+石油宏观 / 事件日历 / 每标的信号 + 期权墙 + Claude 分析。
+覆盖 NAV / 板块 regime / Trump 情绪 / 黄金+石油宏观 / 事件日历 / 每标的信号 + 期权墙 + AI 分析。
 
 ![Dashboard 全景](docs/dashboard-full.png)
 
 **每张标的卡包含**：多空共振条 + 建议动作/置信度 → 迷你 **期权墙 SVG**（call/put 成交分布 + spot 虚线 + Max Pain）→
 **攻防位表格**（strike / 保费 / OI 仓位 / 名义敞口）→ **挤压风险**（gamma_up / put_break / max_pain_gravity）→
-**C/P 比 + 小白解读**（Put 远大于 Call 时区分 ATM 恐慌 vs OTM 保险）→ **🤖 Claude 即时分析**
+**C/P 比 + 小白解读**（Put 远大于 Call 时区分 ATM 恐慌 vs OTM 保险）→ **🤖 AI 即时分析**
 （3 行结构化：综合 / 攻防 / 警示，10 只标的全覆盖，缓存 by 数据 hash）→ **🔗 上下游供应链**
-（Claude 生成 upstream/downstream/peers + confidence 标记 + 可选 FMP peers 交叉验证，懒加载缓存 7 天）。
+（AI CLI 生成 upstream/downstream/peers + confidence 标记 + 可选 FMP peers 交叉验证，懒加载缓存 30 天）。
 
 **🕸 D3 蜘蛛网全图**（Bloomberg SPLC 风格）：每张卡供应链区右上角「🕸 1 层 / 2 层」按钮 —
 - **1 层**：直接邻居（快，用本地 cache）
@@ -44,7 +42,7 @@ WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单�
 - **现金周转循环** — DIO + DSO - DPO，越短越好，>120 天警惕库存压力
 - 每格：最新值 + 涨/跌箭头 + 4 年 SVG sparkline + hover 用途解释
 - ETF 用代表单股（TQQQ/SOXL → NVDA / DRAM/MULL → MU）；GLD 跳过
-- **Claude 分析里也会引用**（发现 CROIC 骤跌 / 借款激增 / Piotroski<4 时会主动警示）
+- **AI 分析里也会引用**（发现 CROIC 骤跌 / 借款激增 / Piotroski<4 时会主动警示）
 
 **🔥 大单高亮 + 财报结合**：
 - 期权 wall 的 OI ≥ 5K 手 或 名义敞口 ≥ $30M → 攻防位表格显示 🔥，迷你 SVG 图的柱子加深填充 + 顶部 🟠 圆点
@@ -60,14 +58,28 @@ WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单�
 
 ## 主要特性
 
+- **宏观预测层**（v0.4 新）— thesis_forecast 45 天事件场景（Cleveland Fed + CME FedWatch + prior）+ 政策工具追踪（回购/YCC/TGA/SLR × 30Y 反应）+ Trump 归因
+- **期权结构完整解读**（v0.4 扩展）— OI-based walls + 联合 band + GEX+IV+Skew stock verdict + 保费/OI/名义敞口 + 杠杆 ETF 结构价换算
+- **AI 新闻结构化生态** — 所有 RSS / Truth Social 先调统一 AI CLI（默认 Codex）拆为固定 JSON schema 再供规则消费；Google News 定题搜索作为主信源
 - **Regime 单一源** — pre-open 算定 → 全系统读单一源，禁止多处独立检测
-- **回测门控** — 任何信号/决策改动必须跑 `_backtest_modules_accuracy.py` 等回测脚本，hit rate 不退化才合并
-- **新闻 CLI 化** — RSS / Truth Social 不直接 keyword 匹配，先调本地 Claude CLI 拆为结构化 JSON 再消费
-- **多模块准确率** — 250 天历史回测，quant（进化规则）20d hit rate 70-78%（SOXL/MULL 等）
+- **TECHNICAL_ONLY 默认 ON** — 决策只看技术面，消息面（Trump / breaking_news / 事件日历）仅 banner，不进 decision_agent 评分
+- **回测门控** — 任何信号/决策改动必须跑 `_backtest_modules_accuracy.py` 等回测脚本，hit rate 不退化才合并；训练集 N≤5 立 hard rule 是过拟合
+- **可解释信号栈** — 固定动量/技术规则 + 共振（confluence 按资产类别校准 hit rate）+ 期权环境；自动进化分数不再进入实时决策
 - **三巫日识别** — 自动识别每季 3/6/9/12 月第三周周五，GEX 代理 + 关联财报提示
-- **Claude AI 目标价** — Claude 输出结构化 JSON（entry_ref / stop_ref），paper_trader 自动挂限价 + SELL STOP
+- **AI 目标价** — AI CLI 输出结构化 JSON（entry_ref / stop_ref），paper_trader 自动挂限价 + SELL STOP
+
+### 机构级测量层（小资金账户口径）
+
+- **组合风险与归因** — NAV/现金/名义及杠杆调整暴露、历史或备用协方差 VaR/ES、板块压力测试、相关性/风险贡献、SPY beta/alpha/跟踪误差和盈亏归因。
+- **杠杆 ETF 路径风险** — TQQQ/QQQ、SOXL/SOXX、MULL/MU 按日复位模拟，分开展示终点杠杆、波动率折损、费用与实现跟踪残差。
+- **成交与审计** — 对齐券商的 submitted/filled/partial/cancelled 状态，计算实际成交率和 implementation shortfall，JSONL 执行账本带防篡改 hash chain。
+- **Point-in-time 数据控制** — 追加式 observed/effective 时间、新鲜度/价格/指标完整性检查；核心行情无效时拦截新风险，但不阻断减仓退出。
+- **Purged walk-forward** — 固定规则用时序样本外 fold 验证，训练/测试之间带 purge 和 embargo；未通过的规则不晋级为当前形态信号。
+- **进攻型小资金策略** — 理论 bid/ask 点差、模型化市场冲击和策略容量都不减仓、不拦单，但仍复盘券商实际成交。`SIM_ACTIVE` 中 VaR/压力/集中度只在 dashboard 提示。
 
 ## 标的列表（[`agents/config.py`](agents/config.py)）
+
+**核心杠杆 ETF (TICKERS)**：
 
 | Ticker | 类型 | 杠杆 | 备注 |
 |---|---|---|---|
@@ -75,7 +87,24 @@ WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单�
 | SOXL | SOX 半导体 杠杆 ETF | 3x | 半导体多头 |
 | DRAM | Roundhill Memory ETF | 1x | 存储芯片板块（Micron + SK Hynix + Samsung 暴露）|
 | MULL | Micron 杠杆 ETF | 2x | DRAM/NAND 龙头单股 |
-| GLD | 黄金 ETF | 1x | 避险 / 宏观对冲 |
+
+**扩展 tracked 标的 (TRACKED_TICKERS + GLD)**：
+
+| Ticker | 类型 | 用途 |
+|---|---|---|
+| GLD | 黄金 ETF | 避险 / 宏观对冲 |
+| NVDA | 半导体链条领头 | 看它就知道 SOXL/DRAM 方向 |
+| MSFT | 云 AI + FAANG | TQQQ/QQQ 权重股 |
+| AAPL | QQQ 最大权重 | 苹果链跟踪 |
+| **NBIS** | Nebius AI cloud pure-play | 2026-Q3 thesis：云端消费增长表达 |
+| **SHY** | 1-3Y Treasury ETF | 2026-Q3 thesis：2Y 债券多仓代理 |
+| **IEI** | 3-7Y Treasury ETF | 2026-Q3 thesis：5Y 债券多仓代理 |
+| LITE | Lumentum 光通信 | AI DC 400G/800G 光模块 |
+| CBRS | Cerebras Systems | WSE 晶圆级 AI inference，NVDA 竞品 |
+| USO | WTI 原油 ETF | 通胀 proxy + geopolitics gauge |
+| XLV | 医疗 ETF | 防御性板块（JNJ/UNH/LLY/PFE 权重）|
+
+**JP 板块**（11 只 short name：長弘 / TDK / ARE / MUFG 等，见 [`jp_watch_contracts.py`](agents/jp_watch_contracts.py)）
 
 ## 快速开始
 
@@ -97,12 +126,17 @@ git config core.hooksPath .githooks
 
 :: 5. 选择运行模式
 run.bat        :: 长跑（orchestrator，每 5min 检查 + 5 个 ET 窗口）
-snap.bat       :: 一键当日快照（regime + Trump + 信号 + 期权 + Claude 解读）
+snap.bat       :: 一键当日快照（regime + Trump + 信号 + 期权 + AI 解读）
 tools.bat      :: 工具菜单（trader status / regime / picks / flatten 等）
 backtest.bat   :: 回测菜单（regime / news / trump / modules / V-bounce）
 trump.bat      :: Trump signal 单独查
 weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accuracy.md
 ```
+
+AI CLI 默认策略是 `AI_CLI_PRIMARY=codex`、`AI_CLI_FALLBACK=none`。因此 Codex
+失败时不会自动调用 Claude。若临时需要旧行为，可在启动前显式设置
+`AI_CLI_PRIMARY=claude` 与 `AI_CLI_FALLBACK=codex`；`snap_public.bat` 为保护额度，
+始终强制 Codex 且无 Claude fallback。
 
 ## 配置文件
 
@@ -118,7 +152,7 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
 ## 入口脚本
 
 - [`run.bat`](agents/run.bat) — orchestrator 长跑，5 个 ET 窗口（08:30 / 09:20 / 10:00 / 12:00 / 15:45）自动触发
-- [`snap.bat`](agents/snap.bat) — 一次性快照，含 regime / Trump / 三巫日 / 信号 / 决策 / 事件日历 / Claude 综合解读
+- [`snap.bat`](agents/snap.bat) — 一次性快照，含 regime / Trump / 三巫日 / 信号 / 决策 / 事件日历 / AI 综合解读
 - [`tools.bat`](agents/tools.bat) → [`tools_menu.py`](agents/tools_menu.py) — 交互菜单
 - [`backtest.bat`](agents/backtest.bat) → [`backtest_menu.py`](agents/backtest_menu.py) — 回测菜单
 - [`trump.bat`](agents/trump.bat) — 仅看 Trump signal banner
@@ -155,27 +189,27 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
                         ↓
                   moomoo SIMULATE 账户
 
-   ＊ Claude CLI 报告解读层（不在下单链，与上面的二审 gate 分开）：
-     run_cycle 完成后调 Claude CLI 综合 11 个 block
+   ＊ AI CLI 报告解读层（不在下单链，与上面的二审 gate 分开）：
+     run_cycle 完成后默认调 Codex CLI 综合 11 个 block
      输出 700-1000 字人话报告 + 结构化 JSON 目标价
      paper_trader 下一个 cycle 会读 JSON 调整限价/止损
 ```
 
-## 信号模块（Block 编号供 Claude 依据标注）
+## 信号模块（Block 编号供 AI 依据标注）
 
 | # | 模块 | 文件 |
 |---|---|---|
 | ① 基础报告 | [`report_generator.py`](agents/report_generator.py) |
-| ② 规则进化 | [`strategy_evolver.py`](agents/strategy_evolver.py) |
-| ③ 胜率排行 | [`strategy_engine.py`](agents/strategy_engine.py) `generate_pattern_leaderboard` |
-| ④ 信号实况（共振） | [`confluence.py`](agents/confluence.py) + [`market_watch.py`](agents/market_watch.py) |
-| ⑤ 事件日历 | [`events_watch.py`](agents/events_watch.py) |
-| ⑥ Trump signal | [`trump_signal.py`](agents/trump_signal.py) |
-| ⑦ 期权墙 | [`option_walls.py`](agents/option_walls.py) |
-| ⑧ MACD + ADX | [`market_watch.py`](agents/market_watch.py) |
-| ⑨ SOX PCA | [`pca_sox.py`](agents/pca_sox.py) |
-| ⑩ 黄金宏观 | [`gold_macro.py`](agents/gold_macro.py) |
-| ⑪ 期权风险（三巫日 / GEX / 关联财报）| [`option_walls.py`](agents/option_walls.py) `get_options_risk_signal` |
+| ② 固定技术形态回测 | [`strategy_engine.py`](agents/strategy_engine.py) `generate_pattern_leaderboard` |
+| ③ 信号实况（共振） | [`confluence.py`](agents/confluence.py) + [`market_watch.py`](agents/market_watch.py) |
+| ④ 事件日历 | [`events_watch.py`](agents/events_watch.py) |
+| ⑤ Trump signal | [`trump_signal.py`](agents/trump_signal.py) |
+| ⑥ 期权墙 | [`option_walls.py`](agents/option_walls.py) |
+| ⑦ MACD + ADX | [`market_watch.py`](agents/market_watch.py) |
+| ⑧ SOX PCA | [`pca_sox.py`](agents/pca_sox.py) |
+| ⑨ 黄金宏观 | [`gold_macro.py`](agents/gold_macro.py) |
+| ⑩ 期权风险（三巫日 / GEX / 关联财报）| [`option_walls.py`](agents/option_walls.py) `get_options_risk_signal` |
+| ⑪ 日本社交推荐 | [`jp_social_reco/`](agents/jp_social_reco/) |
 
 ## 决策模块
 
@@ -184,9 +218,12 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
 | [`agents/decision_agent.py`](agents/decision_agent.py) | 规则引擎：`_etf_rules` / `_gold_rules` 出 action + conf + stop_ref |
 | [`agents/regime_today.py`](agents/regime_today.py) | regime 单一源（pre-open 写 regime_state.json）|
 | [`agents/paper_trader.py`](agents/paper_trader.py) | moomoo SIMULATE 下单 + 仓位管理 + 止盈止损 |
-| [`agents/quant_signal.py`](agents/quant_signal.py) | 进化规则共振打分 |
-| [`agents/ai_prompt.py`](agents/ai_prompt.py) | Claude CLI 调用 + prompt 模板 + 结构化 JSON 解析 |
-| [`agents/claude_gate.py`](agents/claude_gate.py) | Claude 二审 gate（pre-trade approval）|
+| [`agents/ai_prompt.py`](agents/ai_prompt.py) | Codex 优先的统一 AI CLI 路由 + prompt 模板 + 结构化 JSON 解析 |
+| [`agents/claude_gate.py`](agents/claude_gate.py) | AI 二审 gate（保留旧文件名兼容；pre-trade approval）|
+| [`agents/portfolio_analytics.py`](agents/portfolio_analytics.py) | 组合暴露、VaR/ES、压力、相关性、基准与归因 |
+| [`agents/leveraged_etf_risk.py`](agents/leveraged_etf_risk.py) | 日复位杠杆、波动率折损与路径情景 |
+| [`agents/execution_analytics.py`](agents/execution_analytics.py) | 小资金执行口径、实际成交与审计链 |
+| [`agents/data_quality.py`](agents/data_quality.py) | Point-in-time 存储、新鲜度/覆盖检查与下单数据门控 |
 
 ## 回测
 
@@ -198,7 +235,8 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
 | [`_backtest_trump_signal.py`](agents/_backtest_trump_signal.py) | Trump 信号方向命中率（vs trump-code baseline） |
 | [`_backtest_v_bounce.py`](agents/_backtest_v_bounce.py) | V 反转追买（杠杆 ETF 5d/10d/20d） |
 | [`_backtest_gold_macro.py`](agents/_backtest_gold_macro.py) | 黄金宏观信号注入回测 |
-| [`backtest_engine.py`](agents/backtest_engine.py) | Lite / Mid / Heavy 三档全系统回测 |
+| [`backtest_engine.py`](agents/backtest_engine.py) | Lite / Mid 两档全系统回测 |
+| [`research_validation.py`](agents/research_validation.py) | 固定规则的 purge/embargo 时序样本外验证 |
 
 回归测试（在 `agents/` 目录运行）：`python -m unittest discover -s tests -v`
 
@@ -212,13 +250,73 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
 ## 已知限制
 
 - 不提供实盘交易（仅 moomoo SIMULATE 账户）
-- DRAM ETF 上市 < 60 天，进化规则未训练，仅 decision 主流程有效
-- Claude CLI 调用延迟 30-60s，每天 ≤30 次（额度可控）
-- 不付任何 API key — 全部用 FRED 免费 + yfinance + Claude Code 订阅 CLI
+- DRAM ETF 历史数据短于老 ETF，长周期指标的有效样本可能较少
+- AI CLI 调用通常延迟 30-60s；半小时公共快照被强制锁定为 Codex，不会静默消耗 Claude 额度
+- 不需要模型 API key — 使用本机 Codex CLI 已保存登录；Claude 仅作为显式选择或显式 fallback
 
 ## Changelog
 
 每个 tag 对应的主要变更。详细 diff 见 [GitHub Releases](https://github.com/zzwjlwwdtg/fsi-skills-agents/releases)。
+
+### v0.4.0 — 2026-08-25
+
+**大版本**：宏观预测层 + 期权结构完整解读 + AI 新闻结构化生态成熟
+
+**新功能**：
+
+- **宏观预测层**（新）
+  - [`thesis_forecast.py`](agents/thesis_forecast.py) 未来 45 天事件 × 3 场景（dovish/base/hawkish）× 概率 → 概率加权期望 delta_pp
+  - 概率数据源: **Cleveland Fed InflationNowcast**（CPI/PCE）+ **CME FedWatch**（FOMC）+ 历史 prior（NFP/PPI/Retail）
+  - 每事件配 **金十数据风格 label**: 债/股 强利多/利多/偏多/无方向/偏空/利空/强利空 + `_ASSET_MAP` 12 组事件×方向 → 4×4 具体标的清单（利多 USD/能源/银行/黄金 vs 利空 科技股/长债/REITs/growth）
+  - [`policy_toolkit_tracker.py`](agents/policy_toolkit_tracker.py) **美债救援政策工具追踪**：Google News RSS + Fed 官方 → CLI 结构化 → 匹配 11 个预定义工具（回购/YCC/TGA/SLR/FIMA/汇市干预/QE/QRA/发债久期/Fed 鸽鹰口头）→ ^TYX 算 30Y T+0/T+1d 反应 bp
+  - [`trump_thesis_attribution.py`](agents/trump_thesis_attribution.py) Trump 帖子对 cut_prob 影响归因（48h 窗口）
+  - [`bond_ai_interpret.py`](agents/bond_ai_interpret.py) AI CLI 大白话解读 bond_monitor 数字
+  - [`thesis_history.py`](agents/thesis_history.py) 180d cut_prob 演化时序
+  - [`cleveland_nowcast.py`](agents/cleveland_nowcast.py) Cleveland Fed nowcast 数据抓取
+- **期权结构完整解读**（重点扩展）
+  - 每张卡的 **期权墙 SVG**（call/put 成交分布 + spot 虚线 + Max Pain + Pin/gamma_flip）
+  - **OI-based walls (asymmetric)**: call above spot / put below spot，避免 ITM 保护性 put OI 污染 defense 位
+  - **联合 wall bands**: 相邻多 strike 合并（例 AAPL $300+$295 = $285M 联合防御）
+  - **攻防位 4 列表格**: 行权价 / 单手保费（bid/ask mid） / OI 仓位 / 名义敞口
+  - [`gex_calc.py`](agents/gex_calc.py) **GEX + IV Regime + Skew** 三合一 stock verdict：3 类风险（breakdown/event/chase_high）+ 3 类机会（buy_now/add_more/reduce）+ 关键价位（阻力/pin/支撑）
+  - 挤压风险: gamma_up / put_break / gamma_band_up / put_band_break / max_pain_gravity
+  - **杠杆 ETF 结构价换算**（QQQ→TQQQ, SOXX→SOXL）: 3 个月历史折损校准 + spot-anchored + 到期路径估算
+  - 大单标记 🔥（OI ≥ 5K 或名义 ≥ $30M）+ 异常成交 ⚡（vol > 0.5×OI）
+  - [`option_flow.py`](agents/option_flow.py) 新增期权流扫描（quote-side 推断，与 wall 结构分离，score cap 69 防止单独触发自动减仓）
+  - [`moomoo_data.py`](agents/moomoo_data.py) openD 期权链主源（JP 支持 + 速度）+ yfinance fallback
+- **AI 新闻结构化生态**
+  - [`news_analyzer.py`](agents/news_analyzer.py) 统一 RSS → CLI → 固定 JSON schema pipeline（8 个事件枚举 + 归一化）
+  - Google News RSS 定题搜索作为主信源（Reuters/Bloomberg/CNBC/WSJ 聚合）
+  - CLI 分批（20/批 × 120s）避免超时
+- **Dashboard 层**（重排 + 新面板）
+  - 顶部 macro block：bond_monitor + AI 解读 + thesis 历史 + **未来 45 天事件场景预测** + **美债救援政策工具追踪** + Trump 归因
+  - 每张信号卡：多空共振条 → 期权墙 SVG → 攻防位表格 → 挤压风险 → **⚡ 期权判读**（GEX+IV+Skew 综合）→ C/P 比 → 墙 OI 失衡解读 → 财报徽章 → 供应链 D3 蜘蛛网（depth=1/2）→ 4 年基本面（財報狗风格：CROIC/Piotroski/借款/现金周转）
+  - 静态快照模式（`STATIC_SNAPSHOT_MODE`）→ GitHub Pages 部署
+- **标的扩容**（5 → 15+）
+  - 核心杠杆 ETF: TQQQ/SOXL/DRAM/MULL/GLD
+  - 权重股: NVDA/MSFT/AAPL
+  - 2026-Q3 thesis: NBIS（AI 云）+ SHY/IEI（债券对冲）
+  - AI 链: LITE（光通信）+ CBRS（Cerebras）
+  - 宏观 proxy: USO（油）+ XLV（医疗）
+  - JP 板块（长弘/TDK/ARE/MUFG 等 11 只 short name）
+
+**关键 bug 修复**：
+
+- **Gold 假 SELL** — `_gold_rules` 用 hardcoded `_tech_bear()`, RSI 82 → bear=2 → SELL 触发；bypass 了 `_calibrate_confidence` 已将 RSI/CCI overbought 在 gold 上剔除的 hit rate 29.5% 事实。Fix: 传 confluence 到 `_gold_rules`, 用 `bull_weighted/bear_weighted`
+- **Confluence 未 attach 到信号** — `strategy_runner.emit_signal` → `get_decision` 计算但不带出；只有 orchestrator 手工 attach。Fix: `get_decision` 统一 attach `result["confluence"]`
+- **僵尸信号文件** — `US.GLD_latest.json` 等 2026-05 老文件仍在 dashboard 显示旧 SELL；`rm` 清理
+- **AI 宏观暂时不可用** — `f'{None:+.2f}'` 崩溃；加 `if x is not None else "数据不足"` 防御
+- **snapshot endpoints 缺失** — `/api/thesis_forecast`, `/api/thesis_history`, `/api/trump_attribution`, `/api/policy_toolkit` 未加到 `GLOBAL_ENDPOINTS` → docs snapshot 缺 4 个 JSON
+- **URL 参数不匹配** — dashboard `fetchJson('/api/thesis_forecast?days=45')` 但 snapshot 存为无参数文件；改为无参 URL
+- **stale market_impact** — thesis_forecast cache 生成早于 `_market_impact_from_expected`, 前端 fallback "中性"；purge cache 后正确显示 CPI -7.88pp = 债/股 强利空
+- **TECHNICAL_ONLY 默认 ON** — Trump/breaking_news/事件日历退化为 banner, 不进 decision_agent 评分（避免消息面噪音）
+
+**新记忆**：
+
+- [feedback_technical_only_mode.md](memory) 决策只看技术面
+- [feedback_oos_required.md](memory) 自动减仓/反转信号必须 OOS 验证
+- [feedback_model_selection.md](memory) 简单任务用 Haiku/Sonnet，Opus 只留深度推理
+- [project_thesis_2026Q3.md](memory) 2026-Q3 二阶导拐点 thesis（bond+cloud long, avoid semi）
 
 ### [v0.3.0](https://github.com/zzwjlwwdtg/fsi-skills-agents/releases/tag/v0.3.0) — 2026-07-28
 
@@ -249,7 +347,7 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
 - **WebUI Dashboard**（零依赖 Python 自带 `http.server`）
   - [`webui.py`](agents/webui.py) 8 个 API 端点（health/nav/positions/trades/log/hmm/signals/banners/ai_analysis）
   - [`dashboard.html`](agents/dashboard.html) 单页 SPA + Chart.js + marked.js
-  - NAV 时序图 + 每标的信号卡（bull/bear 共振条 + regime 徽章）+ HMM 状态 + Trump/Gold Macro 卡片 + Claude 分析 markdown 渲染
+  - NAV 时序图 + 每标的信号卡（bull/bear 共振条 + regime 徽章）+ HMM 状态 + Trump/Gold Macro 卡片 + AI 分析 markdown 渲染
   - 30s 自动刷新，仅绑 127.0.0.1
   - [`webui.bat`](agents/webui.bat) 启动
 - **Watchdog + 自动重启** [`_watchdog.py`](agents/_watchdog.py)
@@ -293,10 +391,10 @@ weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accu
 
 JP Social Reco 接入 + Block ⑫
 
-- 接入 [`jp_social_reco`](agents/jp_social_reco/) 子系统到主框架（snap.bat / orchestrator / Claude prompt）
+- 接入 [`jp_social_reco`](agents/jp_social_reco/) 子系统到主框架（snap.bat / orchestrator / AI prompt）
 - 新增 `get_jp_social_with_backtest()`：信号 + 创作者历史胜率 + ticker 按 horizon 回测命中
 - 新增 `format_jp_social_banner_enhanced()`：含星标 / thesis / 风险 / 时间维度 / 创作者胜率 / 回测命中
-- Claude prompt 加 **block ⑫** JP 博主推荐，要求 ≥★★★ 标的必须列入早盘可参考清单
+- AI prompt 加 **block ⑫** JP 博主推荐，要求 ≥★★★ 标的必须列入早盘可参考清单
 - 星标算法（按 mentions × creators 数）：★★★★★ / ★★★★ / ★★★ / ★★ / ★
 - bug 修复：price_check 字段附加方式 + creator_accuracy 取 creators list
 
@@ -312,7 +410,7 @@ JP Social Reco 接入 + Block ⑫
 - 期权盯盘（Call/Put Wall + Max Pain + GEX + 三巫日 + 关联财报）
 - V 反弹追买（1x WATCH_BUY / 杠杆 LONG_HOLD 分流）
 - 事件分级（CPI/FOMC/NFP critical, PCE/PPI/Retail high, 财报 moderate）
-- Claude CLI 综合解读 + 结构化 JSON 目标价（A 方案）
+- Codex 优先的 AI CLI 综合解读 + 结构化 JSON 目标价（A 方案）
 - decision_agent 自动算 stop_ref（B 方案）→ paper_trader 挂真实 SELL STOP
 - ticker prefix bug 修复（_scaled_pct 兼容 "SOXL" 和 "US.SOXL"）
 - trump_score 方向不对称（bullish 不加 risk）
