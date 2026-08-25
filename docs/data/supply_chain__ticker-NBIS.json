@@ -1,0 +1,126 @@
+{
+  "ticker": "NBIS",
+  "sector": "云计算/AI基础设施",
+  "business": "Nebius Group 是原 Yandex 分拆出的 AI 云基础设施服务商，提供 GPU 算力租赁、AI 云平台及数据中心托管服务",
+  "upstream": [
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "提供 H100/H200/B200 GPU，是 AI 云算力核心硬件",
+      "weight": 45,
+      "confidence": "high"
+    },
+    {
+      "name": "Supermicro",
+      "ticker": "SMCI",
+      "note": "提供 GPU 服务器整机及机架级方案",
+      "weight": 15,
+      "confidence": "medium"
+    },
+    {
+      "name": "Dell Technologies",
+      "ticker": "DELL",
+      "note": "提供服务器硬件及数据中心基础设施",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "Arista Networks",
+      "ticker": "ANET",
+      "note": "提供高性能网络交换机用于 GPU 集群互联",
+      "weight": 8,
+      "confidence": "medium"
+    },
+    {
+      "name": "施耐德电气",
+      "ticker": "SU.PA",
+      "note": "数据中心电力与冷却基础设施",
+      "weight": 7,
+      "confidence": "medium"
+    },
+    {
+      "name": "TSMC",
+      "ticker": "TSM",
+      "note": "间接上游，代工 NVIDIA GPU 芯片",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "AI 初创公司群体（含 Mistral、Recraft 等）",
+      "ticker": null,
+      "note": "租用 GPU 算力训练/推理大模型",
+      "weight": 40,
+      "confidence": "medium"
+    },
+    {
+      "name": "企业级 AI 客户",
+      "ticker": null,
+      "note": "生成式 AI 应用与推理工作负载",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "Prosus/Naspers 关联企业",
+      "ticker": "PRX.AS",
+      "note": "历史股东关联云服务需求",
+      "weight": 10,
+      "confidence": "low"
+    },
+    {
+      "name": "学术/研究机构",
+      "ticker": null,
+      "note": "科研级 HPC 与 AI 训练",
+      "weight": 10,
+      "confidence": "low"
+    },
+    {
+      "name": "金融/医疗行业客户",
+      "ticker": null,
+      "note": "垂直行业 AI 推理与数据处理",
+      "weight": 8,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "CoreWeave",
+      "ticker": "CRWV",
+      "note": "最直接对标的纯 AI GPU 云服务商",
+      "confidence": "high"
+    },
+    {
+      "name": "Amazon Web Services",
+      "ticker": "AMZN",
+      "note": "超大规模云的 GPU 实例（P5/Trainium）",
+      "confidence": "high"
+    },
+    {
+      "name": "Microsoft Azure",
+      "ticker": "MSFT",
+      "note": "超大规模云 AI 基础设施",
+      "confidence": "high"
+    },
+    {
+      "name": "Oracle Cloud Infrastructure",
+      "ticker": "ORCL",
+      "note": "OCI GPU 集群与 AI 云服务",
+      "confidence": "high"
+    },
+    {
+      "name": "Applied Digital",
+      "ticker": "APLD",
+      "note": "AI 数据中心与 HPC 主机托管",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-08-06T02:06:25.276676+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-08-06T11:06:25.278179",
+    "age_sec": 1693602,
+    "stale": false,
+    "refreshing": false
+  }
+}
