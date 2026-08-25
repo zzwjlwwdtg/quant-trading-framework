@@ -51,6 +51,9 @@ GLOBAL_ENDPOINTS = [
     "/api/hmm",           # market regime detection (bull_low_vol/crisis/…) 公开市场信号
     "/api/bond_monitor",  # 美债 yields + TIPS + GLD 20d correlation + anomaly
     "/api/bond_ai_interpret",  # AI CLI 大白话解读 bond_monitor 数字
+    "/api/thesis_forecast",    # 未来 45 天事件场景预测 (dovish/base/hawkish × 概率)
+    "/api/thesis_history",     # 180d cut_prob 演化 (mini chart 用)
+    "/api/trump_attribution",  # Trump 帖子对 cut_prob 影响归因
     "/api/fed_watch",     # CME FedWatch 加息预期 (AI CLI + live web search)
     "/api/ai_analysis",
     "/api/ai_targets",    # AI CLI 结构化交易目标 (paper_trader 用来挂 GTC 限价 + SELL STOP)

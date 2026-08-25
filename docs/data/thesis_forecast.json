@@ -1,0 +1,307 @@
+{
+  "as_of": "2026-08-25",
+  "days_ahead": 45,
+  "count": 7,
+  "events": [
+    {
+      "date": "2026-09-04",
+      "days_until": 10,
+      "event": "NFP Release",
+      "impact": "critical",
+      "event_type": "NFP",
+      "scenarios": {
+        "dovish": {
+          "desc": "NFP < 100K (就业明显放缓)",
+          "delta_pp": 5,
+          "prob_note": "推动 Fed 降息保就业",
+          "probability": 0.1
+        },
+        "mild_dovish": {
+          "desc": "NFP 100-150K (温和放缓)",
+          "delta_pp": 2,
+          "prob_note": "略微支持降息",
+          "probability": 0.15
+        },
+        "base": {
+          "desc": "NFP 150-250K (符合共识)",
+          "delta_pp": 0,
+          "prob_note": "无明显方向",
+          "probability": 0.45
+        },
+        "hawkish": {
+          "desc": "NFP 250-350K (就业强劲)",
+          "delta_pp": -3,
+          "prob_note": "推迟降息",
+          "probability": 0.2
+        },
+        "very_hawkish": {
+          "desc": "NFP > 350K (就业过热)",
+          "delta_pp": -6,
+          "prob_note": "Fed 更不敢降息",
+          "probability": 0.1
+        }
+      },
+      "delta_range_pp": [
+        -6,
+        5
+      ],
+      "range_desc": "(-6pp ~ +5pp)",
+      "expected_delta_pp": -0.4,
+      "probability_source": "prior"
+    },
+    {
+      "date": "2026-09-09",
+      "days_until": 15,
+      "event": "CPI Release",
+      "impact": "critical",
+      "event_type": "CPI",
+      "scenarios": {
+        "dovish": {
+          "desc": "CPI MoM < -0.15% (通胀明显冷却)",
+          "delta_pp": 8,
+          "prob_note": "让 Fed 有明确借口降息",
+          "probability": 0.0
+        },
+        "mild_dovish": {
+          "desc": "CPI MoM -0.15% ~ -0.05% (略冷)",
+          "delta_pp": 3,
+          "prob_note": "略微支持降息",
+          "probability": 0.0
+        },
+        "base": {
+          "desc": "CPI MoM -0.05% ~ +0.05% (符合共识)",
+          "delta_pp": 0,
+          "prob_note": "无明显方向",
+          "probability": 0.001
+        },
+        "mild_hawkish": {
+          "desc": "CPI MoM +0.05% ~ +0.15% (略强)",
+          "delta_pp": -3,
+          "prob_note": "略微推迟降息",
+          "probability": 0.023
+        },
+        "hawkish": {
+          "desc": "CPI MoM > +0.15% (通胀反弹)",
+          "delta_pp": -8,
+          "prob_note": "Fed 会推迟降息",
+          "probability": 0.976
+        }
+      },
+      "delta_range_pp": [
+        -8,
+        8
+      ],
+      "range_desc": "(-8pp ~ +8pp)",
+      "expected_delta_pp": -7.88,
+      "probability_source": "cleveland_fed_nowcast"
+    },
+    {
+      "date": "2026-09-10",
+      "days_until": 16,
+      "event": "PPI Release",
+      "impact": "high",
+      "event_type": "PPI",
+      "scenarios": {
+        "dovish": {
+          "desc": "PPI MoM < 0% (生产端通胀降)",
+          "delta_pp": 3,
+          "prob_note": "通胀领先指标降",
+          "probability": 0.2
+        },
+        "base": {
+          "desc": "PPI MoM 符合预期",
+          "delta_pp": 0,
+          "prob_note": "无方向",
+          "probability": 0.5
+        },
+        "hawkish": {
+          "desc": "PPI MoM > +0.3%",
+          "delta_pp": -3,
+          "prob_note": "上游通胀有压力",
+          "probability": 0.3
+        }
+      },
+      "delta_range_pp": [
+        -3,
+        3
+      ],
+      "range_desc": "(-3pp ~ +3pp)",
+      "expected_delta_pp": -0.3,
+      "probability_source": "prior"
+    },
+    {
+      "date": "2026-09-15",
+      "days_until": 21,
+      "event": "Retail Sales",
+      "impact": "high",
+      "event_type": "Retail Sales",
+      "scenarios": {
+        "dovish": {
+          "desc": "零售 MoM < 0% (消费明显走弱)",
+          "delta_pp": 3,
+          "prob_note": "支持降息保消费",
+          "probability": 0.2
+        },
+        "base": {
+          "desc": "零售 MoM 0-0.5% (中性)",
+          "delta_pp": 0,
+          "prob_note": "无方向",
+          "probability": 0.55
+        },
+        "hawkish": {
+          "desc": "零售 MoM > 0.5% (消费强)",
+          "delta_pp": -2,
+          "prob_note": "略微推迟降息",
+          "probability": 0.25
+        }
+      },
+      "delta_range_pp": [
+        -2,
+        3
+      ],
+      "range_desc": "(-2pp ~ +3pp)",
+      "expected_delta_pp": 0.1,
+      "probability_source": "prior"
+    },
+    {
+      "date": "2026-09-15",
+      "days_until": 21,
+      "event": "FOMC Decision",
+      "impact": "critical",
+      "event_type": "FOMC",
+      "scenarios": {
+        "surprise_cut": {
+          "desc": "降息 25bp (远超预期)",
+          "delta_pp": 30,
+          "prob_note": "已发生就是 confirm, 后续概率 100%",
+          "probability": 0.05
+        },
+        "dovish_hold": {
+          "desc": "维持 + dot plot 转鸽 / 释放降息信号",
+          "delta_pp": 8,
+          "prob_note": "Powell 发言暗示降息临近",
+          "probability": 0.25
+        },
+        "base": {
+          "desc": "维持 + 中性发言",
+          "delta_pp": 0,
+          "prob_note": "无明显方向",
+          "probability": 0.55
+        },
+        "hawkish_hold": {
+          "desc": "维持 + 强调通胀风险 / 推迟降息",
+          "delta_pp": -8,
+          "prob_note": "Powell 明确 pushback",
+          "probability": 0.12
+        },
+        "surprise_hike": {
+          "desc": "加息 (极端反常)",
+          "delta_pp": -25,
+          "prob_note": "降息 thesis 彻底破产",
+          "probability": 0.03
+        }
+      },
+      "delta_range_pp": [
+        -25,
+        30
+      ],
+      "range_desc": "(-25pp ~ +30pp)",
+      "expected_delta_pp": 1.79,
+      "probability_source": "prior"
+    },
+    {
+      "date": "2026-09-26",
+      "days_until": 32,
+      "event": "PCE Release",
+      "impact": "high",
+      "event_type": "PCE",
+      "scenarios": {
+        "dovish": {
+          "desc": "核心 PCE MoM < 0.15% (通胀冷却)",
+          "delta_pp": 5,
+          "prob_note": "Fed 主看这个数据",
+          "probability": 0.115
+        },
+        "base": {
+          "desc": "核心 PCE MoM 0.15-0.25% (中性)",
+          "delta_pp": 0,
+          "prob_note": "无明显方向",
+          "probability": 0.306
+        },
+        "hawkish": {
+          "desc": "核心 PCE MoM 0.25-0.30% (略强)",
+          "delta_pp": -3,
+          "prob_note": "略推迟降息",
+          "probability": 0.197
+        },
+        "very_hawkish": {
+          "desc": "核心 PCE MoM > 0.30% (通胀反弹)",
+          "delta_pp": -8,
+          "prob_note": "Fed 会明确 pushback",
+          "probability": 0.382
+        }
+      },
+      "delta_range_pp": [
+        -8,
+        5
+      ],
+      "range_desc": "(-8pp ~ +5pp)",
+      "expected_delta_pp": -3.07,
+      "probability_source": "cleveland_fed_nowcast"
+    },
+    {
+      "date": "2026-10-02",
+      "days_until": 38,
+      "event": "NFP Release",
+      "impact": "critical",
+      "event_type": "NFP",
+      "scenarios": {
+        "dovish": {
+          "desc": "NFP < 100K (就业明显放缓)",
+          "delta_pp": 5,
+          "prob_note": "推动 Fed 降息保就业",
+          "probability": 0.1
+        },
+        "mild_dovish": {
+          "desc": "NFP 100-150K (温和放缓)",
+          "delta_pp": 2,
+          "prob_note": "略微支持降息",
+          "probability": 0.15
+        },
+        "base": {
+          "desc": "NFP 150-250K (符合共识)",
+          "delta_pp": 0,
+          "prob_note": "无明显方向",
+          "probability": 0.45
+        },
+        "hawkish": {
+          "desc": "NFP 250-350K (就业强劲)",
+          "delta_pp": -3,
+          "prob_note": "推迟降息",
+          "probability": 0.2
+        },
+        "very_hawkish": {
+          "desc": "NFP > 350K (就业过热)",
+          "delta_pp": -6,
+          "prob_note": "Fed 更不敢降息",
+          "probability": 0.1
+        }
+      },
+      "delta_range_pp": [
+        -6,
+        5
+      ],
+      "range_desc": "(-6pp ~ +5pp)",
+      "expected_delta_pp": -0.4,
+      "probability_source": "prior"
+    }
+  ],
+  "generated_at": "2026-08-25T11:01:47",
+  "note": "Scenarios 是规则版预测. 实际数据发布时,系统会自动对照到最近的 scenario 追加 thesis_history 验证.",
+  "_meta": {
+    "cached_at": "2026-08-25T11:01:47.587699",
+    "age_sec": 138,
+    "stale": false,
+    "refreshing": false
+  }
+}

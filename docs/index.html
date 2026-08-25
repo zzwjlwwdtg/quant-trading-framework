@@ -109,7 +109,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-25T11:03:03", "endpoints_ok": 129, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-25T11:04:07", "endpoints_ok": 132, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -1539,9 +1539,9 @@ async function loadBondAIInterpret() {
   const [r, bond, history, tattr, forecast] = await Promise.all([
     fetchJson('/api/bond_ai_interpret'),
     fetchJson('/api/bond_monitor'),
-    fetchJson('/api/thesis_history?days=180'),
+    fetchJson('/api/thesis_history'),
     fetchJson('/api/trump_attribution'),
-    fetchJson('/api/thesis_forecast?days=45'),
+    fetchJson('/api/thesis_forecast'),
   ]);
   const macroCtx = (bond && bond.macro_context) || {};
   const trendRows = (history && history.rows) || [];
