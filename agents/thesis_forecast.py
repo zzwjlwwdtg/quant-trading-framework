@@ -298,6 +298,52 @@ def _get_fomc_probabilities(fed_watch: Optional[dict], event_date: str) -> Optio
     }
 
 
+def _market_impact_from_expected(event_type: str, expected_pp: float) -> dict:
+    """把 cut_prob 期望 delta 翻译成对债市/股市的影响.
+
+    传导逻辑:
+    · 债市: 与 cut_prob 强相关 (降息概率升 → 收益率降 → 债价升). 1:1 direct.
+    · 股市: 分两类事件:
+        - 利率敏感 (CPI/PCE/FOMC): 与 cut_prob 同向 (discount rate 主导)
+        - 增长敏感 (NFP/Retail/PPI): 与 cut_prob 反向 (经济强 = 利率高但盈利好, 混合)
+    """
+    def _label(pp: float, strong_thr=3.0, weak_thr=0.5) -> str:
+        if pp >= strong_thr: return "强利多"
+        if pp >= weak_thr:   return "利多"
+        if pp <= -strong_thr: return "强利空"
+        if pp <= -weak_thr:  return "利空"
+        return "中性"
+
+    # 债市: 直接同向
+    bond_label = _label(expected_pp)
+
+    # 股市: 分利率敏感 vs 增长敏感
+    rate_sensitive = event_type in ("CPI", "PCE", "FOMC")
+    if rate_sensitive:
+        # 利率降 = 股票估值升 (同向)
+        equity_label = _label(expected_pp)
+        equity_channel = "利率驱动"
+    else:
+        # 增长敏感: 数据软 = 债好但盈利差 → 股混合
+        # 打半折 + 加"混合"提示
+        soft_pp = expected_pp * 0.5
+        base = _label(soft_pp)
+        if base != "中性":
+            equity_label = f"{base}(增长+利率对冲)"
+        else:
+            equity_label = "中性"
+        equity_channel = "增长/利率混合"
+
+    return {
+        "bond": bond_label,
+        "equity": equity_label,
+        "equity_channel": equity_channel,
+        # 数字估算 (rough): 每 1pp cut_prob → 10Y yield ~-3bp, SPX ~+0.15%
+        "bond_yield_bps": round(-expected_pp * 3, 1),
+        "spx_pct_est": round(expected_pp * (0.15 if rate_sensitive else 0.05), 2),
+    }
+
+
 def _compute_expected_delta(scenarios: dict, probs: dict) -> tuple[float, str]:
     """Σ prob × delta_pp. 返回 (expected_pp, source)."""
     total = 0.0
@@ -393,6 +439,7 @@ def get_forecast(days_ahead: int = 45) -> dict:
 
         expected_pp, ev_source = _compute_expected_delta(scenarios, probs)
 
+        market_impact = _market_impact_from_expected(event_type, expected_pp)
         events_out.append({
             "date": ev["date"],
             "days_until": days_until,
@@ -402,8 +449,9 @@ def get_forecast(days_ahead: int = 45) -> dict:
             "scenarios": scenarios_with_prob,
             "delta_range_pp": [min_d, max_d],
             "range_desc": f"({min_d:+d}pp ~ {max_d:+d}pp)",
-            "expected_delta_pp": expected_pp,          # 概率加权期望值
-            "probability_source": prob_source,          # "cme_fedwatch" | "prior"
+            "expected_delta_pp": expected_pp,
+            "probability_source": prob_source,
+            "market_impact": market_impact,   # {bond, equity, equity_channel, bond_yield_bps, spx_pct_est}
         })
 
     events_out.sort(key=lambda x: x["days_until"])

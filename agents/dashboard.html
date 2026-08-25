@@ -1647,7 +1647,18 @@ async function loadBondAIInterpret() {
                     const impactCls = ev.impact === 'critical' ? 'bad' : 'warn';
                     const exp = ev.expected_delta_pp;
                     const expCls = exp > 0.5 ? 'ok' : exp < -0.5 ? 'bad' : 'muted';
-                    const src = ev.probability_source === 'cme_fedwatch' ? '📊 CME FedWatch' : '📈 历史 prior';
+                    const src = ev.probability_source === 'cleveland_fed_nowcast' ? '📊 CLEVELAND FED'
+                              : ev.probability_source === 'cme_fedwatch' ? '📊 CME FedWatch'
+                              : '📈 历史 prior';
+                    const mi = ev.market_impact || {};
+                    const impactColor = (label) => {
+                      if (!label || label === '中性') return 'muted';
+                      if (label.startsWith('强利多')) return 'ok';
+                      if (label.startsWith('利多')) return 'ok';
+                      if (label.startsWith('强利空')) return 'bad';
+                      if (label.startsWith('利空')) return 'bad';
+                      return 'muted';
+                    };
                     return `<div style="padding:5px 6px; margin-top:3px; background:rgba(88,166,255,0.03); border-left:2px solid #58a6ff; border-radius:2px">
                       <div style="display:flex; gap:6px; align-items:center; margin-bottom:3px; font-size:11px; flex-wrap:wrap">
                         <span style="color:var(--muted); min-width:82px">${ev.date}</span>
@@ -1655,8 +1666,17 @@ async function loadBondAIInterpret() {
                         <b>${ev.event}</b>
                         <small style="color:var(--muted)">${ev.days_until}d</small>
                         <small style="color:var(--muted); font-size:9.5px">${ev.range_desc}</small>
-                        <span style="margin-left:auto; font-size:10.5px" title="Σ 概率 × delta = 概率加权期望值 · 数据源: ${src}">
-                          期望 <b class="${expCls}">${exp >= 0 ? '+' : ''}${exp}pp</b>
+                        <span style="margin-left:auto; font-size:10.5px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                          <span title="Σ 概率 × delta = 概率加权期望值 · 数据源: ${src}">
+                            期望 <b class="${expCls}">${exp >= 0 ? '+' : ''}${exp}pp</b>
+                          </span>
+                          <span style="color:var(--muted); font-size:9.5px">·</span>
+                          <span title="债 10Y 收益率 delta ~${mi.bond_yield_bps || 0}bps">
+                            📉 <b>债</b> <b class="${impactColor(mi.bond)}">${mi.bond || '中性'}</b>
+                          </span>
+                          <span title="SPX 估算 ${mi.spx_pct_est >= 0 ? '+' : ''}${mi.spx_pct_est || 0}% · ${mi.equity_channel || ''}">
+                            📈 <b>股</b> <b class="${impactColor(mi.equity)}">${mi.equity || '中性'}</b>
+                          </span>
                           <small style="color:var(--muted); font-size:8.5px">${src}</small>
                         </span>
                       </div>
