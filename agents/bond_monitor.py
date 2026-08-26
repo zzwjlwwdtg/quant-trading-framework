@@ -441,6 +441,75 @@ def get_bond_monitor() -> dict:
             elif delta_tn < -0.05:
                 _warn("warn", f"Fed 12周缩表 ${delta_tn*1000:.0f}Bn (QT 仍在跑)", "qt_active")
 
+    # 8c) 流动性危机三大早期预警 (T-2周) — 机构级监测框架
+    #     MOVE (bond vol, T-1天预警, 比 VIX 早)
+    #     SOFR - IORB (融资市场地板, T-2周预警)
+    #     KBE/SPY (银行相对表现, SVB 前 2 周就跑输)
+    try:
+        import yfinance as yf
+        # 8c.i MOVE index — bond 隐含波动率, ICE BofA MOVE
+        move_hist = yf.Ticker("^MOVE").history(period="60d")
+        if move_hist is not None and not move_hist.empty:
+            move_val = round(float(move_hist["Close"].iloc[-1]), 1)
+            macro_context["move_index"] = move_val
+            if len(move_hist) >= 21:
+                move_20d = float(move_hist["Close"].iloc[-21])
+                macro_context["move_20d_delta"] = round(move_val - move_20d, 1)
+            # 阈值: <80 calm, 80-100 normal, 100-140 elevated, 140+ crisis, 180+ extreme
+            if move_val >= 180:
+                _warn("bad",  f"MOVE {move_val} 债市极端恐慌 (2020-03 / 2023-SVB 级别)", "move_extreme")
+            elif move_val >= 140:
+                _warn("bad",  f"MOVE {move_val} 债券波动率进入 crisis 区 (>140)", "move_crisis")
+            elif move_val >= 100:
+                _warn("warn", f"MOVE {move_val} 债券波动率抬升 (>100 = 期限对冲变贵)", "move_elevated")
+    except Exception as e:
+        logger.warning(f"[bond_monitor] MOVE 拉取失败: {e}")
+
+    # 8c.ii SOFR - IORB spread (Fed 行政地板破位 = 融资市场紧)
+    try:
+        sofr_rows = _fetch_fred_series("SOFR", days=15)
+        iorb_rows = _fetch_fred_series("IORB", days=15)
+        if sofr_rows and iorb_rows:
+            sofr_v = sofr_rows[0][1]
+            iorb_v = iorb_rows[0][1]
+            spread_bps = round((sofr_v - iorb_v) * 100, 1)
+            macro_context["sofr_pct"] = round(sofr_v, 3)
+            macro_context["iorb_pct"] = round(iorb_v, 3)
+            macro_context["sofr_iorb_spread_bps"] = spread_bps
+            # 阈值: <0 normal (SOFR 应在 IORB 下), 0-5 warn (地板破位), >5 alert, >15 extreme
+            if spread_bps >= 15:
+                _warn("bad",  f"SOFR-IORB +{spread_bps}bps 融资市场极端紧 (2019-09 repo 级)", "sofr_iorb_extreme")
+            elif spread_bps >= 5:
+                _warn("bad",  f"SOFR-IORB +{spread_bps}bps 地板破位, 融资开始紧", "sofr_iorb_alert")
+            elif spread_bps >= 1:
+                # 0bps 是常态 (SOFR 有时正好=IORB), 只有明显破位 (>=1bp) 才提示
+                _warn("warn", f"SOFR-IORB +{spread_bps}bps 短端流动性收紧 (SOFR 超越 IORB 地板)", "sofr_iorb_warn")
+    except Exception as e:
+        logger.warning(f"[bond_monitor] SOFR/IORB 拉取失败: {e}")
+
+    # 8c.iii KBE/SPY 银行压力 proxy (银行相对大盘, SVB 前 2 周 -8% 就已跌破)
+    try:
+        import yfinance as yf
+        kbe_hist = yf.Ticker("KBE").history(period="45d")
+        spy_hist = yf.Ticker("SPY").history(period="45d")
+        if (kbe_hist is not None and spy_hist is not None
+                and not kbe_hist.empty and not spy_hist.empty
+                and len(kbe_hist) >= 21 and len(spy_hist) >= 21):
+            ratio_now = float(kbe_hist["Close"].iloc[-1]) / float(spy_hist["Close"].iloc[-1])
+            ratio_20d = float(kbe_hist["Close"].iloc[-21]) / float(spy_hist["Close"].iloc[-21])
+            delta_20d = round((ratio_now / ratio_20d - 1) * 100, 2)
+            macro_context["kbe_spy_ratio"] = round(ratio_now, 5)
+            macro_context["kbe_spy_20d_delta_pct"] = delta_20d
+            # 阈值: >-3% normal, -3~-6% warn (跑输), <-6% alert (SVB 前情), <-10% extreme
+            if delta_20d <= -10:
+                _warn("bad",  f"KBE/SPY 20d {delta_20d}% 银行严重跑输 (>-10% = SVB/2008 级危机前情)", "bank_stress_extreme")
+            elif delta_20d <= -6:
+                _warn("bad",  f"KBE/SPY 20d {delta_20d}% 银行明显跑输 (2023-SVB 前 2 周就是这个)", "bank_stress_alert")
+            elif delta_20d <= -3:
+                _warn("warn", f"KBE/SPY 20d {delta_20d}% 银行相对走弱 (需持续观察)", "bank_stress_warn")
+    except Exception as e:
+        logger.warning(f"[bond_monitor] KBE/SPY 拉取失败: {e}")
+
     # 9) Credit spreads — BAML IG + HY OAS (FRED 免费，卖方 credit desk 首选)
     #    IG >120bps = 收紧, >150bps = stress
     #    HY >400bps = 收紧, >500bps = risk-off

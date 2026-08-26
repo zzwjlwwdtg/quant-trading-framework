@@ -172,6 +172,18 @@ def _make_prompt(bond_data: dict) -> str:
             "VIX 波动率": mc.get("vix") or "N/A",
             "BBI (Bull&Bear 复合)": mc.get("bbi_score") or "N/A",
         },
+        "机构级流动性危机预警 (T-2周 → T-1天)": {
+            "MOVE 债券波动率": (f"{mc.get('move_index')}"
+                              f" ({'crisis >140' if (mc.get('move_index') or 0) >= 140 else 'elevated >100' if (mc.get('move_index') or 0) >= 100 else 'normal'})"
+                              if mc.get("move_index") is not None else "N/A"),
+            "MOVE 20天变化": mc.get("move_20d_delta") if mc.get("move_20d_delta") is not None else "N/A",
+            "SOFR-IORB 利差": (f"{mc.get('sofr_iorb_spread_bps'):+.1f}bps "
+                             f"({'融资市场紧' if (mc.get('sofr_iorb_spread_bps') or -99) >= 5 else '正常'})"
+                             if mc.get("sofr_iorb_spread_bps") is not None else "N/A"),
+            "KBE/SPY 银行相对 20d": (f"{mc.get('kbe_spy_20d_delta_pct'):+.2f}% "
+                                    f"({'SVB 前情!' if (mc.get('kbe_spy_20d_delta_pct') or 0) <= -6 else '轻微跑输' if (mc.get('kbe_spy_20d_delta_pct') or 0) <= -3 else '正常'})"
+                                    if mc.get("kbe_spy_20d_delta_pct") is not None else "N/A"),
+        },
         "政策流动性 (关键: 判断 nfci loose 是政策松还是 Treasury 影子 QE)": {
             "Fed 资产负债表 WALCL": f"${mc.get('walcl_tn')}T" if mc.get("walcl_tn") is not None else "N/A",
             "WALCL 12周变化": (f"${mc.get('walcl_12w_delta_bn')}Bn "

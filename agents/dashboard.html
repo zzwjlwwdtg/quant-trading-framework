@@ -2020,6 +2020,65 @@ async function loadBondMonitor() {
         </div>` : ''}
     </div>` : '';
 
+  // 🚨 机构级流动性危机预警 (MOVE + SOFR-IORB + KBE/SPY 3 指标)
+  // 阈值触发时高亮显示; 全部正常时 collapsed 只展示汇总
+  const liq = {
+    move: mc.move_index,
+    move_delta: mc.move_20d_delta,
+    sofr_iorb: mc.sofr_iorb_spread_bps,
+    kbe_spy: mc.kbe_spy_20d_delta_pct,
+  };
+  const liqHasData = liq.move != null || liq.sofr_iorb != null || liq.kbe_spy != null;
+  // 每个指标的 status: ok/warn/bad/extreme
+  const liqStatus = {
+    move: liq.move == null ? 'unknown' : (liq.move >= 180 ? 'extreme' : liq.move >= 140 ? 'bad' : liq.move >= 100 ? 'warn' : 'ok'),
+    sofr_iorb: liq.sofr_iorb == null ? 'unknown' : (liq.sofr_iorb >= 15 ? 'extreme' : liq.sofr_iorb >= 5 ? 'bad' : liq.sofr_iorb >= 1 ? 'warn' : 'ok'),
+    kbe_spy: liq.kbe_spy == null ? 'unknown' : (liq.kbe_spy <= -10 ? 'extreme' : liq.kbe_spy <= -6 ? 'bad' : liq.kbe_spy <= -3 ? 'warn' : 'ok'),
+  };
+  const anyAlert = Object.values(liqStatus).some(s => s === 'warn' || s === 'bad' || s === 'extreme');
+  const worstStatus = Object.values(liqStatus).includes('extreme') ? 'extreme'
+                    : Object.values(liqStatus).includes('bad') ? 'bad'
+                    : Object.values(liqStatus).includes('warn') ? 'warn' : 'ok';
+  const liqBgColor = {ok:'rgba(63,185,80,0.05)', warn:'rgba(210,153,34,0.10)', bad:'rgba(248,81,73,0.15)', extreme:'rgba(248,81,73,0.25)', unknown:'rgba(255,255,255,0.03)'}[worstStatus];
+  const liqBorderColor = {ok:'#3fb950', warn:'#d29922', bad:'#f85149', extreme:'#f85149', unknown:'#484f58'}[worstStatus];
+  const liqIcon = worstStatus === 'extreme' ? '🚨' : worstStatus === 'bad' ? '🔴' : worstStatus === 'warn' ? '🟡' : '🟢';
+  const liqStatusZh = {ok:'全部正常', warn:'预警', bad:'警戒', extreme:'危机', unknown:'数据缺失'}[worstStatus];
+  const cellCls = (s) => ({ok:'ok', warn:'warn', bad:'bad', extreme:'bad', unknown:'muted'}[s]);
+  const cellBg = (s) => ({ok:'', warn:'rgba(210,153,34,0.08)', bad:'rgba(248,81,73,0.10)', extreme:'rgba(248,81,73,0.20)', unknown:''}[s]);
+  const moveLabel = liq.move == null ? '?' : (liq.move >= 180 ? '极端恐慌' : liq.move >= 140 ? '危机区' : liq.move >= 100 ? '抬升' : '正常');
+  const sofrLabel = liq.sofr_iorb == null ? '?' : (liq.sofr_iorb >= 15 ? '2019 repo 级' : liq.sofr_iorb >= 5 ? '地板破位' : liq.sofr_iorb >= 1 ? '触及' : '正常');
+  const kbeLabel = liq.kbe_spy == null ? '?' : (liq.kbe_spy <= -10 ? 'SVB/2008 级前情' : liq.kbe_spy <= -6 ? 'SVB 前 2 周' : liq.kbe_spy <= -3 ? '轻微跑输' : '正常');
+  const liqHtml = liqHasData ? `
+    <details style="margin:6px 0; padding:5px 8px; background:${liqBgColor}; border-left:3px solid ${liqBorderColor}; border-radius:4px" ${anyAlert ? 'open' : ''}>
+      <summary style="cursor:pointer; list-style:none; font-size:11px; font-weight:600">
+        ${liqIcon} <span style="color:${liqBorderColor}">机构级流动性危机预警</span>
+        <small style="color:var(--muted); font-weight:normal; margin-left:5px">${liqStatusZh}</small>
+      </summary>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:5px; margin-top:5px; font-size:10.5px">
+        <div style="padding:4px 6px; background:${cellBg(liqStatus.move)}; border-radius:3px" title="ICE BofA MOVE Index · Treasury 30Y 隐含波动率 · <100 正常 / 100-140 抬升 / 140+ 危机 (2020-03/2023-SVB) / 180+ 极端">
+          <b>📊 MOVE 债券波动</b><br>
+          <b class="${cellCls(liqStatus.move)}" style="font-size:16px">${liq.move ?? '?'}</b>
+          <small class="${cellCls(liqStatus.move)}"> ${moveLabel}</small>
+          ${liq.move_delta != null ? `<small style="color:var(--muted); display:block">20d: ${liq.move_delta >= 0 ? '+' : ''}${liq.move_delta}</small>` : ''}
+        </div>
+        <div style="padding:4px 6px; background:${cellBg(liqStatus.sofr_iorb)}; border-radius:3px" title="SOFR 隔夜实际利率 减 IORB Fed 行政地板 · SOFR 应低于 IORB · 突破 = 融资市场紧 · +5bps 警戒 · +15bps 2019-09 repo 危机级">
+          <b>💰 SOFR - IORB</b><br>
+          <b class="${cellCls(liqStatus.sofr_iorb)}" style="font-size:16px">${liq.sofr_iorb != null ? (liq.sofr_iorb >= 0 ? '+' : '') + liq.sofr_iorb : '?'}bps</b>
+          <small class="${cellCls(liqStatus.sofr_iorb)}"> ${sofrLabel}</small>
+          <small style="color:var(--muted); display:block">SOFR ${mc.sofr_pct ?? '?'}% vs IORB ${mc.iorb_pct ?? '?'}%</small>
+        </div>
+        <div style="padding:4px 6px; background:${cellBg(liqStatus.kbe_spy)}; border-radius:3px" title="KBE 银行 ETF / SPY 大盘 · 20 日相对表现 · SVB 前 2 周就 -8%~-10% · -6% 警戒 · -10% 危机">
+          <b>🏦 KBE/SPY 银行相对</b><br>
+          <b class="${cellCls(liqStatus.kbe_spy)}" style="font-size:16px">${liq.kbe_spy != null ? (liq.kbe_spy >= 0 ? '+' : '') + liq.kbe_spy.toFixed(1) : '?'}%</b>
+          <small class="${cellCls(liqStatus.kbe_spy)}"> ${kbeLabel}</small>
+          <small style="color:var(--muted); display:block">20d 变化</small>
+        </div>
+      </div>
+      <div style="margin-top:5px; font-size:9.5px; color:var(--muted); line-height:1.4">
+        💡 <b>预警时效顺序</b>: SOFR-IORB (T-2周) → KBE/SPY (T-2周) → MOVE (T-1天) → VIX/HY (T-0). 融资端最早, 股票最晚.
+      </div>
+    </details>` : '';
+
   // FRED PNG charts (直接嵌入官方图，每日自动更新，零维护)
   const fredCharts = `
     <details style="margin-top:6px; padding-top:5px; border-top:1px dashed var(--border)">
@@ -2114,6 +2173,7 @@ async function loadBondMonitor() {
 
   el.innerHTML = `
     ${warningsHtml}
+    ${liqHtml}
     ${macroCtxHtml}
     <div style="font-size:11px; color:var(--muted); margin-bottom:4px">
       收益率快照 · <span style="color:var(--muted); font-size:9px">asof ${b.asof || '-'}</span>
