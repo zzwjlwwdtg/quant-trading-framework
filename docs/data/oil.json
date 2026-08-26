@@ -1,12 +1,12 @@
 {
-  "ts": "2026-08-26T12:57:51.103868+00:00",
+  "ts": "2026-08-26T13:30:21.076491+00:00",
   "factors": [
     {
       "arrow": "▼",
       "name": "WTI 油价",
       "direction": "bearish",
       "weight": 1,
-      "value": "$80.26 (20d -5.0%)",
+      "value": "$80.72 (20d -4.4%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,15 +14,15 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$5.03 (Brent $85.29 - WTI $80.26)",
+      "value": "$4.98 (Brent $85.7 - WTI $80.72)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
-      "arrow": "▲",
+      "arrow": "·",
       "name": "XLE 能源板块",
-      "direction": "bullish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "XLE +7.8% vs SPY +3.4% (差 +4.4pp)",
+      "value": "XLE +4.8% vs SPY +4.9% (差 -0.1pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "99.05 (5d +0.2%)",
+      "value": "99.1 (5d +0.3%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -58,19 +58,19 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "neutral",
-  "score": -1,
+  "direction": "bearish",
+  "score": -2,
   "notes": [
     "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
   ],
-  "price": 80.26,
-  "pct_5d": -6.49,
-  "pct_20d": -4.97,
+  "price": 80.72,
+  "pct_5d": -5.95,
+  "pct_20d": -4.43,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-26T21:57:52.734028",
-    "age_sec": 314,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-26T22:30:23.388288",
+    "age_sec": 161,
+    "stale": false,
+    "refreshing": false
   }
 }
