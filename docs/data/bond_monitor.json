@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-26T20:53",
+  "asof": "2026-08-26T21:24",
   "yields": {
     "10y": {
       "value": 4.639,
@@ -247,6 +247,11 @@
     },
     {
       "level": "warn",
+      "msg": "SOFR-IORB +1.0bps 短端流动性收紧 (SOFR 超越 IORB 地板)",
+      "key": "sofr_iorb_warn"
+    },
+    {
+      "level": "warn",
       "msg": "KBE/SPY 20d -5.83% 银行相对走弱 (需持续观察)",
       "key": "bank_stress_warn"
     },
@@ -292,16 +297,16 @@
     "walcl_12w_delta_bn": 35.0,
     "move_index": 71.9,
     "move_20d_delta": -4.2,
-    "sofr_pct": 3.65,
+    "sofr_pct": 3.66,
     "iorb_pct": 3.65,
-    "sofr_iorb_spread_bps": 0.0,
+    "sofr_iorb_spread_bps": 1.0,
     "kbe_spy_ratio": 0.08936,
     "kbe_spy_20d_delta_pct": -5.83,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 269.0,
-    "dxy": 99.02,
-    "dxy_pct_20d": -1.77,
-    "dxy_z_60d": -1.09,
+    "dxy": 98.97,
+    "dxy_pct_20d": -1.82,
+    "dxy_z_60d": -1.14,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -348,14 +353,14 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7685.75,
-        "chg_pct": -0.08
+        "price": 7687.75,
+        "chg_pct": -0.06
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29205.25,
-        "chg_pct": -0.24
+        "price": 29219.75,
+        "chg_pct": -0.19
       },
       "cl_f": {
         "symbol": "CL=F",
@@ -366,8 +371,8 @@
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4674.4,
-        "chg_pct": 0.78
+        "price": 4682.9,
+        "chg_pct": 0.97
       }
     },
     "oil_uso": 126.15,
@@ -457,7 +462,7 @@
     "stablecoin_total_bn": 256.8,
     "usdt_bn": 183.2,
     "usdc_bn": 73.6,
-    "vix": 15.69,
+    "vix": 15.67,
     "bbi_score": 1.12,
     "bbi_components": {
       "vix": -0.39,
@@ -467,8 +472,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-08-26T20:53:31.062480",
-    "age_sec": 573,
+    "cached_at": "2026-08-26T21:24:31.476668",
+    "age_sec": 514,
     "stale": false,
     "refreshing": false
   }
