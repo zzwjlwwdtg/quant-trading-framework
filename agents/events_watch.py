@@ -185,10 +185,12 @@ EQUITY_CALENDAR = [
     {"date": "2026-11-18", "event": "NVDA Earnings (est)",   "impact": "high"},
     # 2026-Q3 thesis: 核心 PCE (BEA)、GOOG/AMZN Q3 earnings — invalidation triggers
     # 详见 memory/project_thesis_2026Q3.md
-    {"date": "2026-08-29", "event": "PCE Release (核心 PCE >0.25% m/m = bond thesis invalidate)", "impact": "critical"},
-    {"date": "2026-09-26", "event": "PCE Release", "impact": "critical"},
-    {"date": "2026-10-31", "event": "PCE Release", "impact": "critical"},
-    {"date": "2026-11-26", "event": "PCE Release", "impact": "critical"},
+    # BEA Personal Income & Outlays 通常是每月倒数第 2 或最后一个工作日 (Wed-Fri) 08:30 ET
+    # 与 GOLD_CALENDAR 里的 PCE 日期对齐 (2026-08-28 曾经错为 08-29)
+    {"date": "2026-08-28", "event": "PCE Release (核心 PCE >0.25% m/m = bond thesis invalidate)", "impact": "critical"},
+    {"date": "2026-09-25", "event": "PCE Release", "impact": "critical"},
+    {"date": "2026-10-30", "event": "PCE Release", "impact": "critical"},
+    {"date": "2026-11-25", "event": "PCE Release", "impact": "critical"},
     # GOOG / AMZN Q3 财报（capex 若继续上调 → AI 价值链 shift 判断错误）
     {"date": "2026-10-28", "event": "GOOG Q3 Earnings (capex 是否继续上调?)", "impact": "high"},
     {"date": "2026-10-30", "event": "AMZN Q3 Earnings (capex 是否继续上调?)", "impact": "high"},
