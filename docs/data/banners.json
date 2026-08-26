@@ -8,18 +8,65 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "NOISE": 7,
-      "MEDIA_ATTACK": 1,
-      "DOMESTIC_POLICY": 1
+      "NOISE": 14,
+      "MEDIA_ATTACK": 3,
+      "DOMESTIC_POLICY": 6,
+      "GEOPOLITICAL": 4,
+      "DEAL": 2
     },
-    "breaking": [],
+    "breaking": [
+      {
+        "event_type": "DEAL",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 9,
+        "tickers": [
+          "SOXL",
+          "NVDA",
+          "QQQ",
+          "TQQQ",
+          "SPY"
+        ],
+        "preview": "Apple to invest $30 billion in US chip manufacturing: https://www.foxbusiness.com/media/apple-invest-30-billion-us-chip-",
+        "verbatim": "Apple to invest $30 billion in US chip manufacturing",
+        "post_time": "2026-08-26T16:21:18.460Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "Bessent: Iran's Leadership 'Panicking' Under Trump Economic Offensive — Vows to Sever 'Every Economic Lifeline': https:/",
+        "verbatim": "Iran's Leadership 'Panicking' Under Trump Economic Offensive — Vows to Sever 'Every Economic Lifeline'",
+        "post_time": "2026-08-26T16:22:27.742Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "Trump Unleashes Scott Bessent on Iran: https://www.wsj.com/opinion/donald-trump-scott-bessent-sanctions-iran-oil-economy",
+        "verbatim": "Trump Unleashes Scott Bessent on Iran",
+        "post_time": "2026-08-26T16:26:54.420Z"
+      }
+    ],
     "summary": {
-      "text": "三条均为噪音或转发，缺乏政策信号，市场情绪中性。",
+      "text": "纪念阵亡军人并转向反气候政策，情绪偏中性略利空。",
       "state": "cached",
       "post_ids": [
-        "117162591991461737",
-        "117162570262085889",
-        "117162569163470489"
+        "117163377375423640",
+        "117162808158712669",
+        "117162779250247451"
       ]
     }
   },
