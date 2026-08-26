@@ -3,9 +3,21 @@
   "flow": null,
   "anomaly": {
     "detected": true,
-    "reason": "8/26 09:15 0.61× 均值 · 主动买 ¥34.65億 (@¥6991.0)",
-    "score": 0.4,
+    "reason": "8/26 09:50 1.19× 均值 · 主动卖 ¥42.6億 (@¥6897.0)",
+    "score": 0.8,
     "peak_bars": [
+      {
+        "time": "09:50",
+        "vol": 617600,
+        "ratio": 1.19,
+        "open": 6944.0,
+        "price": 6897.0,
+        "chg_pct": -0.68,
+        "direction": "sell",
+        "value_oku": 42.6,
+        "date": "2026-08-26",
+        "tier": "huge_abs"
+      },
       {
         "time": "09:15",
         "vol": 495700,
@@ -29,21 +41,45 @@
         "value_oku": 33.23,
         "date": "2026-08-26",
         "tier": "huge_abs"
+      },
+      {
+        "time": "10:05",
+        "vol": 456900,
+        "ratio": 0.91,
+        "open": 6949.0,
+        "price": 6998.0,
+        "chg_pct": 0.71,
+        "direction": "buy",
+        "value_oku": 31.97,
+        "date": "2026-08-26",
+        "tier": "huge_abs"
       }
     ],
-    "day_ratio": 0.12,
+    "day_ratio": 0.22,
     "trading_date": "2026-08-26",
     "date_short": "8/26",
     "net_bias": "neutral",
-    "buy_shares": 495700,
-    "sell_shares": 478500,
-    "buy_value_oku": 34.65,
-    "sell_value_oku": 33.23,
+    "buy_shares": 952600,
+    "sell_shares": 1096100,
+    "buy_value_oku": 66.62,
+    "sell_value_oku": 75.83,
     "days": [
       {
         "trading_date": "2026-08-26",
         "date_short": "8/26",
         "peak_bars": [
+          {
+            "time": "09:50",
+            "vol": 617600,
+            "ratio": 1.19,
+            "open": 6944.0,
+            "price": 6897.0,
+            "chg_pct": -0.68,
+            "direction": "sell",
+            "value_oku": 42.6,
+            "date": "2026-08-26",
+            "tier": "huge_abs"
+          },
           {
             "time": "09:15",
             "vol": 495700,
@@ -67,23 +103,35 @@
             "value_oku": 33.23,
             "date": "2026-08-26",
             "tier": "huge_abs"
+          },
+          {
+            "time": "10:05",
+            "vol": 456900,
+            "ratio": 0.91,
+            "open": 6949.0,
+            "price": 6998.0,
+            "chg_pct": 0.71,
+            "direction": "buy",
+            "value_oku": 31.97,
+            "date": "2026-08-26",
+            "tier": "huge_abs"
           }
         ],
         "slices": [],
-        "day_ratio": 0.12,
-        "day_chg_pct": -0.79,
+        "day_ratio": 0.22,
+        "day_chg_pct": -0.01,
         "day_open": 7003.0,
-        "day_close": 6948.0,
+        "day_close": 7002.0,
         "net_bias": "neutral",
-        "buy_shares": 495700,
-        "sell_shares": 478500,
-        "buy_value_oku": 34.65,
-        "sell_value_oku": 33.23,
+        "buy_shares": 952600,
+        "sell_shares": 1096100,
+        "buy_value_oku": 66.62,
+        "sell_value_oku": 75.83,
         "full_bias": "sell",
-        "full_up_shares": 820900,
-        "full_down_shares": 2245800,
-        "full_up_value_oku": 57.35,
-        "full_down_value_oku": 156.32
+        "full_up_shares": 2003000,
+        "full_down_shares": 3293400,
+        "full_up_value_oku": 139.96,
+        "full_down_value_oku": 228.83
       },
       {
         "trading_date": "2026-08-25",
@@ -175,7 +223,7 @@
           }
         ],
         "slices": [],
-        "day_ratio": 0.7,
+        "day_ratio": 0.69,
         "day_chg_pct": 2.35,
         "day_open": 6989.0,
         "day_close": 7153.0,
@@ -220,7 +268,7 @@
           }
         ],
         "slices": [],
-        "day_ratio": 0.61,
+        "day_ratio": 0.6,
         "day_chg_pct": 1.24,
         "day_open": 7000.0,
         "day_close": 7087.0,
@@ -435,11 +483,11 @@
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-08-26 09:40 JST",
+  "asof": "2026-08-26 10:15 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-08-26T09:59:48.252622",
-    "age_sec": 194,
+    "cached_at": "2026-08-26T10:32:47.054621",
+    "age_sec": 15,
     "stale": false,
     "refreshing": false
   }
