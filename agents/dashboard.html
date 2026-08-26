@@ -2050,73 +2050,6 @@ async function loadBondMonitor() {
   const moveLabel = liq.move == null ? '?' : (liq.move >= 180 ? '极端恐慌' : liq.move >= 140 ? '危机区' : liq.move >= 100 ? '抬升' : '正常');
   const sofrLabel = liq.sofr_iorb == null ? '?' : (liq.sofr_iorb >= 15 ? '2019 repo 级' : liq.sofr_iorb >= 5 ? '地板破位' : liq.sofr_iorb >= 1 ? '触及' : '正常');
   const kbeLabel = liq.kbe_spy == null ? '?' : (liq.kbe_spy <= -10 ? 'SVB/2008 级前情' : liq.kbe_spy <= -6 ? 'SVB 前 2 周' : liq.kbe_spy <= -3 ? '轻微跑输' : '正常');
-  // 迷你 SVG chart: 90d 历史 + 阈值区带 + 2008/2020 危机峰值参考线
-  //   series: 数字数组
-  //   thresholds: [warn, bad, extreme] (数值, 按方向)
-  //   crisis: [{value, label}] 历史危机峰值 (画虚线水平线)
-  //   direction: 'high' = 越大越危险, 'low' = 越小越危险
-  const liqChart = (series, thresholds, crisis, direction, current) => {
-    if (!series || series.length < 2) return '';
-    const w = 200, h = 42, pad = 4;
-    // Y range: 覆盖 series + 阈值 + 历史危机峰值
-    const allVals = [...series, ...thresholds, ...crisis.map(c => c.value), current];
-    let minV = Math.min(...allVals), maxV = Math.max(...allVals);
-    // 加 5% padding
-    const range = Math.max(maxV - minV, 1);
-    minV -= range * 0.05; maxV += range * 0.05;
-    const rangeAdj = maxV - minV;
-    const yFor = v => h - pad - ((v - minV) / rangeAdj) * (h - 2 * pad);
-    const xStep = (w - 2 * pad) / (series.length - 1);
-    const xAt = i => pad + i * xStep;
-    // 阈值区带 (从最严重到最轻, 画方向对应的填充)
-    const [warn, bad, extreme] = thresholds;
-    const bands = direction === 'high' ? [
-      { top: extreme, bot: maxV, color: 'rgba(248,81,73,0.30)' },   // extreme+
-      { top: bad, bot: extreme, color: 'rgba(248,81,73,0.15)' },
-      { top: warn, bot: bad, color: 'rgba(210,153,34,0.15)' },
-    ] : [
-      { top: minV, bot: extreme, color: 'rgba(248,81,73,0.30)' },
-      { top: extreme, bot: bad, color: 'rgba(248,81,73,0.15)' },
-      { top: bad, bot: warn, color: 'rgba(210,153,34,0.15)' },
-    ];
-    const bandsSvg = bands.map(b => {
-      const y1 = yFor(Math.max(b.top, b.bot));
-      const y2 = yFor(Math.min(b.top, b.bot));
-      return `<rect x="${pad}" y="${y1}" width="${w-2*pad}" height="${y2-y1}" fill="${b.color}"/>`;
-    }).join('');
-    // 折线
-    const line = series.map((v, i) => `${i===0?'M':'L'} ${xAt(i)} ${yFor(v)}`).join(' ');
-    // 历史危机水平线
-    const crisisLines = crisis.map(c => {
-      const y = yFor(c.value);
-      if (y < 0 || y > h) return '';
-      return `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="#a371f7" stroke-width="0.8" stroke-dasharray="3,2"/>
-              <text x="${w-pad-2}" y="${y-1}" text-anchor="end" fill="#a371f7" font-size="7">${c.label}</text>`;
-    }).join('');
-    // 当前值点
-    const currY = yFor(current);
-    return `<svg width="${w}" height="${h}" style="display:block; margin-top:3px">
-      ${bandsSvg}
-      ${crisisLines}
-      <path d="${line}" fill="none" stroke="#58a6ff" stroke-width="1.3"/>
-      <circle cx="${xAt(series.length-1)}" cy="${currY}" r="2.5" fill="#58a6ff"/>
-    </svg>`;
-  };
-
-  // 历史危机峰值参考 (2008 GFC / 2020 COVID / 2023 SVB)
-  const CRISIS_PEAKS = {
-    move:      [{value:264, label:'08 GFC 264'}, {value:163, label:'20 COVID 163'}, {value:198, label:'23 SVB 198'}],
-    sofr_iorb: [{value:285, label:'19 repo +285'},{value:40,  label:'20 COVID +40'}],
-    kbe_spy:   [{value:-35, label:'08 GFC -35%'}, {value:-30, label:'20 COVID -30%'},{value:-18, label:'23 SVB -18%'}],
-  };
-
-  const moveChart = mc.move_90d_history && liq.move != null
-    ? liqChart(mc.move_90d_history, [100, 140, 180], CRISIS_PEAKS.move, 'high', liq.move) : '';
-  const sofrChart = mc.sofr_iorb_90d_history && liq.sofr_iorb != null
-    ? liqChart(mc.sofr_iorb_90d_history, [1, 5, 15], CRISIS_PEAKS.sofr_iorb, 'high', liq.sofr_iorb) : '';
-  const kbeChart = mc.kbe_spy_90d_history && liq.kbe_spy != null
-    ? liqChart(mc.kbe_spy_90d_history, [-3, -6, -10], CRISIS_PEAKS.kbe_spy, 'low', liq.kbe_spy) : '';
-
   const liqHtml = liqHasData ? `
     <details style="margin:6px 0; padding:5px 8px; background:${liqBgColor}; border-left:3px solid ${liqBorderColor}; border-radius:4px" ${anyAlert ? 'open' : ''}>
       <summary style="cursor:pointer; list-style:none; font-size:11px; font-weight:600">
@@ -2129,59 +2062,50 @@ async function loadBondMonitor() {
           <b class="${cellCls(liqStatus.move)}" style="font-size:16px">${liq.move ?? '?'}</b>
           <small class="${cellCls(liqStatus.move)}"> ${moveLabel}</small>
           ${liq.move_delta != null ? `<small style="color:var(--muted); display:block">20d: ${liq.move_delta >= 0 ? '+' : ''}${liq.move_delta}</small>` : ''}
-          ${moveChart}
         </div>
         <div style="padding:4px 6px; background:${cellBg(liqStatus.sofr_iorb)}; border-radius:3px" title="SOFR 隔夜实际利率 减 IORB Fed 行政地板 · SOFR 应低于 IORB · 突破 = 融资市场紧 · +5bps 警戒 · +15bps 2019-09 repo 危机级">
           <b>💰 SOFR - IORB</b><br>
           <b class="${cellCls(liqStatus.sofr_iorb)}" style="font-size:16px">${liq.sofr_iorb != null ? (liq.sofr_iorb >= 0 ? '+' : '') + liq.sofr_iorb : '?'}bps</b>
           <small class="${cellCls(liqStatus.sofr_iorb)}"> ${sofrLabel}</small>
           <small style="color:var(--muted); display:block">SOFR ${mc.sofr_pct ?? '?'}% vs IORB ${mc.iorb_pct ?? '?'}%</small>
-          ${sofrChart}
         </div>
         <div style="padding:4px 6px; background:${cellBg(liqStatus.kbe_spy)}; border-radius:3px" title="KBE 银行 ETF / SPY 大盘 · 20 日相对表现 · SVB 前 2 周就 -8%~-10% · -6% 警戒 · -10% 危机">
           <b>🏦 KBE/SPY 银行相对</b><br>
           <b class="${cellCls(liqStatus.kbe_spy)}" style="font-size:16px">${liq.kbe_spy != null ? (liq.kbe_spy >= 0 ? '+' : '') + liq.kbe_spy.toFixed(1) : '?'}%</b>
           <small class="${cellCls(liqStatus.kbe_spy)}"> ${kbeLabel}</small>
           <small style="color:var(--muted); display:block">20d 变化</small>
-          ${kbeChart}
         </div>
       </div>
-      <div style="margin-top:5px; font-size:9px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap">
-        <span><b style="color:#58a6ff">━</b> 90d 走势</span>
-        <span><span style="display:inline-block; width:10px; height:8px; background:rgba(210,153,34,0.15); vertical-align:middle"></span> warn</span>
-        <span><span style="display:inline-block; width:10px; height:8px; background:rgba(248,81,73,0.15); vertical-align:middle"></span> bad</span>
-        <span><span style="display:inline-block; width:10px; height:8px; background:rgba(248,81,73,0.30); vertical-align:middle"></span> extreme</span>
-        <span><b style="color:#a371f7">┅</b> 历史危机峰值 (2008/2020/2023)</span>
-      </div>
-      <div style="margin-top:3px; font-size:9.5px; color:var(--muted); line-height:1.4">
+      <div style="margin-top:6px; font-size:9.5px; color:var(--muted); line-height:1.4">
         💡 <b>预警时效顺序</b>: SOFR-IORB (T-2周) → KBE/SPY (T-2周) → MOVE (T-1天) → VIX/HY (T-0). 融资端最早, 股票最晚.
       </div>
-      <details style="margin-top:8px; padding-top:6px; border-top:1px dashed rgba(139,148,158,0.2)">
-        <summary style="cursor:pointer; list-style:none; font-size:10.5px; color:var(--muted)">
-          📈 <b style="color:#58a6ff">26 年长时序图</b> (2000-今, monthly) — 看当前 vs 2008 GFC / 2020 COVID / 2023 SVB
-        </summary>
-        <div style="margin-top:6px">
-          <div style="display:grid; grid-template-columns:1fr; gap:14px">
-            <div>
-              <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">📊 <b>MOVE 债券波动率</b> (^MOVE, 2003-今)</div>
-              <div style="position:relative; height:180px"><canvas id="liq-chart-move"></canvas></div>
-            </div>
-            <div>
-              <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">💰 <b>融资市场压力</b> (TEDRATE 1986-2022 + SOFR-IORB 2018-今, bps)</div>
-              <div style="position:relative; height:180px"><canvas id="liq-chart-funding"></canvas></div>
-            </div>
-            <div>
-              <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">🏦 <b>银行相对表现</b> (XLF/SPY 20d 相对, 1999-今, %)</div>
-              <div style="position:relative; height:180px"><canvas id="liq-chart-bank"></canvas></div>
-            </div>
+      <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(139,148,158,0.2)">
+        <div style="font-size:11px; color:#58a6ff; margin-bottom:6px">
+          📈 <b>26 年长时序</b> (monthly) — 直接看当前 vs 2008 GFC / 2019 Repo / 2020 COVID / 2023 SVB
+        </div>
+        <div style="display:grid; grid-template-columns:1fr; gap:14px">
+          <div>
+            <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">📊 <b>MOVE 债券波动率</b> (^MOVE, 2003-今)</div>
+            <div style="position:relative; height:200px"><canvas id="liq-chart-move"></canvas></div>
           </div>
-          <div style="font-size:9px; color:var(--muted); margin-top:6px">
-            <b>阈值区带</b>: 黄=warn · 红=bad · 深红=extreme &nbsp;·&nbsp;
-            <b>虚线</b>: 2008-09-15 Lehman · 2019-09-17 Repo · 2020-03-16 COVID · 2023-03-10 SVB &nbsp;·&nbsp;
-            <b>紫点</b>: 当前值 &nbsp;·&nbsp; 数据 weekly 刷新
+          <div>
+            <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">💰 <b>融资市场压力</b> (TEDRATE 1986-2022 + SOFR-IORB 2018-今, bps)</div>
+            <div style="position:relative; height:200px"><canvas id="liq-chart-funding"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">🏦 <b>银行相对表现</b> (XLF/SPY 20d 相对, 1999-今, %)</div>
+            <div style="position:relative; height:200px"><canvas id="liq-chart-bank"></canvas></div>
           </div>
         </div>
-      </details>
+        <div style="font-size:9px; color:var(--muted); margin-top:6px; display:flex; gap:10px; flex-wrap:wrap">
+          <span><b style="color:#58a6ff">━</b> monthly</span>
+          <span><span style="display:inline-block; width:10px; height:8px; background:rgba(210,153,34,0.10); vertical-align:middle"></span> warn</span>
+          <span><span style="display:inline-block; width:10px; height:8px; background:rgba(248,81,73,0.10); vertical-align:middle"></span> bad</span>
+          <span><span style="display:inline-block; width:10px; height:8px; background:rgba(248,81,73,0.20); vertical-align:middle"></span> extreme</span>
+          <span><span style="color:#a371f7">┅</span> 危机 (Lehman/Repo/COVID/SVB)</span>
+          <span><span style="color:#a371f7">●</span> 当前</span>
+        </div>
+      </div>
     </details>` : '';
 
   // FRED PNG charts (直接嵌入官方图，每日自动更新，零维护)
