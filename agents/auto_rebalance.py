@@ -60,6 +60,33 @@ _CASH_FLOOR_PCT = 15.0      # 现金底线, 不允许一次 rebalance 用光
 _MIN_ORDER_DIFF_PCT = 3.0   # 偏差 < 3% 不动 (避免小抖动)
 _MIN_ORDER_USD = 5000       # 最小订单金额
 
+# 传导链断点 → duration/敞口 联动调整
+# 根据 bond_ai_interpret 的 chain_blocked_at 动态改 target max_pct.
+# 逻辑: 当断点在 nfci (Fed QT 实质停止 / nfci loose baseline), 长端 term
+# premium 抬升压力持续, 中/长久期债 (IEI 3-7Y, TLT 20+Y) 承压 → 减仓,
+# 前端 (SHY 1-3Y) 因曲线陡峭化利好 → 允许更满仓.
+_CHAIN_BLOCKED_ADJUSTMENTS = {
+    "nfci": {
+        # nfci 松 = Fed 没实质紧 = 长端 term premium 持续, 减 duration
+        "IEI":  0.72,   # 25 * 0.72 = 18
+        "SHY":  1.20,   # 25 * 1.2 = 30 (曲线陡峭化利好前端)
+        "MSFT": 1.0, "GOOGL": 1.0, "NBIS": 1.0,  # 股票不动
+    },
+    "em": {
+        # 强美元但 EM 仍强 = dxy 传导失效, 通常伴随美股同步坚挺, 维持股票配置
+    },
+    "erp": {
+        # real_rates 高但股票没跌 = 估值传导失效 = 泡沫风险, 减股票加防御
+        "MSFT": 0.6, "GOOGL": 0.6, "NBIS": 0.5,
+        "GLD":  1.3, "XLV": 1.3,
+    },
+    "credit": {
+        # 极少见 (nfci 已 tight 但 credit 还 calm): 说明利差要开始扩, 提早减
+        "MSFT": 0.7, "GOOGL": 0.7, "NBIS": 0.5,
+        "SHY":  1.1, "IEI": 1.1,  # 债券 flight-to-quality
+    },
+}
+
 
 REBAL_LOG = Path(SIGNALS_DIR) / "rebalance_plan.jsonl"
 
@@ -181,18 +208,45 @@ _REGIME_SCALER = {
 }
 
 
+def _load_chain_blocked_at() -> str | None:
+    """从 bond_ai_interpret cache 读 chain_blocked_at (跨进程共享).
+    只信 fresh (<12h) 的数据; 太老宁可不用."""
+    from datetime import datetime, timedelta
+    cache = Path(SIGNALS_DIR).parent / ".webui_cache" / "bond_ai_interpret.json"
+    if not cache.exists():
+        return None
+    age = datetime.now().timestamp() - cache.stat().st_mtime
+    if age > 12 * 3600:
+        return None
+    try:
+        d = json.loads(cache.read_text(encoding="utf-8"))
+        data = d.get("data") if "data" in d else d
+        return data.get("chain_blocked_at")
+    except Exception:
+        return None
+
+
 def compute_target_weights(signals: dict, regime: str,
-                           drawdown_pct: float = 0.0) -> dict[str, float]:
-    """按 thesis + 信号 + regime 算目标权重 (百分数, 0-100).
+                           drawdown_pct: float = 0.0,
+                           chain_blocked_at: str | None = None) -> dict[str, float]:
+    """按 thesis + 信号 + regime + 传导链断点 算目标权重 (百分数, 0-100).
     返回 {ticker: target_weight_pct}. 未在 template 且无仓位的 ticker 不出现.
 
     Regime overlay 是 class-aware:
     - bond 在 risk_off 里 scaler 1.1 (bond 是 risk_off 的天然去处, 不缩)
     - cloud/growth 在 risk_off 里 scaler 0.7 (缩仓)
     - drawdown > 30% → 全部缩到 0 (深回撤保护)
+
+    Chain overlay (2026-08-26 加): 根据 bond_ai_interpret 的 chain_blocked_at
+    动态调整个别 ticker 的 max_pct scaler. 例: nfci 断点时 IEI 降位、SHY 上位.
+    None → 用 bond_ai_interpret cache 里的最新值.
     """
     if drawdown_pct >= 30:
         return {}
+
+    if chain_blocked_at is None:
+        chain_blocked_at = _load_chain_blocked_at()
+    chain_adj = _CHAIN_BLOCKED_ADJUSTMENTS.get(chain_blocked_at or "", {})
 
     targets: dict[str, float] = {}
     for tk, cfg in _TARGET_TEMPLATE.items():
@@ -213,7 +267,9 @@ def compute_target_weights(signals: dict, regime: str,
             scaler *= 0.5               # 强信号 + 落刀 → 减半 (等企稳再补)
         cls = cfg["class"]
         regime_scaler = _REGIME_SCALER.get((regime, cls), 1.0)
-        target = cfg["max_pct"] * scaler * regime_scaler
+        # 传导链断点调整 (per-ticker overlay)
+        chain_scaler = chain_adj.get(tk, 1.0)
+        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler
         targets[tk] = round(target, 2)
     return targets
 
