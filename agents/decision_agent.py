@@ -478,7 +478,13 @@ def get_regime(macro: dict, market: dict) -> str:
     if vix > 20 and fg > 70:
         return "overheated"
     if t10y2y is not None and t10y2y < 0:
-        return "recession_risk"
+        # 曲线倒挂是宏观领先指标, 常持续数月才落入实际衰退。若当前价格没有
+        # 同步走弱, 只降到 risk_off (谨慎, 不禁 buy), 而非 recession_risk.
+        # 回测证据: 单纯用 t10y2y < 0 → recession_risk 在 2026-06 到 08 期间
+        # 24 个触发点里市场 79% 上涨、平均 +1%, 明显误报.
+        if trend == "down" and pct_zone in ("drop", "crash"):
+            return "recession_risk"
+        return "risk_off"
     if vix < 18 and trend == "up" and ma_stack == "bull" and fg < 80:
         return "bull_trending"
     return "neutral"

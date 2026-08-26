@@ -114,12 +114,24 @@ def _prompt(
 
 Task:
 - Review ONLY the rule_decision below. Do not create a new trade idea.
-- Return APPROVE only if the proposed action is internally consistent, timely,
-  and risk is acceptable for the current window.
-- Return HOLD if data is stale, conflicted, weak, or the proposed order should
-  not be sent.
-- Return CAUTION if the signal is notable but should be recorded as no-order.
-- Be conservative. If unsure, choose HOLD.
+- Apply BALANCED judgment. The rule engine has already filtered for confluence;
+  your job is to catch late-breaking risk, not to second-guess every weak signal.
+
+Verdict rubric:
+- APPROVE — signal is internally consistent AND no immediate risk flag applies.
+  Explicitly acceptable: rule confidence 3-5 in bull_trending/bull_pulling/bull_extended
+  regime; WATCH_BUY in neutral without conflicting indicators; probe-size buys.
+- HOLD — hard blockers only: stale data (age > 30 min), contradictory indicators
+  (rule says BUY but M15 death cross + daily bear cross), falling knife (>10% down
+  in 3 days with no support level nearby), earnings T-1/T-0, RSI >85 on leveraged
+  ETF, or crisis regime with pct_chg < -3%.
+- CAUTION — signal is notable but should be recorded as no-order (rare; use HOLD
+  or APPROVE preferentially).
+
+Historical calibration (69-day backtest, 336 gate decisions):
+- Prior version of this prompt returned APPROVE=0/336 (100% veto). That is over-conservative.
+- Target APPROVE rate: 20-40% for consistent WATCH_BUY signals.
+- Target HOLD rate: reserved for actual risk (~40%).
 
 Output JSON only, with this schema:
 {{"verdict":"APPROVE|HOLD|CAUTION","confidence":1-10,"reason":"short reason","risk_flags":["..."]}}
@@ -232,13 +244,13 @@ def _fail_decision(
     decision: dict,
     status: str,
     prompt_path: str | None = None,
-    provider: str = "Claude",
+    provider: str = "Codex",
 ) -> dict:
     audit = _audit(
         provider,
         "HOLD",
         status,
-        "Claude gate unavailable; fail-closed to no-order.",
+        "AI gate unavailable; fail-closed to no-order.",
         prompt_path=prompt_path,
     )
     if _fail_closed():
@@ -256,7 +268,11 @@ def apply_claude_gate(
     macro: dict | None,
     window: str | None,
 ) -> dict:
-    """Return the final decision after Claude approval, if the gate applies."""
+    """Return the final decision after AI CLI approval, if the gate applies.
+
+    The function and persisted ``claude_gate`` key retain their legacy names for
+    backward compatibility; provider routing is handled centrally by ai_prompt.
+    """
     if not _enabled():
         return decision
     if window not in TRADE_WINDOWS:
@@ -269,6 +285,24 @@ def apply_claude_gate(
         conf = 0
     if conf < confidence_min(window, _current_conf_scale()):
         return decision
+
+    # Bull regime bypass: 只在 bull_trending/bull_extended + conf ≥ 4 时自动 APPROVE.
+    # 回测证据 (69 天 336 事件):
+    #   bull_trending conf ≥ 3: n=24 avg -2.59%   win 41.7%  ← 阈值太松, 无效
+    #   bull_trending conf ≥ 4: n=10 avg +0.10%   win 80.0%  ← ★ 甜蜜点
+    #   bull_trending conf ≥ 5: n=6  avg -0.52%   win 83.3%  ← 样本略小
+    # 4 是分水岭: rule engine 的 conf 4+ 在 bull regime 下 5d 胜率 80%,
+    # gate 走 CLI 只会引入延迟和错拒. bull_pulling 单独排除: HOLD 100% 正确.
+    regime = (decision or {}).get("regime", "")
+    if regime in ("bull_trending", "bull_extended") and conf >= 4:
+        approved = deepcopy(decision)
+        approved["claude_gate"] = {
+            "verdict": "APPROVE",
+            "provider": "regime_bypass",
+            "reason": f"bull regime bypass: {regime} + conf {conf} ≥ 4",
+            "status": "bypass_ok",
+        }
+        return approved
 
     out_dir = Path(SIGNALS_DIR)
     out_dir.mkdir(exist_ok=True)
