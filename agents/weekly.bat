@@ -33,6 +33,10 @@ REM Weekly: claude_gate hit-rate audit (parse 60-90d prompt+raw pairs, compare v
 REM Output: prints APPROVE rate + HOLD median with alert thresholds
 "%PY%" -X utf8 -u _backtest_claude_gate.py
 
+REM Weekly: auto-rebalance audit (replay historical rebalance_plan.jsonl for 5d/10d P&L)
+REM Output: prints each historical rebalance plan's actual forward P&L
+"%PY%" -X utf8 -u _backtest_rebalance.py
+
 echo.
 REM 只有交互式（有 stdin）才 pause，避免 Task Scheduler 卡住
 if defined SESSIONNAME if "%SESSIONNAME%"=="Console" pause
