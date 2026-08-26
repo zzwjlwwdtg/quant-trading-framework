@@ -65,6 +65,74 @@ _MIN_ORDER_USD = 5000       # 最小订单金额
 # 逻辑: 当断点在 nfci (Fed QT 实质停止 / nfci loose baseline), 长端 term
 # premium 抬升压力持续, 中/长久期债 (IEI 3-7Y, TLT 20+Y) 承压 → 减仓,
 # 前端 (SHY 1-3Y) 因曲线陡峭化利好 → 允许更满仓.
+# 流动性危机预警 → 全局风险敞口调整
+# 读 bond_monitor 的 MOVE / SOFR-IORB / KBE-SPY 3 指标, 取 worst status,
+# 按等级对 class 施加倍率. 级别越高越 defensive.
+#   L1 (any warn): 轻度收缩, cloud -15%, hedge +10%
+#   L2 (any bad): 明显防御, cloud -40%, hedge +30%, probe 半仓
+#   L3 (any extreme): 危机模式, cloud -70%, bond +20% (flight-to-quality), probe 0
+_LIQ_CRISIS_SCALER = {
+    # (level, class) → scaler
+    (1, "cloud"): 0.85, (1, "hedge"): 1.10, (1, "probe"): 0.75,
+    (2, "cloud"): 0.60, (2, "hedge"): 1.30, (2, "probe"): 0.50, (2, "bond"): 1.10,
+    (3, "cloud"): 0.30, (3, "hedge"): 1.50, (3, "probe"): 0.0,  (3, "bond"): 1.20,
+}
+
+
+def _liquidity_crisis_level(mc: dict) -> tuple[int, list[str]]:
+    """按 MOVE / SOFR-IORB / KBE-SPY 3 指标计算流动性危机等级.
+    返回 (level 0-3, [trigger 列表说明])."""
+    triggers: list[str] = []
+    level = 0
+    move = mc.get("move_index")
+    if move is not None:
+        if move >= 180:
+            level = max(level, 3); triggers.append(f"MOVE {move} 极端")
+        elif move >= 140:
+            level = max(level, 2); triggers.append(f"MOVE {move} 危机区")
+        elif move >= 100:
+            level = max(level, 1); triggers.append(f"MOVE {move} 抬升")
+    sofr = mc.get("sofr_iorb_spread_bps")
+    if sofr is not None:
+        if sofr >= 15:
+            level = max(level, 3); triggers.append(f"SOFR-IORB +{sofr}bps 2019 repo 级")
+        elif sofr >= 5:
+            level = max(level, 2); triggers.append(f"SOFR-IORB +{sofr}bps 破位")
+        elif sofr >= 1:
+            level = max(level, 1); triggers.append(f"SOFR-IORB +{sofr}bps 触及")
+    kbe = mc.get("kbe_spy_20d_delta_pct")
+    if kbe is not None:
+        if kbe <= -10:
+            level = max(level, 3); triggers.append(f"KBE/SPY {kbe}% SVB/2008 级")
+        elif kbe <= -6:
+            level = max(level, 2); triggers.append(f"KBE/SPY {kbe}% SVB 前 2 周")
+        elif kbe <= -3:
+            level = max(level, 1); triggers.append(f"KBE/SPY {kbe}% 银行走弱")
+    return level, triggers
+
+
+def _load_liquidity_state() -> tuple[int, list[str]]:
+    """从 bond_monitor cache 读 3 指标, 算 crisis level. 12h 内 fresh 才用.
+    cache 文件名带 _v2 后缀 (webui 版本化)."""
+    from datetime import datetime
+    cache_dir = Path(SIGNALS_DIR).parent / ".webui_cache"
+    # 兼容 v1 / v2 文件名
+    for name in ("bond_monitor_v2.json", "bond_monitor.json"):
+        cache = cache_dir / name
+        if cache.exists():
+            age = datetime.now().timestamp() - cache.stat().st_mtime
+            if age > 12 * 3600:
+                continue
+            try:
+                d = json.loads(cache.read_text(encoding="utf-8"))
+                data = d.get("data") if "data" in d else d
+                mc = data.get("macro_context", {}) if isinstance(data, dict) else {}
+                return _liquidity_crisis_level(mc)
+            except Exception:
+                continue
+    return 0, []
+
+
 _CHAIN_BLOCKED_ADJUSTMENTS = {
     "nfci": {
         # nfci 松 = Fed 没实质紧 = 长端 term premium 持续, 减 duration
@@ -228,18 +296,21 @@ def _load_chain_blocked_at() -> str | None:
 
 def compute_target_weights(signals: dict, regime: str,
                            drawdown_pct: float = 0.0,
-                           chain_blocked_at: str | None = None) -> dict[str, float]:
-    """按 thesis + 信号 + regime + 传导链断点 算目标权重 (百分数, 0-100).
+                           chain_blocked_at: str | None = None,
+                           liq_level: int | None = None) -> dict[str, float]:
+    """按 thesis + 信号 + regime + 传导链 + 流动性危机 算目标权重.
     返回 {ticker: target_weight_pct}. 未在 template 且无仓位的 ticker 不出现.
 
-    Regime overlay 是 class-aware:
-    - bond 在 risk_off 里 scaler 1.1 (bond 是 risk_off 的天然去处, 不缩)
-    - cloud/growth 在 risk_off 里 scaler 0.7 (缩仓)
-    - drawdown > 30% → 全部缩到 0 (深回撤保护)
+    5 层 overlay:
+      target = max_pct
+             × conf_scaler(sig.conf)          # 信号强度 (0.4-1.0)
+             × falling_knife_scaler            # 5/10d 落刀过滤 (0 或 0.5)
+             × regime_scaler(regime, class)    # bull/bear/crisis 期
+             × chain_scaler(blocked_at, tk)    # 传导链断点定向调
+             × liq_scaler(liq_level, class)    # 流动性危机全局收缩
 
-    Chain overlay (2026-08-26 加): 根据 bond_ai_interpret 的 chain_blocked_at
-    动态调整个别 ticker 的 max_pct scaler. 例: nfci 断点时 IEI 降位、SHY 上位.
-    None → 用 bond_ai_interpret cache 里的最新值.
+    liq_level: 0-3 (0 无, 1 warn, 2 bad, 3 extreme).
+      None → 从 bond_monitor cache 自动算.
     """
     if drawdown_pct >= 30:
         return {}
@@ -247,6 +318,9 @@ def compute_target_weights(signals: dict, regime: str,
     if chain_blocked_at is None:
         chain_blocked_at = _load_chain_blocked_at()
     chain_adj = _CHAIN_BLOCKED_ADJUSTMENTS.get(chain_blocked_at or "", {})
+
+    if liq_level is None:
+        liq_level, _ = _load_liquidity_state()
 
     targets: dict[str, float] = {}
     for tk, cfg in _TARGET_TEMPLATE.items():
@@ -267,9 +341,9 @@ def compute_target_weights(signals: dict, regime: str,
             scaler *= 0.5               # 强信号 + 落刀 → 减半 (等企稳再补)
         cls = cfg["class"]
         regime_scaler = _REGIME_SCALER.get((regime, cls), 1.0)
-        # 传导链断点调整 (per-ticker overlay)
         chain_scaler = chain_adj.get(tk, 1.0)
-        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler
+        liq_scaler = _LIQ_CRISIS_SCALER.get((liq_level, cls), 1.0) if liq_level > 0 else 1.0
+        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler
         targets[tk] = round(target, 2)
     return targets
 
@@ -399,7 +473,11 @@ def check_and_execute_rebalance(window: str | None = None,
             pass
     drawdown_pct = (peak - nav) / peak * 100 if peak > 0 else 0
 
-    targets = compute_target_weights(signals, regime, drawdown_pct)
+    liq_level, liq_triggers = _load_liquidity_state()
+    chain_blocked = _load_chain_blocked_at()
+    targets = compute_target_weights(signals, regime, drawdown_pct,
+                                       chain_blocked_at=chain_blocked,
+                                       liq_level=liq_level)
     orders = plan_rebalance(positions, cash, nav, targets, prices=prices)
 
     result = {
@@ -410,6 +488,9 @@ def check_and_execute_rebalance(window: str | None = None,
         "cash": cash,
         "drawdown_pct": round(drawdown_pct, 2),
         "regime": regime,
+        "chain_blocked_at": chain_blocked,
+        "liq_crisis_level": liq_level,
+        "liq_triggers": liq_triggers,
         "targets": targets,
         "orders": orders,
         "n_orders": len(orders),
@@ -460,6 +541,12 @@ def _cli_main():
     print(f"NAV ${r['nav']:,.0f} · Cash ${r['cash']:,.0f} "
           f"({r['cash']/r['nav']*100:.1f}%) · Drawdown {r['drawdown_pct']:.1f}% · "
           f"Regime {r['regime']}")
+    lvl = r.get('liq_crisis_level', 0)
+    if lvl > 0:
+        lvl_label = {1: '⚠ L1 warn', 2: '🔴 L2 bad', 3: '🚨 L3 extreme'}.get(lvl, '?')
+        print(f"流动性危机等级: {lvl_label} · 触发: {', '.join(r.get('liq_triggers', []))}")
+    if r.get('chain_blocked_at'):
+        print(f"传导链断点: {r['chain_blocked_at']}")
     print("=" * 80)
     print("\nTarget weights:")
     for tk, w in sorted(r["targets"].items(), key=lambda x: -x[1]):
