@@ -386,14 +386,60 @@ def get_bond_monitor() -> dict:
 
     # 8) NFCI (Chicago Fed National Financial Conditions Index) — 大投行主用 FCI 之一
     #    >0 = 金融条件紧于均值 (股市承压), <0 = 宽松
-    nfci_rows = _fetch_fred_series("NFCI", days=30)
+    nfci_rows = _fetch_fred_series("NFCI", days=180)  # 180d 拿 12w 趋势
     if nfci_rows:
         nfci_v, nfci_asof = nfci_rows[0][1], nfci_rows[0][0]
         macro_context["nfci"] = {"value": round(nfci_v, 3), "asof": nfci_asof}
+        # 12w 前的 NFCI (每周更新, 12 行 ≈ 12 周前)
+        if len(nfci_rows) >= 12:
+            nfci_12w = nfci_rows[11][1]
+            macro_context["nfci_12w_delta"] = round(nfci_v - nfci_12w, 3)
         if nfci_v > 0.5:
             _warn("bad", f"NFCI +{nfci_v:.2f} 金融条件明显收紧 ({nfci_asof})", "nfci_tight")
         elif nfci_v > 0:
             _warn("warn", f"NFCI +{nfci_v:.2f} 金融条件紧于均值 ({nfci_asof})", "nfci_above_avg")
+
+    # 8b) 流动性/影子 QE 指标 — 让 AI 能判断 "nfci loose 背后是 policy tightening 停摆
+    #     还是 Treasury 影子 QE 抵消". 之前 bond_ai 只看到 nfci=loose 没上下文,
+    #     容易脑补"Treasury 影子 QE" 但数据说 TGA 反而在吸金 (2026-08-26 例证).
+    #  RRP (隔夜逆回购): 剩余 → 短端流动性缓冲. 见底 = 断粮.
+    rrp_rows = _fetch_fred_series("RRPONTSYD", days=90)
+    if rrp_rows:
+        rrp_bn = round(rrp_rows[0][1], 1)
+        macro_context["rrp_bn"] = rrp_bn
+        macro_context["rrp_asof"] = rrp_rows[0][0]
+        if rrp_bn < 5:
+            _warn("warn", f"RRP {rrp_bn}Bn 见底 (无短端流动性缓冲)", "rrp_drained")
+    #  TGA (Treasury General Account): 财政部现金. 增 = 吸金 (紧), 减 = 放钱 (松).
+    tga_rows = _fetch_fred_series("WTREGEN", days=90)
+    if tga_rows:
+        tga_bn = round(tga_rows[0][1] / 1000, 1)  # FRED 单位是 $M
+        macro_context["tga_bn"] = tga_bn
+        macro_context["tga_asof"] = tga_rows[0][0]
+        if len(tga_rows) >= 4:
+            tga_4w = tga_rows[3][1] / 1000
+            delta = round(tga_bn - tga_4w, 1)
+            macro_context["tga_4w_delta_bn"] = delta
+            # TGA 增加 = 财政部吸金 = 变相收紧
+            if delta > 100:
+                _warn("warn", f"TGA 4周 +${delta}Bn (吸金, 变相收紧)", "tga_absorbing")
+            elif delta < -100:
+                _warn("warn", f"TGA 4周 ${delta}Bn (放钱, 影子 QE 释放)", "tga_releasing")
+    #  WALCL (Fed 资产负债表): 缩表=QT, 扩表=QE, 平=停止紧缩
+    walcl_rows = _fetch_fred_series("WALCL", days=90)
+    if walcl_rows:
+        walcl_tn = round(walcl_rows[0][1] / 1_000_000, 3)  # $M → $T
+        macro_context["walcl_tn"] = walcl_tn
+        macro_context["walcl_asof"] = walcl_rows[0][0]
+        if len(walcl_rows) >= 12:
+            walcl_12w = walcl_rows[11][1] / 1_000_000
+            delta_tn = round(walcl_tn - walcl_12w, 3)
+            macro_context["walcl_12w_delta_bn"] = round(delta_tn * 1000, 1)
+            # 12w 扩表 > 20B = QT 实质停止
+            if delta_tn > 0.02:
+                _warn("warn", f"Fed 12周扩表 +${delta_tn*1000:.0f}Bn (QT 已停止)", "qt_paused")
+            elif delta_tn < -0.05:
+                _warn("warn", f"Fed 12周缩表 ${delta_tn*1000:.0f}Bn (QT 仍在跑)", "qt_active")
 
     # 9) Credit spreads — BAML IG + HY OAS (FRED 免费，卖方 credit desk 首选)
     #    IG >120bps = 收紧, >150bps = stress

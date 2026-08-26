@@ -56,7 +56,7 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
 {
   "chain_verdict": "看多" | "看空" | "中性" | "谨慎乐观" | "谨慎看空",
   "chain_summary": "40 字总结整条传导链（普通人能懂）",
-  "chain_blocked_at": "节点 key，传导链在这里断了；如 'credit' 表示利率高但信用还没扩大。null 表示未阻断",
+  "chain_blocked_at": "拓扑链上第一个'上游到位但下游不响应'的节点 key. 常见: 'nfci' (real_rates 高但金融条件仍松) / 'em' (强美元但 EM 仍强) / 'erp' (real_rates 高但股票没跌). 严禁跳过中游报 'credit' 或 'vol'. null=整条链传导到位.",
   "nodes": {
     "inflation":  {"direction": "deflationary|cooling|target|elevated|hot", "note": "≤15字（通胀）"},
     "jobs":       {"direction": "strong|healthy|softening|weak|recession", "note": "≤15字（就业）"},
@@ -98,6 +98,15 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
   - 例：credit 说 "银行相互借钱正常" 不说 "IG 利差正常"
   - 例：dxy 说 "美元近期走弱" 不说 "DXY z=-1.23σ"
 - direction 必须严格从枚举里选，system 依此上色
+- **nfci 断点归因** (核心): 若 real_rates=elevated 但 nfci=loose, 必须查"政策流动性"块判断原因:
+    * WALCL 12周 flat/扩表 + TGA 吸金 → **"Fed QT 实质停止, 名义 tightening 姿态但没行动"**
+       (nfci loose 是 baseline, 不是 Treasury 影子 QE 抵消)
+    * WALCL 缩表中 + TGA 大幅放钱 → **"Treasury 影子 QE 主动抵消 Fed QT"**
+       (需谨慎: 一次性弹药, 用完 nfci 会突然收紧)
+    * WALCL flat + TGA flat + IG/HY 压缩 → **"企业基本面强, spread 被盈利压住"**
+       (最稳态; 但若 earnings 见顶, spread 会突然扩)
+    * 数据缺失就说 "机制不明, 需盯 WALCL/TGA 走势"
+  chain_summary 里必须点出上面这三种情况之一, 不要模糊说 "被什么什么松".
 - chain_blocked_at 判读：**严格按拓扑顺序**逐条边检查, 不要跳步.
   拓扑边 (逐条走, 找第一个"上游到位但下游不响应"的节点):
     fed=tightening        → 下游 rates 应 elevated (若不是 = blocked_at=rates)
@@ -159,8 +168,20 @@ def _make_prompt(bond_data: dict) -> str:
         },
         "金融条件": {
             "NFCI 芝加哥 Fed 金融条件": mc.get("nfci", {}).get("value") if mc.get("nfci") else "N/A",
+            "NFCI 12周变化": f"{mc.get('nfci_12w_delta')} (负=更松, 正=更紧)" if mc.get("nfci_12w_delta") is not None else "N/A",
             "VIX 波动率": mc.get("vix") or "N/A",
             "BBI (Bull&Bear 复合)": mc.get("bbi_score") or "N/A",
+        },
+        "政策流动性 (关键: 判断 nfci loose 是政策松还是 Treasury 影子 QE)": {
+            "Fed 资产负债表 WALCL": f"${mc.get('walcl_tn')}T" if mc.get("walcl_tn") is not None else "N/A",
+            "WALCL 12周变化": (f"${mc.get('walcl_12w_delta_bn')}Bn "
+                              f"({'扩表 = QE 姿态' if (mc.get('walcl_12w_delta_bn') or 0) > 20 else '缩表 = QT' if (mc.get('walcl_12w_delta_bn') or 0) < -50 else 'flat = QT 暂停/结束'})"
+                              if mc.get("walcl_12w_delta_bn") is not None else "N/A"),
+            "Treasury TGA 现金": f"${mc.get('tga_bn')}Bn" if mc.get("tga_bn") is not None else "N/A",
+            "TGA 4周变化": (f"${mc.get('tga_4w_delta_bn')}Bn "
+                          f"({'吸金 (变相收紧)' if (mc.get('tga_4w_delta_bn') or 0) > 50 else '放钱 (影子 QE 释放)' if (mc.get('tga_4w_delta_bn') or 0) < -50 else '平'})"
+                          if mc.get("tga_4w_delta_bn") is not None else "N/A"),
+            "Fed RRP 隔夜逆回购": f"${mc.get('rrp_bn')}Bn (<5Bn=见底, 无短端缓冲)" if mc.get("rrp_bn") is not None else "N/A",
         },
         "黄金对冲": {
             "GLD vs TIPS 相关性": (bond_data.get("gld_correlation") or {}).get("vs_tips_10y"),
