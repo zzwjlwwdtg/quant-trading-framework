@@ -5,8 +5,8 @@
       "date": "2026-09-16",
       "days_until": 21,
       "probabilities": {
-        "hold": 60.3,
-        "hike_25": 39.7
+        "hold": 64,
+        "hike_25": 36
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -15,9 +15,8 @@
       "date": "2026-10-28",
       "days_until": 63,
       "probabilities": {
-        "hold": 45.0,
-        "hike_25": 44.9,
-        "hike_50": 10.0
+        "hold": 69,
+        "hike_25": 31
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -26,62 +25,60 @@
       "date": "2026-12-09",
       "days_until": 105,
       "probabilities": {
-        "hold": 26.6,
-        "hike_25": 45.0,
-        "hike_50": 28.4
+        "hold": 60,
+        "hike_25": 40
       },
-      "most_likely": "hike_25",
+      "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2027-01-27",
       "days_until": 154,
       "probabilities": {
-        "hold": 21.5,
-        "hike_25": 41.5,
-        "hike_50": 37.1
+        "hold": 97,
+        "cut_25": 3
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hold",
+      "consensus_direction": "neutral"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
   "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-24 10:25 EDT",
-  "recent_event_impact": "过去7天内未发现NFP/CPI/PPI新发布；8/19发布的7月FOMC minutes偏鹰。最新就业/通胀数据均已在snapshot前发布：8/7 NFP -23K、失业率4.1%；8/12 CPI +0.1% MoM、核心CPI +0.2%；8/13 PPI持平。",
-  "commentary": "Data snapshot为2026-08-24 10:25 EDT，晚于8/7 NFP、8/12 CPI和8/13 PPI，也晚于8/19 FOMC minutes。疲弱NFP和温和CPI/PPI压低了立即加息压力，但FOMC纪要显示通胀担忧和加息分歧，市场仍将年内路径定价为温和偏鹰。",
+  "data_snapshot_date": "2026-08-25",
+  "recent_event_impact": "最近7天未发现新的NFP/CPI/PPI发布；8/19 FOMC minutes和8/25 Collins讲话偏鹰，且数据快照在这些事件之后。较早的8/7 NFP为-23K、失业率4.1%本应偏鸽，但8/12 CPI同比3.4%与8/13 PPI同比4.7%压制降息预期，使市场仍倾向hold并保留25bp加息尾部概率。",
+  "commentary": "Data snapshot为2026-08-25，符合今天2026-08-26的最近1个交易日要求；8/7疲弱NFP增加宽松理由，但随后CPI 3.4% y/y、PPI 4.7% y/y和8/19 FOMC minutes偏鹰，市场对未来三次会议均维持“hold为主、hike_25为次”的定价。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
-      "type": "cme_fedwatch_derived_snapshot"
+      "url": "https://www.fedchirp.com/",
+      "type": "fed_funds_futures_reconstruction"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/empsit_08072026.htm",
+      "url": "https://www.bls.gov/news.release/empsit.htm",
       "type": "nfp"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
+      "url": "https://www.bls.gov/news.release/cpi.htm",
       "type": "cpi"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/ppi_08132026.htm",
+      "url": "https://www.bls.gov/news.release/ppi.htm",
       "type": "ppi"
     },
     {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomcminutes20260729.htm",
-      "type": "fomc_minutes"
+      "url": "https://www.bls.gov/schedule/2026/",
+      "type": "economic_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-26T00:06:58+00:00",
+  "fetched_at": "2026-08-26T08:08:29+00:00",
   "_meta": {
-    "cached_at": "2026-08-26T09:06:58.780932",
-    "age_sec": 28564,
+    "cached_at": "2026-08-26T17:08:29.878875",
+    "age_sec": 1475,
     "stale": false,
     "refreshing": false
   }
