@@ -2,45 +2,71 @@
   "ticker": "6762.T",
   "flow": null,
   "anomaly": {
-    "detected": false,
-    "reason": "",
-    "score": 0.0,
-    "peak_bars": [],
-    "day_ratio": 0.45,
+    "detected": true,
+    "reason": "8/26 12:30 3.33× 均值 · 主动卖 ¥62.89億 (@¥3033.0)",
+    "score": 0.2,
+    "peak_bars": [
+      {
+        "time": "12:30",
+        "vol": 2073400,
+        "ratio": 3.33,
+        "open": 3039.0,
+        "price": 3033.0,
+        "chg_pct": -0.2,
+        "direction": "sell",
+        "value_oku": 62.89,
+        "date": "2026-08-26",
+        "tier": "huge_abs"
+      }
+    ],
+    "day_ratio": 0.66,
     "trading_date": "2026-08-26",
     "date_short": "8/26",
-    "net_bias": "neutral",
+    "net_bias": "sell",
     "buy_shares": 0,
-    "sell_shares": 0,
+    "sell_shares": 2073400,
     "buy_value_oku": 0,
-    "sell_value_oku": 0,
+    "sell_value_oku": 62.89,
     "days": [
       {
         "trading_date": "2026-08-26",
         "date_short": "8/26",
-        "peak_bars": [],
+        "peak_bars": [
+          {
+            "time": "12:30",
+            "vol": 2073400,
+            "ratio": 3.33,
+            "open": 3039.0,
+            "price": 3033.0,
+            "chg_pct": -0.2,
+            "direction": "sell",
+            "value_oku": 62.89,
+            "date": "2026-08-26",
+            "tier": "huge_abs"
+          }
+        ],
         "slices": [],
-        "day_ratio": 0.45,
+        "day_ratio": 0.66,
         "day_chg_pct": 0.4,
         "day_open": 3023.0,
         "day_close": 3035.0,
-        "net_bias": "neutral",
+        "net_bias": "sell",
         "buy_shares": 0,
-        "sell_shares": 0,
+        "sell_shares": 2073400,
         "buy_value_oku": 0,
-        "sell_value_oku": 0,
-        "full_bias": "neutral",
+        "sell_value_oku": 62.89,
+        "full_bias": "sell",
         "full_up_shares": 1666100,
-        "full_down_shares": 1642300,
+        "full_down_shares": 3665100,
         "full_up_value_oku": 50.59,
-        "full_down_value_oku": 49.77
+        "full_down_value_oku": 111.13
       },
       {
         "trading_date": "2026-08-25",
         "date_short": "8/25",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.69,
+        "day_ratio": 0.64,
         "day_chg_pct": 1.97,
         "day_open": 2973.5,
         "day_close": 3032.0,
@@ -60,7 +86,7 @@
         "date_short": "8/24",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.47,
+        "day_ratio": 0.44,
         "day_chg_pct": 1.43,
         "day_open": 3010.0,
         "day_close": 3053.0,
@@ -80,7 +106,7 @@
         "date_short": "8/21",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.53,
+        "day_ratio": 0.49,
         "day_chg_pct": 1.53,
         "day_open": 2981.5,
         "day_close": 3027.0,
@@ -100,7 +126,7 @@
         "date_short": "8/20",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.6,
+        "day_ratio": 0.63,
         "day_chg_pct": 0.91,
         "day_open": 2980.0,
         "day_close": 3007.0,
@@ -110,13 +136,28 @@
         "buy_value_oku": 0,
         "sell_value_oku": 0,
         "full_bias": "neutral",
-        "full_up_shares": 2138800,
-        "full_down_shares": 2384100,
-        "full_up_value_oku": 64.2,
-        "full_down_value_oku": 71.49
+        "full_up_shares": 2727500,
+        "full_down_shares": 2383600,
+        "full_up_value_oku": 81.77,
+        "full_down_value_oku": 71.48
       }
     ],
-    "highlights": [],
+    "highlights": [
+      {
+        "time": "12:30",
+        "vol": 2073400,
+        "ratio": 3.33,
+        "open": 3039.0,
+        "price": 3033.0,
+        "chg_pct": -0.2,
+        "direction": "sell",
+        "value_oku": 62.89,
+        "date": "2026-08-26",
+        "tier": "huge_abs",
+        "_score": 209.42,
+        "date_short": "8/26"
+      }
+    ],
     "thresholds": {
       "ratio_min": 5.0,
       "value_oku_min": 1.0
@@ -125,8 +166,8 @@
   "asof": "2026-08-26 15:20 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-08-27T07:58:54.019805",
-    "age_sec": 250,
+    "cached_at": "2026-08-27T08:31:54.697082",
+    "age_sec": 71,
     "stale": false,
     "refreshing": false
   }
