@@ -98,7 +98,21 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
   - 例：credit 说 "银行相互借钱正常" 不说 "IG 利差正常"
   - 例：dxy 说 "美元近期走弱" 不说 "DXY z=-1.23σ"
 - direction 必须严格从枚举里选，system 依此上色
-- chain_blocked_at 判读：找**第一个未传导下去**的节点。例：如果 rates 高但 credit 平静 → blocked_at="credit"
+- chain_blocked_at 判读：**严格按拓扑顺序**逐条边检查, 不要跳步.
+  拓扑边 (逐条走, 找第一个"上游到位但下游不响应"的节点):
+    fed=tightening        → 下游 rates 应 elevated (若不是 = blocked_at=rates)
+    rates=elevated        → 下游 real_rates 应 elevated (若不是 = blocked_at=real_rates)
+    real_rates=elevated   → 下游 nfci 应 tight (若 loose = blocked_at=nfci) ★
+    nfci=tight            → 下游 credit 应 widening (若 calm = blocked_at=credit)
+    credit=widening       → 下游 vol 应 elevated (若 calm = blocked_at=vol)
+    fed=tightening        → dxy 应 strong (若 weak = blocked_at=dxy)
+    dxy=strong            → em 应 underperforming (若 outperforming = blocked_at=em)
+    dxy=strong            → stablecoin 应 shrinking (若 growing = blocked_at=stablecoin)
+  **关键错误示范** (不要犯): 看到 "rates 高 + credit calm" 就报 blocked_at=credit.
+  错在跳了 real_rates→nfci 这一层. 应先检查 real_rates→nfci 边: 若 nfci 已经 loose,
+  则**真正的断点是 nfci**, credit calm 只是 loose nfci 的自然下游结果, 不是独立异常.
+  一般规律: **传导链是链式的, 断点通常在中游 (nfci/em/erp) 而不是终端 (credit/vol/equity)**.
+  若整条链都传导到位则 blocked_at=null. 不要因为找不到"经典"断点就报 null; 优先报中游断点.
 - **中英混杂 OK**（如 "EM 反而跑赢"），但不要出现纯行话短语
 - **量能复证**：数据里给了各节点 proxy ETF 量能 z-score (相对 20d 均值)。
   - z >= +1σ 显著放量 = 信号有真金白银支持 (可信度更高)
