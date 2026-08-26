@@ -1,0 +1,420 @@
+"""
+auto_rebalance.py — 每日 pre-close 一次的自动组合再平衡
+
+设计原则:
+1. **只在 pre-close 跑一次/天**, 避免日内噪音
+2. **regime gate**: crisis / 深回撤 → 跳过, 不 rebalance 进恐慌
+3. **只跑 |current - target| > 3% 的仓位**, 小抖动不动
+4. **卖优先, 买后置**: 先把超配减到目标, 再用释放现金买欠配
+5. **thesis-anchored target 权重表**: 见 `_TARGET_TEMPLATE`
+6. **信号 conf 调档**: 目标权重 × f(conf) — conf=5 拿满配, conf=2 只拿 40%
+7. **所有订单落 signals/rebalance_plan.jsonl** 便于回溯
+
+CLI:
+    python auto_rebalance.py --dry-run   # 打印计划不下单
+    python auto_rebalance.py             # 真跑 (受 AUTO_REBALANCE_ENABLED 控制)
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+
+from config import SIGNALS_DIR
+from notifier import logger
+
+
+# ── Thesis 目标权重模板 ──────────────────────────────────────────────────────
+# 从 project_thesis_2026Q3.md: bond+cloud long, avoid semi
+# 每个 ticker 给一个"满配"目标 (信号 conf ≥ 5 时的上限), 系统按当前 conf 缩放.
+# 总和 ≥ 100% 是故意的: 让 conf 权重决定实际 sum, 通常落在 70-85%.
+_TARGET_TEMPLATE = {
+    # === Bond 长仓 (thesis 主力) ===
+    "SHY":  {"class": "bond", "max_pct": 25.0, "min_conf": 2, "note": "1-3Y Treasury"},
+    "IEI":  {"class": "bond", "max_pct": 25.0, "min_conf": 2, "note": "3-7Y Treasury"},
+
+    # === Cloud/AI 长仓 (thesis 主力) ===
+    "MSFT": {"class": "cloud", "max_pct": 10.0, "min_conf": 3, "note": "Azure cloud + AI"},
+    "GOOGL": {"class": "cloud", "max_pct": 8.0, "min_conf": 3, "note": "GCP cloud"},
+    "NBIS": {"class": "cloud", "max_pct": 5.0, "min_conf": 2, "note": "Nebius AI cloud pure-play"},
+
+    # === 防御 / 通胀 hedge ===
+    "GLD":  {"class": "hedge", "max_pct": 8.0,  "min_conf": 2, "note": "gold hedge"},
+    "XLV":  {"class": "hedge", "max_pct": 4.0,  "min_conf": 3, "note": "healthcare defensive"},
+    "USO":  {"class": "hedge", "max_pct": 3.0,  "min_conf": 3, "note": "oil / inflation proxy"},
+
+    # === Probe (thesis 之外的探仓, 严格限量) ===
+    "CBRS": {"class": "probe", "max_pct": 2.0,  "min_conf": 4, "note": "Cerebras AI chip"},
+    "LITE": {"class": "probe", "max_pct": 2.0,  "min_conf": 4, "note": "optical/AI DC"},
+
+    # === Avoid (thesis 明确避开: 半导体) ===
+    # 不列在 target 里 = 目标权重 0, 有仓位就减
+}
+# 注: TQQQ / SOXL / DRAM / MULL / NVDA / AMAT / KLAC 等半导体系不在 target
+#     → 有仓位就 rebalance 减到 0
+
+_CASH_FLOOR_PCT = 15.0      # 现金底线, 不允许一次 rebalance 用光
+_MIN_ORDER_DIFF_PCT = 3.0   # 偏差 < 3% 不动 (避免小抖动)
+_MIN_ORDER_USD = 5000       # 最小订单金额
+
+
+REBAL_LOG = Path(SIGNALS_DIR) / "rebalance_plan.jsonl"
+
+
+# ── 数据 helper ──────────────────────────────────────────────────────────────
+def _load_current_positions() -> tuple[dict, float, float]:
+    """从 trade_log 重建当前持仓 + 最新价. 返回 (positions, cash, nav).
+    positions = {ticker: {qty, avg_cost, last_px}}
+    """
+    log_path = Path(SIGNALS_DIR) / "trade_log.jsonl"
+    if not log_path.exists():
+        return {}, 0.0, 0.0
+    positions: dict = defaultdict(lambda: {"qty": 0, "cost": 0.0})
+    last_px: dict = {}
+    for line in log_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            d = json.loads(line)
+            tk = d["ticker"].replace("US.", "")
+            qty = d.get("qty", 0) or 0
+            px = d.get("price", 0) or 0
+            side = d.get("side", "")
+            if side == "BUY":
+                positions[tk]["qty"] += qty
+                positions[tk]["cost"] += qty * px
+            elif side == "SELL" and positions[tk]["qty"] > 0:
+                avg = positions[tk]["cost"] / positions[tk]["qty"]
+                positions[tk]["qty"] -= qty
+                positions[tk]["cost"] -= qty * avg
+            last_px[tk] = px
+        except Exception:
+            continue
+
+    # 从最新信号里补最新 price (trade_log 的价格是历史成交价)
+    import glob
+    for p in glob.glob(f"{SIGNALS_DIR}/*_latest.json"):
+        tk = Path(p).stem.replace("_latest", "")
+        try:
+            sig = json.loads(Path(p).read_text(encoding="utf-8"))
+            mk = sig.get("market", {})
+            if mk.get("price"):
+                last_px[tk] = float(mk["price"])
+        except Exception:
+            continue
+
+    open_pos = {tk: {"qty": p["qty"],
+                     "avg_cost": p["cost"] / p["qty"] if p["qty"] else 0,
+                     "last_px": last_px.get(tk, p["cost"] / p["qty"] if p["qty"] else 0)}
+                for tk, p in positions.items() if p["qty"] > 0}
+
+    # NAV 从 nav_history 拿最新
+    nav_path = Path(SIGNALS_DIR) / "nav_history.jsonl"
+    nav = 0.0
+    if nav_path.exists():
+        try:
+            lines = nav_path.read_text(encoding="utf-8").strip().splitlines()
+            nav = float(json.loads(lines[-1]).get("nav", 0))
+        except Exception:
+            pass
+    mv = sum(p["qty"] * p["last_px"] for p in open_pos.values())
+    cash = nav - mv
+    return open_pos, cash, nav
+
+
+def _load_signals() -> tuple[dict, dict]:
+    """每 ticker 最新信号. 返回 (signals dict, prices dict).
+    prices 里含所有有 market.price 的 ticker, 供未持仓 BUY 的定价."""
+    import glob
+    signals: dict = {}
+    prices: dict = {}
+    for p in glob.glob(f"{SIGNALS_DIR}/*_latest.json"):
+        tk = Path(p).stem.replace("_latest", "")
+        try:
+            sig = json.loads(Path(p).read_text(encoding="utf-8"))
+            dec = sig.get("decision", {})
+            mkt = sig.get("market", {})
+            signals[tk] = {
+                "action": dec.get("action", "?"),
+                "conf": int(dec.get("confidence", 0) or 0),
+                "regime": dec.get("regime", "?"),
+                "cum_5d": mkt.get("cum_5d_pct"),
+                "cum_10d": mkt.get("cum_10d_pct"),
+            }
+            if mkt.get("price"):
+                prices[tk] = float(mkt["price"])
+        except Exception:
+            continue
+    return signals, prices
+
+
+# ── 目标权重计算 ─────────────────────────────────────────────────────────────
+def _conf_scaler(conf: int, min_conf: int) -> float:
+    """conf → 目标权重系数. min_conf 以下=0, 满仓 conf=5.
+    conf=2 → 0.4, conf=3 → 0.6, conf=4 → 0.8, conf=5 → 1.0
+    """
+    if conf < min_conf:
+        return 0.0
+    return min(1.0, 0.2 + 0.2 * conf)
+
+
+_REGIME_SCALER = {
+    # (regime, class) → scaler; 缺省 1.0
+    # bond 在 risk_off/crisis 里是避险资产, 不该跟着其它 class 一起缩
+    # cloud/probe/hedge 在 risk_off 缩仓, crisis 里更低
+    ("risk_off", "bond"):    1.1,
+    ("risk_off", "cloud"):   0.7,
+    ("risk_off", "hedge"):   1.0,
+    ("risk_off", "probe"):   0.5,
+    ("crisis", "bond"):      1.3,
+    ("crisis", "cloud"):     0.3,
+    ("crisis", "hedge"):     1.1,
+    ("crisis", "probe"):     0.0,
+    ("recession_risk", "bond"):  1.2,
+    ("recession_risk", "cloud"): 0.6,
+    ("recession_risk", "hedge"): 1.0,
+    ("recession_risk", "probe"): 0.3,
+}
+
+
+def compute_target_weights(signals: dict, regime: str,
+                           drawdown_pct: float = 0.0) -> dict[str, float]:
+    """按 thesis + 信号 + regime 算目标权重 (百分数, 0-100).
+    返回 {ticker: target_weight_pct}. 未在 template 且无仓位的 ticker 不出现.
+
+    Regime overlay 是 class-aware:
+    - bond 在 risk_off 里 scaler 1.1 (bond 是 risk_off 的天然去处, 不缩)
+    - cloud/growth 在 risk_off 里 scaler 0.7 (缩仓)
+    - drawdown > 30% → 全部缩到 0 (深回撤保护)
+    """
+    if drawdown_pct >= 30:
+        return {}
+
+    targets: dict[str, float] = {}
+    for tk, cfg in _TARGET_TEMPLATE.items():
+        sig = signals.get(tk, {})
+        conf = sig.get("conf", 0)
+        scaler = _conf_scaler(conf, cfg["min_conf"])
+        if scaler == 0:
+            continue
+        if sig.get("action") in ("SELL", "REDUCE"):
+            continue
+        # 落刀过滤: 若 5d 或 10d 累计跌 > 15%, 目标砍半 (或直接 0 若 conf 弱)
+        # 回测证据: NBIS conf=2 + cum_5d -17% 触发 target 3%, 结果 5d 又跌 21% 亏 $9K
+        cum_5d = sig.get("cum_5d") or 0
+        cum_10d = sig.get("cum_10d") or 0
+        if cum_5d <= -15 or cum_10d <= -20:
+            if conf < 4:
+                continue                # 弱信号 + 落刀 → 直接 0
+            scaler *= 0.5               # 强信号 + 落刀 → 减半 (等企稳再补)
+        cls = cfg["class"]
+        regime_scaler = _REGIME_SCALER.get((regime, cls), 1.0)
+        target = cfg["max_pct"] * scaler * regime_scaler
+        targets[tk] = round(target, 2)
+    return targets
+
+
+# ── 订单生成 ─────────────────────────────────────────────────────────────────
+def plan_rebalance(positions: dict, cash: float, nav: float,
+                    targets: dict[str, float],
+                    prices: dict | None = None) -> list[dict]:
+    """当前权重 → 目标权重的最小订单集. 只在 |diff| ≥ 3% AND USD ≥ $5K 时产订单.
+    prices: {ticker: last_px} — 用于未持仓的 BUY 目标 (从信号里补价)"""
+    if nav <= 0:
+        return []
+    prices = prices or {}
+    orders = []
+
+    # 1) 先算所有 ticker 的 current_pct 和 target_pct
+    universe = set(positions.keys()) | set(targets.keys())
+    diffs = []
+    for tk in universe:
+        pos = positions.get(tk, {"qty": 0, "last_px": 0})
+        current_mv = pos["qty"] * pos["last_px"]
+        current_pct = current_mv / nav * 100
+        target_pct = targets.get(tk, 0.0)  # 不在 target = 目标 0 (avoid list)
+        diff_pct = target_pct - current_pct
+        diff_usd = diff_pct / 100 * nav
+        # 未持仓的 BUY 目标: last_px 从 prices 补 (signal 里的)
+        px = pos["last_px"] or prices.get(tk, 0)
+        diffs.append({
+            "ticker": tk,
+            "current_pct": round(current_pct, 2),
+            "target_pct": round(target_pct, 2),
+            "diff_pct": round(diff_pct, 2),
+            "diff_usd": round(diff_usd, 0),
+            "price": px,
+            "qty_current": pos["qty"],
+        })
+
+    # 2) 卖优先: diff < -3% → SELL. 用释放的现金池给后续 BUY.
+    projected_cash = cash
+    for d in sorted(diffs, key=lambda x: x["diff_pct"]):
+        if d["diff_pct"] > -_MIN_ORDER_DIFF_PCT:
+            break
+        if abs(d["diff_usd"]) < _MIN_ORDER_USD:
+            continue
+        if d["price"] <= 0:
+            continue
+        # 卖的数量: 减到 target 权重 (若 target=0 就全卖)
+        sell_qty = int(-d["diff_usd"] / d["price"])
+        sell_qty = min(sell_qty, d["qty_current"])
+        if sell_qty <= 0:
+            continue
+        proceeds = sell_qty * d["price"]
+        projected_cash += proceeds
+        orders.append({
+            "ticker": d["ticker"],
+            "side": "SELL",
+            "qty": sell_qty,
+            "price": d["price"],
+            "reason": f"rebalance: {d['current_pct']:.1f}% → {d['target_pct']:.1f}% (diff {d['diff_pct']:+.1f}pp)",
+            "usd": round(proceeds, 0),
+        })
+
+    # 3) 买后置: 用现金池 (保留 cash floor) 从大到小满足 buy diff
+    cash_floor = nav * _CASH_FLOOR_PCT / 100
+    available = projected_cash - cash_floor
+    for d in sorted(diffs, key=lambda x: -x["diff_pct"]):
+        if d["diff_pct"] < _MIN_ORDER_DIFF_PCT:
+            break
+        if d["price"] <= 0:
+            continue
+        want_usd = min(d["diff_usd"], available)
+        if want_usd < _MIN_ORDER_USD:
+            continue
+        buy_qty = int(want_usd / d["price"])
+        if buy_qty <= 0:
+            continue
+        cost = buy_qty * d["price"]
+        available -= cost
+        orders.append({
+            "ticker": d["ticker"],
+            "side": "BUY",
+            "qty": buy_qty,
+            "price": d["price"],
+            "reason": f"rebalance: {d['current_pct']:.1f}% → {d['target_pct']:.1f}% (diff {d['diff_pct']:+.1f}pp)",
+            "usd": round(cost, 0),
+        })
+    return orders
+
+
+# ── 主入口 ──────────────────────────────────────────────────────────────────
+def check_and_execute_rebalance(window: str | None = None,
+                                  dry_run: bool | None = None) -> dict:
+    """orchestrator 每 cycle 末尾调用. 只在 pre-close 真跑."""
+    if dry_run is None:
+        dry_run = os.environ.get("AUTO_REBALANCE_ENABLED", "1") == "0"
+
+    if window != "pre-close" and not dry_run:
+        return {"status": "skipped_wrong_window", "window": window}
+
+    positions, cash, nav = _load_current_positions()
+    if nav <= 0:
+        return {"status": "no_nav_data"}
+
+    signals, prices = _load_signals()
+
+    # regime & drawdown
+    regime = "neutral"
+    try:
+        rs = json.loads((Path(SIGNALS_DIR).parent / "regime_state.json").read_text(
+            encoding="utf-8"))
+        regime = rs.get("regime", "neutral")
+    except Exception:
+        # fallback: 从任意一个信号里拿
+        for s in signals.values():
+            if s.get("regime"):
+                regime = s["regime"]
+                break
+
+    nav_path = Path(SIGNALS_DIR) / "nav_history.jsonl"
+    peak = nav
+    if nav_path.exists():
+        try:
+            for line in nav_path.read_text(encoding="utf-8").splitlines()[-30:]:
+                p = float(json.loads(line).get("peak", 0))
+                peak = max(peak, p)
+        except Exception:
+            pass
+    drawdown_pct = (peak - nav) / peak * 100 if peak > 0 else 0
+
+    targets = compute_target_weights(signals, regime, drawdown_pct)
+    orders = plan_rebalance(positions, cash, nav, targets, prices=prices)
+
+    result = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "window": window,
+        "dry_run": dry_run,
+        "nav": nav,
+        "cash": cash,
+        "drawdown_pct": round(drawdown_pct, 2),
+        "regime": regime,
+        "targets": targets,
+        "orders": orders,
+        "n_orders": len(orders),
+    }
+
+    # 落盘 (即使 dry_run 也记录, 用来审计和回溯)
+    try:
+        with REBAL_LOG.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(result, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+    if dry_run:
+        logger.info(f"[rebalance] dry_run — {len(orders)} orders planned")
+        for o in orders:
+            logger.info(f"  {o['side']} {o['qty']} {o['ticker']} @ ${o['price']:.2f} "
+                        f"(${o['usd']:,.0f}) — {o['reason']}")
+        return result
+
+    # 真执行: 用 paper_trader.submit_rebalance_order 直接下单, 不走 decision engine
+    try:
+        from paper_trader import submit_rebalance_order
+    except Exception as exc:
+        logger.error(f"[rebalance] paper_trader import failed: {exc}")
+        return {**result, "status": "import_error"}
+
+    submitted = []
+    for o in orders:
+        oid = submit_rebalance_order(
+            ticker=o["ticker"], side=o["side"], qty=o["qty"],
+            price=o["price"], reason=o["reason"],
+        )
+        if oid:
+            submitted.append({**o, "order_id": oid})
+        else:
+            logger.warning(f"[rebalance] failed to submit {o['side']} {o['qty']} {o['ticker']}")
+
+    return {**result, "status": "executed", "submitted": len(submitted),
+            "submitted_orders": submitted}
+
+
+# ── CLI ─────────────────────────────────────────────────────────────────────
+def _cli_main():
+    dry = "--dry-run" in sys.argv or "-n" in sys.argv
+    r = check_and_execute_rebalance(window="pre-close",
+                                     dry_run=dry or True)  # CLI 默认 dry-run
+    print("=" * 80)
+    print(f"NAV ${r['nav']:,.0f} · Cash ${r['cash']:,.0f} "
+          f"({r['cash']/r['nav']*100:.1f}%) · Drawdown {r['drawdown_pct']:.1f}% · "
+          f"Regime {r['regime']}")
+    print("=" * 80)
+    print("\nTarget weights:")
+    for tk, w in sorted(r["targets"].items(), key=lambda x: -x[1]):
+        print(f"  {tk:<6} {w:>5.1f}%")
+    print(f"\nPlanned orders ({r['n_orders']}):")
+    if not r["orders"]:
+        print("  (无 — 所有偏差 < 3% 或 <$5K)")
+    for o in r["orders"]:
+        print(f"  {o['side']:<4} {o['qty']:>6} {o['ticker']:<6} "
+              f"@ ${o['price']:.2f}  =${o['usd']:>8,.0f}  {o['reason']}")
+
+
+if __name__ == "__main__":
+    _cli_main()

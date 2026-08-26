@@ -47,6 +47,13 @@ from config import (
 )
 from notifier import logger
 from atomic_io import atomic_write_json
+from data_quality import order_data_gate
+from execution_analytics import (
+    actual_execution_quality,
+    append_execution_event,
+    estimate_execution,
+)
+from portfolio_analytics import pretrade_portfolio_gate
 from trading_contracts import (
     BUY_ACTIONS,
     CRISIS_PROBE_TARGET_VOL,
@@ -89,6 +96,8 @@ TARGET_PORT_VOL = {
     "bull_pulling":   0.25,
     "bull_trending":  0.22,
     "bull_chop":      0.15,
+    "neutral_chop":   0.10,
+    "risk_off":       0.08,
     "neutral":        0.12,
     "overheated":     0.08,
     "recession_risk": 0.05,
@@ -507,6 +516,7 @@ LIVE_FRACTION = max(0.0, min(1.0, float(os.environ.get("TRADER_LIVE_FRACTION", "
 
 STATE_PATH    = Path(__file__).parent / "trader_state.json"
 UNIVERSE_PATH = Path(__file__).parent / "universe_state.json"
+EXECUTION_LOG_PATH = Path(__file__).parent / "signals" / "execution_ledger.jsonl"
 
 
 # ---------- Trade context (lazy singleton) ----------
@@ -743,13 +753,179 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
 # ---------- AI target loader (A 方案：Claude 结构化目标覆盖)----------
 
 def _load_ai_target_safe(ticker: str) -> dict | None:
-    """从 signals/ai_targets_<date>.json 读取该 ticker 的 Claude 目标。
+    """从 signals/ai_targets_<date>.json 读取该 ticker 的 AI 价位目标。
     失败/不存在返回 None，不影响默认下单流程。"""
     try:
         from ai_prompt import load_ai_target
         return load_ai_target(ticker)
     except Exception:
         return None
+
+
+def _ai_target_matches_market(ticker: str, target: dict | None,
+                              current_price: float) -> bool:
+    """拒绝已经明显脱离现价的旧 AI 目标。
+
+    3x/2x 产品日内波动更大，允许 8%；普通资产允许 4%。这是是否继续消费
+    旧计划的安全阈值，不代表追价区间。
+    """
+    if not target or current_price <= 0:
+        return False
+    try:
+        entry = float(target.get("entry_ref") or 0)
+    except (TypeError, ValueError):
+        return False
+    if entry <= 0:
+        return False
+    drift_limit = 0.08 if ticker in {"US.TQQQ", "US.SOXL", "US.MULL"} else 0.04
+    drift = abs(entry - current_price) / current_price
+    if drift > drift_limit:
+        logger.info(
+            f"[trader] IGNORE stale AI target {ticker}: entry ${entry:.2f} vs "
+            f"current ${current_price:.2f} ({drift*100:.1f}% > {drift_limit*100:.0f}%)"
+        )
+        return False
+    return True
+
+
+_PENDING_ORDER_STATUSES = {
+    "SUBMITTED", "SUBMITTING", "WAITING_SUBMIT", "FILLED_PART",
+}
+_MANAGED_ENTRY_KEYS = (
+    "managed_entry_order_id", "managed_entry_kind", "managed_entry_ref",
+    "managed_entry_stop_ref", "managed_entry_target_ts",
+    "managed_entry_updated_utc",
+)
+
+
+def _clear_managed_entry(tstate: dict, *, clear_unfilled_entry: bool = False) -> None:
+    for key in _MANAGED_ENTRY_KEYS:
+        tstate.pop(key, None)
+    if clear_unfilled_entry:
+        for key in (
+            "first_entry_utc", "entry_price", "entry_high", "entry_qty",
+            "entry_basis_source", "entry_conf", "entry_conf_scale",
+            "pyramid_layer", "tp_levels_hit",
+        ):
+            tstate.pop(key, None)
+        _clear_protective_stop(tstate)
+
+
+def _sync_pending_entry_for_decision(
+    ticker: str,
+    tstate: dict,
+    action: str,
+    current_price: float,
+) -> str:
+    """让本系统提交的未成交 BUY 跟随最新决策/AI 价位。
+
+    返回 none/keep/updated/cancelled/error。只处理 trader_state 记录的
+    order_id，因此不会触碰手工单；保护性卖单也不会进入此路径。
+    """
+    oid = tstate.get("last_order_id")
+    if not oid or str(tstate.get("last_side") or "").upper() != "BUY":
+        return "none"
+    try:
+        ctx = _ctx_get()
+        ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+    except Exception as exc:
+        logger.warning(f"[trader] {ticker} pending-entry query failed: {exc}")
+        return "error"
+    if ret != RET_OK or orders is None:
+        return "error"
+
+    row = None
+    for _, candidate in orders.iterrows():
+        if str(candidate.get("order_id") or "") == str(oid):
+            row = candidate
+            break
+    if row is None:
+        _clear_managed_entry(tstate)
+        return "none"
+    status = str(row.get("order_status") or "").upper()
+    if status not in _PENDING_ORDER_STATUSES:
+        _clear_managed_entry(tstate)
+        # 刚成交时持仓查询可能比订单状态慢一个节拍；本轮先不重复买。
+        if float(row.get("dealt_qty") or 0) > 0:
+            return "keep"
+        return "none"
+
+    # 新系统决策已不再要求买入：旧限价必须撤销，不能继续在后台埋伏。
+    if action not in BUY_ACTIONS:
+        reason = f"latest decision={action or 'NONE'}"
+        op = ModifyOrderOp.CANCEL
+    else:
+        ai_t = _load_ai_target_safe(ticker)
+        ai_entry = (ai_t or {}).get("entry_ref")
+        desired_limit = bool(
+            ai_t
+            and _ai_target_matches_market(ticker, ai_t, current_price)
+            and ai_t.get("action") in ("watch_buy", "buy")
+            and ai_t.get("use_limit")
+            and ai_entry
+            and float(ai_entry) < current_price
+        )
+        if desired_limit:
+            desired_price = round(float(ai_entry) * 1.001, 2)
+            old_price = float(row.get("price") or 0)
+            if abs(desired_price - old_price) < 0.005:
+                return "keep"
+            try:
+                ret, info = ctx.modify_order(
+                    modify_order_op=ModifyOrderOp.NORMAL,
+                    order_id=oid,
+                    qty=float(row.get("qty") or 0),
+                    price=desired_price,
+                    trd_env=TRD_ENV,
+                    acc_id=ACC_ID,
+                )
+            except Exception as exc:
+                logger.error(f"[trader] {ticker} pending limit update failed: {exc}")
+                return "error"
+            if ret != RET_OK:
+                logger.error(f"[trader] {ticker} pending limit update rejected: {info}")
+                return "error"
+            tstate.update({
+                "managed_entry_order_id": str(oid),
+                "managed_entry_kind": "ai_limit",
+                "managed_entry_ref": float(ai_entry),
+                "managed_entry_stop_ref": (ai_t or {}).get("stop_ref"),
+                "managed_entry_target_ts": (ai_t or {}).get("_source_ts"),
+                "managed_entry_updated_utc": datetime.now(timezone.utc).isoformat(),
+                "last_price": float(ai_entry),
+            })
+            logger.info(
+                f"[trader] {ticker} UPDATE pending AI limit order={oid} "
+                f"${old_price:.2f} → ${desired_price:.2f}"
+            )
+            return "updated"
+
+        # 只有明确标记为 AI resting limit 的单，才因 AI 不再要求限价而撤销；
+        # 老版本/普通可成交 BUY 保守地保留，避免误撤。
+        if tstate.get("managed_entry_kind") != "ai_limit":
+            return "keep"
+        reason = "latest AI target no longer requests a resting limit"
+        op = ModifyOrderOp.CANCEL
+
+    try:
+        ret, info = ctx.modify_order(
+            modify_order_op=op,
+            order_id=oid,
+            qty=0,
+            price=0,
+            trd_env=TRD_ENV,
+            acc_id=ACC_ID,
+        )
+    except Exception as exc:
+        logger.error(f"[trader] {ticker} stale pending cancel failed: {exc}")
+        return "error"
+    if ret != RET_OK:
+        logger.error(f"[trader] {ticker} stale pending cancel rejected: {info}")
+        return "error"
+    logger.info(f"[trader] CANCEL stale pending BUY {ticker} order={oid}: {reason}")
+    _clear_managed_entry(tstate, clear_unfilled_entry=True)
+    tstate["last_order_id"] = None
+    return "cancelled"
 
 
 # ---------- Claude vs Rules 冲突 alert（A 方案：不下单，只提示）----------
@@ -864,6 +1040,52 @@ def _position_cost_price(code: str, fallback: float) -> float:
 
 # ---------- Order placement ----------
 
+
+def _portfolio_what_if(code: str, side: str, qty: int, price: float) -> dict:
+    """Broker-backed pre-trade portfolio stress check; unavailable is explicit."""
+    if DRY_RUN:
+        # A dry-run must not open a broker context merely to calculate an
+        # observational warning.  Live SIMULATE orders use the real holdings.
+        return {
+            "allow_order": True,
+            "status": "dry_run_observe_only",
+            "policy": "no_broker_connection_no_risk_block",
+        }
+    try:
+        ctx = _ctx_get()
+        ret, frame = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+        if ret != RET_OK:
+            raise RuntimeError("position query failed")
+        positions = []
+        if frame is not None and not frame.empty:
+            for _, row in frame.iterrows():
+                current_price = float(row.get("nominal_price", 0) or row.get("cost_price", 0) or 0)
+                current_qty = float(row.get("qty", 0) or 0)
+                positions.append({
+                    "ticker": str(row.get("code") or ""),
+                    "qty": current_qty,
+                    "current_price": current_price,
+                    "cost_price": float(row.get("cost_price", 0) or 0),
+                    "market_val": float(row.get("market_val", 0) or current_qty * current_price),
+                    "pl_val": float(row.get("pl_val", 0) or 0),
+                })
+        nav = 0.0
+        ret_info, info = ctx.accinfo_query(trd_env=TRD_ENV, acc_id=ACC_ID, currency="USD")
+        if ret_info == RET_OK and info is not None and not info.empty:
+            nav = float(info.iloc[0].get("total_assets", 0) or 0)
+        if nav <= 0:
+            nav = max(_get_account_power(), sum(p["market_val"] for p in positions))
+        return pretrade_portfolio_gate(
+            positions,
+            nav=nav,
+            ticker=code,
+            side=side,
+            qty=qty,
+            price=price,
+        )
+    except Exception as exc:
+        return {"allow_order": True, "status": "unavailable", "reason": str(exc)}
+
 def _get_realtime_price(code: str, fallback: float) -> float:
     """
     pre-market/after-hours 时取真实实时价，避免 daily K 收盘价和实时价有大 gap
@@ -950,6 +1172,33 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         logger.warning(f"[trader] SKIP {side} {code} qty={qty} price={price}")
         return None
     side_label = "BUY " if side == TrdSide.BUY else "SELL"
+    # Data provenance gate is fail-closed for new risk and fail-open for exits.
+    # Missing optional quote fields only creates a warning; invalid/stale price
+    # blocks BUY.  This keeps historical callers compatible while hardening the
+    # live market path.
+    extra = dict(extra or {})
+    portfolio_gate = _portfolio_what_if(code, side_label.strip(), qty, price)
+    if is_sim_active_trading() and not portfolio_gate.get("allow_order", False):
+        portfolio_gate["sim_active_override"] = True
+        portfolio_gate["allow_order"] = True
+        logger.warning(
+            f"[trader] SIM_ACTIVE portfolio warning only for {code}: "
+            f"{', '.join(portfolio_gate.get('breaches') or [])}"
+        )
+    extra["portfolio_what_if"] = portfolio_gate
+    if not portfolio_gate.get("allow_order", False):
+        logger.error(
+            f"[trader] SKIP {side_label.strip()} {code}: portfolio risk gate "
+            f"({', '.join(portfolio_gate.get('breaches') or [])})"
+        )
+        return None
+    if mkt:
+        quality = order_data_gate(mkt, side_label.strip())
+        extra["data_quality"] = quality
+        if not quality.get("allow_order", False):
+            reasons = ", ".join(x.get("code", "data") for x in quality.get("issues", []))
+            logger.error(f"[trader] SKIP {side_label.strip()} {code}: data-quality gate ({reasons})")
+            return None
     # 盘前普通订单以实时价为基准，但正向跳空超过上限时不追价。
     # 明确低于市价的 AI resting limit 保留原限价，不受此门禁影响。
     ref_price = price
@@ -980,10 +1229,36 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         order_price = round(ref_price * (1 - buffer), 2)
     rth_label = "+RTHx" if fill_outside_rth else ""
     ref_label = f"ref {ref_price:.2f}" + (f" / daily {price:.2f}" if ref_price != price else "")
+    execution_plan = estimate_execution(
+        code,
+        side_label.strip(),
+        qty,
+        ref_price,
+        bid=(mkt or {}).get("bid_price") or (mkt or {}).get("bid"),
+        ask=(mkt or {}).get("ask_price") or (mkt or {}).get("ask"),
+        avg_daily_volume=(mkt or {}).get("avg_volume_20"),
+        annual_volatility=(mkt or {}).get("vol_20d_annual"),
+        outside_rth=fill_outside_rth,
+        resting_limit=resting_limit,
+    )
+    extra["execution_plan"] = execution_plan
     if DRY_RUN:
         logger.info(f"[trader-DRY ] {side_label} {qty:>5} {code:<8} @ {order_price:>8.2f} ({ref_label}) {rth_label} {tag}")
         _log_trade(code, side_label.strip(), qty, order_price, "DRY", tag,
                    decision=decision, mkt=mkt, window=window, extra=extra)
+        modeled_qty = int(execution_plan.get("modeled_fill_qty") or 0)
+        modeled_price = float(execution_plan.get("expected_fill_price") or order_price)
+        append_execution_event(EXECUTION_LOG_PATH, {
+            "event": "modeled",
+            "order_id": "DRY",
+            "ticker": code,
+            "side": side_label.strip(),
+            "plan": execution_plan,
+            "quality": actual_execution_quality(
+                side=side_label.strip(), requested_qty=qty, dealt_qty=modeled_qty,
+                reference_price=ref_price, average_fill_price=modeled_price,
+            ),
+        })
         return "DRY"
     ctx = _ctx_get()
     try:
@@ -1007,6 +1282,16 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     logger.info(f"[trader-LIVE] {side_label} {qty:>5} {code:<8} @ {order_price:>8.2f} ({ref_label}) {rth_label} order={oid} {tag}")
     _log_trade(code, side_label.strip(), qty, order_price, str(oid), tag,
                decision=decision, mkt=mkt, window=window, extra=extra)
+    append_execution_event(EXECUTION_LOG_PATH, {
+        "event": "submitted",
+        "order_id": str(oid),
+        "ticker": code,
+        "side": side_label.strip(),
+        "requested_qty": qty,
+        "order_price": order_price,
+        "reference_price": ref_price,
+        "plan": execution_plan,
+    })
     # 主动推送 trade（Telegram/Discord，如已配置）
     try:
         from notifications import notify_trade
@@ -1015,6 +1300,127 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     except Exception:
         pass
     return oid
+
+
+def refresh_execution_ledger() -> None:
+    """Reconcile submitted orders with broker fill/partial/cancel facts."""
+    if DRY_RUN or not EXECUTION_LOG_PATH.exists():
+        return
+    submitted: dict[str, dict] = {}
+    try:
+        with open(EXECUTION_LOG_PATH, encoding="utf-8") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except Exception:
+                    continue
+                oid = str(event.get("order_id") or "")
+                if not oid:
+                    continue
+                if event.get("event") == "submitted":
+                    submitted[oid] = event
+    except Exception:
+        return
+    if not submitted:
+        return
+    try:
+        ctx = _ctx_get()
+        ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+        if ret != RET_OK or orders is None or orders.empty:
+            return
+    except Exception:
+        return
+    state = _state_load()
+    seen = state.get("__execution_reconcile", {})
+    if not isinstance(seen, dict):
+        seen = {}
+    dirty = False
+    for _, row in orders.iterrows():
+        oid = str(row.get("order_id") or "")
+        base = submitted.get(oid)
+        if not base:
+            continue
+        requested = int(float(row.get("qty", base.get("requested_qty", 0)) or 0))
+        dealt = float(row.get("dealt_qty", 0) or 0)
+        avg_fill = float(row.get("dealt_avg_price", 0) or 0)
+        status = str(row.get("order_status") or "")
+        signature = f"{status}|{dealt:.8f}|{avg_fill:.8f}"
+        if seen.get(oid) == signature:
+            continue
+        upper = status.upper()
+        if dealt >= requested > 0:
+            event_name = "filled"
+        elif dealt > 0:
+            event_name = "partial"
+        elif "CANCEL" in upper or "DISABLE" in upper or "FAIL" in upper:
+            event_name = "cancelled"
+        else:
+            continue
+        reference = float(base.get("reference_price") or base.get("order_price") or 0)
+        quality = actual_execution_quality(
+            side=base.get("side", "BUY"), requested_qty=requested, dealt_qty=dealt,
+            reference_price=reference, average_fill_price=avg_fill,
+        )
+        append_execution_event(EXECUTION_LOG_PATH, {
+            "event": event_name,
+            "order_id": oid,
+            "ticker": base.get("ticker"),
+            "side": base.get("side"),
+            "broker_status": status,
+            "requested_qty": requested,
+            "dealt_qty": dealt,
+            "average_fill_price": avg_fill,
+            "quality": quality,
+        })
+        seen[oid] = signature
+        dirty = True
+    if dirty:
+        state["__execution_reconcile"] = dict(list(seen.items())[-500:])
+        _state_save(state)
+
+
+def sync_pending_entries_from_latest_signals() -> list[dict]:
+    """AI 目标刷新后，立即同步系统尚未成交的限价 BUY。
+
+    只扫描带 ``managed_entry_order_id`` 的系统订单；不新建订单、不触碰
+    手工单。最新规则 action 失效则撤单，AI entry_ref 改变则原单改价。
+    """
+    with _TRADER_LOCK:
+        state = _state_load()
+        changes: list[dict] = []
+        dirty = False
+        signals_dir = Path(__file__).parent / "signals"
+        for ticker, tstate in state.items():
+            if not isinstance(tstate, dict) or not tstate.get("managed_entry_order_id"):
+                continue
+            if _position_qty(ticker) > 0:
+                _clear_managed_entry(tstate)
+                dirty = True
+                continue
+            short = ticker.split(".")[-1]
+            signal_path = signals_dir / f"{short}_latest.json"
+            if not signal_path.exists():
+                continue
+            try:
+                signal = json.loads(signal_path.read_text(encoding="utf-8"))
+                decision = signal.get("decision") or {}
+                market = signal.get("market") or {}
+                action = str(decision.get("action") or "")
+                current_price = float(market.get("price") or 0)
+            except Exception:
+                continue
+            if current_price <= 0:
+                continue
+            result = _sync_pending_entry_for_decision(
+                ticker, tstate, action, current_price
+            )
+            if result in {"updated", "cancelled", "none"}:
+                dirty = True
+            if result in {"updated", "cancelled"}:
+                changes.append({"ticker": ticker, "result": result})
+        if dirty:
+            _state_save(state)
+        return changes
 
 
 def _place_stop_loss(code: str, qty: int, stop_price: float):
@@ -1088,6 +1494,10 @@ def _monitor_software_stops_unlocked() -> list[str]:
         can_sell_qty = int(snapshot.get("can_sell_qty") or 0)
         current_price = float(snapshot.get("nominal_price") or 0)
         if position_qty <= 0:
+            # AI resting BUY 还在 broker 等待成交时，保留随单止损状态；
+            # 否则订单稍后成交会变成没有保护的裸仓。
+            if tstate.get("managed_entry_order_id"):
+                continue
             _clear_protective_stop(tstate)
             dirty = True
             continue
@@ -1177,13 +1587,38 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
     else:
         window_key = f"{today}:{window}"
 
+    # 普通已完成动作保持原有的零查询幂等路径；只有仍有 managed entry 的
+    # 情况才需要先向 broker 核对，以便同一窗口内也能响应目标更新。
+    if (
+        tstate.get("last_window_key") == window_key
+        and not tstate.get("managed_entry_order_id")
+    ):
+        return
+
+    # 先核对上一轮由本系统提交、尚未成交的 BUY。最新决策转 HOLD/SELL 时
+    # 撤单；AI 入场价变化时直接改单；仍有效时阻止重复提交。
+    pos_qty_check = _position_qty(ticker)
+    sync_result = "none"
+    if pos_qty_check <= 0:
+        sync_result = _sync_pending_entry_for_decision(
+            ticker, tstate, action, float(price)
+        )
+        if sync_result in {"updated", "cancelled", "none"}:
+            state[ticker] = tstate
+            _state_save(state)
+        if sync_result in {"keep", "updated", "error"}:
+            return
+    elif tstate.get("managed_entry_order_id"):
+        _clear_managed_entry(tstate)
+        state[ticker] = tstate
+        _state_save(state)
+
     # A successful order in this window must block every branch, including
     # trailing-stop/TP, when the scheduler retries a partially failed cycle.
-    if tstate.get("last_window_key") == window_key:
+    if tstate.get("last_window_key") == window_key and sync_result != "cancelled":
         return
 
     # ── 纪律性管理（与方向信号解耦, 任一触发立刻 return 不走 normal action）──
-    pos_qty_check = _position_qty(ticker)
     cur_price = float(price)
     risk_state_dirty = False
     if pos_qty_check > 0:
@@ -1272,7 +1707,11 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
         # → 打 Discord alert，不自动执行，让用户决定
         try:
             ai_t = _load_ai_target_safe(ticker)
-            if ai_t and ai_t.get("action") in ("watch_buy", "buy"):
+            if (
+                ai_t
+                and _ai_target_matches_market(ticker, ai_t, cur_price)
+                and ai_t.get("action") in ("watch_buy", "buy")
+            ):
                 entry = ai_t.get("entry_ref")
                 stop  = ai_t.get("stop_ref")
                 _notify_claude_rules_conflict(ticker, action, ai_t, entry, stop, cur_price, window_key)
@@ -1413,8 +1852,10 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
                 return
         if size_usd <= 0:
             return
-        # A 方案：Claude AI target 覆盖（entry_ref + stop_ref + use_limit）
+        # AI target 仅在仍贴近现价时覆盖（entry_ref + stop_ref + use_limit）
         ai_t = _load_ai_target_safe(ticker)
+        if ai_t and not _ai_target_matches_market(ticker, ai_t, float(price)):
+            ai_t = None
         ai_price = float(price)  # 默认用当前价撮合
         ai_use_limit = False
         ai_stop_override = None
@@ -1425,7 +1866,11 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
                 ai_price = float(ai_entry)
                 ai_use_limit = True
                 logger.info(f"[trader] {ticker} AI 限价等回踩 ${ai_entry:.2f} (现价 ${price:.2f})")
-            ai_stop_override = ai_t.get("stop_ref")
+            candidate_stop = ai_t.get("stop_ref")
+            # 止损必须低于本轮实际执行基准；旧目标中的 stop 若已高于现价，
+            # 不能继续沿用，否则会在成交后立刻触发错误卖出。
+            if candidate_stop and float(candidate_stop) < ai_price:
+                ai_stop_override = candidate_stop
         qty  = int(size_usd // ai_price)
         side = TrdSide.BUY
         # stop_ref 优先级：AI > decision_agent > None
@@ -1500,6 +1945,20 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
         "last_order_id":   None if oid == "DRY" else oid,
         "last_window_key": window_key,
     })
+    if (
+        side == TrdSide.BUY
+        and oid != "DRY"
+        and 'ai_use_limit' in locals()
+        and ai_use_limit
+    ):
+        tstate.update({
+            "managed_entry_order_id": str(oid),
+            "managed_entry_kind": "ai_limit",
+            "managed_entry_ref": float(ai_price),
+            "managed_entry_stop_ref": stop,
+            "managed_entry_target_ts": (ai_t or {}).get("_source_ts"),
+            "managed_entry_updated_utc": now_iso,
+        })
     if is_first_entry:
         tstate["first_entry_utc"] = now_iso
         # 首次入场: 记 entry 数据供 TP/SL/Pyramid 用
@@ -1694,6 +2153,10 @@ def _refresh_nav_peak_unlocked() -> None:
                 _update_nav_peak(total)
     except Exception:
         pass
+    try:
+        refresh_execution_ledger()
+    except Exception as exc:
+        logger.warning(f"[trader] execution reconciliation skipped: {exc}")
 
 
 # ---------- CLI ----------
@@ -1729,6 +2192,55 @@ def _cli_status():
             print("(无未结)")
     else:
         print("(无)")
+
+
+def submit_rebalance_order(ticker: str, side: str, qty: int, price: float,
+                            reason: str = "auto_rebalance") -> str | None:
+    """公开 API: auto_rebalance 模块用这个提交订单, 不走 decision engine + gate.
+
+    ticker: 'US.SHY' 或 'SHY' (自动加前缀)
+    side:   'BUY' | 'SELL'
+    qty:    整数股数
+    price:  限价 (通常是当前 last_px 附近)
+    reason: 日志里的说明
+
+    Returns order_id (成功) 或 None (失败).
+    DRY_RUN 模式下只 log 不发单.
+    """
+    code = ticker if ticker.startswith("US.") else f"US.{ticker}"
+    side_enum = TrdSide.BUY if side.upper() == "BUY" else TrdSide.SELL
+    side_label = side.upper()
+    tag = f"[REBALANCE {reason}]"
+
+    if DRY_RUN:
+        logger.info(f"[trader-DRY] {side_label} {qty} {code} @ {price:.2f} {tag}")
+        _log_trade(code, side_label, qty, round(price, 2), "DRY", tag,
+                   decision={"action": f"REBALANCE_{side_label}",
+                             "reason": reason, "engine": "rebalance"},
+                   mkt={"price": price}, window="pre-close")
+        return "DRY"
+
+    ctx = _ctx_get()
+    try:
+        ret, info = ctx.place_order(
+            price=round(price, 2), qty=float(qty), code=code,
+            trd_side=side_enum, order_type=OrderType.NORMAL,
+            trd_env=TRD_ENV, acc_id=ACC_ID,
+        )
+    except Exception as exc:
+        logger.error(f"[rebalance-submit] {code} FAIL: {exc}")
+        return None
+    if ret != RET_OK:
+        logger.error(f"[rebalance-submit] {side_label} {qty} {code} @ {price:.2f}: {info}")
+        return None
+    oid = info.iloc[0]["order_id"] if hasattr(info, "iloc") else str(info)
+    logger.info(f"[trader-LIVE] {side_label} {qty} {code} @ {price:.2f} "
+                f"order={oid} {tag}")
+    _log_trade(code, side_label, qty, round(price, 2), str(oid), tag,
+               decision={"action": f"REBALANCE_{side_label}",
+                         "reason": reason, "engine": "rebalance"},
+               mkt={"price": price}, window="pre-close")
+    return str(oid)
 
 
 def _cli_flatten():

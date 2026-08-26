@@ -930,6 +930,18 @@ def run_cycle(window: str | None = None) -> None:
     except Exception as _exc:
         logger.warning(f"[thesis_history] append skipped: {_exc}")
 
+    # pre-close 窗口跑一次自动 rebalance (集中度 / thesis 权重校准)
+    # AUTO_REBALANCE_EXECUTE=1 才真下单, 否则只 log dry-run 到 signals/rebalance_plan.jsonl
+    if window == "pre-close":
+        try:
+            from auto_rebalance import check_and_execute_rebalance
+            _execute = os.environ.get("AUTO_REBALANCE_EXECUTE", "0") == "1"
+            reb = check_and_execute_rebalance(window="pre-close", dry_run=not _execute)
+            n = reb.get("n_orders", 0)
+            logger.info(f"[rebalance] {n} orders {'submitted' if _execute else 'planned (dry-run)'}")
+        except Exception as _exc:
+            logger.warning(f"[rebalance] skipped: {_exc}")
+
     # 检查是否到了报告生成时间
     trigger = _report_trigger()
     if trigger:
