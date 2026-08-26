@@ -3054,6 +3054,19 @@ def api_thesis_forecast(days_ahead: int = 45) -> dict:
     return _cached(f"thesis_forecast_{days_ahead}", ttl_sec=6 * 3600, compute_fn=_compute)
 
 
+def api_liquidity_history() -> dict:
+    """26 年流动性历史 (MOVE / funding / bank stress, monthly).
+    静态文件, 只读 signals/liquidity_history.json. Weekly 由
+    _build_liquidity_history.py 刷新."""
+    path = Path(SCRIPT_DIR) / "signals" / "liquidity_history.json"
+    if not path.exists():
+        return {"error": "liquidity_history.json not built yet — run _build_liquidity_history.py"}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"error": f"read_failed: {str(e)[:200]}"}
+
+
 def api_policy_toolkit() -> dict:
     """美债救援政策工具追踪。RSS + CLI 结构化, 12h TTL, 首次异步刷新。
 
@@ -4883,6 +4896,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_fed_watch())
             elif path == "/api/policy_toolkit":
                 self._json(api_policy_toolkit())
+            elif path == "/api/liquidity_history":
+                self._json(api_liquidity_history())
             else:
                 self.send_error(404, f"route not found: {path}")
         except Exception as e:

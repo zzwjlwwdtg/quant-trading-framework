@@ -37,6 +37,10 @@ REM Weekly: auto-rebalance audit (replay historical rebalance_plan.jsonl for 5d/
 REM Output: prints each historical rebalance plan's actual forward P&L
 "%PY%" -X utf8 -u _backtest_rebalance.py
 
+REM Weekly: 26-year liquidity history (MOVE + funding + bank stress, monthly aggregation)
+REM Output: signals/liquidity_history.json (dashboard 26 年图渲染的数据源)
+"%PY%" -X utf8 -u _build_liquidity_history.py
+
 echo.
 REM 只有交互式（有 stdin）才 pause，避免 Task Scheduler 卡住
 if defined SESSIONNAME if "%SESSIONNAME%"=="Console" pause

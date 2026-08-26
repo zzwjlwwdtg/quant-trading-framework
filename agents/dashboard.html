@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FSI Trading Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@11.1.0/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
 <style>
@@ -2154,6 +2156,32 @@ async function loadBondMonitor() {
       <div style="margin-top:3px; font-size:9.5px; color:var(--muted); line-height:1.4">
         💡 <b>预警时效顺序</b>: SOFR-IORB (T-2周) → KBE/SPY (T-2周) → MOVE (T-1天) → VIX/HY (T-0). 融资端最早, 股票最晚.
       </div>
+      <details style="margin-top:8px; padding-top:6px; border-top:1px dashed rgba(139,148,158,0.2)">
+        <summary style="cursor:pointer; list-style:none; font-size:10.5px; color:var(--muted)">
+          📈 <b style="color:#58a6ff">26 年长时序图</b> (2000-今, monthly) — 看当前 vs 2008 GFC / 2020 COVID / 2023 SVB
+        </summary>
+        <div style="margin-top:6px">
+          <div style="display:grid; grid-template-columns:1fr; gap:14px">
+            <div>
+              <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">📊 <b>MOVE 债券波动率</b> (^MOVE, 2003-今)</div>
+              <div style="position:relative; height:180px"><canvas id="liq-chart-move"></canvas></div>
+            </div>
+            <div>
+              <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">💰 <b>融资市场压力</b> (TEDRATE 1986-2022 + SOFR-IORB 2018-今, bps)</div>
+              <div style="position:relative; height:180px"><canvas id="liq-chart-funding"></canvas></div>
+            </div>
+            <div>
+              <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">🏦 <b>银行相对表现</b> (XLF/SPY 20d 相对, 1999-今, %)</div>
+              <div style="position:relative; height:180px"><canvas id="liq-chart-bank"></canvas></div>
+            </div>
+          </div>
+          <div style="font-size:9px; color:var(--muted); margin-top:6px">
+            <b>阈值区带</b>: 黄=warn · 红=bad · 深红=extreme &nbsp;·&nbsp;
+            <b>虚线</b>: 2008-09-15 Lehman · 2019-09-17 Repo · 2020-03-16 COVID · 2023-03-10 SVB &nbsp;·&nbsp;
+            <b>紫点</b>: 当前值 &nbsp;·&nbsp; 数据 weekly 刷新
+          </div>
+        </div>
+      </details>
     </details>` : '';
 
   // FRED PNG charts (直接嵌入官方图，每日自动更新，零维护)
@@ -2268,6 +2296,99 @@ async function loadBondMonitor() {
 
   // 异步拉 Fed 预期
   loadFedWatch();
+  // 异步渲染 26 年长时序流动性图 (details 展开时也会重复触发, 内部去重)
+  loadLiquidityLongCharts();
+}
+
+// ── 26 年流动性长时序 Chart.js 图 ─────────────────────────────────────
+window.__liqChartInstances = window.__liqChartInstances || {};
+async function loadLiquidityLongCharts() {
+  const canvases = ['liq-chart-move', 'liq-chart-funding', 'liq-chart-bank'];
+  if (!canvases.every(id => document.getElementById(id))) return;
+  const d = await fetchJson('/api/liquidity_history');
+  if (!d || d.error || !d.series) return;
+
+  const CRISIS_COLOR = '#a371f7';
+  const buildChart = (canvasId, seriesKey, label, thresholds, direction, unit) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    // 销毁旧 instance (避免 details 反复展开重复)
+    if (window.__liqChartInstances[canvasId]) {
+      window.__liqChartInstances[canvasId].destroy();
+    }
+    const data = (d.series[seriesKey] || []).map(p => ({x: p.date, y: p.value}));
+    if (!data.length) return;
+    const values = data.map(p => p.y);
+    const dataMin = Math.min(...values), dataMax = Math.max(...values);
+    // Y 轴 padding
+    const range = Math.max(dataMax - dataMin, 1);
+    const yMin = Math.min(dataMin, direction === 'low' ? thresholds.extreme : 0) - range * 0.05;
+    const yMax = Math.max(dataMax, direction === 'high' ? thresholds.extreme : 0) + range * 0.05;
+
+    // 阈值区带 (box annotations)
+    const bands = direction === 'high' ? [
+      {yMin: thresholds.extreme, yMax: yMax,             color: 'rgba(248,81,73,0.20)'},
+      {yMin: thresholds.bad,     yMax: thresholds.extreme, color: 'rgba(248,81,73,0.10)'},
+      {yMin: thresholds.warn,    yMax: thresholds.bad,   color: 'rgba(210,153,34,0.10)'},
+    ] : [
+      {yMin: yMin,                yMax: thresholds.extreme, color: 'rgba(248,81,73,0.20)'},
+      {yMin: thresholds.extreme,  yMax: thresholds.bad,     color: 'rgba(248,81,73,0.10)'},
+      {yMin: thresholds.bad,      yMax: thresholds.warn,    color: 'rgba(210,153,34,0.10)'},
+    ];
+    const annotations = {};
+    bands.forEach((b, i) => {
+      annotations[`band${i}`] = { type: 'box', yMin: b.yMin, yMax: b.yMax, backgroundColor: b.color, borderWidth: 0 };
+    });
+    // 危机日期垂直线 (只画在系列时间范围内)
+    const firstDate = data[0].x, lastDate = data[data.length-1].x;
+    (d.crisis_events || []).forEach((ev, i) => {
+      if (ev.date < firstDate || ev.date > lastDate) return;
+      annotations[`crisis${i}`] = {
+        type: 'line', xMin: ev.date, xMax: ev.date,
+        borderColor: CRISIS_COLOR, borderWidth: 1, borderDash: [4, 3],
+        label: { display: true, content: ev.label, position: 'start',
+                 backgroundColor: 'rgba(163,113,247,0.85)', color: '#fff',
+                 font: {size: 9}, padding: 2 }
+      };
+    });
+    // 当前值大点
+    const currentPoint = data[data.length - 1];
+    annotations['current'] = {
+      type: 'point', xValue: currentPoint.x, yValue: currentPoint.y,
+      backgroundColor: '#a371f7', borderColor: '#fff', borderWidth: 1, radius: 4,
+    };
+
+    const ctx = canvas.getContext('2d');
+    window.__liqChartInstances[canvasId] = new Chart(ctx, {
+      type: 'line',
+      data: { datasets: [{
+        label: label,
+        data: data,
+        borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.05)',
+        borderWidth: 1.3, pointRadius: 0, tension: 0.15, fill: false,
+      }]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => `${label}: ${c.parsed.y}${unit}` } },
+          annotation: { annotations: annotations },
+        },
+        scales: {
+          x: { type: 'time', time: { unit: 'year', displayFormats: {year: 'yyyy'} },
+               grid: {color: 'rgba(139,148,158,0.08)'}, ticks: {color: '#7d8590', font: {size: 9}} },
+          y: { min: yMin, max: yMax, grid: {color: 'rgba(139,148,158,0.08)'},
+               ticks: {color: '#7d8590', font: {size: 9}, callback: (v) => v + unit} },
+        }
+      }
+    });
+  };
+
+  const t = d.thresholds || {};
+  buildChart('liq-chart-move',    'move',    'MOVE',      t.move       || {warn:100, bad:140, extreme:180}, 'high', '');
+  buildChart('liq-chart-funding', 'funding', 'Funding',   t.funding_bps || {warn:30,  bad:100, extreme:200}, 'high', 'bps');
+  buildChart('liq-chart-bank',    'bank',    'Bank 20d',  t.bank_20d_pct|| {warn:-3,  bad:-6,  extreme:-10}, 'low', '%');
 }
 
 async function loadFedWatch() {
