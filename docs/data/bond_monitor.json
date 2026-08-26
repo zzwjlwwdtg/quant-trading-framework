@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-26T17:53",
+  "asof": "2026-08-26T17:59",
   "yields": {
     "10y": {
       "value": 4.639,
@@ -237,6 +237,21 @@
     },
     {
       "level": "warn",
+      "msg": "RRP 0.4Bn 见底 (无短端流动性缓冲)",
+      "key": "rrp_drained"
+    },
+    {
+      "level": "warn",
+      "msg": "Fed 12周扩表 +$35Bn (QT 已停止)",
+      "key": "qt_paused"
+    },
+    {
+      "level": "warn",
+      "msg": "KBE/SPY 20d -5.83% 银行相对走弱 (需持续观察)",
+      "key": "bank_stress_warn"
+    },
+    {
+      "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $0.4B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
     },
@@ -266,11 +281,114 @@
       "value": -0.559,
       "asof": "2026-08-14"
     },
+    "nfci_12w_delta": -0.05,
+    "rrp_bn": 0.4,
+    "rrp_asof": "2026-08-25",
+    "tga_bn": 953.6,
+    "tga_asof": "2026-08-19",
+    "tga_4w_delta_bn": 42.8,
+    "walcl_tn": 6.746,
+    "walcl_asof": "2026-08-19",
+    "walcl_12w_delta_bn": 35.0,
+    "move_index": 71.9,
+    "move_90d_history": [
+      65.7,
+      69.9,
+      68.4,
+      72.1,
+      76.8,
+      67.2,
+      70.2,
+      86.1,
+      79.7,
+      70.9,
+      73.3,
+      71.2,
+      77.0,
+      69.4,
+      70.7,
+      68.8,
+      66.8,
+      68.6,
+      70.2,
+      69.6,
+      68.5,
+      72.7,
+      80.1,
+      76.1,
+      83.0,
+      73.6,
+      75.5,
+      69.2,
+      75.0,
+      73.4
+    ],
+    "move_20d_delta": -4.2,
+    "sofr_pct": 3.65,
+    "iorb_pct": 3.65,
+    "sofr_iorb_spread_bps": 0.0,
+    "sofr_iorb_90d_history": [
+      -2.0,
+      -2.0,
+      -4.0,
+      -2.0,
+      -5.0,
+      -2.0,
+      -4.0,
+      -1.0,
+      3.0,
+      -2.0,
+      -12.0,
+      -2.0,
+      -6.0,
+      -3.0,
+      -1.0,
+      0.0,
+      1.0,
+      -3.0,
+      -3.0,
+      1.0,
+      -2.0
+    ],
+    "kbe_spy_ratio": 0.08936,
+    "kbe_spy_20d_delta_pct": -5.83,
+    "kbe_spy_90d_history": [
+      2.13,
+      -2.9,
+      -2.38,
+      -4.56,
+      -6.32,
+      -6.89,
+      -8.21,
+      -4.67,
+      -4.93,
+      -6.04,
+      -7.05,
+      0.03,
+      7.47,
+      4.75,
+      4.0,
+      9.93,
+      11.13,
+      9.37,
+      3.2,
+      1.65,
+      7.43,
+      1.81,
+      -0.21,
+      0.69,
+      0.53,
+      -0.64,
+      -0.28,
+      -1.79,
+      -3.41,
+      -5.83
+    ],
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 269.0,
-    "dxy": 98.96,
-    "dxy_pct_20d": -1.83,
-    "dxy_z_60d": -1.16,
+    "dxy": 98.95,
+    "dxy_pct_20d": -1.84,
+    "dxy_z_60d": -1.17,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -317,35 +435,33 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7690.75,
-        "chg_pct": -0.02
+        "price": 7689.25,
+        "chg_pct": -0.04
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29245.5,
-        "chg_pct": -0.11
+        "price": 29233.5,
+        "chg_pct": -0.15
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 79.91,
-        "chg_pct": -2.97
+        "price": 79.8,
+        "chg_pct": -3.11
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4684.6,
-        "chg_pct": 1.0
+        "price": 4683.8,
+        "chg_pct": 0.99
       }
     },
     "oil_uso": 126.15,
     "oil_pct_20d": 4.7,
-    "oil_wti": 79.91,
+    "oil_wti": 79.78,
     "eem_pct_20d": 7.84,
     "eem_vs_spx_20d": 4.46,
-    "rrp_bn": 0.4,
-    "tga_bn": 953.6,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -428,18 +544,18 @@
     "stablecoin_total_bn": 256.9,
     "usdt_bn": 183.2,
     "usdc_bn": 73.7,
-    "vix": 15.7,
-    "bbi_score": 1.11,
+    "vix": 15.69,
+    "bbi_score": 1.12,
     "bbi_components": {
-      "vix": -0.38,
+      "vix": -0.39,
       "ig": -1.4,
       "hy": -1.2,
       "erp": 1.5
     }
   },
   "_meta": {
-    "cached_at": "2026-08-26T17:53:09.891228",
-    "age_sec": 23,
+    "cached_at": "2026-08-26T17:59:10.623104",
+    "age_sec": 235,
     "stale": false,
     "refreshing": false
   }
