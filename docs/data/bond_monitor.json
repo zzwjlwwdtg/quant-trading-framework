@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-26T09:01",
+  "asof": "2026-08-26T09:32",
   "yields": {
     "10y": {
       "value": 4.639,
@@ -237,16 +237,6 @@
     },
     {
       "level": "warn",
-      "msg": "Nikkei 225 (日) -0.7% (5d -5.3%) 明显走弱",
-      "key": "asia_n225_weak"
-    },
-    {
-      "level": "warn",
-      "msg": "KOSPI (韩) -3.1% (5d -4.0%) 明显走弱",
-      "key": "asia_kospi_weak"
-    },
-    {
-      "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $0.4B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
     },
@@ -278,17 +268,17 @@
     },
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 269.0,
-    "dxy": 98.92,
-    "dxy_pct_20d": -2.43,
-    "dxy_z_60d": -1.22,
+    "dxy": 98.91,
+    "dxy_pct_20d": -2.44,
+    "dxy_z_60d": -1.23,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 65528.09,
-        "chg_1d": -0.74,
-        "chg_5d_pct": -5.33,
-        "asof": "2026-08-24"
+        "close": 65650.05,
+        "chg_1d": 0.19,
+        "chg_5d_pct": -2.68,
+        "asof": "2026-08-26"
       },
       "HSI": {
         "symbol": "^HSI",
@@ -317,41 +307,41 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6696.96,
-        "chg_1d": -3.12,
-        "chg_5d_pct": -4.03,
-        "asof": "2026-08-24"
+        "close": 6784.62,
+        "chg_1d": 1.31,
+        "chg_5d_pct": -1.24,
+        "asof": "2026-08-26"
       }
     },
     "us_futures": {
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7681.5,
-        "chg_pct": 0.15
+        "price": 7683.0,
+        "chg_pct": 0.17
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29219.75,
-        "chg_pct": 0.39
+        "price": 29210.5,
+        "chg_pct": 0.36
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 81.07,
-        "chg_pct": -4.63
+        "price": 80.85,
+        "chg_pct": -4.89
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4711.5,
-        "chg_pct": 1.52
+        "price": 4703.5,
+        "chg_pct": 1.35
       }
     },
     "oil_uso": 126.15,
     "oil_pct_20d": 4.7,
-    "oil_wti": 81.07,
+    "oil_wti": 80.85,
     "eem_pct_20d": 7.84,
     "eem_vs_spx_20d": 4.46,
     "rrp_bn": 0.4,
@@ -448,8 +438,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-08-26T09:02:01.451596",
-    "age_sec": 60,
+    "cached_at": "2026-08-26T09:32:54.902910",
+    "age_sec": 7,
     "stale": false,
     "refreshing": false
   }

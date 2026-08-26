@@ -28,11 +28,10 @@
       "probabilities": {
         "hold": 26.6,
         "hike_25": 45.0,
-        "hike_50": 24.3,
-        "hike_75": 4.1
+        "hike_50": 28.4
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2027-01-27",
@@ -40,19 +39,17 @@
       "probabilities": {
         "hold": 21.5,
         "hike_25": 41.5,
-        "hike_50": 28.3,
-        "hike_75": 8.0,
-        "hike_100": 0.8
+        "hike_50": 37.1
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-H2",
+  "implied_terminal_date": "2027-Q2",
   "data_snapshot_date": "2026-08-24 10:25 EDT",
-  "recent_event_impact": "最近7天内未发现新的NFP/CPI/PPI正式发布；最近关键就业/通胀数据为8/7 NFP -23K、8/12 CPI +0.1% m/m、8/13 PPI 0.0% m/m，均已早于8/24概率快照。8/19 FOMC minutes 在快照前发布，较前一周更高的远期加息概率显示市场更重视通胀/政策偏鹰风险。",
-  "commentary": "数据快照为2026-08-24 10:25 EDT，满足最近1个美国交易日附近的要求；8/7疲弱NFP本应压低加息路径，但8/12低CPI、8/13零PPI并未阻止市场在8/19 FOMC minutes后上调远期加息概率，12月和2027年1月的最可能结果已转向hike_25。注意：CME官方页面可访问但概率表由动态组件加载；本次概率采用Investing.com Fed Rate Monitor，其说明基于CME Group 30-Day Fed Fund futures prices。",
+  "recent_event_impact": "过去7天内未发现NFP/CPI/PPI新发布；8/19发布的7月FOMC minutes偏鹰。最新就业/通胀数据均已在snapshot前发布：8/7 NFP -23K、失业率4.1%；8/12 CPI +0.1% MoM、核心CPI +0.2%；8/13 PPI持平。",
+  "commentary": "Data snapshot为2026-08-24 10:25 EDT，晚于8/7 NFP、8/12 CPI和8/13 PPI，也晚于8/19 FOMC minutes。疲弱NFP和温和CPI/PPI压低了立即加息压力，但FOMC纪要显示通胀担忧和加息分歧，市场仍将年内路径定价为温和偏鹰。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -60,23 +57,31 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
-      "type": "cme_fedwatch_derived"
+      "type": "cme_fedwatch_derived_snapshot"
     },
     {
-      "url": "https://www.getfirstprint.com/calendar/2026-08",
-      "type": "economic_calendar"
+      "url": "https://www.bls.gov/news.release/archives/empsit_08072026.htm",
+      "type": "nfp"
     },
     {
       "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
-      "type": "official_cpi"
+      "type": "cpi"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/archives/ppi_08132026.htm",
+      "type": "ppi"
+    },
+    {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomcminutes20260729.htm",
+      "type": "fomc_minutes"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-25T16:05:10+00:00",
+  "fetched_at": "2026-08-26T00:06:58+00:00",
   "_meta": {
-    "cached_at": "2026-08-26T01:05:10.721261",
-    "age_sec": 28671,
+    "cached_at": "2026-08-26T09:06:58.780932",
+    "age_sec": 1563,
     "stale": false,
     "refreshing": false
   }
