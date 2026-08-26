@@ -473,7 +473,9 @@ def get_forecast(days_ahead: int = 45) -> dict:
         days_until = (ev_date - today).days
         if days_until < 0 or days_until > days_ahead:
             continue
-        impact = _classify_event_impact(ev["event"])
+        # 优先用日历自带的 impact 字段 (更精确, 已由维护者手工标注),
+        # fallback 到 name 分类器. 修复过: PCE 带注释描述会被 exact-match 打成 moderate.
+        impact = ev.get("impact") or _classify_event_impact(ev["event"])
         # 只挑 critical / high 的 (moderate/normal 忽略, 减少噪音)
         if impact not in ("critical", "high"):
             continue

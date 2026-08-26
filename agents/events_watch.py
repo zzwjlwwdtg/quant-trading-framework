@@ -90,8 +90,18 @@ _EVENT_IMPACT_MAP = {
 
 
 def _classify_event_impact(event_name: str) -> str:
-    """根据事件名返回 impact 等级（critical / high / moderate / normal）"""
-    return _EVENT_IMPACT_MAP.get(event_name, "moderate")
+    """根据事件名返回 impact 等级（critical / high / moderate / normal）.
+
+    支持 exact match 和 prefix match: 例如
+    "PCE Release (核心 PCE >0.25% m/m = bond thesis invalidate)" 会命中 "PCE Release".
+    避免日历里加了注释描述之后被误降级为 moderate.
+    """
+    if event_name in _EVENT_IMPACT_MAP:
+        return _EVENT_IMPACT_MAP[event_name]
+    for key, level in _EVENT_IMPACT_MAP.items():
+        if event_name.startswith(key):
+            return level
+    return "moderate"
 
 
 def _compute_risk_level(breaking: bool, days_away: int, event_impact: str) -> str:
