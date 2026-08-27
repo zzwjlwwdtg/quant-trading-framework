@@ -111,7 +111,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-27T15:59:02", "endpoints_ok": 20, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-27T16:33:06", "endpoints_ok": 130, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -2045,22 +2045,25 @@ async function loadBondMonitor() {
     move: liq.move == null ? 'unknown' : (liq.move >= 180 ? 'extreme' : liq.move >= 140 ? 'bad' : liq.move >= 100 ? 'warn' : 'ok'),
     sofr_iorb: liq.sofr_iorb == null ? 'unknown' : (liq.sofr_iorb >= 15 ? 'extreme' : liq.sofr_iorb >= 5 ? 'bad' : liq.sofr_iorb >= 1 ? 'warn' : 'ok'),
     kbe_spy: liq.kbe_spy == null ? 'unknown' : (liq.kbe_spy <= -10 ? 'extreme' : liq.kbe_spy <= -6 ? 'bad' : liq.kbe_spy <= -3 ? 'warn' : 'ok'),
-    sb_corr: liq.sb_corr == null ? 'unknown' : (liq.sb_corr > 0.4 ? 'extreme' : liq.sb_corr > 0.1 ? 'bad' : liq.sb_corr > -0.3 ? 'warn' : 'ok'),
+    // sb_corr 单独分类为"脆弱性" (fragility) 而非"危机预测", 不参与 worstStatus 判定
+    sb_corr: liq.sb_corr == null ? 'unknown' : (liq.sb_corr > 0.4 ? 'fragile_high' : liq.sb_corr > 0.1 ? 'fragile' : liq.sb_corr > -0.3 ? 'weakening' : 'ok'),
   };
-  const anyAlert = Object.values(liqStatus).some(s => s === 'warn' || s === 'bad' || s === 'extreme');
-  const worstStatus = Object.values(liqStatus).includes('extreme') ? 'extreme'
-                    : Object.values(liqStatus).includes('bad') ? 'bad'
-                    : Object.values(liqStatus).includes('warn') ? 'warn' : 'ok';
+  // worstStatus 只看 crisis-predictor 类别 (MOVE/SOFR/KBE), 不含 sb_corr (fragility)
+  const crisisStatuses = [liqStatus.move, liqStatus.sofr_iorb, liqStatus.kbe_spy];
+  const anyAlert = crisisStatuses.some(s => s === 'warn' || s === 'bad' || s === 'extreme');
+  const worstStatus = crisisStatuses.includes('extreme') ? 'extreme'
+                    : crisisStatuses.includes('bad') ? 'bad'
+                    : crisisStatuses.includes('warn') ? 'warn' : 'ok';
   const liqBgColor = {ok:'rgba(63,185,80,0.05)', warn:'rgba(210,153,34,0.10)', bad:'rgba(248,81,73,0.15)', extreme:'rgba(248,81,73,0.25)', unknown:'rgba(255,255,255,0.03)'}[worstStatus];
   const liqBorderColor = {ok:'#3fb950', warn:'#d29922', bad:'#f85149', extreme:'#f85149', unknown:'#484f58'}[worstStatus];
   const liqIcon = worstStatus === 'extreme' ? '🚨' : worstStatus === 'bad' ? '🔴' : worstStatus === 'warn' ? '🟡' : '🟢';
   const liqStatusZh = {ok:'全部正常', warn:'预警', bad:'警戒', extreme:'危机', unknown:'数据缺失'}[worstStatus];
-  const cellCls = (s) => ({ok:'ok', warn:'warn', bad:'bad', extreme:'bad', unknown:'muted'}[s]);
-  const cellBg = (s) => ({ok:'', warn:'rgba(210,153,34,0.08)', bad:'rgba(248,81,73,0.10)', extreme:'rgba(248,81,73,0.20)', unknown:''}[s]);
+  const cellCls = (s) => ({ok:'ok', warn:'warn', bad:'bad', extreme:'bad', fragile:'warn', fragile_high:'warn', weakening:'muted', unknown:'muted'}[s]);
+  const cellBg = (s) => ({ok:'', warn:'rgba(210,153,34,0.08)', bad:'rgba(248,81,73,0.10)', extreme:'rgba(248,81,73,0.20)', fragile:'rgba(163,113,247,0.10)', fragile_high:'rgba(163,113,247,0.18)', weakening:'rgba(163,113,247,0.05)', unknown:''}[s]);
   const moveLabel = liq.move == null ? '?' : (liq.move >= 180 ? '极端恐慌' : liq.move >= 140 ? '危机区' : liq.move >= 100 ? '抬升' : '正常');
   const sofrLabel = liq.sofr_iorb == null ? '?' : (liq.sofr_iorb >= 15 ? '2019 repo 级' : liq.sofr_iorb >= 5 ? '地板破位' : liq.sofr_iorb >= 1 ? '触及' : '正常');
   const kbeLabel = liq.kbe_spy == null ? '?' : (liq.kbe_spy <= -10 ? 'SVB/2008 级前情' : liq.kbe_spy <= -6 ? 'SVB 前 2 周' : liq.kbe_spy <= -3 ? '轻微跑输' : '正常');
-  const sbCorrLabel = liq.sb_corr == null ? '?' : (liq.sb_corr > 0.4 ? '1970s 滞胀级' : liq.sb_corr > 0.1 ? '2022 双杀级' : liq.sb_corr > -0.3 ? '对冲弱化' : '正常对冲');
+  const sbCorrLabel = liq.sb_corr == null ? '?' : (liq.sb_corr > 0.4 ? '1970s 滞胀 (脆)' : liq.sb_corr > 0.1 ? '2022 regime (脆)' : liq.sb_corr > -0.3 ? '对冲弱化' : '正常对冲');
   const liqHtml = liqHasData ? `
     <details style="margin:6px 0; padding:5px 8px; background:${liqBgColor}; border-left:3px solid ${liqBorderColor}; border-radius:4px" ${anyAlert ? 'open' : ''}>
       <summary style="cursor:pointer; list-style:none; font-size:11px; font-weight:600">
@@ -2086,15 +2089,21 @@ async function loadBondMonitor() {
           <small class="${cellCls(liqStatus.kbe_spy)}"> ${kbeLabel}</small>
           <small style="color:var(--muted); display:block">20d 变化</small>
         </div>
-        <div style="padding:4px 6px; background:${cellBg(liqStatus.sb_corr)}; border-radius:3px" title="SPY vs IEF (7-10Y UST) 60 日日收益率相关性 · 正常 <-0.3 = 债券对冲股票 · +0.1 破裂 (2022 双杀) · +0.4 极端 (1970s 滞胀)">
-          <b>⚡ 股债 60d 相关</b><br>
+      </div>
+      <div style="margin-top:10px; padding-top:6px; border-top:1px dashed rgba(139,148,158,0.2)">
+        <div style="font-size:10.5px; color:var(--muted); margin-bottom:4px">
+          🧩 <b>组合脆弱性</b> (regime describer, NOT crisis predictor)
+        </div>
+        <div style="padding:4px 6px; background:${cellBg(liqStatus.sb_corr)}; border-radius:3px; max-width:280px" title="SPY vs IEF (7-10Y UST) 60 日日收益率相关性. 正数=股债同向 = 传统 60/40 对冲失效. 学术共识 (NBER Li 2020, PGIM 2024): 相关性是脆弱性 gauge 不是 crisis predictor. 触发时应加 GLD 多元 hedge, 不是砍 bond.">
+          <b>⚡ 股债 60d 相关性 (脆弱性)</b><br>
           <b class="${cellCls(liqStatus.sb_corr)}" style="font-size:16px">${liq.sb_corr != null ? (liq.sb_corr >= 0 ? '+' : '') + liq.sb_corr.toFixed(2) : '?'}</b>
           <small class="${cellCls(liqStatus.sb_corr)}"> ${sbCorrLabel}</small>
-          <small style="color:var(--muted); display:block">对冲失效?</small>
+          <small style="color:var(--muted); display:block">→ 需要多元 hedge, 不代表危机将至</small>
         </div>
       </div>
       <div style="margin-top:6px; font-size:9.5px; color:var(--muted); line-height:1.4">
-        💡 <b>预警时效顺序</b>: SOFR-IORB (T-2周) → KBE/SPY (T-2周) → MOVE (T-1天) → VIX/HY (T-0). 融资端最早, 股票最晚.
+        💡 <b>预警时效顺序</b>: SOFR-EFFR/IORB (T-2周) → KBE/SPY (T-2周) → MOVE (T-1天) → VIX/HY (T-0). 融资端最早, 股票最晚.<br>
+        <span style="color:#a371f7">🧩 sb_corr 不是预警指标, 是脆弱性 gauge (regime describer)</span>. 真危机减债要看融资/信用/波动率而非 corr.
       </div>
       <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(139,148,158,0.2)">
         <div style="font-size:11px; color:#58a6ff; margin-bottom:6px">
