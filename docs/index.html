@@ -111,7 +111,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-08-27T14:33:04", "endpoints_ok": 130, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-08-27T15:59:02", "endpoints_ok": 20, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -2030,13 +2030,14 @@ async function loadBondMonitor() {
         </div>` : ''}
     </div>` : '';
 
-  // 🚨 机构级流动性危机预警 (MOVE + SOFR-IORB + KBE/SPY 3 指标)
+  // 🚨 机构级流动性危机预警 (MOVE + SOFR-IORB + KBE/SPY + SPY-IEF corr 4 指标)
   // 阈值触发时高亮显示; 全部正常时 collapsed 只展示汇总
   const liq = {
     move: mc.move_index,
     move_delta: mc.move_20d_delta,
     sofr_iorb: mc.sofr_iorb_spread_bps,
     kbe_spy: mc.kbe_spy_20d_delta_pct,
+    sb_corr: mc.spy_ief_60d_corr,
   };
   const liqHasData = liq.move != null || liq.sofr_iorb != null || liq.kbe_spy != null;
   // 每个指标的 status: ok/warn/bad/extreme
@@ -2044,6 +2045,7 @@ async function loadBondMonitor() {
     move: liq.move == null ? 'unknown' : (liq.move >= 180 ? 'extreme' : liq.move >= 140 ? 'bad' : liq.move >= 100 ? 'warn' : 'ok'),
     sofr_iorb: liq.sofr_iorb == null ? 'unknown' : (liq.sofr_iorb >= 15 ? 'extreme' : liq.sofr_iorb >= 5 ? 'bad' : liq.sofr_iorb >= 1 ? 'warn' : 'ok'),
     kbe_spy: liq.kbe_spy == null ? 'unknown' : (liq.kbe_spy <= -10 ? 'extreme' : liq.kbe_spy <= -6 ? 'bad' : liq.kbe_spy <= -3 ? 'warn' : 'ok'),
+    sb_corr: liq.sb_corr == null ? 'unknown' : (liq.sb_corr > 0.4 ? 'extreme' : liq.sb_corr > 0.1 ? 'bad' : liq.sb_corr > -0.3 ? 'warn' : 'ok'),
   };
   const anyAlert = Object.values(liqStatus).some(s => s === 'warn' || s === 'bad' || s === 'extreme');
   const worstStatus = Object.values(liqStatus).includes('extreme') ? 'extreme'
@@ -2058,6 +2060,7 @@ async function loadBondMonitor() {
   const moveLabel = liq.move == null ? '?' : (liq.move >= 180 ? '极端恐慌' : liq.move >= 140 ? '危机区' : liq.move >= 100 ? '抬升' : '正常');
   const sofrLabel = liq.sofr_iorb == null ? '?' : (liq.sofr_iorb >= 15 ? '2019 repo 级' : liq.sofr_iorb >= 5 ? '地板破位' : liq.sofr_iorb >= 1 ? '触及' : '正常');
   const kbeLabel = liq.kbe_spy == null ? '?' : (liq.kbe_spy <= -10 ? 'SVB/2008 级前情' : liq.kbe_spy <= -6 ? 'SVB 前 2 周' : liq.kbe_spy <= -3 ? '轻微跑输' : '正常');
+  const sbCorrLabel = liq.sb_corr == null ? '?' : (liq.sb_corr > 0.4 ? '1970s 滞胀级' : liq.sb_corr > 0.1 ? '2022 双杀级' : liq.sb_corr > -0.3 ? '对冲弱化' : '正常对冲');
   const liqHtml = liqHasData ? `
     <details style="margin:6px 0; padding:5px 8px; background:${liqBgColor}; border-left:3px solid ${liqBorderColor}; border-radius:4px" ${anyAlert ? 'open' : ''}>
       <summary style="cursor:pointer; list-style:none; font-size:11px; font-weight:600">
@@ -2083,6 +2086,12 @@ async function loadBondMonitor() {
           <small class="${cellCls(liqStatus.kbe_spy)}"> ${kbeLabel}</small>
           <small style="color:var(--muted); display:block">20d 变化</small>
         </div>
+        <div style="padding:4px 6px; background:${cellBg(liqStatus.sb_corr)}; border-radius:3px" title="SPY vs IEF (7-10Y UST) 60 日日收益率相关性 · 正常 <-0.3 = 债券对冲股票 · +0.1 破裂 (2022 双杀) · +0.4 极端 (1970s 滞胀)">
+          <b>⚡ 股债 60d 相关</b><br>
+          <b class="${cellCls(liqStatus.sb_corr)}" style="font-size:16px">${liq.sb_corr != null ? (liq.sb_corr >= 0 ? '+' : '') + liq.sb_corr.toFixed(2) : '?'}</b>
+          <small class="${cellCls(liqStatus.sb_corr)}"> ${sbCorrLabel}</small>
+          <small style="color:var(--muted); display:block">对冲失效?</small>
+        </div>
       </div>
       <div style="margin-top:6px; font-size:9.5px; color:var(--muted); line-height:1.4">
         💡 <b>预警时效顺序</b>: SOFR-IORB (T-2周) → KBE/SPY (T-2周) → MOVE (T-1天) → VIX/HY (T-0). 融资端最早, 股票最晚.
@@ -2103,6 +2112,10 @@ async function loadBondMonitor() {
           <div>
             <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">🏦 <b>银行相对表现</b> (XLF/SPY 20d 相对, 1999-今, %)</div>
             <div style="position:relative; height:200px"><canvas id="liq-chart-bank"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:10.5px; color:var(--muted); margin-bottom:3px">⚡ <b>股债 60d 相关性</b> (SPY vs IEF, 2002-今) — 2022 峰 +0.50 · 1970s 滞胀常年 >+0.3</div>
+            <div style="position:relative; height:200px"><canvas id="liq-chart-sbcorr"></canvas></div>
           </div>
         </div>
         <div style="font-size:9px; color:var(--muted); margin-top:6px; display:flex; gap:10px; flex-wrap:wrap">
@@ -2235,7 +2248,7 @@ async function loadBondMonitor() {
 // ── 26 年流动性长时序 Chart.js 图 ─────────────────────────────────────
 window.__liqChartInstances = window.__liqChartInstances || {};
 async function loadLiquidityLongCharts() {
-  const canvases = ['liq-chart-move', 'liq-chart-funding', 'liq-chart-bank'];
+  const canvases = ['liq-chart-move', 'liq-chart-funding', 'liq-chart-bank', 'liq-chart-sbcorr'];
   if (!canvases.every(id => document.getElementById(id))) return;
   const d = await fetchJson('/api/liquidity_history');
   if (!d || d.error || !d.series) return;
@@ -2321,6 +2334,7 @@ async function loadLiquidityLongCharts() {
   buildChart('liq-chart-move',    'move',    'MOVE',      t.move       || {warn:100, bad:140, extreme:180}, 'high', '');
   buildChart('liq-chart-funding', 'funding', 'Funding',   t.funding_bps || {warn:30,  bad:100, extreme:200}, 'high', 'bps');
   buildChart('liq-chart-bank',    'bank',    'Bank 20d',  t.bank_20d_pct|| {warn:-3,  bad:-6,  extreme:-10}, 'low', '%');
+  buildChart('liq-chart-sbcorr',  'sb_corr', 'SPY-IEF 60d corr', t.sb_corr_60d || {warn:-0.3, bad:0.1, extreme:0.4}, 'high', '');
 }
 
 async function loadFedWatch() {

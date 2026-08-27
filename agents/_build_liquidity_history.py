@@ -42,6 +42,7 @@ THRESHOLDS = {
     "move":         {"warn": 100, "bad": 140, "extreme": 180, "direction": "high"},
     "funding_bps":  {"warn": 30,  "bad": 100, "extreme": 200, "direction": "high"},
     "bank_20d_pct": {"warn": -3,  "bad": -6,  "extreme": -10, "direction": "low"},
+    "sb_corr_60d":  {"warn": -0.3, "bad": 0.1, "extreme": 0.4, "direction": "high"},
 }
 
 
@@ -136,6 +137,39 @@ def build_funding() -> list[dict]:
     return result
 
 
+def build_stock_bond_corr() -> list[dict]:
+    """SPY-IEF 60d rolling correlation, monthly (每月最后一日).
+    IEF 从 2002-07 开始, SPY 从 1993, 共同起始 2002-07."""
+    import statistics as _st
+    print("  fetching SPY / IEF (for stock-bond correlation) ...")
+    spy = _fetch_yf("SPY")
+    ief = _fetch_yf("IEF")
+    if not spy or not ief:
+        return []
+    spy_map = dict(spy)
+    ief_map = dict(ief)
+    common = sorted(set(spy_map) & set(ief_map))
+    if len(common) < 62:
+        return []
+    # 每日 60d 前向 correlation
+    daily = []
+    for i in range(61, len(common)):
+        window = common[i-60:i+1]
+        spy_rets = [spy_map[window[j]]/spy_map[window[j-1]] - 1 for j in range(1, len(window))]
+        ief_rets = [ief_map[window[j]]/ief_map[window[j-1]] - 1 for j in range(1, len(window))]
+        n = min(len(spy_rets), len(ief_rets))
+        if n < 30: continue
+        mean_s = sum(spy_rets[:n])/n
+        mean_i = sum(ief_rets[:n])/n
+        cov = sum((spy_rets[j]-mean_s)*(ief_rets[j]-mean_i) for j in range(n))/n
+        std_s = _st.stdev(spy_rets[:n])
+        std_i = _st.stdev(ief_rets[:n])
+        if std_s > 0 and std_i > 0:
+            daily.append((common[i], round(cov / (std_s * std_i), 3)))
+    monthly = _monthly_last(daily)
+    return [{"date": d.isoformat(), "value": v} for d, v in monthly]
+
+
 def build_bank_stress() -> list[dict]:
     """XLF/SPY 20d 相对变化, 月度."""
     print("  fetching XLF ...")
@@ -168,6 +202,8 @@ def main():
     print(f"  funding: {len(funding)} monthly points")
     bank = build_bank_stress()
     print(f"  bank: {len(bank)} monthly points")
+    sb_corr = build_stock_bond_corr()
+    print(f"  sb_corr: {len(sb_corr)} monthly points")
 
     out = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
@@ -175,11 +211,13 @@ def main():
             "move":    {"first": move[0]["date"], "last": move[-1]["date"]} if move else None,
             "funding": {"first": funding[0]["date"], "last": funding[-1]["date"]} if funding else None,
             "bank":    {"first": bank[0]["date"], "last": bank[-1]["date"]} if bank else None,
+            "sb_corr": {"first": sb_corr[0]["date"], "last": sb_corr[-1]["date"]} if sb_corr else None,
         },
         "series": {
             "move": move,
             "funding": funding,
             "bank": bank,
+            "sb_corr": sb_corr,
         },
         "crisis_events": CRISIS_EVENTS,
         "thresholds": THRESHOLDS,
