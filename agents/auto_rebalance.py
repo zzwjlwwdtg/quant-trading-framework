@@ -111,6 +111,37 @@ def _liquidity_crisis_level(mc: dict) -> tuple[int, list[str]]:
     return level, triggers
 
 
+def _load_asia_repatriation_signal() -> tuple[bool, str]:
+    """机构级 JP repatriation 信号 (BIS CIP + JP MoF 干预阈值).
+    True = 应减 US long duration 敞口 (IEI/TLT).
+    """
+    from datetime import datetime
+    cache_dir = Path(SIGNALS_DIR).parent / ".webui_cache"
+    for name in ("bond_monitor_v2.json", "bond_monitor.json"):
+        cache = cache_dir / name
+        if not cache.exists():
+            continue
+        age_h = (datetime.now().timestamp() - cache.stat().st_mtime) / 3600
+        if age_h > 12:
+            continue
+        try:
+            d = json.loads(cache.read_text(encoding="utf-8"))
+            data = d.get("data") if "data" in d else d
+            mc = data.get("macro_context", {}) if isinstance(data, dict) else {}
+            hedged = mc.get("hedged_ust_10y_for_jp")
+            jgb = mc.get("jgb_10y_pct")
+            usdjpy = mc.get("usdjpy") or 0
+            # BIS CIP 信号: hedged UST < JGB → JP 抛售 UST
+            if hedged is not None and jgb is not None and hedged < jgb:
+                return True, f"BIS CIP: hedged UST {hedged}% < JGB {jgb}%"
+            # JP MoF 真实干预区: USDJPY >= 160
+            if usdjpy >= 160:
+                return True, f"USDJPY {usdjpy} >= 160 (JP MoF 真实干预)"
+        except Exception:
+            continue
+    return False, ""
+
+
 def _load_liquidity_state() -> tuple[int, list[str]]:
     """从 bond_monitor cache 读 3 指标, 算 crisis level. 12h 内 fresh 才用.
     cache 文件名带 _v2 后缀 (webui 版本化)."""
@@ -322,6 +353,9 @@ def compute_target_weights(signals: dict, regime: str,
     if liq_level is None:
         liq_level, _ = _load_liquidity_state()
 
+    # 机构级 JP repatriation 信号 (BIS CIP + JP MoF): 触发时减 US long duration
+    asia_repat_trigger, asia_repat_reason = _load_asia_repatriation_signal()
+
     targets: dict[str, float] = {}
     for tk, cfg in _TARGET_TEMPLATE.items():
         sig = signals.get(tk, {})
@@ -343,7 +377,17 @@ def compute_target_weights(signals: dict, regime: str,
         regime_scaler = _REGIME_SCALER.get((regime, cls), 1.0)
         chain_scaler = chain_adj.get(tk, 1.0)
         liq_scaler = _LIQ_CRISIS_SCALER.get((liq_level, cls), 1.0) if liq_level > 0 else 1.0
-        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler
+        # Asia repatriation: 触发时减 US mid/long duration (IEI 特别中招)
+        # SHY (1-3Y) 前端不太受影响; IEI (3-7Y) / TLT (20+Y) 减仓
+        asia_scaler = 1.0
+        if asia_repat_trigger:
+            if tk == "IEI":
+                asia_scaler = 0.6   # 减 40%
+            elif tk in ("TLT", "TLH"):
+                asia_scaler = 0.4   # 长端更严重
+            elif cls == "hedge":
+                asia_scaler = 1.15  # 加 GLD 因 JP 干预 = USD 弱 = 金价支持
+        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler * asia_scaler
         targets[tk] = round(target, 2)
     return targets
 
@@ -475,6 +519,7 @@ def check_and_execute_rebalance(window: str | None = None,
 
     liq_level, liq_triggers = _load_liquidity_state()
     chain_blocked = _load_chain_blocked_at()
+    asia_repat_trigger, asia_repat_reason = _load_asia_repatriation_signal()
     targets = compute_target_weights(signals, regime, drawdown_pct,
                                        chain_blocked_at=chain_blocked,
                                        liq_level=liq_level)
@@ -491,6 +536,8 @@ def check_and_execute_rebalance(window: str | None = None,
         "chain_blocked_at": chain_blocked,
         "liq_crisis_level": liq_level,
         "liq_triggers": liq_triggers,
+        "asia_repat_trigger": asia_repat_trigger,
+        "asia_repat_reason": asia_repat_reason,
         "targets": targets,
         "orders": orders,
         "n_orders": len(orders),
@@ -547,6 +594,8 @@ def _cli_main():
         print(f"流动性危机等级: {lvl_label} · 触发: {', '.join(r.get('liq_triggers', []))}")
     if r.get('chain_blocked_at'):
         print(f"传导链断点: {r['chain_blocked_at']}")
+    if r.get('asia_repat_trigger'):
+        print(f"🇯🇵 Asia repatriation 触发: {r.get('asia_repat_reason')} → IEI × 0.6")
     print("=" * 80)
     print("\nTarget weights:")
     for tk, w in sorted(r["targets"].items(), key=lambda x: -x[1]):

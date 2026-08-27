@@ -463,8 +463,8 @@ def get_bond_monitor() -> dict:
                 _warn("bad",  f"MOVE {move_val} 债券波动率进入 crisis 区 (>140)", "move_crisis")
             elif move_val >= 100:
                 _warn("warn", f"MOVE {move_val} 债券波动率抬升 (>100 = 期限对冲变贵)", "move_elevated")
-    except Exception as e:
-        logger.warning(f"[bond_monitor] MOVE 拉取失败: {e}")
+    except Exception:
+        pass  # MOVE 拉取失败, 静默降级 (yfinance ^MOVE 偶尔无响应)
 
     # 8c.ii SOFR - IORB spread (Fed 行政地板破位 = 融资市场紧)
     try:
@@ -485,8 +485,118 @@ def get_bond_monitor() -> dict:
             elif spread_bps >= 1:
                 # 0bps 是常态 (SOFR 有时正好=IORB), 只有明显破位 (>=1bp) 才提示
                 _warn("warn", f"SOFR-IORB +{spread_bps}bps 短端流动性收紧 (SOFR 超越 IORB 地板)", "sofr_iorb_warn")
-    except Exception as e:
-        logger.warning(f"[bond_monitor] SOFR/IORB 拉取失败: {e}")
+    except Exception:
+        pass  # SOFR/IORB 拉取失败, 静默降级
+
+    # 8c.iv 亚洲 → 美债传导 (JP/KR 利率对 UST 需求的影响)
+    # 采用 3 个机构公开公式, 不发明:
+    #   (1) BIS CIP hedged yield: JP 投资者 FX 对冲后 UST 收益率是否仍 > JGB
+    #   (2) DB Real Yield Gap: (UST-CPI_US) - (JGB-CPI_JP) 收窄 = 回流压力
+    #   (3) JP MoF FX intervention thresholds: USDJPY 155/160 (2024 历史)
+    try:
+        import yfinance as yf
+        # JGB 10Y (FRED monthly, 2 月滞后 — 用于机构公式基础值)
+        jgb_rows = _fetch_fred_series("IRLTLT01JPM156N", days=180)
+        # KTB 10Y (Korea Long-Term Rate, FRED monthly)
+        ktb_rows = _fetch_fred_series("IRLTLT01KRM156N", days=180)
+        # Japan Short-Term Interbank (TONA proxy for CIP hedge cost)
+        tona_rows = _fetch_fred_series("IR3TIB01JPM156N", days=180)
+        # USDJPY spot (daily, real-time)
+        usdjpy_hist = yf.Ticker("USDJPY=X").history(period="60d")
+        # KRW/USD spot
+        krw_hist = yf.Ticker("KRW=X").history(period="60d")
+        # US 10Y for spread calc (use last available bond_monitor y10)
+        y10_val = (yields_out.get("10y", {}) or {}).get("value")
+
+        # --- USDJPY (daily) ---
+        if usdjpy_hist is not None and not usdjpy_hist.empty:
+            usdjpy_val = round(float(usdjpy_hist["Close"].iloc[-1]), 2)
+            macro_context["usdjpy"] = usdjpy_val
+            if len(usdjpy_hist) >= 21:
+                usdjpy_20d = float(usdjpy_hist["Close"].iloc[-21])
+                macro_context["usdjpy_20d_pct"] = round((usdjpy_val / usdjpy_20d - 1) * 100, 2)
+            # JP MoF intervention thresholds (2022-2024 历史):
+            if usdjpy_val >= 160:
+                _warn("bad",  f"USDJPY {usdjpy_val} 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)", "jpy_intervention_risk")
+            elif usdjpy_val >= 155:
+                _warn("warn", f"USDJPY {usdjpy_val} 进入 155-160 口头干预区间 (JP MoF)", "jpy_verbal_zone")
+
+        # --- KRW/USD (daily) ---
+        if krw_hist is not None and not krw_hist.empty:
+            krw_val = round(float(krw_hist["Close"].iloc[-1]), 1)
+            macro_context["krw_usd"] = krw_val
+            if len(krw_hist) >= 21:
+                krw_20d = float(krw_hist["Close"].iloc[-21])
+                macro_context["krw_20d_pct"] = round((krw_val / krw_20d - 1) * 100, 2)
+            # 韩元一般 1300+ 就是弱势, 1400+ 是危机水平 (2022-10, 2024-04)
+            if krw_val >= 1400:
+                _warn("bad",  f"KRW/USD {krw_val} 韩元危机水平 (2022-10 达 1440)", "krw_crisis")
+            elif krw_val >= 1350:
+                _warn("warn", f"KRW/USD {krw_val} 韩元明显走弱", "krw_weak")
+
+        # --- JGB & KTB 10Y (FRED monthly) ---
+        if jgb_rows:
+            jgb_val = round(jgb_rows[0][1], 2)
+            jgb_asof = jgb_rows[0][0]
+            macro_context["jgb_10y_pct"] = jgb_val
+            macro_context["jgb_asof"] = jgb_asof
+            # BIS 风格 spread (原始, 未对冲)
+            if y10_val:
+                spread_bps = round((y10_val - jgb_val) * 100, 1)
+                macro_context["ust_jgb_spread_bps"] = spread_bps
+                # 6 个月前的 spread 用于趋势
+                if len(jgb_rows) >= 6:
+                    jgb_6m = jgb_rows[5][1]
+                    old_spread = (y10_val - jgb_6m) * 100  # 简化: 当前 UST vs 6 月前 JGB
+                    macro_context["ust_jgb_spread_6m_delta_bps"] = round(spread_bps - old_spread, 1)
+
+        if ktb_rows:
+            ktb_val = round(ktb_rows[0][1], 2)
+            macro_context["ktb_10y_pct"] = ktb_val
+            macro_context["ktb_asof"] = ktb_rows[0][0]
+            if y10_val:
+                macro_context["ust_ktb_spread_bps"] = round((y10_val - ktb_val) * 100, 1)
+
+        # --- BIS CIP-hedged UST for JP investor (SIMPLIFIED, no xccy basis) ---
+        # 完整: hedged = UST - (SOFR_3M - TONA_3M) - xccy_basis
+        # xccy_basis 不免费, 忽略 (calm 时接近 0, stress 时 -30 to -60 bps)
+        # 简化: hedged ≈ UST - (SOFR - TONA)
+        sofr_v = macro_context.get("sofr_pct")
+        if sofr_v and tona_rows and y10_val and jgb_rows:
+            tona_v = tona_rows[0][1]
+            hedge_cost = sofr_v - tona_v  # 美日短端利差 = 对冲成本
+            hedged_ust_for_jp = round(y10_val - hedge_cost, 2)
+            macro_context["hedged_ust_10y_for_jp"] = hedged_ust_for_jp
+            macro_context["hedge_cost_jp"] = round(hedge_cost, 2)
+            # BIS 信号: hedged UST < JGB → JP 投资者不该买 UST
+            jgb_val = jgb_rows[0][1]
+            if hedged_ust_for_jp < jgb_val:
+                _warn("bad",
+                      f"BIS CIP: FX 对冲后 UST 10Y ({hedged_ust_for_jp}%) < JGB ({jgb_val}%) = JP 投资者会抛售 UST",
+                      "cip_repatriation_signal")
+            elif hedged_ust_for_jp < jgb_val + 0.3:
+                _warn("warn",
+                      f"BIS CIP: 对冲后 UST 相对 JGB 优势仅 +{hedged_ust_for_jp - jgb_val:.1f}pp (< 0.3pp 警戒)",
+                      "cip_narrowing")
+
+        # --- DB Real Yield Gap (JP repatriation model) ---
+        cpi_us = macro_context.get("cpi_yoy_pct")
+        # 日本 CPI (FRED CPALTT01JPM657N: JP CPI YoY)
+        jp_cpi_rows = _fetch_fred_series("CPALTT01JPM657N", days=90)
+        if cpi_us and jp_cpi_rows and jgb_rows and y10_val:
+            cpi_jp = jp_cpi_rows[0][1]
+            real_us = y10_val - cpi_us
+            real_jp = jgb_rows[0][1] - cpi_jp
+            gap = round(real_us - real_jp, 2)
+            macro_context["real_yield_gap_us_jp"] = gap
+            macro_context["cpi_jp_yoy_pct"] = round(cpi_jp, 2)
+            if gap < 0:
+                _warn("bad", f"DB Real Yield Gap: (UST 实-{real_us:.1f}%) - (JGB 实{real_jp:.1f}%) = {gap}% → JP 相对回报优势失衡", "real_yield_gap_negative")
+            elif gap < 1:
+                _warn("warn", f"DB Real Yield Gap: {gap}% (< 1% 警戒, JP 回流临界)", "real_yield_gap_narrow")
+
+    except Exception:
+        pass  # Asia carry indicators 拉取失败, 静默降级
 
     # 8c.iii KBE/SPY 银行压力 proxy (银行相对大盘, SVB 前 2 周 -8% 就已跌破)
     try:
@@ -508,8 +618,8 @@ def get_bond_monitor() -> dict:
                 _warn("bad",  f"KBE/SPY 20d {delta_20d}% 银行明显跑输 (2023-SVB 前 2 周就是这个)", "bank_stress_alert")
             elif delta_20d <= -3:
                 _warn("warn", f"KBE/SPY 20d {delta_20d}% 银行相对走弱 (需持续观察)", "bank_stress_warn")
-    except Exception as e:
-        logger.warning(f"[bond_monitor] KBE/SPY 拉取失败: {e}")
+    except Exception:
+        pass  # KBE/SPY 拉取失败, 静默降级
 
     # 9) Credit spreads — BAML IG + HY OAS (FRED 免费，卖方 credit desk 首选)
     #    IG >120bps = 收紧, >150bps = stress

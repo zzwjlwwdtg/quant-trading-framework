@@ -172,6 +172,24 @@ def _make_prompt(bond_data: dict) -> str:
             "VIX 波动率": mc.get("vix") or "N/A",
             "BBI (Bull&Bear 复合)": mc.get("bbi_score") or "N/A",
         },
+        "亚洲 → 美债传导 (JP/KR repatriation, 机构级公式)": {
+            "USDJPY": (f"{mc.get('usdjpy')} "
+                       f"({'>160 = JP MoF 真干预' if (mc.get('usdjpy') or 0) >= 160 else '155-160 口头干预区' if (mc.get('usdjpy') or 0) >= 155 else '正常'})"
+                       if mc.get("usdjpy") is not None else "N/A"),
+            "KRW/USD": (f"{mc.get('krw_usd')} "
+                        f"({'危机' if (mc.get('krw_usd') or 0) >= 1400 else '弱' if (mc.get('krw_usd') or 0) >= 1350 else '正常'})"
+                        if mc.get("krw_usd") is not None else "N/A"),
+            "JGB 10Y": f"{mc.get('jgb_10y_pct')}% (asof {mc.get('jgb_asof')})" if mc.get("jgb_10y_pct") is not None else "N/A",
+            "KTB 10Y": f"{mc.get('ktb_10y_pct')}% (asof {mc.get('ktb_asof')})" if mc.get("ktb_10y_pct") is not None else "N/A",
+            "UST-JGB 利差": f"{mc.get('ust_jgb_spread_bps')}bps" if mc.get("ust_jgb_spread_bps") is not None else "N/A",
+            "BIS CIP 对冲后 UST for JP": (f"{mc.get('hedged_ust_10y_for_jp')}% "
+                                        f"(vs JGB {mc.get('jgb_10y_pct')}%, 差 {mc.get('hedged_ust_10y_for_jp') - mc.get('jgb_10y_pct'):.2f}pp; "
+                                        f"{'负差 = JP 抛售信号' if (mc.get('hedged_ust_10y_for_jp') or 999) < (mc.get('jgb_10y_pct') or 0) else '正差 = JP 继续持 UST'})"
+                                        if mc.get("hedged_ust_10y_for_jp") is not None and mc.get("jgb_10y_pct") is not None else "N/A"),
+            "DB Real Yield Gap (US-JP)": (f"{mc.get('real_yield_gap_us_jp')}pp "
+                                          f"({'负 = 回流压力' if (mc.get('real_yield_gap_us_jp') or 99) < 0 else '<1pp 警戒' if (mc.get('real_yield_gap_us_jp') or 99) < 1 else '安全'})"
+                                          if mc.get("real_yield_gap_us_jp") is not None else "N/A"),
+        },
         "机构级流动性危机预警 (T-2周 → T-1天)": {
             "MOVE 债券波动率": (f"{mc.get('move_index')}"
                               f" ({'crisis >140' if (mc.get('move_index') or 0) >= 140 else 'elevated >100' if (mc.get('move_index') or 0) >= 100 else 'normal'})"
