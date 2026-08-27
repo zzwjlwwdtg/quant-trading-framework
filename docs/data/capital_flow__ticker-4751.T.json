@@ -2,38 +2,64 @@
   "ticker": "4751.T",
   "flow": null,
   "anomaly": {
-    "detected": false,
-    "reason": "",
-    "score": 0.0,
-    "peak_bars": [],
-    "day_ratio": 0.3,
+    "detected": true,
+    "reason": "8/27 12:30 3.21× 均值 · 主动卖 ¥32.61億 (@¥1333.5)",
+    "score": 0.2,
+    "peak_bars": [
+      {
+        "time": "12:30",
+        "vol": 2445200,
+        "ratio": 3.21,
+        "open": 1337.0,
+        "price": 1333.5,
+        "chg_pct": -0.26,
+        "direction": "sell",
+        "value_oku": 32.61,
+        "date": "2026-08-27",
+        "tier": "huge_abs"
+      }
+    ],
+    "day_ratio": 0.69,
     "trading_date": "2026-08-27",
     "date_short": "8/27",
-    "net_bias": "neutral",
+    "net_bias": "sell",
     "buy_shares": 0,
-    "sell_shares": 0,
+    "sell_shares": 2445200,
     "buy_value_oku": 0,
-    "sell_value_oku": 0,
+    "sell_value_oku": 32.61,
     "days": [
       {
         "trading_date": "2026-08-27",
         "date_short": "8/27",
-        "peak_bars": [],
+        "peak_bars": [
+          {
+            "time": "12:30",
+            "vol": 2445200,
+            "ratio": 3.21,
+            "open": 1337.0,
+            "price": 1333.5,
+            "chg_pct": -0.26,
+            "direction": "sell",
+            "value_oku": 32.61,
+            "date": "2026-08-27",
+            "tier": "huge_abs"
+          }
+        ],
         "slices": [],
-        "day_ratio": 0.3,
-        "day_chg_pct": -0.74,
+        "day_ratio": 0.69,
+        "day_chg_pct": -0.93,
         "day_open": 1345.0,
-        "day_close": 1335.0,
-        "net_bias": "neutral",
+        "day_close": 1332.5,
+        "net_bias": "sell",
         "buy_shares": 0,
-        "sell_shares": 0,
+        "sell_shares": 2445200,
         "buy_value_oku": 0,
-        "sell_value_oku": 0,
+        "sell_value_oku": 32.61,
         "full_bias": "sell",
-        "full_up_shares": 558300,
-        "full_down_shares": 1019500,
-        "full_up_value_oku": 7.54,
-        "full_down_value_oku": 13.69
+        "full_up_shares": 604100,
+        "full_down_shares": 3490100,
+        "full_up_value_oku": 8.15,
+        "full_down_value_oku": 46.63
       },
       {
         "trading_date": "2026-08-26",
@@ -53,7 +79,7 @@
           }
         ],
         "slices": [],
-        "day_ratio": 0.93,
+        "day_ratio": 0.91,
         "day_chg_pct": -1.44,
         "day_open": 1358.5,
         "day_close": 1339.0,
@@ -73,7 +99,7 @@
         "date_short": "8/25",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.42,
+        "day_ratio": 0.41,
         "day_chg_pct": -0.45,
         "day_open": 1346.5,
         "day_close": 1340.5,
@@ -93,7 +119,7 @@
         "date_short": "8/24",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.63,
+        "day_ratio": 0.62,
         "day_chg_pct": 2.11,
         "day_open": 1306.0,
         "day_close": 1333.5,
@@ -113,7 +139,7 @@
         "date_short": "8/21",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.46,
+        "day_ratio": 0.45,
         "day_chg_pct": -1.58,
         "day_open": 1325.0,
         "day_close": 1304.0,
@@ -143,6 +169,20 @@
         "tier": "huge_abs",
         "_score": 115.77,
         "date_short": "8/26"
+      },
+      {
+        "time": "12:30",
+        "vol": 2445200,
+        "ratio": 3.21,
+        "open": 1337.0,
+        "price": 1333.5,
+        "chg_pct": -0.26,
+        "direction": "sell",
+        "value_oku": 32.61,
+        "date": "2026-08-27",
+        "tier": "huge_abs",
+        "_score": 104.68,
+        "date_short": "8/27"
       }
     ],
     "thresholds": {
@@ -150,12 +190,12 @@
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-08-27 11:30 JST",
+  "asof": "2026-08-27 12:40 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-08-27T12:30:20.071597",
-    "age_sec": 162,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-08-27T12:57:50.025301",
+    "age_sec": 313,
+    "stale": true,
+    "refreshing": true
   }
 }
