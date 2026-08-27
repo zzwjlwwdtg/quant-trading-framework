@@ -111,6 +111,35 @@ def _liquidity_crisis_level(mc: dict) -> tuple[int, list[str]]:
     return level, triggers
 
 
+def _load_stock_bond_corr() -> tuple[float | None, str]:
+    """读 SPY-IEF 60d 相关性. 返回 (corr, regime_label).
+    regime: hedge_ok / weakening / broken / extreme
+    """
+    from datetime import datetime
+    cache_dir = Path(SIGNALS_DIR).parent / ".webui_cache"
+    for name in ("bond_monitor_v2.json", "bond_monitor.json"):
+        cache = cache_dir / name
+        if not cache.exists():
+            continue
+        age_h = (datetime.now().timestamp() - cache.stat().st_mtime) / 3600
+        if age_h > 12:
+            continue
+        try:
+            d = json.loads(cache.read_text(encoding="utf-8"))
+            data = d.get("data") if "data" in d else d
+            mc = data.get("macro_context", {}) if isinstance(data, dict) else {}
+            corr = mc.get("spy_ief_60d_corr")
+            if corr is None:
+                continue
+            if corr > 0.4:   return corr, "extreme"
+            if corr > 0.1:   return corr, "broken"
+            if corr > -0.3:  return corr, "weakening"
+            return corr, "hedge_ok"
+        except Exception:
+            continue
+    return None, ""
+
+
 def _load_asia_repatriation_signal() -> tuple[bool, str]:
     """机构级 JP repatriation 信号 (BIS CIP + JP MoF 干预阈值).
     True = 应减 US long duration 敞口 (IEI/TLT).
@@ -356,6 +385,9 @@ def compute_target_weights(signals: dict, regime: str,
     # 机构级 JP repatriation 信号 (BIS CIP + JP MoF): 触发时减 US long duration
     asia_repat_trigger, asia_repat_reason = _load_asia_repatriation_signal()
 
+    # 股债 60d 相关性: 正相关 = 债券不再对冲股票 (2022 股债双杀 regime)
+    sb_corr, sb_regime = _load_stock_bond_corr()
+
     targets: dict[str, float] = {}
     for tk, cfg in _TARGET_TEMPLATE.items():
         sig = signals.get(tk, {})
@@ -387,7 +419,26 @@ def compute_target_weights(signals: dict, regime: str,
                 asia_scaler = 0.4   # 长端更严重
             elif cls == "hedge":
                 asia_scaler = 1.15  # 加 GLD 因 JP 干预 = USD 弱 = 金价支持
-        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler * asia_scaler
+        # 股债相关性 overlay: 债券失对冲能力 → 减 IEI/TLT 加 GLD
+        # 2022 回测: overlay 减损 2.8pp (backtest_2022_stockbond.py)
+        # 短端 SHY (1-3Y) 受冲击小, 中/长端 IEI/TLT 严重 - 差异化 scaler
+        corr_scaler = 1.0
+        if sb_regime == "extreme":  # corr > +0.4, 1970s 滞胀级
+            if tk == "SHY": corr_scaler = 0.85
+            elif tk == "IEI": corr_scaler = 0.5
+            elif tk in ("TLT", "TLH"): corr_scaler = 0.3
+            elif cls == "hedge": corr_scaler = 1.4
+            elif cls == "cloud": corr_scaler = 0.5
+        elif sb_regime == "broken":  # corr > +0.1, 2022 双杀级
+            if tk == "SHY": corr_scaler = 0.95
+            elif tk == "IEI": corr_scaler = 0.7
+            elif tk in ("TLT", "TLH"): corr_scaler = 0.5
+            elif cls == "hedge": corr_scaler = 1.2
+            elif cls == "cloud": corr_scaler = 0.8
+        elif sb_regime == "weakening":  # corr > -0.3
+            if tk == "IEI": corr_scaler = 0.9
+            elif cls == "hedge": corr_scaler = 1.1
+        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler * asia_scaler * corr_scaler
         targets[tk] = round(target, 2)
     return targets
 
@@ -520,6 +571,7 @@ def check_and_execute_rebalance(window: str | None = None,
     liq_level, liq_triggers = _load_liquidity_state()
     chain_blocked = _load_chain_blocked_at()
     asia_repat_trigger, asia_repat_reason = _load_asia_repatriation_signal()
+    sb_corr, sb_regime = _load_stock_bond_corr()
     targets = compute_target_weights(signals, regime, drawdown_pct,
                                        chain_blocked_at=chain_blocked,
                                        liq_level=liq_level)
@@ -538,6 +590,8 @@ def check_and_execute_rebalance(window: str | None = None,
         "liq_triggers": liq_triggers,
         "asia_repat_trigger": asia_repat_trigger,
         "asia_repat_reason": asia_repat_reason,
+        "spy_ief_60d_corr": sb_corr,
+        "stock_bond_regime": sb_regime,
         "targets": targets,
         "orders": orders,
         "n_orders": len(orders),
@@ -585,8 +639,8 @@ def _cli_main():
     r = check_and_execute_rebalance(window="pre-close",
                                      dry_run=dry or True)  # CLI 默认 dry-run
     print("=" * 80)
-    print(f"NAV ${r['nav']:,.0f} · Cash ${r['cash']:,.0f} "
-          f"({r['cash']/r['nav']*100:.1f}%) · Drawdown {r['drawdown_pct']:.1f}% · "
+    print(f"NAV ${r['nav']:,.0f} - Cash ${r['cash']:,.0f} "
+          f"({r['cash']/r['nav']*100:.1f}%) - Drawdown {r['drawdown_pct']:.1f}% - "
           f"Regime {r['regime']}")
     lvl = r.get('liq_crisis_level', 0)
     if lvl > 0:
@@ -596,6 +650,8 @@ def _cli_main():
         print(f"传导链断点: {r['chain_blocked_at']}")
     if r.get('asia_repat_trigger'):
         print(f"🇯🇵 Asia repatriation 触发: {r.get('asia_repat_reason')} → IEI × 0.6")
+    if r.get('stock_bond_regime') in ('broken', 'extreme'):
+        print(f"⚡ 股债相关 {r.get('spy_ief_60d_corr'):+.2f} = {r.get('stock_bond_regime')} → bond × 0.5-0.75, hedge × 1.2-1.4")
     print("=" * 80)
     print("\nTarget weights:")
     for tk, w in sorted(r["targets"].items(), key=lambda x: -x[1]):

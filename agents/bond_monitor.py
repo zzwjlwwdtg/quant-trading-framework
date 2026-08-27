@@ -580,20 +580,72 @@ def get_bond_monitor() -> dict:
                       "cip_narrowing")
 
         # --- DB Real Yield Gap (JP repatriation model) ---
-        cpi_us = macro_context.get("cpi_yoy_pct")
-        # 日本 CPI (FRED CPALTT01JPM657N: JP CPI YoY)
-        jp_cpi_rows = _fetch_fred_series("CPALTT01JPM657N", days=90)
+        # US CPI YoY 从 CPIAUCSL 直接算 (bond_monitor 后续才设 cpi_yoy_pct,
+        # 此时未 set, 直接 fetch 避免依赖顺序)
+        us_cpi_rows = _fetch_fred_series("CPIAUCSL", days=400)
+        cpi_us = None
+        if us_cpi_rows and len(us_cpi_rows) >= 13:
+            cpi_us = round((us_cpi_rows[0][1] / us_cpi_rows[12][1] - 1) * 100, 2)
+        # 尝试 FPCPITOTLZGJPN (WB 提供的 JP annual inflation YoY %, 直接可用)
+        jp_cpi_rows = _fetch_fred_series("FPCPITOTLZGJPN", days=800)
         if cpi_us and jp_cpi_rows and jgb_rows and y10_val:
-            cpi_jp = jp_cpi_rows[0][1]
+            cpi_jp_yoy = round(jp_cpi_rows[0][1], 2)  # 直接是 YoY %
             real_us = y10_val - cpi_us
-            real_jp = jgb_rows[0][1] - cpi_jp
+            real_jp = jgb_rows[0][1] - cpi_jp_yoy
             gap = round(real_us - real_jp, 2)
             macro_context["real_yield_gap_us_jp"] = gap
-            macro_context["cpi_jp_yoy_pct"] = round(cpi_jp, 2)
+            macro_context["cpi_jp_yoy_pct"] = cpi_jp_yoy
             if gap < 0:
-                _warn("bad", f"DB Real Yield Gap: (UST 实-{real_us:.1f}%) - (JGB 实{real_jp:.1f}%) = {gap}% → JP 相对回报优势失衡", "real_yield_gap_negative")
+                _warn("bad", f"DB Real Yield Gap: (UST 实 {real_us:.1f}%) - (JGB 实 {real_jp:.1f}%) = {gap}% → JP 相对回报优势失衡", "real_yield_gap_negative")
             elif gap < 1:
                 _warn("warn", f"DB Real Yield Gap: {gap}% (< 1% 警戒, JP 回流临界)", "real_yield_gap_narrow")
+
+        # --- 股债 60d 相关性 (SPY-IEF) — 检测股债双杀 regime ---
+        # 传统: 相关性 ≤ -0.3 = 股跌债涨的正常对冲关系
+        # 2022 案例: 相关性一度 > +0.4 (股债双杀), Fed 加息通胀高企同时打两个
+        # 这个 signal 直接告诉你 "债券还能不能对冲股票下跌"
+        spy_hist_full = yf.Ticker("SPY").history(period="120d")
+        ief_hist = yf.Ticker("IEF").history(period="120d")
+        if (spy_hist_full is not None and ief_hist is not None
+                and not spy_hist_full.empty and not ief_hist.empty
+                and len(spy_hist_full) >= 61 and len(ief_hist) >= 61):
+            # 用最近 60 个交易日算日收益率相关性
+            import statistics as _st
+            spy_returns = [
+                float(spy_hist_full["Close"].iloc[i]) / float(spy_hist_full["Close"].iloc[i-1]) - 1
+                for i in range(-60, 0)
+            ]
+            ief_returns = [
+                float(ief_hist["Close"].iloc[i]) / float(ief_hist["Close"].iloc[i-1]) - 1
+                for i in range(-60, 0)
+            ]
+            n = min(len(spy_returns), len(ief_returns))
+            if n >= 30:
+                mean_s = sum(spy_returns[:n]) / n
+                mean_i = sum(ief_returns[:n]) / n
+                cov = sum((spy_returns[j] - mean_s) * (ief_returns[j] - mean_i) for j in range(n)) / n
+                std_s = _st.stdev(spy_returns[:n])
+                std_i = _st.stdev(ief_returns[:n])
+                if std_s > 0 and std_i > 0:
+                    corr = round(cov / (std_s * std_i), 3)
+                    macro_context["spy_ief_60d_corr"] = corr
+                    # 阈值 (基于历史统计):
+                    #   < -0.3: 正常对冲区 (债券真在 hedge 股票)
+                    #   -0.3 ~ +0.1: 弱化区 (对冲边际)
+                    #   +0.1 ~ +0.4: 破裂区 (2022 股债双杀水平)
+                    #   > +0.4: 严重相关 (1970s 滞胀级)
+                    if corr > 0.4:
+                        _warn("bad",
+                              f"SPY-IEF 60d 相关 +{corr} → 股债双杀严重区 (1970s 滞胀级, 传统对冲完全失效)",
+                              "stock_bond_corr_extreme")
+                    elif corr > 0.1:
+                        _warn("bad",
+                              f"SPY-IEF 60d 相关 +{corr} → 股债对冲破裂 (2022 股债双杀水平)",
+                              "stock_bond_corr_broken")
+                    elif corr > -0.3:
+                        _warn("warn",
+                              f"SPY-IEF 60d 相关 {corr} (>-0.3 = 对冲弱化, 债券保护力下降)",
+                              "stock_bond_corr_weakening")
 
     except Exception:
         pass  # Asia carry indicators 拉取失败, 静默降级
