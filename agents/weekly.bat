@@ -41,6 +41,11 @@ REM Weekly: 26-year liquidity history (MOVE + funding + bank stress, monthly agg
 REM Output: signals/liquidity_history.json (dashboard 26 年图渲染的数据源)
 "%PY%" -X utf8 -u _build_liquidity_history.py
 
+REM Weekly: 经济日历动态刷新 (FRED release schedule 官方 API)
+REM Output: signals/economic_calendar.json — events_watch.py 优先读它
+REM 若 FRED 不可用 events_watch 会 fallback 到 hardcoded (可能过时)
+"%PY%" -X utf8 -u _refresh_calendar.py
+
 echo.
 REM 只有交互式（有 stdin）才 pause，避免 Task Scheduler 卡住
 if defined SESSIONNAME if "%SESSIONNAME%"=="Console" pause

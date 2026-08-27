@@ -138,13 +138,53 @@ def _compute_risk_level(breaking: bool, days_away: int, event_impact: str) -> st
     return "normal"
 
 
-EQUITY_CALENDAR = [
+# ── 事件级备注 (thesis invalidation trigger 等) ──────────────────────────
+# 从事件名分离到独立 dict, 事件名保持干净 (方便与 FRED cache 匹配)
+# thesis_forecast / auto_rebalance 引用这里的注释
+EVENT_THESIS_NOTES = {
+    "PCE Release": "核心 PCE >0.25% m/m = bond thesis invalidate (project_thesis_2026Q3)",
+    "FOMC Decision": "9-16 若不降息 = thesis playing_out 需 confirm",
+}
+
+
+def _load_calendar_from_fred_cache() -> list[dict] | None:
+    """从 signals/economic_calendar.json (由 _refresh_calendar.py 周刷) 读日历.
+    优先级: FRED cache > hardcoded fallback.
+
+    Cache >14 天视为 stale, 忽略. 保证日历始终不落后 2 周以上.
+    """
+    from pathlib import Path
+    from datetime import datetime as _dt
+    p = Path(SIGNALS_DIR) / "economic_calendar.json"
+    if not p.exists():
+        return None
+    try:
+        age_days = (_dt.now().timestamp() - p.stat().st_mtime) / 86400
+        if age_days > 14:
+            return None
+        d = json.loads(p.read_text(encoding="utf-8"))
+        events = d.get("events", [])
+        if not events:
+            return None
+        # PCE 加 thesis 注释 (关键事件)
+        for ev in events:
+            note = EVENT_THESIS_NOTES.get(ev.get("event", ""))
+            if note and ev.get("impact") == "critical":
+                ev["thesis_note"] = note
+        return events
+    except Exception:
+        return None
+
+
+# hardcoded fallback: 如果 FRED cache 不可用 (首次运行/网络问题) 用这个
+# 定期通过 _refresh_calendar.py --print 校对; 长期依赖 FRED cache
+_EQUITY_CALENDAR_FALLBACK = [
     # CPI（通胀）
     {"date": "2026-05-13", "event": "CPI Release",           "impact": "high"},
     {"date": "2026-06-10", "event": "CPI Release",           "impact": "high"},
     {"date": "2026-07-15", "event": "CPI Release",           "impact": "high"},
     {"date": "2026-08-12", "event": "CPI Release",           "impact": "high"},
-    {"date": "2026-09-09", "event": "CPI Release",           "impact": "high"},
+    {"date": "2026-09-11", "event": "CPI Release",           "impact": "high"},
     {"date": "2026-10-13", "event": "CPI Release",           "impact": "high"},
     {"date": "2026-11-12", "event": "CPI Release",           "impact": "high"},
     {"date": "2026-12-10", "event": "CPI Release",           "impact": "high"},
@@ -162,7 +202,7 @@ EQUITY_CALENDAR = [
     {"date": "2026-06-17", "event": "Retail Sales",          "impact": "high"},
     {"date": "2026-07-16", "event": "Retail Sales",          "impact": "high"},
     {"date": "2026-08-14", "event": "Retail Sales",          "impact": "high"},
-    {"date": "2026-09-15", "event": "Retail Sales",          "impact": "high"},
+    {"date": "2026-09-16", "event": "Retail Sales",          "impact": "high"},
     {"date": "2026-10-15", "event": "Retail Sales",          "impact": "high"},
     {"date": "2026-11-13", "event": "Retail Sales",          "impact": "high"},
     # NFP（非农就业，月初首个周五）
@@ -173,12 +213,12 @@ EQUITY_CALENDAR = [
     {"date": "2026-10-02", "event": "NFP Release",           "impact": "high"},
     {"date": "2026-11-06", "event": "NFP Release",           "impact": "high"},
     {"date": "2026-12-04", "event": "NFP Release",           "impact": "high"},
-    # FOMC（每月或每两月一次）
-    {"date": "2026-06-09", "event": "FOMC Decision",         "impact": "high"},
-    {"date": "2026-07-28", "event": "FOMC Decision",         "impact": "high"},
-    {"date": "2026-09-15", "event": "FOMC Decision",         "impact": "high"},
-    {"date": "2026-10-27", "event": "FOMC Decision",         "impact": "high"},
-    {"date": "2026-12-08", "event": "FOMC Decision",         "impact": "high"},
+    # FOMC 决议 (Day 2, 2 PM ET 发布, Fed 官方 2026 calendar)
+    {"date": "2026-06-17", "event": "FOMC Decision",         "impact": "high"},
+    {"date": "2026-07-29", "event": "FOMC Decision",         "impact": "high"},
+    {"date": "2026-09-16", "event": "FOMC Decision",         "impact": "high"},
+    {"date": "2026-10-28", "event": "FOMC Decision",         "impact": "high"},
+    {"date": "2026-12-09", "event": "FOMC Decision",         "impact": "high"},
     # NVDA 财报（半导体板块风向标；用户确认 2026-Q1 FY27 在 5-20）
     {"date": "2026-05-20", "event": "NVDA Earnings",         "impact": "high"},
     {"date": "2026-08-26", "event": "NVDA Earnings (est)",   "impact": "high"},
@@ -187,16 +227,33 @@ EQUITY_CALENDAR = [
     # 详见 memory/project_thesis_2026Q3.md
     # BEA Personal Income & Outlays 通常是每月倒数第 2 或最后一个工作日 (Wed-Fri) 08:30 ET
     # 与 GOLD_CALENDAR 里的 PCE 日期对齐 (2026-08-28 曾经错为 08-29)
+    # BEA 官方 2026 release schedule (每月倒数 1-2 工作日, Wed/Thu 08:30 ET)
     {"date": "2026-08-28", "event": "PCE Release (核心 PCE >0.25% m/m = bond thesis invalidate)", "impact": "critical"},
-    {"date": "2026-09-25", "event": "PCE Release", "impact": "critical"},
-    {"date": "2026-10-30", "event": "PCE Release", "impact": "critical"},
+    {"date": "2026-09-30", "event": "PCE Release", "impact": "critical"},
+    {"date": "2026-10-29", "event": "PCE Release", "impact": "critical"},
     {"date": "2026-11-25", "event": "PCE Release", "impact": "critical"},
+    {"date": "2026-12-23", "event": "PCE Release", "impact": "critical"},
     # GOOG / AMZN Q3 财报（capex 若继续上调 → AI 价值链 shift 判断错误）
     {"date": "2026-10-28", "event": "GOOG Q3 Earnings (capex 是否继续上调?)", "impact": "high"},
     {"date": "2026-10-30", "event": "AMZN Q3 Earnings (capex 是否继续上调?)", "impact": "high"},
     # MSFT Q1 FY27（AI capex 收窄若下季再现 = 结构性 shift 确认）
     {"date": "2026-10-28", "event": "MSFT Q1 FY27 Earnings (capex 是否继续收窄?)", "impact": "high"},
 ]
+
+
+# 关键: EQUITY_CALENDAR 优先用 FRED cache, hardcoded 仅 fallback
+# 用户 2026-08-27 明确要求: "日历一定要准", 不能靠手工维护
+# _refresh_calendar.py 每周 weekly.bat 自动刷 FRED release schedule
+_cached_events = _load_calendar_from_fred_cache()
+if _cached_events:
+    # 保留 hardcoded 里的公司财报事件 (NVDA/GOOG/AMZN/MSFT 等 — FRED 没有这些)
+    _corp_events = [ev for ev in _EQUITY_CALENDAR_FALLBACK
+                    if any(kw in ev.get("event", "")
+                           for kw in ("Earnings", "NVDA", "GOOG", "AMZN", "MSFT"))]
+    EQUITY_CALENDAR = sorted(_cached_events + _corp_events,
+                              key=lambda x: (x["date"], x["event"]))
+else:
+    EQUITY_CALENDAR = _EQUITY_CALENDAR_FALLBACK
 
 # ── 多信源验证配置 ─────────────────────────────────────────────────────────────
 # 优先级：官方机构 RSS（零延迟）→ Yahoo Finance（~5分钟）→ FRED（可能滞后数小时）
@@ -264,15 +321,22 @@ _EVENT_VERIFY = {
 
 # ── Gold-specific calendar (additional events that move gold) ─────────────────
 # Gold reacts to: FOMC, CPI, NFP, PCE, USD data, geopolitical
+# 未来 PCE 事件已在 EQUITY_CALENDAR (critical). 此处只保留历史 PCE
+# (已发布, 供回测/参考). 未来重复项会被下面的去重逻辑清掉.
 GOLD_CALENDAR = EQUITY_CALENDAR + [
     {"date": "2026-05-29", "event": "PCE Release",           "impact": "high"},
     {"date": "2026-06-26", "event": "PCE Release",           "impact": "high"},
     {"date": "2026-07-31", "event": "PCE Release",           "impact": "high"},
-    {"date": "2026-08-28", "event": "PCE Release",           "impact": "high"},
-    {"date": "2026-09-25", "event": "PCE Release",           "impact": "high"},
-    {"date": "2026-10-30", "event": "PCE Release",           "impact": "high"},
-    {"date": "2026-11-25", "event": "PCE Release",           "impact": "high"},
 ]
+# 单一源守护: 若 EQUITY_CALENDAR 已包含某未来 PCE 日期, GOLD 里同日期不重复
+# (memory: feedback_single_source_calendar.md)
+_gold_seen = set()
+GOLD_CALENDAR = [
+    ev for ev in GOLD_CALENDAR
+    if not ((ev["date"], ev["event"].split("(")[0].strip()) in _gold_seen
+            or _gold_seen.add((ev["date"], ev["event"].split("(")[0].strip())))
+]
+del _gold_seen
 
 # ── Breaking news keywords ─────────────────────────────────────────────────────
 EQUITY_BREAKING = [
