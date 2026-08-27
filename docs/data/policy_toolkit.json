@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-08-27T06:03:41.619449",
-  "count_total_actions": 70,
+  "as_of": "2026-08-27T18:04:58.519264",
+  "count_total_actions": 77,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -121,6 +121,29 @@
       "event_count_180d": 14
     },
     {
+      "tool_key": "duration_shortening",
+      "zh": "缩短发债久期",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "多发 T-bill 少发长债, 压制长端供给",
+      "invalidation": "短端供给爆棚, 靠 MMF/RRP 吸收; RRP 见底就断供",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "duration_shortening",
+        "action_type": "signaled",
+        "date": "2026-08-27",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "讨论其债市动作可能合理，偏向认可财政部压长端收益率的策略。",
+        "verbatim": "Scott Bessent’s bond market moves may not be so misguided after all",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNLWdHaTNCVUxxaXFGTmkxWlh2SERTNGtYMDYxR1JRblVtOU5FWk5WRVE1TlRHN3dCU2JEOGZQRUpsd2NZNTlsT0poel8xcUl4TmlDdDJxbllvWDdCTEg2VTVaZmpkWkNDS0dQbGlQMmRrMmJ3TzNYRDVYV2FaajM5WGlmRjFGQk82M25vNE4zS3RSMndIcGxucGd0aG5sWXlKbnlfQWdHLVE1QQ?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 7
+    },
+    {
       "tool_key": "fx_intervention",
       "zh": "汇市干预 (支撑日元)",
       "owner": "Treasury/G7",
@@ -151,18 +174,6 @@
       "feasibility": "medium",
       "canonical_desc": "豁免银行 SLR 里的国债, 让银行可大量吸纳长债",
       "invalidation": "放松金融监管的道德风险 + Fed 内部意见分歧",
-      "status": "观察",
-      "last_action": null,
-      "yield_reaction_30y": {},
-      "event_count_180d": 0
-    },
-    {
-      "tool_key": "duration_shortening",
-      "zh": "缩短发债久期",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "多发 T-bill 少发长债, 压制长端供给",
-      "invalidation": "短端供给爆棚, 靠 MMF/RRP 吸收; RRP 见底就断供",
       "status": "观察",
       "last_action": null,
       "yield_reaction_30y": {},
