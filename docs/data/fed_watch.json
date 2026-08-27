@@ -5,11 +5,8 @@
       "date": "2026-09-16",
       "days_until": 20,
       "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 57,
-        "hike_25": 43,
-        "hike_50": 0
+        "hold": 63.5,
+        "hike_25": 36.5
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -18,11 +15,9 @@
       "date": "2026-10-28",
       "days_until": 62,
       "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 77,
-        "hike_25": 23,
-        "hike_50": 0
+        "hold": 47.3,
+        "hike_25": 43.4,
+        "hike_50": 9.3
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -31,53 +26,62 @@
       "date": "2026-12-09",
       "days_until": 104,
       "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 54,
-        "hike_25": 46,
-        "hike_50": 0
+        "hold": 27.3,
+        "hike_25": 45.0,
+        "hike_50": 27.6
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 153,
+      "probabilities": {
+        "hold": 21.6,
+        "hike_25": 41.4,
+        "hike_50": 37.0
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_rate": "4.01% market-implied mid rate",
   "implied_terminal_date": "2026-Q4",
   "data_snapshot_date": "2026-08-27",
-  "recent_event_impact": "过去7天内未发现NFP/CPI/PPI/FOMC决议或Powell讲话；最新就业/通胀数据为8/7 NFP -23K、失业率4.1%，8/12 CPI +0.1% m/m、3.4% y/y、核心2.5% y/y，8/13 PPI持平、4.7% y/y。8/27 PCE通胀报道显示通胀仍偏高，强化9月加息尾部概率。",
-  "commentary": "数据快照为2026-08-27，Frenzy Capital基于CME /ZQ Fed Funds futures方法显示未来三次FOMC均以维持利率为主，但每次会议仍有23%-46%的25bp加息概率，整体为hawkish hold。最新NFP疲弱本应压低加息预期，但CPI/PPI仍显示同比通胀高于目标，且8/27 PCE相关报道偏热，使市场继续保留较高加息风险定价。",
+  "recent_event_impact": "最近7天内未发现新的NFP/CPI/PPI/FOMC发布；最新NFP为2026-08-07非农-23K、失业率4.1%，削弱加息确定性；2026-08-12 CPI同比3.4%、核心2.5%，2026-08-13 PPI同比4.7%、环比持平，使通胀风险仍支撑远期加息概率。",
+  "commentary": "数据快照为2026-08-27，已晚于8月7日NFP、8月12日CPI和8月13日PPI，因此这些就业与通胀数据应已反映在定价中。市场对9月仍以按兵不动为基准，但10月以后累计加息概率超过维持不变，反映软就业压低近端紧缩确定性、而CPI/PPI仍偏高支撑中期偏鹰定价。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_probability_backup"
+      "url": "https://www.oanda.jp/lab-education/dictionary/fedwatchtool/",
+      "type": "cme_fedwatch_snapshot_mirror"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/home.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.fisclear.com/fed-watch",
+      "type": "fed_funds_futures_snapshot"
     },
     {
-      "url": "https://www.bls.gov/ces/",
-      "type": "nfp"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp_release"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "url": "https://www.bls.gov/news.release/cpi.nr0.htm",
+      "type": "cpi_release"
     },
     {
-      "url": "https://www.bls.gov/ppi/",
-      "type": "ppi"
+      "url": "https://www.bls.gov/news.release/ppi.htm",
+      "type": "ppi_release"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-27T00:11:25+00:00",
+  "fetched_at": "2026-08-27T08:12:55+00:00",
   "_meta": {
-    "cached_at": "2026-08-27T09:11:25.744654",
-    "age_sec": 28312,
+    "cached_at": "2026-08-27T17:12:55.498739",
+    "age_sec": 1209,
     "stale": false,
     "refreshing": false
   }
