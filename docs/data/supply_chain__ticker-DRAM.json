@@ -1,119 +1,113 @@
 {
   "ticker": "DRAM",
-  "sector": "半导体存储/DRAM",
-  "business": "美国本土 DRAM 存储芯片设计与销售商 Dataram（现 U.S. Gold Corp 前身壳，本 ticker 已用于小市值存储/内存相关标的），主营 DRAM 内存模组及企业级存储解决方案",
+  "sector": "存储半导体",
+  "business": "DRAM 是偏存储芯片主题的标的，核心暴露在动态随机存取存储器及相关半导体供应链，包括存储芯片制造、晶圆代工、设备和下游服务器/消费电子需求。",
   "upstream": [
     {
-      "name": "美光科技",
-      "ticker": "MU",
-      "note": "提供 DRAM 晶圆及内存颗粒",
-      "weight": 85,
-      "confidence": "high"
-    },
-    {
-      "name": "三星电子",
-      "ticker": "005930.KS",
-      "note": "DRAM 颗粒供应",
-      "weight": 70,
+      "name": "ASML Holding",
+      "ticker": "ASML",
+      "note": "提供EUV/DUV光刻设备，是先进DRAM制程扩产的关键设备供应商",
+      "weight": 90,
       "confidence": "medium"
     },
     {
-      "name": "SK 海力士",
-      "ticker": "000660.KS",
-      "note": "DRAM/NAND 颗粒供应",
+      "name": "Applied Materials",
+      "ticker": "AMAT",
+      "note": "提供沉积、刻蚀、离子注入等晶圆制造设备，覆盖存储芯片产线多个关键环节",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Lam Research",
+      "ticker": "LRCX",
+      "note": "提供刻蚀和薄膜沉积设备，在DRAM高深宽比结构制造中战略重要度高",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "Tokyo Electron",
+      "ticker": "8035.T",
+      "note": "提供涂布显影、刻蚀、清洗和沉积设备，服务全球存储厂资本开支",
+      "weight": 72,
+      "confidence": "medium"
+    },
+    {
+      "name": "KLA Corporation",
+      "ticker": "KLAC",
+      "note": "提供过程控制、检测和量测设备，帮助提升DRAM良率",
       "weight": 60,
       "confidence": "medium"
-    },
-    {
-      "name": "日月光投控",
-      "ticker": "ASX",
-      "note": "存储模组封装测试",
-      "weight": 40,
-      "confidence": "low"
-    },
-    {
-      "name": "南亚科技",
-      "ticker": "2408.TW",
-      "note": "利基型 DRAM 颗粒",
-      "weight": 30,
-      "confidence": "low"
     }
   ],
   "downstream": [
     {
-      "name": "戴尔科技",
-      "ticker": "DELL",
-      "note": "服务器/工作站内存升级采购",
-      "weight": 70,
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "采购高带宽存储器及相关存储供应链能力，用于AI GPU和加速卡",
+      "weight": 95,
       "confidence": "medium"
     },
     {
-      "name": "惠普企业",
-      "ticker": "HPE",
-      "note": "企业级服务器内存模组",
+      "name": "Amazon",
+      "ticker": "AMZN",
+      "note": "云计算服务器和AI基础设施需要大量DRAM与HBM相关存储资源",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "Azure数据中心、AI训练和推理服务器带动服务器DRAM需求",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "iPhone、Mac、iPad等终端设备采购移动DRAM和封装存储方案",
+      "weight": 74,
+      "confidence": "medium"
+    },
+    {
+      "name": "Dell Technologies",
+      "ticker": "DELL",
+      "note": "服务器、工作站和企业PC使用DRAM模组及高容量内存配置",
       "weight": 65,
       "confidence": "medium"
-    },
-    {
-      "name": "超微电脑",
-      "ticker": "SMCI",
-      "note": "AI 服务器内存配套",
-      "weight": 55,
-      "confidence": "medium"
-    },
-    {
-      "name": "联想集团",
-      "ticker": "0992.HK",
-      "note": "PC 及服务器内存采购",
-      "weight": 45,
-      "confidence": "low"
-    },
-    {
-      "name": "美国联邦政府/国防部",
-      "ticker": null,
-      "note": "军工及政府 IT 系统内存",
-      "weight": 35,
-      "confidence": "low"
     }
   ],
   "peers": [
     {
-      "name": "金士顿",
-      "ticker": null,
-      "note": "内存模组，全球最大独立厂商，未上市",
+      "name": "Micron Technology",
+      "ticker": "MU",
+      "note": "DRAM、NAND和HBM存储芯片制造商，是美国主要存储厂",
       "confidence": "high"
     },
     {
-      "name": "威刚科技",
-      "ticker": "3260.TW",
-      "note": "消费级内存模组",
-      "confidence": "high"
-    },
-    {
-      "name": "金士泰",
-      "ticker": null,
-      "note": "企业级内存模组",
+      "name": "Samsung Electronics",
+      "ticker": "005930.KS",
+      "note": "全球DRAM和NAND龙头之一，在HBM与服务器内存领域竞争",
       "confidence": "medium"
     },
     {
-      "name": "十铨科技",
-      "ticker": "4967.TW",
-      "note": "消费级内存与电竞产品",
+      "name": "SK hynix",
+      "ticker": "000660.KS",
+      "note": "DRAM和HBM核心供应商，在AI高带宽存储市场竞争力强",
       "confidence": "medium"
     },
     {
-      "name": "宇瞻科技",
-      "ticker": "8271.TW",
-      "note": "工业级内存模组",
+      "name": "Western Digital",
+      "ticker": "WDC",
+      "note": "主要竞争在NAND和存储解决方案，部分需求端与存储周期相关",
       "confidence": "medium"
     }
   ],
-  "generated_at": "2026-07-29T08:50:09.008549+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-28T09:03:33.114050+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-29T17:50:09.009799",
-    "age_sec": 2592776,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T18:03:33.115049",
+    "age_sec": 1773,
+    "stale": false,
+    "refreshing": false
   }
 }

@@ -1,48 +1,41 @@
 {
   "ticker": "MULL",
-  "sector": "电动车/新能源商用车",
-  "business": "Mullen Automotive 设计与生产电动商用车（EV Cargo Van/Class 3 卡车）及少量乘用电动车",
+  "sector": "商用电动车",
+  "business": "MULL所对应的原Mullen Automotive现Bollinger Innovations主要开发、组装和销售Class 1、Class 3及Bollinger Class 4商用电动车，面向城市配送、车队和公共部门电动化需求。",
   "upstream": [
     {
-      "name": "宁德时代 CATL",
-      "ticker": "300750.SZ",
-      "note": "动力电池电芯供应",
+      "name": "Roush Industries",
+      "ticker": null,
+      "note": "为Bollinger B4 Class 4电动卡车提供合同制造、工程验证和生产支持",
       "weight": 85,
       "confidence": "medium"
     },
     {
-      "name": "Bollinger Motors",
+      "name": "Our Next Energy",
       "ticker": null,
-      "note": "Class 4-6 电动卡车平台（Mullen 控股子公司提供技术/整车）",
-      "weight": 70,
-      "confidence": "high"
-    },
-    {
-      "name": "ReVolt Systems",
-      "ticker": null,
-      "note": "增程式动力系统 (Range Extender) 技术合作",
-      "weight": 50,
+      "note": "为Bollinger B4供应电池包，是中型商用电动车核心BOM环节",
+      "weight": 80,
       "confidence": "medium"
     },
     {
-      "name": "NVIDIA",
-      "ticker": "NVDA",
-      "note": "车载智能座舱/驾驶辅助芯片方案",
-      "weight": 40,
-      "confidence": "low"
-    },
-    {
-      "name": "Enpower Greentech",
+      "name": "Qiantu Motor / CH-Auto",
       "ticker": null,
-      "note": "固态电池/半固态电池研发合作",
+      "note": "提供Qiantu K50相关知识产权、整车套件和零部件合作，主要关联乘用性能EV项目而非当前商用车主线",
       "weight": 35,
       "confidence": "medium"
     },
     {
-      "name": "Randy Marion Automotive",
+      "name": "Syncron",
       "ticker": null,
-      "note": "整车总装/上装改装合作伙伴（曾为大宗采购方兼装配方）",
-      "weight": 30,
+      "note": "提供保修管理系统和售后运营软件，支撑商用车客户服务体系",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "EO Charging",
+      "ticker": null,
+      "note": "为Bollinger商用车队客户提供充电和车队电动化解决方案，偏生态合作伙伴",
+      "weight": 20,
       "confidence": "medium"
     }
   ],
@@ -50,77 +43,84 @@
     {
       "name": "Randy Marion Automotive Group",
       "ticker": null,
-      "note": "美国大型车队经销商，批量采购 Class 3 EV Cargo Van",
-      "weight": 80,
+      "note": "战略授权经销商和大额采购方，采购Mullen Class 1/3商用EV用于分销给车队客户",
+      "weight": 95,
       "confidence": "high"
     },
     {
-      "name": "Papé Kenworth",
+      "name": "Momentum Groups",
       "ticker": null,
-      "note": "卡车经销网络，分销 Bollinger B4 商用车",
-      "weight": 50,
+      "note": "采购Bollinger B4 Class 4电动卡车，用于车队管理、移动充电和改装应用",
+      "weight": 80,
       "confidence": "medium"
     },
     {
-      "name": "美国联邦/地方政府车队",
+      "name": "Doering Fleet Management",
       "ticker": null,
-      "note": "市政/邮政/公用事业电动化车队采购",
-      "weight": 40,
-      "confidence": "low"
+      "note": "采购Bollinger B4电动卡车，用于其商用车队客户的中型电动卡车部署",
+      "weight": 70,
+      "confidence": "medium"
     },
     {
-      "name": "最后一公里物流公司",
+      "name": "MGT Lease Company",
       "ticker": null,
-      "note": "城市配送/冷链短途运输车队",
-      "weight": 35,
-      "confidence": "low"
+      "note": "采购Mullen Class 1货运厢式车和Class 3底盘驾驶室卡车，用于车队租赁和商业客户转租",
+      "weight": 65,
+      "confidence": "medium"
     },
     {
-      "name": "租赁车队运营商",
+      "name": "National Auto Fleet Group",
       "ticker": null,
-      "note": "商用车租赁运营，用于 EV 车队试点",
-      "weight": 25,
-      "confidence": "low"
+      "note": "作为公共部门采购渠道和经销合作方，帮助政府机构采购Mullen商用EV",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "EnviroCharge",
+      "ticker": null,
+      "note": "采购Bollinger B4并改装为移动充电单元",
+      "weight": 45,
+      "confidence": "medium"
     }
   ],
   "peers": [
     {
+      "name": "Rivian Automotive",
+      "ticker": "RIVN",
+      "note": "电动商用配送车和车队电动化，尤其是EDV平台",
+      "confidence": "high"
+    },
+    {
       "name": "Workhorse Group",
       "ticker": "WKHS",
-      "note": "同为美国电动商用/物流车厂商",
+      "note": "轻中型电动配送车和末端物流车队市场",
       "confidence": "high"
     },
     {
-      "name": "Canoo",
-      "ticker": "GOEV",
-      "note": "电动 LDV/商用平台竞争",
-      "confidence": "high"
-    },
-    {
-      "name": "Xos Inc",
+      "name": "Xos",
       "ticker": "XOS",
-      "note": "Class 5-7 电动商用卡车直接对手",
+      "note": "Class 5-8商用电动卡车、车队充电与服务",
       "confidence": "high"
     },
     {
-      "name": "Nikola",
-      "ticker": "NKLA",
-      "note": "电动/氢能商用卡车竞争",
-      "confidence": "high"
+      "name": "GreenPower Motor",
+      "ticker": "GP",
+      "note": "电动商用车、校车和中型车辆平台",
+      "confidence": "medium"
     },
     {
-      "name": "Rivian",
-      "ticker": "RIVN",
-      "note": "电动商用 Van（EDV）在最后一公里领域竞争",
+      "name": "Ford Motor",
+      "ticker": "F",
+      "note": "E-Transit和商用车电动化，对Mullen Class 1货运车形成规模化竞争",
       "confidence": "high"
     }
   ],
-  "generated_at": "2026-07-29T08:52:39.877955+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-28T09:04:09.897174+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-29T17:52:39.878961",
-    "age_sec": 2592625,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T18:04:09.898173",
+    "age_sec": 1736,
+    "stale": false,
+    "refreshing": false
   }
 }

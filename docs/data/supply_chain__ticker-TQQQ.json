@@ -1,133 +1,119 @@
 {
   "ticker": "TQQQ",
-  "sector": "杠杆ETF/纳斯达克100科技",
-  "business": "3倍做多纳斯达克100指数（QQQ）的杠杆ETF，主要暴露于大型科技股",
+  "sector": "纳斯达克100科技成长股三倍杠杆ETF",
+  "business": "TQQQ 是 ProShares 发行的三倍日内杠杆 ETF，核心经济敞口来自纳斯达克100指数，主要集中于大型科技、半导体、云计算、消费电子和互联网平台公司。",
   "upstream": [
     {
-      "name": "ProShares",
-      "ticker": null,
-      "note": "ETF发行方与管理人",
-      "weight": 90,
-      "confidence": "high"
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为英伟达、苹果、AMD、博通等纳斯达克100核心持仓提供先进制程晶圆代工，是AI芯片和消费电子芯片供应链关键环节",
+      "weight": 95,
+      "confidence": "medium"
     },
     {
-      "name": "Nasdaq",
-      "ticker": "NDAQ",
-      "note": "提供NDX指数授权",
-      "weight": 70,
-      "confidence": "high"
+      "name": "ASML",
+      "ticker": "ASML",
+      "note": "提供EUV光刻设备，支撑台积电、三星、英特尔等先进制程产能，间接影响纳斯达克100半导体权重股供给",
+      "weight": 88,
+      "confidence": "medium"
     },
     {
-      "name": "Société Générale",
-      "ticker": "GLE.PA",
-      "note": "提供总收益互换（swap）对手方",
-      "weight": 65,
-      "confidence": "high"
+      "name": "鸿海精密",
+      "ticker": "2317.TW",
+      "note": "苹果 iPhone、Mac 等硬件的重要代工制造商，间接影响苹果这一纳斯达克100重仓股的产品交付",
+      "weight": 82,
+      "confidence": "medium"
     },
     {
-      "name": "高盛",
-      "ticker": "GS",
-      "note": "swap/期货对手方",
-      "weight": 60,
-      "confidence": "high"
+      "name": "三星电子",
+      "ticker": "005930.KS",
+      "note": "提供存储芯片、显示面板及部分半导体制造能力，服务于智能手机、云服务器和AI硬件供应链",
+      "weight": 76,
+      "confidence": "medium"
     },
     {
-      "name": "摩根大通",
-      "ticker": "JPM",
-      "note": "swap对手方与托管",
-      "weight": 55,
-      "confidence": "high"
-    },
-    {
-      "name": "BNY Mellon",
-      "ticker": "BK",
-      "note": "ETF托管与行政管理",
-      "weight": 50,
-      "confidence": "high"
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "提供DRAM和NAND存储产品，是AI服务器、云计算和高端终端设备的重要上游供应商",
+      "weight": 68,
+      "confidence": "medium"
     }
   ],
   "downstream": [
     {
-      "name": "英伟达",
-      "ticker": "NVDA",
-      "note": "NDX第一大权重成分（AI芯片）",
+      "name": "企业云与AI客户",
+      "ticker": null,
+      "note": "购买微软Azure、亚马逊AWS、谷歌云和英伟达AI算力，用于企业软件、数据分析、模型训练和推理",
       "weight": 95,
-      "confidence": "high"
+      "confidence": "medium"
     },
     {
-      "name": "苹果",
-      "ticker": "AAPL",
-      "note": "NDX核心权重成分",
+      "name": "全球消费电子用户",
+      "ticker": null,
+      "note": "购买苹果硬件、微软软件订阅、亚马逊电商服务及各类数字内容，是大型科技平台收入基础",
       "weight": 90,
-      "confidence": "high"
+      "confidence": "medium"
     },
     {
-      "name": "微软",
-      "ticker": "MSFT",
-      "note": "NDX核心权重成分（云与AI）",
-      "weight": 88,
-      "confidence": "high"
+      "name": "广告主与营销代理商",
+      "ticker": null,
+      "note": "向Alphabet、Meta、亚马逊等平台购买搜索、社交、电商和视频广告投放",
+      "weight": 84,
+      "confidence": "medium"
     },
     {
-      "name": "亚马逊",
-      "ticker": "AMZN",
-      "note": "NDX核心权重成分（云与电商）",
-      "weight": 75,
-      "confidence": "high"
+      "name": "数据中心与云服务运营商",
+      "ticker": null,
+      "note": "采购英伟达GPU、网络设备、服务器和相关软件栈，用于AI集群和高性能计算基础设施",
+      "weight": 80,
+      "confidence": "medium"
     },
     {
-      "name": "Meta",
-      "ticker": "META",
-      "note": "NDX权重成分（广告与AI）",
-      "weight": 65,
-      "confidence": "high"
-    },
-    {
-      "name": "博通",
-      "ticker": "AVGO",
-      "note": "NDX权重成分（AI ASIC/网络芯片）",
-      "weight": 60,
-      "confidence": "high"
+      "name": "软件开发者与企业IT部门",
+      "ticker": null,
+      "note": "采购微软、Adobe、Oracle、ServiceNow等软件和平台服务，用于办公、开发、自动化和业务系统",
+      "weight": 72,
+      "confidence": "medium"
     }
   ],
   "peers": [
     {
-      "name": "QLD",
+      "name": "Invesco QQQ Trust",
+      "ticker": "QQQ",
+      "note": "非杠杆纳斯达克100ETF，是TQQQ的基础指数敞口参照产品",
+      "confidence": "high"
+    },
+    {
+      "name": "ProShares Ultra QQQ",
       "ticker": "QLD",
-      "note": "2倍做多QQQ，同族低杠杆版",
+      "note": "提供纳斯达克100指数两倍日内杠杆敞口，与TQQQ竞争杠杆科技指数资金",
       "confidence": "high"
     },
     {
-      "name": "SQQQ",
-      "ticker": "SQQQ",
-      "note": "3倍做空QQQ，反向对手产品",
-      "confidence": "high"
-    },
-    {
-      "name": "TECL",
+      "name": "Direxion Daily Technology Bull 3X Shares",
       "ticker": "TECL",
-      "note": "3倍做多科技板块XLK",
-      "confidence": "high"
+      "note": "提供美国科技板块三倍杠杆敞口，风险收益特征与TQQQ相近",
+      "confidence": "medium"
     },
     {
-      "name": "SOXL",
-      "ticker": "SOXL",
-      "note": "3倍做多半导体，重叠NVDA/AVGO",
-      "confidence": "high"
-    },
-    {
-      "name": "UPRO",
+      "name": "ProShares UltraPro S&P500",
       "ticker": "UPRO",
-      "note": "3倍做多标普500，宽基替代",
-      "confidence": "high"
+      "note": "提供标普500三倍杠杆敞口，竞争高杠杆宽基ETF资金",
+      "confidence": "medium"
+    },
+    {
+      "name": "MicroSectors FANG+ Index 3X Leveraged ETN",
+      "ticker": "FNGU",
+      "note": "提供大型科技和互联网龙头三倍杠杆敞口，与TQQQ在高贝塔科技交易中竞争",
+      "confidence": "medium"
     }
   ],
-  "generated_at": "2026-07-29T08:49:21.299664+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-28T09:03:40.020524+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-29T17:49:21.302186",
-    "age_sec": 2592824,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T18:03:40.033487",
+    "age_sec": 1766,
+    "stale": false,
+    "refreshing": false
   }
 }

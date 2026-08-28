@@ -1,126 +1,119 @@
 {
   "ticker": "SOXL",
-  "sector": "半导体（3倍杠杆ETF，追踪ICE Semiconductor Index）",
-  "business": "Direxion Daily Semiconductor Bull 3X ETF，通过掉期合约提供半导体指数3倍日回报，底层为NVDA/AVGO/AMD等半导体龙头",
+  "sector": "半导体杠杆ETF/半导体产业链",
+  "business": "SOXL 是 Direxion 提供的 3 倍做多半导体行业日内杠杆ETF，经济敞口主要来自其追踪指数中的美国半导体设计、制造、设备和材料相关公司。",
   "upstream": [
     {
-      "name": "NVIDIA",
-      "ticker": "NVDA",
-      "note": "指数最大权重成分股，AI GPU龙头",
-      "weight": 25,
-      "confidence": "high"
-    },
-    {
-      "name": "Broadcom",
-      "ticker": "AVGO",
-      "note": "指数第二大权重，AI ASIC与网络芯片",
-      "weight": 20,
-      "confidence": "high"
-    },
-    {
-      "name": "AMD",
-      "ticker": "AMD",
-      "note": "指数核心成分，CPU/GPU/AI加速器",
-      "weight": 10,
-      "confidence": "high"
-    },
-    {
-      "name": "Taiwan Semiconductor",
+      "name": "台积电",
       "ticker": "TSM",
-      "note": "指数成分，全球最大晶圆代工",
-      "weight": 8,
-      "confidence": "high"
+      "note": "为英伟达、AMD、高通、博通等半导体设计公司提供先进制程代工，是半导体链核心产能来源",
+      "weight": 95,
+      "confidence": "medium"
     },
     {
-      "name": "Qualcomm",
-      "ticker": "QCOM",
-      "note": "指数成分，手机基带与AI边缘芯片",
-      "weight": 6,
-      "confidence": "high"
+      "name": "ASML",
+      "ticker": "ASML",
+      "note": "提供EUV/DUV光刻设备，决定先进制程晶圆厂扩产能力",
+      "weight": 88,
+      "confidence": "medium"
     },
     {
       "name": "Applied Materials",
       "ticker": "AMAT",
-      "note": "指数成分，半导体设备龙头",
-      "weight": 5,
-      "confidence": "high"
+      "note": "提供沉积、刻蚀、离子注入等晶圆制造设备",
+      "weight": 78,
+      "confidence": "medium"
+    },
+    {
+      "name": "Lam Research",
+      "ticker": "LRCX",
+      "note": "提供刻蚀和沉积设备，服务存储和逻辑芯片制造",
+      "weight": 72,
+      "confidence": "medium"
+    },
+    {
+      "name": "KLA",
+      "ticker": "KLAC",
+      "note": "提供制程控制、量测和缺陷检测设备，提高晶圆良率",
+      "weight": 65,
+      "confidence": "medium"
     }
   ],
   "downstream": [
     {
-      "name": "零售杠杆交易者",
-      "ticker": null,
-      "note": "Robinhood/富途散户短线追涨半导体β",
-      "weight": 45,
-      "confidence": "high"
-    },
-    {
-      "name": "对冲基金/CTA",
-      "ticker": null,
-      "note": "用SOXL做半导体beta敞口或对冲SOXS",
-      "weight": 25,
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "采购AI加速器、CPU、网络芯片和云数据中心半导体，用于Azure和AI训练推理",
+      "weight": 90,
       "confidence": "medium"
     },
     {
-      "name": "期权做市商",
-      "ticker": null,
-      "note": "SOXL期权流动性极高，delta对冲需求大",
-      "weight": 15,
-      "confidence": "high"
-    },
-    {
-      "name": "资产管理机构",
-      "ticker": null,
-      "note": "战术配置半导体主题短期敞口",
-      "weight": 10,
+      "name": "Amazon",
+      "ticker": "AMZN",
+      "note": "采购GPU、服务器CPU、网络芯片，并自研云端芯片用于AWS基础设施",
+      "weight": 86,
       "confidence": "medium"
     },
     {
-      "name": "程序化交易/量化",
-      "ticker": null,
-      "note": "日内动量与均值回归策略",
-      "weight": 5,
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购和自研AI/数据中心芯片，用于Google Cloud、搜索和AI模型训练推理",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "采购移动SoC、射频、连接、存储和传感器芯片，用于iPhone、Mac和可穿戴设备",
+      "weight": 78,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "采购AI加速器、网络芯片和服务器半导体，用于推荐系统、广告和大模型基础设施",
+      "weight": 72,
       "confidence": "medium"
     }
   ],
   "peers": [
     {
-      "name": "SOXS Direxion半导体3X做空",
-      "ticker": "SOXS",
-      "note": "反向对手盘，同一指数-3X",
-      "confidence": "high"
-    },
-    {
-      "name": "SOXX iShares半导体ETF",
+      "name": "iShares Semiconductor ETF",
       "ticker": "SOXX",
-      "note": "1X无杠杆同类，费率更低",
+      "note": "非杠杆半导体ETF，覆盖美国上市半导体龙头",
       "confidence": "high"
     },
     {
-      "name": "SMH VanEck半导体ETF",
+      "name": "VanEck Semiconductor ETF",
       "ticker": "SMH",
-      "note": "1X无杠杆，市值加权更集中于TSM/NVDA",
+      "note": "非杠杆半导体ETF，权重更集中于大型半导体公司",
       "confidence": "high"
     },
     {
-      "name": "USD ProShares半导体2X",
+      "name": "ProShares Ultra Semiconductors",
       "ticker": "USD",
-      "note": "2X杠杆同类，波动更低",
+      "note": "2倍做多半导体行业杠杆ETF",
       "confidence": "high"
     },
     {
-      "name": "TECL Direxion科技3X",
-      "ticker": "TECL",
-      "note": "更广义科技3X，含大量非半导体",
+      "name": "SPDR S&P Semiconductor ETF",
+      "ticker": "XSD",
+      "note": "等权风格半导体ETF，覆盖更广泛的美国半导体公司",
+      "confidence": "high"
+    },
+    {
+      "name": "First Trust Nasdaq Semiconductor ETF",
+      "ticker": "FTXL",
+      "note": "基于量化因子筛选的半导体ETF",
       "confidence": "high"
     }
   ],
-  "generated_at": "2026-07-29T08:49:48.776750+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-28T09:03:35.507924+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-29T17:49:48.777749",
-    "age_sec": 2592796,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T18:03:35.532307",
+    "age_sec": 1770,
+    "stale": false,
+    "refreshing": false
   }
 }

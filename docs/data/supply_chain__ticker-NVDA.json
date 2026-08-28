@@ -1,91 +1,91 @@
 {
   "ticker": "NVDA",
-  "sector": "半导体设计（GPU/AI加速器）",
-  "business": "设计GPU、数据中心AI加速器、网络芯片及CUDA软件生态，主导AI训练与推理算力市场",
+  "sector": "半导体设计",
+  "business": "英伟达主要设计并销售 GPU、AI 加速器、网络芯片与相关软硬件平台，核心增长来自数据中心 AI 训练与推理需求。",
   "upstream": [
     {
       "name": "台积电",
       "ticker": "TSM",
-      "note": "独家代工H100/H200/B100/B200等先进制程GPU（4N/3nm）",
+      "note": "代工生产先进制程 GPU、AI 加速器芯片及 CoWoS 先进封装产能",
       "weight": 95,
       "confidence": "high"
     },
     {
       "name": "SK海力士",
-      "ticker": "000660.KS",
-      "note": "HBM3/HBM3e高带宽内存主力供应商",
-      "weight": 85,
-      "confidence": "high"
-    },
-    {
-      "name": "三星电子",
-      "ticker": "005930.KS",
-      "note": "HBM内存供应及部分先进封装",
-      "weight": 55,
-      "confidence": "high"
+      "ticker": null,
+      "note": "供应 HBM 高带宽内存，用于 H100、H200、Blackwell 等 AI 加速器",
+      "weight": 88,
+      "confidence": "medium"
     },
     {
       "name": "美光科技",
       "ticker": "MU",
-      "note": "HBM3e内存补充供应，已进入H200/B系列",
-      "weight": 50,
-      "confidence": "high"
+      "note": "供应 HBM 与高速显存，提升英伟达 AI GPU 内存带宽与供应弹性",
+      "weight": 72,
+      "confidence": "medium"
     },
     {
-      "name": "ASML",
-      "ticker": "ASML",
-      "note": "通过台积电间接依赖EUV光刻机",
-      "weight": 45,
+      "name": "三星电子",
+      "ticker": null,
+      "note": "供应显存、HBM 候选产能及部分半导体制造相关服务",
+      "weight": 65,
       "confidence": "medium"
     },
     {
       "name": "日月光投控",
-      "ticker": "ASX",
-      "note": "CoWoS先进封装及测试产能补充",
-      "weight": 40,
+      "ticker": null,
+      "note": "提供部分封测与先进封装相关服务，补充台积电封装产能",
+      "weight": 45,
       "confidence": "medium"
+    },
+    {
+      "name": "联发科/高速互连与板卡生态供应商",
+      "ticker": null,
+      "note": "通过高速 SerDes、服务器板卡、光模块与系统集成生态支持 AI 服务器交付",
+      "weight": 35,
+      "confidence": "low"
     }
   ],
   "downstream": [
     {
       "name": "微软",
       "ticker": "MSFT",
-      "note": "Azure云端大规模采购H100/H200/B200训练与推理",
+      "note": "采购数据中心 GPU、AI 加速器与网络设备，用于 Azure 云、OpenAI 工作负载和企业 AI 服务",
       "weight": 95,
-      "confidence": "high"
-    },
-    {
-      "name": "Meta Platforms",
-      "ticker": "META",
-      "note": "自建AI集群训练Llama系列，单一最大客户之一",
-      "weight": 90,
-      "confidence": "high"
-    },
-    {
-      "name": "Alphabet",
-      "ticker": "GOOGL",
-      "note": "Google Cloud及Gemini训练采购GPU（虽有自研TPU）",
-      "weight": 80,
       "confidence": "high"
     },
     {
       "name": "亚马逊",
       "ticker": "AMZN",
-      "note": "AWS EC2 GPU实例及内部模型训练",
-      "weight": 80,
+      "note": "采购 GPU 与网络方案，用于 AWS AI 训练、推理和云计算实例",
+      "weight": 90,
       "confidence": "high"
+    },
+    {
+      "name": "谷歌母公司 Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购 GPU 用于 Google Cloud、AI 训练推理及内部大模型工作负载，同时自研 TPU 形成替代压力",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "采购大量 AI GPU 用于推荐系统、生成式 AI、Llama 模型训练与推理基础设施",
+      "weight": 80,
+      "confidence": "medium"
     },
     {
       "name": "甲骨文",
       "ticker": "ORCL",
-      "note": "OCI云基础设施大规模GPU采购",
-      "weight": 65,
-      "confidence": "high"
+      "note": "采购 GPU 集群用于 OCI 云服务和 AI 基础设施租赁",
+      "weight": 68,
+      "confidence": "medium"
     },
     {
       "name": "特斯拉",
       "ticker": "TSLA",
-      "note": "Dojo补充与FSD训练集群采购H100",
+      "note": "采购 GPU 用于自动驾驶训练、仿真和 AI 基础设施，同时自研 Dojo 形成部分替代",
       "weight": 45,
       "confidence": "medium"
     }
@@ -94,40 +94,40 @@
     {
       "name": "AMD",
       "ticker": "AMD",
-      "note": "MI300X/MI325X数据中心GPU直接竞争",
+      "note": "在数据中心 GPU、AI 加速器和高性能计算芯片上直接竞争",
       "confidence": "high"
     },
     {
       "name": "英特尔",
       "ticker": "INTC",
-      "note": "Gaudi AI加速器及数据中心GPU竞争",
-      "confidence": "high"
+      "note": "通过 Gaudi AI 加速器、CPU 平台和数据中心芯片组合竞争",
+      "confidence": "medium"
     },
     {
       "name": "博通",
       "ticker": "AVGO",
-      "note": "为Google/Meta代工定制ASIC AI芯片，蚕食GPU份额",
-      "confidence": "high"
-    },
-    {
-      "name": "Marvell",
-      "ticker": "MRVL",
-      "note": "定制AI ASIC及数据中心互联竞争",
+      "note": "在 AI 定制 ASIC、数据中心网络芯片和高速互连方案上竞争",
       "confidence": "medium"
     },
     {
-      "name": "华为海思",
-      "ticker": null,
-      "note": "昇腾910B在中国市场替代NVDA受限产品",
+      "name": "谷歌母公司 Alphabet",
+      "ticker": "GOOGL",
+      "note": "TPU 自研加速器削弱部分云端 GPU 采购需求，并向云客户提供替代算力",
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "Trainium 和 Inferentia 自研 AI 芯片在 AWS 内部及云客户场景中替代部分 GPU 需求",
       "confidence": "medium"
     }
   ],
-  "generated_at": "2026-07-29T08:53:48.561312+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-28T09:03:35.161082+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-29T17:53:48.562320",
-    "age_sec": 2592556,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T18:03:35.162536",
+    "age_sec": 1770,
+    "stale": false,
+    "refreshing": false
   }
 }
