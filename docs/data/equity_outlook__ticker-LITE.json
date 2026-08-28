@@ -5,16 +5,16 @@
   "analyst_consensus": {
     "n_analysts": 24,
     "recommendation": "buy",
-    "current_price": 896.48,
+    "current_price": 895.0,
     "forward_eps": 33.01,
     "trailing_eps": -92.94,
     "eps_growth_pct": null,
-    "forward_pe": 27.16,
+    "forward_pe": 27.11,
     "trailing_pe": null,
     "target_mean": 1148.3,
     "target_high": 1400.0,
     "target_low": 820.0,
-    "target_upside_pct": 28.1,
+    "target_upside_pct": 28.3,
     "revenue_growth_pct": 109.3,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-06",
@@ -29,29 +29,29 @@
     "implied_hist_median": 701.53,
     "implied_hist_p25": 640.46,
     "implied_hist_p75": 910.5,
-    "implied_hist_upside": -21.7,
-    "peer_pe_median": 19.63,
+    "implied_hist_upside": -21.6,
+    "peer_pe_median": 19.52,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "COHR",
-        "pe": 20.08
+        "pe": 20.02
       },
       {
         "ticker": "FN",
-        "pe": 19.19
+        "pe": 19.02
       },
       {
         "ticker": "MRVL",
-        "pe": 33.77
+        "pe": 32.79
       },
       {
         "ticker": "300502.SZ",
         "pe": 11.18
       }
     ],
-    "implied_peer_median": 648.05,
-    "implied_peer_upside": -27.7,
+    "implied_peer_median": 644.42,
+    "implied_peer_upside": -28.0,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -199,37 +199,37 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 1148.3,
-        "gap_pct": 28.1
+        "gap_pct": 28.3
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 701.53,
-        "gap_pct": -21.7
+        "gap_pct": -21.6
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 648.05,
-        "gap_pct": -27.7
+        "implied_price": 644.42,
+        "gap_pct": -28.0
       }
     ],
-    "median_gap_pct": -21.7,
+    "median_gap_pct": -21.6,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数低于现价 21.7%",
+      "多口径隐含价中位数低于现价 21.6%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-28T17:05:19.666108+00:00",
+  "fetched_at": "2026-08-28T23:05:49.796067+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-29T02:05:19.667107",
-    "age_sec": 21470,
+    "cached_at": "2026-08-29T08:05:49.797071",
+    "age_sec": 1636,
     "stale": false,
     "refreshing": false
   },
