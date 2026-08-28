@@ -10,17 +10,17 @@
     "event_counts": {
       "DOMESTIC_POLICY": 4,
       "DEAL": 1,
-      "MEDIA_ATTACK": 1,
-      "MARKET": 1,
       "NOISE": 3,
-      "GEOPOLITICAL": 2
+      "MARKET": 1,
+      "GEOPOLITICAL": 2,
+      "MEDIA_ATTACK": 1
     },
     "breaking": [
       {
         "event_type": "MARKET",
         "direction": "bullish",
         "magnitude": "large",
-        "confidence": 9,
+        "confidence": 10,
         "tickers": [
           "NVDA",
           "SOXL",
@@ -35,8 +35,8 @@
       {
         "event_type": "DEAL",
         "direction": "bullish",
-        "magnitude": "medium",
-        "confidence": 8,
+        "magnitude": "large",
+        "confidence": 9,
         "tickers": [
           "SOXL",
           "NVDA",
@@ -47,6 +47,18 @@
         "preview": "GREAT NEWS! Micron, one of the \"HOTTEST\" Companies in the World, just announced a MASSIVE 10 BILLION DOLLAR Investment i",
         "verbatim": "Micron... announced a MASSIVE 10 BILLION DOLLAR Investment in new Research Labs right here in America",
         "post_time": "2026-08-27T18:31:52.946Z"
+      },
+      {
+        "event_type": "DOMESTIC_POLICY",
+        "direction": "bearish",
+        "magnitude": "small",
+        "confidence": 8,
+        "tickers": [
+          "SPY"
+        ],
+        "preview": "Ranchers and Farmers have always been a number one priority for me. They work very hard, are smart, efficient, and immac",
+        "verbatim": "I am authorizing legal documents to be drawn in order to allow Farm",
+        "post_time": "2026-08-28T12:22:40.534Z"
       }
     ],
     "summary": {
