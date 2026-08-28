@@ -419,25 +419,20 @@ def compute_target_weights(signals: dict, regime: str,
                 asia_scaler = 0.4   # 长端更严重
             elif cls == "hedge":
                 asia_scaler = 1.15  # 加 GLD 因 JP 干预 = USD 弱 = 金价支持
-        # 股债相关性 overlay: 债券失对冲能力 → 减 IEI/TLT 加 GLD
-        # 2022 回测: overlay 减损 2.8pp (backtest_2022_stockbond.py)
-        # 短端 SHY (1-3Y) 受冲击小, 中/长端 IEI/TLT 严重 - 差异化 scaler
+        # 股债相关性 overlay: sb_corr 是**脆弱性 gauge** 不是 crisis predictor
+        # (memory: feedback_correlation_is_regime_not_predictor.md)
+        # 触发时应**加 hedge (GLD)** 而非砍 bond, 因为 corr broken 只是
+        # 说"传统 60/40 对冲失效", 不代表 liquidity dry-up.
+        # 真危机减债要靠 SOFR-EFFR / MOVE / HY OAS 领先指标.
         corr_scaler = 1.0
-        if sb_regime == "extreme":  # corr > +0.4, 1970s 滞胀级
-            if tk == "SHY": corr_scaler = 0.85
-            elif tk == "IEI": corr_scaler = 0.5
-            elif tk in ("TLT", "TLH"): corr_scaler = 0.3
-            elif cls == "hedge": corr_scaler = 1.4
-            elif cls == "cloud": corr_scaler = 0.5
+        if sb_regime == "extreme":  # corr > +0.4, 1970s 滞胀级 = 组合极脆弱
+            if tk in ("IEI", "TLT", "TLH"): corr_scaler = 0.85   # 微减长/中久期
+            elif cls == "hedge": corr_scaler = 1.4               # 加 GLD 多元 hedge
         elif sb_regime == "broken":  # corr > +0.1, 2022 双杀级
-            if tk == "SHY": corr_scaler = 0.95
-            elif tk == "IEI": corr_scaler = 0.7
-            elif tk in ("TLT", "TLH"): corr_scaler = 0.5
-            elif cls == "hedge": corr_scaler = 1.2
-            elif cls == "cloud": corr_scaler = 0.8
-        elif sb_regime == "weakening":  # corr > -0.3
-            if tk == "IEI": corr_scaler = 0.9
-            elif cls == "hedge": corr_scaler = 1.1
+            if tk in ("IEI", "TLT"): corr_scaler = 0.92          # 略减
+            elif cls == "hedge": corr_scaler = 1.2               # 加 hedge
+        elif sb_regime == "weakening":  # corr > -0.3, 对冲弱化早期
+            if cls == "hedge": corr_scaler = 1.1
         target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler * asia_scaler * corr_scaler
         targets[tk] = round(target, 2)
     return targets
@@ -651,7 +646,7 @@ def _cli_main():
     if r.get('asia_repat_trigger'):
         print(f"🇯🇵 Asia repatriation 触发: {r.get('asia_repat_reason')} → IEI × 0.6")
     if r.get('stock_bond_regime') in ('broken', 'extreme'):
-        print(f"⚡ 股债相关 {r.get('spy_ief_60d_corr'):+.2f} = {r.get('stock_bond_regime')} → bond × 0.5-0.75, hedge × 1.2-1.4")
+        print(f"⚡ 股债相关 {r.get('spy_ief_60d_corr'):+.2f} = {r.get('stock_bond_regime')} (脆弱性 gauge) → 加 hedge × 1.2-1.4, 微减 bond × 0.85-0.92")
     print("=" * 80)
     print("\nTarget weights:")
     for tk, w in sorted(r["targets"].items(), key=lambda x: -x[1]):

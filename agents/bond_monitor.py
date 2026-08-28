@@ -466,6 +466,51 @@ def get_bond_monitor() -> dict:
     except Exception:
         pass  # MOVE 拉取失败, 静默降级 (yfinance ^MOVE 偶尔无响应)
 
+    # 8c.i-b SOFR - EFFR spread (repo market pressure, 真领先指标)
+    #   来源: 参考央行 monitors, SOFR (repo 实际) vs EFFR (Fed 目标) 差
+    #   >5bps warn / >15bps bad / >30bps extreme (2019-09 repo 危机)
+    #   比 SOFR-IORB 更直接反映银行间融资紧张 (EFFR 更真实反映政策)
+    try:
+        sofr_rows2 = _fetch_fred_series("SOFR", days=15)
+        effr_rows = _fetch_fred_series("EFFR", days=15)
+        if sofr_rows2 and effr_rows:
+            sofr2 = sofr_rows2[0][1]
+            effr = effr_rows[0][1]
+            sofr_effr_bps = round((sofr2 - effr) * 100, 1)
+            macro_context["effr_pct"] = round(effr, 3)
+            macro_context["sofr_effr_spread_bps"] = sofr_effr_bps
+            if sofr_effr_bps >= 30:
+                _warn("bad", f"SOFR-EFFR +{sofr_effr_bps}bps repo 极端紧 (2019-09 级)", "sofr_effr_extreme")
+            elif sofr_effr_bps >= 15:
+                _warn("bad", f"SOFR-EFFR +{sofr_effr_bps}bps repo 明显承压", "sofr_effr_alert")
+            elif sofr_effr_bps >= 5:
+                _warn("warn", f"SOFR-EFFR +{sofr_effr_bps}bps repo 边际收紧", "sofr_effr_warn")
+    except Exception:
+        pass
+
+    # 8c.i-c 银行准备金 / 银行总资产 (slow gauge, 阶段性液性紧缺预警)
+    #   WRESBAL (Reserves of Depository Institutions) / TLAACBW027SBOG (银行总资产)
+    #   >12% 充裕 / 10-12% 中性 / <10% 稀缺 / <8% 危机 (2019 repo ~7.5%)
+    #   注意: 分母是**银行体系总资产 ~$25T** 不是 Fed BS
+    try:
+        wresbal_rows = _fetch_fred_series("WRESBAL", days=90)  # weekly, $M
+        bank_assets_rows = _fetch_fred_series("TLAACBW027SBOG", days=90)  # weekly, $B
+        if wresbal_rows and bank_assets_rows:
+            reserves_bn = wresbal_rows[0][1] / 1000  # $M -> $Bn
+            bank_assets_bn = bank_assets_rows[0][1]  # already $B
+            reserves_pct = round(reserves_bn / bank_assets_bn * 100, 1) if bank_assets_bn else 0
+            macro_context["bank_reserves_bn"] = round(reserves_bn, 0)
+            macro_context["bank_total_assets_bn"] = round(bank_assets_bn, 0)
+            macro_context["bank_reserves_pct_of_assets"] = reserves_pct
+            if reserves_pct < 8:
+                _warn("bad", f"银行准备金 {reserves_pct}% (< 8% 危机, 2019 repo 水平)", "reserves_crisis")
+            elif reserves_pct < 10:
+                _warn("warn", f"银行准备金 {reserves_pct}% (< 10% 稀缺)", "reserves_scarce")
+            elif reserves_pct < 12:
+                _warn("info", f"银行准备金 {reserves_pct}% (< 12% 中性偏紧)", "reserves_neutral")
+    except Exception:
+        pass
+
     # 8c.ii SOFR - IORB spread (Fed 行政地板破位 = 融资市场紧)
     try:
         sofr_rows = _fetch_fred_series("SOFR", days=15)
