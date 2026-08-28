@@ -1,12 +1,12 @@
 {
-  "ts": "2026-08-28T13:57:45.716598+00:00",
+  "ts": "2026-08-28T14:30:15.962090+00:00",
   "factors": [
     {
-      "arrow": "▼",
+      "arrow": "·",
       "name": "WTI 油价",
-      "direction": "bearish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "$82.62 (20d -2.4%)",
+      "value": "$82.83 (20d -2.2%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$4.95 (Brent $87.57 - WTI $82.62)",
+      "value": "$4.98 (Brent $87.81 - WTI $82.83)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "neutral",
       "weight": 1,
-      "value": "XLE +4.9% vs SPY +3.4% (差 +1.6pp)",
+      "value": "XLE +4.7% vs SPY +3.2% (差 +1.5pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "99.22 (5d +0.4%)",
+      "value": "99.5 (5d +0.7%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -42,11 +42,11 @@
       "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
-      "arrow": "▼",
+      "arrow": "·",
       "name": "OVX 油价波动率",
-      "direction": "bearish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "45.28 · 极高（>45），市场恐慌",
+      "value": "44.7 · 偏高（35-45），关注",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -58,19 +58,19 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "bearish",
-  "score": -2,
+  "direction": "neutral",
+  "score": 0,
   "notes": [
-    "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
+    "综合 score=+0，多因子分歧，观察后续"
   ],
-  "price": 82.62,
-  "pct_5d": -5.1,
-  "pct_20d": -2.42,
+  "price": 82.83,
+  "pct_5d": -4.86,
+  "pct_20d": -2.17,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-08-28T22:57:49.217553",
-    "age_sec": 314,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T23:30:20.262513",
+    "age_sec": 166,
+    "stale": false,
+    "refreshing": false
   }
 }
