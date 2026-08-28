@@ -1,73 +1,79 @@
 {
-  "current_target_range": "3.75-4.00",
+  "current_target_range": "3.50-3.75",
   "meetings": [
     {
       "date": "2026-09-16",
       "days_until": 19,
       "probabilities": {
-        "cut_25": 66.3,
-        "hold": 33.7
+        "hold": 65.6,
+        "hike_25": 34.4
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 61,
       "probabilities": {
-        "cut_25": 49.5,
-        "hold": 42.0,
-        "hike_25": 8.5
+        "hold": 47.5,
+        "hike_25": 43.0,
+        "hike_50": 9.5
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 103,
       "probabilities": {
-        "cut_25": 27.3,
-        "hold": 45.4,
-        "hike_25": 23.5,
-        "hike_50": 3.8
+        "hold": 26.2,
+        "hike_25": 45.0,
+        "hike_50": 28.9
       },
-      "most_likely": "hold",
-      "consensus_direction": "neutral_with_two_sided_tail"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 152,
+      "probabilities": {
+        "hold": 21.2,
+        "hike_25": 41.4,
+        "hike_50": 37.4
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "not_available",
-  "implied_terminal_date": "not_available",
-  "data_snapshot_date": "2026-08-27 11:35 EDT",
-  "recent_event_impact": "过去7天未发现新的NFP/CPI/PPI/FOMC决定；最近CPI为2026-08-12，CPI-U同比+3.4%、核心CPI同比+2.5%；最近PPI为2026-08-13，最终需求PPI环比持平、同比+4.7%，均已早于2026-08-27概率快照并已被市场消化。",
-  "commentary": "CME口径的最新可抓取快照为2026-08-27 11:35 EDT，距2026-08-28在1个交易日内；9月会议市场更偏向降息25bp，但10月和12月分布显示通胀韧性仍限制连续宽松定价。最近CPI/PPI数据已在快照前发布，CPI同比3.4%、核心2.5%和PPI同比4.7%的组合使远期会议出现明显的维持甚至再加息尾部概率。",
+  "implied_terminal_rate": "3.75-4.00",
+  "implied_terminal_date": "2026-Q4/2027-Q1",
+  "data_snapshot_date": "2026-08-27 19:35 EDT",
+  "recent_event_impact": "最近7天内未发现NFP/CPI/PPI正式发布；最近关键数据为8/7 NFP意外转负、8/12 CPI温和、8/13 PPI持平，压低加息赔率；但8/26 PCE同比3.7%、核心3.3%偏高，使9月加息概率仍约34%。",
+  "commentary": "Investing.com Fed Rate Monitor基于CME 30-Day Fed Funds futures，snapshot为2026-08-27 19:35 EDT，处于2026-08-28最近1个交易日内。市场仍以9月按兵不动为基准，但8/7 NFP疲弱与8/12-8/13 CPI/PPI温和后的鸽派定价，被8/26偏高PCE部分逆转，10月以后累计加息概率升至多数。",
   "sources": [
-    {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_fedwatch_proxy"
-    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_based_fed_rate_monitor"
     },
     {
-      "url": "https://www.bls.gov/ppi/",
-      "type": "ppi"
+      "url": "https://fred.stlouisfed.org/series/DFEDTARL",
+      "type": "current_target_range_check"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/08_sched_list.htm",
-      "type": "economic_calendar"
+      "url": "https://www.bls.gov/schedule/2026/home.htm",
+      "type": "economic_release_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-27T16:14:08+00:00",
+  "fetched_at": "2026-08-28T00:15:15+00:00",
   "_meta": {
-    "cached_at": "2026-08-28T01:14:08.360540",
-    "age_sec": 28135,
+    "cached_at": "2026-08-28T09:15:15.854123",
+    "age_sec": 1067,
     "stale": false,
     "refreshing": false
   }
