@@ -1,133 +1,133 @@
 {
   "ticker": "TSLA",
-  "sector": "新能源车/储能",
-  "business": "设计、制造并销售纯电动汽车、储能系统及光伏产品，同时开发自动驾驶(FSD)与人形机器人(Optimus)",
+  "sector": "新能源车/储能/自动驾驶",
+  "business": "特斯拉设计、制造并直销电动车，同时经营电池储能、充电网络、车载软件、FSD/Robotaxi及相关能源服务。",
   "upstream": [
     {
-      "name": "宁德时代",
-      "ticker": "300750.SZ",
-      "note": "磷酸铁锂动力电池(上海工厂主供)与储能电芯",
-      "weight": 90,
-      "confidence": "high"
-    },
-    {
-      "name": "松下控股",
+      "name": "Panasonic Holdings",
       "ticker": "6752.T",
-      "note": "内华达超级工厂 2170 圆柱电芯，Model S/X/3 长期供应",
-      "weight": 75,
-      "confidence": "high"
+      "note": "供应圆柱电池电芯，是美国及早期车型电池体系的核心伙伴",
+      "weight": 90,
+      "confidence": "medium"
     },
     {
-      "name": "LG新能源",
-      "ticker": "373220.KS",
-      "note": "上海工厂 Model Y 圆柱及方形电池、4680 部分供应",
-      "weight": 65,
-      "confidence": "high"
+      "name": "LG Energy Solution",
+      "ticker": null,
+      "note": "供应动力电池电芯，覆盖部分全球车型和区域产能",
+      "weight": 80,
+      "confidence": "medium"
     },
     {
-      "name": "英伟达",
+      "name": "Contemporary Amperex Technology Co. Limited",
+      "ticker": null,
+      "note": "供应LFP电池电芯，尤其与中国及标准续航车型、储能产品相关",
+      "weight": 78,
+      "confidence": "medium"
+    },
+    {
+      "name": "NVIDIA",
       "ticker": "NVDA",
-      "note": "Cortex 训练集群 H100/H200 GPU 用于 FSD 与 Dojo 之外的 AI 训练",
-      "weight": 55,
-      "confidence": "high"
-    },
-    {
-      "name": "台积电",
-      "ticker": "TSM",
-      "note": "代工 HW4/HW5 FSD 自研 SoC 与 Dojo D1 芯片",
+      "note": "提供AI训练/推理GPU及数据中心算力生态，用于自动驾驶和机器人AI研发",
       "weight": 55,
       "confidence": "medium"
     },
     {
-      "name": "赣锋锂业",
-      "ticker": "002460.SZ",
-      "note": "氢氧化锂长单，供三元高镍电池正极",
-      "weight": 40,
+      "name": "STMicroelectronics",
+      "ticker": "STM",
+      "note": "供应功率半导体/SiC等车用电子器件，影响电驱逆变器效率和成本",
+      "weight": 42,
       "confidence": "medium"
+    },
+    {
+      "name": "Albemarle",
+      "ticker": "ALB",
+      "note": "上游锂资源及锂化学品供应链相关企业，影响电池材料成本",
+      "weight": 35,
+      "confidence": "low"
     }
   ],
   "downstream": [
     {
-      "name": "个人消费者(散户零售)",
+      "name": "个人及企业零售车主",
       "ticker": null,
-      "note": "Model 3/Y/S/X/Cybertruck 直营销售，占汽车营收 80%+",
-      "weight": 85,
+      "note": "购买Model 3/Y/S/X、Cybertruck及FSD、保险、充电等服务，是汽车收入主体",
+      "weight": 100,
       "confidence": "high"
     },
     {
-      "name": "Hertz Global",
-      "ticker": "HTZ",
-      "note": "车队采购 Model 3 用于租赁与网约车",
-      "weight": 25,
-      "confidence": "high"
-    },
-    {
-      "name": "Uber Technologies",
-      "ticker": "UBER",
-      "note": "网约车司机端 EV 车队采购与充电合作",
-      "weight": 20,
+      "name": "PG&E Corporation",
+      "ticker": "PCG",
+      "note": "采购/使用Megapack等大型储能系统用于电网调峰和可再生能源并网",
+      "weight": 45,
       "confidence": "medium"
     },
     {
-      "name": "福特汽车",
-      "ticker": "F",
-      "note": "NACS 充电标准授权 + Supercharger 网络接入",
-      "weight": 18,
-      "confidence": "high"
+      "name": "Intersect Power",
+      "ticker": null,
+      "note": "采购Megapack用于大型太阳能和储能项目",
+      "weight": 42,
+      "confidence": "medium"
     },
     {
-      "name": "通用汽车",
-      "ticker": "GM",
-      "note": "NACS 接口授权与 Supercharger 使用协议",
-      "weight": 18,
-      "confidence": "high"
-    },
-    {
-      "name": "PG&E / 公用事业",
-      "ticker": "PCG",
-      "note": "Megapack 大型储能项目采购(Moss Landing 等)",
+      "name": "bp p.l.c.",
+      "ticker": "BP",
+      "note": "采购Tesla超充硬件，用于bp pulse公共充电网络建设",
       "weight": 30,
-      "confidence": "high"
+      "confidence": "medium"
+    },
+    {
+      "name": "Hertz Global Holdings",
+      "ticker": "HTZ",
+      "note": "车队采购Tesla车辆用于租赁业务，当前战略重要度较历史订单下降",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "Ford Motor Company",
+      "ticker": "F",
+      "note": "接入Tesla Supercharger/NACS生态，为其电动车客户提供充电网络兼容性",
+      "weight": 20,
+      "confidence": "medium"
     }
   ],
   "peers": [
     {
-      "name": "比亚迪",
+      "name": "BYD Company Limited",
       "ticker": "1211.HK",
-      "note": "全球纯电+插混销量第一，直接争夺中国及欧洲市场",
+      "note": "在中国及全球市场与Tesla竞争新能源乘用车、电池垂直整合和价格带",
       "confidence": "high"
+    },
+    {
+      "name": "General Motors",
+      "ticker": "GM",
+      "note": "在北美电动车、软件定义汽车和未来自动驾驶出行方向竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Ford Motor Company",
+      "ticker": "F",
+      "note": "在电动皮卡、SUV和北美主流电动车市场竞争",
+      "confidence": "medium"
     },
     {
       "name": "Rivian Automotive",
       "ticker": "RIVN",
-      "note": "美国本土电动皮卡/SUV，Cybertruck 直接对手",
-      "confidence": "high"
+      "note": "在高端电动SUV、皮卡和商用电动车领域竞争",
+      "confidence": "medium"
     },
     {
       "name": "Lucid Group",
       "ticker": "LCID",
-      "note": "高端纯电轿车，正面竞争 Model S",
-      "confidence": "high"
-    },
-    {
-      "name": "蔚来",
-      "ticker": "NIO",
-      "note": "中国高端纯电，换电模式差异化",
-      "confidence": "high"
-    },
-    {
-      "name": "小鹏汽车",
-      "ticker": "XPEV",
-      "note": "中国智能驾驶(XNGP)对标 FSD",
-      "confidence": "high"
+      "note": "在高端长续航电动车市场与Model S/X等产品竞争",
+      "confidence": "medium"
     }
   ],
-  "generated_at": "2026-07-29T08:32:19.280313+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-28T08:33:46.373959+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-29T17:32:19.281312",
-    "age_sec": 2592046,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-28T17:33:46.386981",
+    "age_sec": 1759,
+    "stale": false,
+    "refreshing": false
   }
 }
