@@ -1,5 +1,5 @@
 {
-  "asof": "2026-08-29T06:00",
+  "asof": "2026-08-29T06:32",
   "yields": {
     "10y": {
       "value": 4.72,
@@ -196,10 +196,10 @@
   },
   "spreads": {
     "2s10s": {
-      "value": 0.47,
-      "chg_20d_bps": 0.0,
+      "value": 0.39,
+      "chg_20d_bps": -6.0,
       "regime": "正常",
-      "asof": "2026-08-27"
+      "asof": "2026-08-28"
     }
   },
   "gld_correlation": {
@@ -263,6 +263,11 @@
     },
     {
       "level": "bad",
+      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.35%) < JGB (2.67%) = JP 投资者会抛售 UST",
+      "key": "cip_repatriation_signal"
+    },
+    {
+      "level": "bad",
       "msg": "SPY-IEF 60d 相关 +0.422 → 股债双杀严重区 (1970s 滞胀级, 传统对冲完全失效)",
       "key": "stock_bond_corr_extreme"
     },
@@ -313,6 +318,9 @@
     "walcl_12w_delta_bn": 6.0,
     "move_index": 71.0,
     "move_20d_delta": -12.0,
+    "sofr_pct": 3.64,
+    "iorb_pct": 3.65,
+    "sofr_iorb_spread_bps": -1.0,
     "usdjpy": 160.04,
     "usdjpy_20d_pct": -0.09,
     "krw_usd": 1375.7,
@@ -324,6 +332,8 @@
     "ktb_10y_pct": 4.18,
     "ktb_asof": "2026-06-01",
     "ust_ktb_spread_bps": 54.0,
+    "hedged_ust_10y_for_jp": 2.35,
+    "hedge_cost_jp": 2.37,
     "real_yield_gap_us_jp": 1.68,
     "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.422,
@@ -380,31 +390,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7724.0,
-        "chg_pct": -0.24
+        "price": 7724.75,
+        "chg_pct": -0.23
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29512.75,
-        "chg_pct": -0.62
+        "price": 29509.5,
+        "chg_pct": -0.63
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 83.35,
-        "chg_pct": -0.22
+        "price": 83.44,
+        "chg_pct": -0.11
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4507.9,
-        "chg_pct": -2.21
+        "price": 4504.1,
+        "chg_pct": -2.29
       }
     },
     "oil_uso": 129.7,
     "oil_pct_20d": 0.41,
-    "oil_wti": 83.35,
+    "oil_wti": 83.44,
     "eem_pct_20d": 4.76,
     "eem_vs_spx_20d": 1.77,
     "volume_confirm": {
@@ -487,7 +497,7 @@
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-07-01",
     "stablecoin_total_bn": 257.2,
-    "usdt_bn": 183.4,
+    "usdt_bn": 183.3,
     "usdc_bn": 73.8,
     "vix": 14.43,
     "bbi_score": 1.37,
@@ -499,8 +509,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-08-29T06:01:36.350343",
-    "age_sec": 90,
+    "cached_at": "2026-08-29T06:32:29.147865",
+    "age_sec": 35,
     "stale": false,
     "refreshing": false
   }

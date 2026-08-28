@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-08-28T18:12:00.035183",
-  "count_total_actions": 106,
+  "as_of": "2026-08-29T06:15:19.548658",
+  "count_total_actions": 115,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -24,9 +24,33 @@
       },
       "yield_reaction_30y": {
         "t0_bp": 0.5,
-        "yield_at_close": 5.191
+        "yield_at_close": 5.191,
+        "t1d_bp": 1.5
       },
-      "event_count_180d": 51
+      "event_count_180d": 55
+    },
+    {
+      "tool_key": "fed_dovish_signal",
+      "zh": "Fed 官员鸽派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
+      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fed_dovish_signal",
+        "action_type": "signaled",
+        "date": "2026-08-18",
+        "actor": "Fed",
+        "amount_desc": "9月加息概率降至30.6%",
+        "commentary": "加息概率下降利好久期资产，但只是市场定价变化。",
+        "verbatim": "Fed September Rate Hike Odds Fall to 30.6% Ahead of FOMC Minutes",
+        "source": "GoogleNews: FOMC minutes rate expectations",
+        "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE93Rk9XZ0lBYkVCSUF3UWpHdl90N0pqTWZnT194anc2OGlRUGJCLUVZdFJpSmFTQUpLUEZSZXlaUF84NjZ2MHdfQm1uWTIzb0NMVDBsQzR6aThHTnkyVW92LU5RaUo4czY4VUpv?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 2
     },
     {
       "tool_key": "qra_wording",
@@ -75,29 +99,6 @@
       "event_count_180d": 4
     },
     {
-      "tool_key": "tga_deployment",
-      "zh": "TGA 财政存款回购",
-      "owner": "Treasury",
-      "feasibility": "medium",
-      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
-      "invalidation": "一次性弹药, 用完就没了",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "tga_deployment",
-        "action_type": "signaled",
-        "date": "2026-08-25",
-        "actor": "Bessent",
-        "amount_desc": "near $1 trillion Treasury General Account",
-        "commentary": "同一TGA融资回购信号，核心影响是给财政买债提供现金来源。",
-        "verbatim": "Bessent could tap near $1 trillion Treasury General Account to fund bond buybacks, sources said",
-        "source": "GoogleNews: TGA Treasury General Account debt buyback",
-        "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNN0xvdW1tSTZUU2lnWlRNTXdXZXlIcEJGTTdLV1ZQYjFfeXEzZl9zTmh4R1FpZzFVNTRDNkpBb0ZFVGVBalFrQjNFeEM4ZnFWQ3VRX3A1VjdIUllzeWU4QktrNzM3YjNteWRDclhvVjZZbUJMYzhOYnFNb19UTGNVaHJRTUUyWjZScWRsc3Q3Nll0NFFzN2d30gGcAUFVX3lxTE5YZDJGM1BwR29NZ1BLR1FoTWNVcHlSRFJCallhWFphMUdBOXhZaFNLWWhuSnBwVjBJcFFwSWZrSnJuWVBfLWNja1B4NXdINkRoOVJPYXlJdFVqOG11eXZMSFFTNXhsaGU2cmtXZ3hjaDl6LXNLTV9wWVdPN1E3WFp6eTRiNmhyMHhhbVBQTzZHc3JPMDRTY19UZnpoZw?oc=5",
-        "confidence": 9
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 17
-    },
-    {
       "tool_key": "duration_shortening",
       "zh": "缩短发债久期",
       "owner": "Treasury",
@@ -121,6 +122,29 @@
       "event_count_180d": 8
     },
     {
+      "tool_key": "tga_deployment",
+      "zh": "TGA 财政存款回购",
+      "owner": "Treasury",
+      "feasibility": "medium",
+      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
+      "invalidation": "一次性弹药, 用完就没了",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "tga_deployment",
+        "action_type": "signaled",
+        "date": "2026-08-28",
+        "actor": "Treasury",
+        "amount_desc": "$967B backup plan",
+        "commentary": "动用TGA支持回购会向市场注入流动性，缓和供需压力。",
+        "verbatim": "Treasury's $967 Billion Backup Plan for the Bond Market",
+        "source": "GoogleNews: TGA Treasury General Account debt buyback",
+        "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOemJnQlhKclFPbFJrUGVkNlN5Qk0yU3pIaDdjOGdvWkpZeDlDRi1lUlB5VzEyanB2YklqaHg3VmhTMUttSnV4UFZmSWZhelVwbll0Sk0xVFNmbkhqZmFqMUJWUTQzRThGaUxFR0FMRVRyRGU1QjJ2aVJ6X29zb2UyYWZDV1h1dHF0bnlwSFlweVQyRnUxSHJZ?oc=5",
+        "confidence": 8
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 19
+    },
+    {
       "tool_key": "fed_hawkish_signal",
       "zh": "Fed 官员鹰派信号",
       "owner": "Fed (口头)",
@@ -141,7 +165,7 @@
         "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 25
+      "event_count_180d": 26
     },
     {
       "tool_key": "fx_intervention",
@@ -186,18 +210,6 @@
       "feasibility": "low",
       "canonical_desc": "Fed 直接买国债扩表, 压制收益率",
       "invalidation": "与抗通胀目标直接冲突, Warsh 明确反对",
-      "status": "观察",
-      "last_action": null,
-      "yield_reaction_30y": {},
-      "event_count_180d": 0
-    },
-    {
-      "tool_key": "fed_dovish_signal",
-      "zh": "Fed 官员鸽派信号",
-      "owner": "Fed (口头)",
-      "feasibility": "high",
-      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
-      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
       "status": "观察",
       "last_action": null,
       "yield_reaction_30y": {},
