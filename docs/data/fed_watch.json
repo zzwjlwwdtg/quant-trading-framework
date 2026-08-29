@@ -7,11 +7,11 @@
       "probabilities": {
         "cut_50": 0,
         "cut_25": 0,
-        "hold": 61,
-        "hike_25": 39,
+        "hold": 40,
+        "hike_25": 60,
         "hike_50": 0
       },
-      "most_likely": "hold",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
@@ -20,8 +20,8 @@
       "probabilities": {
         "cut_50": 0,
         "cut_25": 0,
-        "hold": 75,
-        "hike_25": 25,
+        "hold": 70,
+        "hike_25": 30,
         "hike_50": 0
       },
       "most_likely": "hold",
@@ -33,19 +33,19 @@
       "probabilities": {
         "cut_50": 0,
         "cut_25": 0,
-        "hold": 52,
-        "hike_25": 48,
+        "hold": 36,
+        "hike_25": 64,
         "hike_50": 0
       },
-      "most_likely": "hold",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": null,
-  "implied_terminal_date": null,
+  "implied_terminal_rate": "约4.00% EFFR；目标区间约3.75-4.00至4.00-4.25",
+  "implied_terminal_date": "2026-12",
   "data_snapshot_date": "2026-08-28",
-  "recent_event_impact": "最近7天内未见NFP/CPI/PPI/FOMC决议；但2026-08-28 Fed主席Warsh在Jackson Hole发表偏鹰讲话，报道称9月加息概率明显上升。此前2026-08-07 NFP为-23K且前两月下修103K，偏鸽；2026-08-12 CPI同比3.4%、2026-08-13 PPI同比4.7%，通胀仍偏高，抵消就业疲弱带来的降息/暂停倾向。",
-  "commentary": "数据snapshot为2026-08-28，已覆盖当日Warsh讲话后的市场重定价；NFP疲弱本应压低加息预期，但CPI/PPI和PCE通胀仍高使曲线维持偏鹰，未来三次会议均主要定价为hold但每次都有显著25bp加息概率。",
+  "recent_event_impact": "8/28 Fed主席Kevin Warsh在Jackson Hole发表偏鹰讲话后，9月加息概率由约35%升至约58-60%；7月NFP为-23K且5-6月合计下修103K，7月CPI同比3.4%、核心CPI同比2.5%，7月PPI持平但同比4.7%，就业偏弱与通胀仍高形成拉扯。",
+  "commentary": "数据快照为2026-08-28，已覆盖当日Jackson Hole讲话这一最近7天内关键事件；未发现8/22-8/29期间新的NFP/CPI/PPI正式月度发布，下一批8月NFP/CPI/PPI分别在9/4、9/11、9/10发布。市场从7月就业疲软和CPI/PPI降温中看到部分鸽派因素，但Warsh讲话强调通胀仍高，使短端重新转向偏鹰，未来三次会议均主要定价为维持或25bp加息。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -53,31 +53,35 @@
     },
     {
       "url": "https://www.frenzycap.com/fedwatch",
-      "type": "backup_fed_funds_futures"
+      "type": "fed_funds_futures_backup"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
-      "type": "recent_fed_event"
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "type": "fomc_calendar"
     },
     {
       "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "type": "nfp_release"
     },
     {
       "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "type": "cpi_release"
     },
     {
-      "url": "https://jmmresearch.com/events/producer-price-index-2026-08-13-a7652d/",
-      "type": "ppi"
+      "url": "https://www.bls.gov/news.release/ppi.htm",
+      "type": "ppi_release"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/2026-august.htm",
+      "type": "fed_speech_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-28T16:18:02+00:00",
+  "fetched_at": "2026-08-29T00:19:45+00:00",
   "_meta": {
-    "cached_at": "2026-08-29T01:18:02.371510",
-    "age_sec": 26101,
+    "cached_at": "2026-08-29T09:19:45.179951",
+    "age_sec": 4400,
     "stale": false,
     "refreshing": false
   }
