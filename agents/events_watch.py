@@ -79,6 +79,7 @@ def _filter_fresh_news(items: list[dict]) -> tuple[list[dict], list[dict]]:
 # moderate: 小幅反应（单股财报、地区联储数据）→ 不影响决策路径
 _EVENT_IMPACT_MAP = {
     "FOMC Decision": "critical",
+    "Jackson Hole Symposium": "critical",
     "CPI Release":   "critical",
     "NFP Release":   "critical",
     "PCE Release":   "high",
@@ -223,6 +224,10 @@ _EQUITY_CALENDAR_FALLBACK = [
     {"date": "2026-05-20", "event": "NVDA Earnings",         "impact": "high"},
     {"date": "2026-08-26", "event": "NVDA Earnings (est)",   "impact": "high"},
     {"date": "2026-11-18", "event": "NVDA Earnings (est)",   "impact": "high"},
+    # Jackson Hole Symposium (Kansas City Fed annual, 每年 8 月最后一整周四五)
+    # Fed Chair 演讲通常 8/25 前后周四/周五, 常重定义利率路径 (2022 Powell hawkish → SPX -3%)
+    # 不在 FRED 也不在 Fed FOMC calendar API, 需要 hardcoded
+    {"date": "2026-08-28", "event": "Jackson Hole Symposium (Warsh 演讲, hawkish 重定义)", "impact": "critical"},
     # 2026-Q3 thesis: 核心 PCE (BEA)、GOOG/AMZN Q3 earnings — invalidation triggers
     # 详见 memory/project_thesis_2026Q3.md
     # BEA Personal Income & Outlays 通常是每月倒数第 2 或最后一个工作日 (Wed-Fri) 08:30 ET

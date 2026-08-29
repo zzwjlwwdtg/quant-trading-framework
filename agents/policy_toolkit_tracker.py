@@ -126,7 +126,10 @@ _GNEWS_QUERIES = [
     "Federal Reserve rate cut dovish hawkish",
     "SLR exemption bank Treasury Federal Reserve",
     "yield curve control QE Federal Reserve",
-    "Powell Jackson Hole dovish hawkish",
+    # 2026: Powell 已被 Warsh 换. 保留 Powell 是为了历史向后兼容 + 有时新闻仍提
+    "Warsh Federal Reserve rate hike inflation",
+    "Warsh Powell Jackson Hole dovish hawkish",
+    "Fed Chair speech rate policy",
     "FOMC minutes rate expectations",
     "TGA Treasury General Account debt buyback",
 ]
