@@ -1,87 +1,70 @@
 {
   "ticker": "SHINETSU",
   "source_stock": "4063.T",
-  "direction": "新指引",
-  "revision_type": "initial",
+  "direction": "待核验",
+  "revision_type": "unverified",
   "magnitude": "不明",
-  "last_update": "2026-07-24",
-  "next_earnings": "2026-10-31",
-  "guidance_note": "2027年3月期通期予想は売上高2兆7,000億円、営業利益7,000億円、親会社株主帰属純利益5,250億円、EPS 286.00円。前期比では売上高+4.9%、営業利益+10.2%、純利益+10.7%、EPS+13.2%。",
-  "revision_reason": "前回発表予想は売上高・営業利益・純利益・EPSとも「―」で、今回、売上高 ―→2兆7,000億円、営業利益 ―→7,000億円、純利益 ―→5,250億円、EPS ―→286.00円として初開示。会社は事業環境の変動要因を慎重に織り込んだと説明。",
+  "last_update": null,
+  "next_earnings": "2026-10-23",
+  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
+  "revision_reason": null,
   "market_reaction": "不明",
-  "confidence": "medium",
+  "confidence": "unverified",
   "source_verified": true,
-  "source_status": "codex_cli_websearch",
-  "generated_at": "2026-08-26T08:50:31.950032+00:00",
-  "sources": [
-    {
-      "url": "https://www.shinetsu.co.jp/wp-content/uploads/2026/07/20260724J1.pdf",
-      "type": "IR",
-      "title": "業績予想および配当予想に関するお知らせ"
-    },
-    {
-      "url": "https://www.shinetsu.co.jp/wp-content/uploads/2026/07/20260724_con_J.pdf",
-      "type": "IR",
-      "title": "2027年3月期 第1四半期決算短信〔日本基準〕（連結）"
-    },
-    {
-      "url": "https://www.shinetsu.co.jp/jp/ir/ir-calendar/",
-      "type": "IR",
-      "title": "IRカレンダー"
-    }
-  ],
-  "source_via": "codex_cli_websearch",
+  "source_status": "analyst_only",
+  "generated_at": "2026-08-29T08:51:39.468061+00:00",
+  "ai_error": "codex_codex_error: exit=1 stderr=2026-08-29T08:51:39.671842Z ERROR codex_models_manager::cache: failed to load models cache: u",
   "analyst_consensus": {
     "n_analysts": 17,
     "recommendation": "buy",
-    "current_price": 5967.0,
+    "current_price": 6001.0,
     "forward_eps": 329.73,
-    "trailing_eps": 252.21,
-    "eps_growth_pct": 30.7,
-    "forward_pe": 18.1,
-    "trailing_pe": 23.66,
-    "target_mean": 7839.41,
+    "trailing_eps": 252.64,
+    "eps_growth_pct": 30.5,
+    "forward_pe": 18.2,
+    "trailing_pe": 23.75,
+    "target_mean": 7804.12,
     "target_high": 9510.0,
-    "target_low": 6900.0,
-    "target_upside_pct": 31.4,
+    "target_low": 6500.0,
+    "target_upside_pct": 30.0,
     "revenue_growth_pct": 5.4,
     "earnings_growth_pct": 5.7,
     "next_earnings": "2026-10-23",
-    "implied_pe_hold": 7801.03,
-    "implied_pe_hold_upside": 30.7,
-    "peg_fair_price": 10122.71,
-    "peg_ratio": 0.59,
+    "implied_pe_hold": 7832.13,
+    "implied_pe_hold_upside": 30.5,
+    "peg_fair_price": 10056.77,
+    "peg_ratio": 0.6,
     "hist_pe_median": 18.1,
     "hist_pe_p25": 16.21,
-    "hist_pe_p75": 22.96,
-    "hist_pe_n_days": 833,
+    "hist_pe_p75": 22.97,
+    "hist_pe_n_days": 835,
     "implied_hist_median": 5968.11,
     "implied_hist_p25": 5344.92,
-    "implied_hist_p75": 7570.6,
-    "implied_hist_upside": 0.0,
-    "peer_pe_median": 26.66,
+    "implied_hist_p75": 7573.9,
+    "implied_hist_upside": -0.5,
+    "peer_pe_median": 27.81,
     "peer_pe_n_peers": 3,
     "peer_pe_details": [
       {
         "ticker": "3436.T",
-        "pe": 69.17
+        "pe": 69.75
       },
       {
         "ticker": "1301.TW",
-        "pe": 26.66
+        "pe": 27.81
       },
       {
         "ticker": "WLK",
-        "pe": 22.25
+        "pe": 22.52
       }
     ],
-    "implied_peer_median": 8790.6,
-    "implied_peer_upside": 47.3,
+    "implied_peer_median": 9169.79,
+    "implied_peer_upside": 52.8,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-26T17:51:22.801204",
-    "age_sec": 254502,
+    "cached_at": "2026-08-29T17:51:46.396100",
+    "age_sec": 2477,
     "stale": false,
     "refreshing": false
   }

@@ -1,81 +1,74 @@
 {
   "ticker": "ARE",
   "source_stock": "5857.T",
-  "direction": "据え置き",
-  "revision_type": "maintained",
-  "magnitude": "小",
-  "last_update": "2026-08-04",
-  "next_earnings": "2026-11-04",
-  "guidance_note": "2027年3月期通期予想は売上収益6,800億円（+19.3% YoY）、営業利益410億円（+10.8%）、親会社帰属当期利益290億円（+19.0%）、EPS337.43円。",
-  "revision_reason": "2026年8月4日の1Q短信で、2026年5月1日公表の通期予想から変更なし。売上収益6,800億円→6,800億円、営業利益410億円→410億円、純利益290億円→290億円、EPS337.43円→337.43円。",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
+  "last_update": null,
+  "next_earnings": "2026-10-28",
+  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
+  "revision_reason": null,
   "market_reaction": "不明",
-  "confidence": "high",
+  "confidence": "unverified",
   "source_verified": true,
-  "source_status": "codex_cli_websearch",
-  "generated_at": "2026-08-26T08:51:31.922480+00:00",
-  "sources": [
-    {
-      "url": "https://www.are-holdings.com/ir/calendar/",
-      "type": "IR",
-      "title": "IRカレンダー"
-    }
-  ],
-  "source_via": "codex_cli_websearch",
+  "source_status": "analyst_only",
+  "generated_at": "2026-08-29T08:52:39.468085+00:00",
+  "ai_error": "codex_codex_error: exit=1 stderr=2026-08-29T08:52:39.683609Z ERROR codex_models_manager::cache: failed to load models cache: u",
   "analyst_consensus": {
     "n_analysts": 1,
-    "recommendation": "none",
-    "current_price": 4050.0,
+    "recommendation": "strong_buy",
+    "current_price": 4165.0,
     "forward_eps": 178.8,
-    "trailing_eps": 287.12,
+    "trailing_eps": 286.97,
     "eps_growth_pct": -37.7,
-    "forward_pe": 22.65,
-    "trailing_pe": 14.11,
+    "forward_pe": 23.29,
+    "trailing_pe": 14.51,
     "target_mean": 6400.0,
     "target_high": 6400.0,
     "target_low": 6400.0,
-    "target_upside_pct": 58.0,
+    "target_upside_pct": 53.7,
     "revenue_growth_pct": 43.8,
     "earnings_growth_pct": 131.4,
     "next_earnings": "2026-10-28",
-    "implied_pe_hold": 2522.08,
+    "implied_pe_hold": 2595.05,
     "implied_pe_hold_upside": -37.7,
     "peg_fair_price": null,
     "peg_ratio": null,
     "hist_pe_median": 9.59,
     "hist_pe_p25": 6.96,
-    "hist_pe_p75": 13.68,
-    "hist_pe_n_days": 1078,
+    "hist_pe_p75": 13.76,
+    "hist_pe_n_days": 1080,
     "implied_hist_median": 1714.69,
     "implied_hist_p25": 1244.45,
-    "implied_hist_p75": 2445.98,
-    "implied_hist_upside": -57.7,
-    "peer_pe_median": 20.9,
+    "implied_hist_p75": 2460.29,
+    "implied_hist_upside": -58.8,
+    "peer_pe_median": 21.18,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "5714.T",
-        "pe": 21.62
+        "pe": 21.51
       },
       {
         "ticker": "5857.T",
-        "pe": 22.65
+        "pe": 23.29
       },
       {
         "ticker": "7456.T",
-        "pe": 20.17
+        "pe": 20.85
       },
       {
         "ticker": "5020.T",
-        "pe": 13.2
+        "pe": 13.31
       }
     ],
-    "implied_peer_median": 3736.92,
-    "implied_peer_upside": -7.7,
+    "implied_peer_median": 3786.98,
+    "implied_peer_upside": -9.1,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-26T17:52:17.599549",
-    "age_sec": 254447,
+    "cached_at": "2026-08-29T17:52:45.520036",
+    "age_sec": 2418,
     "stale": false,
     "refreshing": false
   }
