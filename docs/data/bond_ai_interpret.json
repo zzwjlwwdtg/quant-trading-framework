@@ -1,39 +1,39 @@
 {
   "chain_verdict": "谨慎看空",
-  "chain_summary": "高利率未压垮市场，Fed QT实质停止，名义紧但没行动。",
+  "chain_summary": "高利率已到位，但Fed QT实质停止，压力卡在金融条件",
   "chain_blocked_at": "nfci",
   "nodes": {
     "inflation": {
       "direction": "elevated",
-      "note": "仍高于目标"
+      "note": "物价还偏高"
     },
     "jobs": {
       "direction": "healthy",
-      "note": "就业未明显坏"
+      "note": "失业没恶化"
     },
     "fed": {
       "direction": "tightening",
-      "note": "还没到放水"
+      "note": "降息借口不足"
     },
     "rates": {
       "direction": "elevated",
-      "note": "长债很压人"
+      "note": "长债利率高"
     },
     "real_rates": {
       "direction": "elevated",
-      "note": "真利率偏高"
+      "note": "真利率压股"
     },
     "dxy": {
       "direction": "normal",
-      "note": "美元小幅走弱"
+      "note": "美元略偏弱"
     },
     "erp": {
       "direction": "compressed",
       "note": "股票偏贵"
     },
     "curve": {
-      "direction": "normal",
-      "note": "长端更高"
+      "direction": "steep",
+      "note": "长端更贵钱"
     },
     "nfci": {
       "direction": "loose",
@@ -41,35 +41,35 @@
     },
     "credit": {
       "direction": "calm",
-      "note": "借钱还正常"
+      "note": "借钱仍顺"
     },
     "stablecoin": {
       "direction": "growing",
-      "note": "链上美元变多"
+      "note": "影子美元大"
     },
     "vol": {
       "direction": "calm",
-      "note": "市场没恐慌"
+      "note": "市场不恐慌"
     },
     "em": {
       "direction": "outperforming",
-      "note": "跑赢但缩量"
+      "note": "涨但缩量"
     },
     "bbi": {
-      "direction": "greed",
-      "note": "散户偏乐观"
+      "direction": "fear",
+      "note": "散户偏怕"
     },
     "us_equity": {
       "direction": "resilient",
-      "note": "美股还扛着"
+      "note": "美股暂扛住"
     },
     "jp_equity": {
       "direction": "resilient",
-      "note": "日股放量抗跌"
+      "note": "日股放量稳"
     },
     "kr_equity": {
       "direction": "weakening",
-      "note": "韩股数据不足"
+      "note": "韩元拖累"
     },
     "oil": {
       "direction": "stable",
@@ -77,40 +77,43 @@
     }
   },
   "user_thesis_check": {
-    "status": "against",
-    "summary": "概率27% (30d从45→现在27, 方向下降) — 通胀和就业是阻力",
+    "status": "mixed",
+    "summary": "概率27% (30d 从45→现在27, 方向下降) — 美元弱支持, 通胀和就业阻力大",
     "supporting_nodes": [
       "rates",
       "real_rates",
-      "dxy"
+      "dxy",
+      "erp",
+      "bbi",
+      "kr_equity"
     ],
     "contradicting_nodes": [
       "inflation",
       "jobs",
+      "fed",
       "nfci",
       "credit",
       "vol",
-      "bbi",
-      "oil",
-      "us_equity"
+      "us_equity",
+      "oil"
     ],
     "cut_probability_pct": 27,
     "trend_direction": "falling",
-    "primary_driver": "高实际利率继续压经济和估值，给未来降息留下理由。",
-    "primary_blocker": "通胀仍高、就业不差、市场不慌，Fed 没有急着降息的借口。",
-    "action_around_thesis": "10月前别重仓押降息，等就业走弱或市场真正转紧再加码。"
+    "primary_driver": "高实际利率和股票估值压力，给未来降息留了潜在借口",
+    "primary_blocker": "通胀仍高、就业不差、市场没恐慌，Fed 现在不用急着救",
+    "action_around_thesis": "10月前别重仓押降息，等就业转弱或信用市场变差再加码"
   },
-  "action_hint": "别追高股市，保留现金，优先等波动率或信用市场给确认信号。",
+  "action_hint": "散户宜降低追高，保留现金，等波动或利率真正回落再出手",
   "confidence": "medium",
   "verdict": "谨慎看空",
-  "one_liner": "高利率未压垮市场，Fed QT实质停止，名义紧但没行动。",
+  "one_liner": "高利率已到位，但Fed QT实质停止，压力卡在金融条件",
   "reasoning": "",
   "who_agrees": "",
   "_source": "ai_cli_codex",
-  "generated_at": "2026-08-28T20:04:27+00:00",
+  "generated_at": "2026-08-29T02:05:30+00:00",
   "_meta": {
-    "cached_at": "2026-08-29T05:04:27.415769",
-    "age_sec": 19718,
+    "cached_at": "2026-08-29T11:05:30.471756",
+    "age_sec": 5254,
     "stale": false,
     "refreshing": false
   }

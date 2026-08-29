@@ -1,133 +1,119 @@
 {
   "ticker": "MSFT",
-  "sector": "云计算/软件",
-  "business": "全球最大企业软件与云服务厂商，业务涵盖 Azure 云、Office/Microsoft 365、Windows、LinkedIn、Xbox 游戏及 AI 平台",
+  "sector": "云计算与企业软件",
+  "business": "微软以 Azure 云、Microsoft 365、Windows、Dynamics、LinkedIn、游戏和 AI 平台为核心，向企业、开发者和消费者销售软件订阅、云基础设施与数字服务。",
   "upstream": [
     {
       "name": "NVIDIA",
       "ticker": "NVDA",
-      "note": "Azure AI 数据中心 GPU（H100/H200/Blackwell）核心供应商",
+      "note": "为 Azure 数据中心和 AI 训练/推理集群提供 GPU、网络设备和加速计算生态",
       "weight": 95,
-      "confidence": "high"
+      "confidence": "medium"
     },
     {
       "name": "AMD",
       "ticker": "AMD",
-      "note": "EPYC 服务器 CPU 与 MI300 AI 加速卡供应商",
-      "weight": 70,
-      "confidence": "high"
+      "note": "为 Azure 云服务器提供 EPYC CPU、Instinct GPU 等计算芯片",
+      "weight": 75,
+      "confidence": "medium"
     },
     {
       "name": "Intel",
       "ticker": "INTC",
-      "note": "Xeon 服务器 CPU 与部分数据中心芯片",
+      "note": "为云服务器和企业终端生态提供 CPU、网络和平台芯片",
       "weight": 65,
-      "confidence": "high"
+      "confidence": "medium"
     },
     {
-      "name": "TSMC",
+      "name": "Taiwan Semiconductor Manufacturing",
       "ticker": "TSM",
-      "note": "代工 Cobalt/Maia 自研芯片及合作伙伴芯片",
+      "note": "代工生产微软自研及上游芯片供应商的先进制程芯片，间接支撑 Azure 和 AI 基础设施",
       "weight": 60,
       "confidence": "medium"
     },
     {
-      "name": "OpenAI",
+      "name": "Samsung Electronics",
       "ticker": null,
-      "note": "GPT 系列大模型独家云合作伙伴，Azure OpenAI 服务核心",
-      "weight": 85,
-      "confidence": "high"
-    },
-    {
-      "name": "Micron Technology",
-      "ticker": "MU",
-      "note": "数据中心 HBM 与 DRAM/NAND 存储供应商",
-      "weight": 55,
-      "confidence": "high"
+      "note": "提供服务器内存、存储和显示/终端相关零部件，支撑数据中心与设备供应链",
+      "weight": 45,
+      "confidence": "medium"
     }
   ],
   "downstream": [
     {
       "name": "OpenAI",
       "ticker": null,
-      "note": "最大 Azure 客户之一，训练与推理算力消耗巨大",
-      "weight": 90,
-      "confidence": "high"
-    },
-    {
-      "name": "美国联邦政府/国防部",
-      "ticker": null,
-      "note": "Azure Government 云、JWCC 合同、Office 365 政企版",
-      "weight": 75,
-      "confidence": "high"
-    },
-    {
-      "name": "Accenture",
-      "ticker": "ACN",
-      "note": "全球最大 Microsoft 365/Azure 咨询与实施合作伙伴",
-      "weight": 60,
-      "confidence": "high"
-    },
-    {
-      "name": "全球 500 强企业",
-      "ticker": null,
-      "note": "Office 365/Dynamics/Azure 订阅企业客户群",
-      "weight": 85,
-      "confidence": "high"
-    },
-    {
-      "name": "Coca-Cola",
-      "ticker": "KO",
-      "note": "11 亿美元 Azure+Copilot 五年战略合作案例代表",
-      "weight": 40,
+      "note": "采购和使用 Azure 超算与云基础设施，用于大模型训练、推理和产品运行",
+      "weight": 95,
       "confidence": "medium"
     },
     {
       "name": "Walmart",
       "ticker": "WMT",
-      "note": "Azure 云服务与 AI 战略客户",
+      "note": "使用 Microsoft Azure、Microsoft 365 和数据/AI 工具支持零售运营与数字化转型",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "The Coca-Cola Company",
+      "ticker": "KO",
+      "note": "采购 Microsoft Cloud、Azure OpenAI Service 和企业协作工具用于全球业务数字化与生成式 AI 应用",
       "weight": 45,
+      "confidence": "medium"
+    },
+    {
+      "name": "Amgen",
+      "ticker": "AMGN",
+      "note": "使用 Microsoft 365、Azure 和 AI 工具支持研发、运营和企业生产力场景",
+      "weight": 40,
+      "confidence": "medium"
+    },
+    {
+      "name": "London Stock Exchange Group",
+      "ticker": null,
+      "note": "使用微软云、数据分析和协作平台推进金融数据与工作流产品合作",
+      "weight": 38,
       "confidence": "medium"
     }
   ],
   "peers": [
     {
-      "name": "Amazon (AWS)",
+      "name": "Amazon",
       "ticker": "AMZN",
-      "note": "云计算 IaaS/PaaS 全球第一，Azure 直接竞争对手",
+      "note": "AWS 与 Azure 在云基础设施、AI 云服务和企业客户上直接竞争",
       "confidence": "high"
     },
     {
-      "name": "Alphabet (Google Cloud)",
+      "name": "Alphabet",
       "ticker": "GOOGL",
-      "note": "云计算与生产力工具 (Workspace vs 365) 双线竞争",
+      "note": "Google Cloud、Workspace、AI 模型和搜索广告生态与微软多线竞争",
       "confidence": "high"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "在操作系统、生产力入口、设备生态和消费者服务方面竞争",
+      "confidence": "medium"
     },
     {
       "name": "Oracle",
       "ticker": "ORCL",
-      "note": "企业软件、数据库与 OCI 云直接竞争",
-      "confidence": "high"
+      "note": "在企业云、数据库、ERP 和行业应用市场竞争",
+      "confidence": "medium"
     },
     {
       "name": "Salesforce",
       "ticker": "CRM",
-      "note": "CRM/SaaS 与 Dynamics 365 竞争",
-      "confidence": "high"
-    },
-    {
-      "name": "IBM",
-      "ticker": "IBM",
-      "note": "混合云、企业 AI (watsonx) 与咨询业务竞争",
+      "note": "在企业 SaaS、CRM、协作和 AI 助手工作流领域竞争",
       "confidence": "medium"
     }
   ],
-  "generated_at": "2026-07-30T00:47:31.838678+00:00",
-  "source": "claude",
+  "generated_at": "2026-08-29T01:33:32.251563+00:00",
+  "source": "codex",
   "_meta": {
-    "cached_at": "2026-07-30T09:47:31.840181",
-    "age_sec": 2594736,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-08-29T10:33:32.252564",
+    "age_sec": 7173,
+    "stale": false,
+    "refreshing": false
   }
 }
