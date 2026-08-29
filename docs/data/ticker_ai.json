@@ -1,22 +1,22 @@
 {
   "exists": true,
   "tickers": {
-    "AAPL": "- 综合: 偏多关注，$320 call wall 与 high gamma_up 共振；CROIC高位回落，Piotroski强，借款高；预期与股价基本匹配\n- 攻防: 防守$300距spot 6.16%，进攻突破$320距0.09%才有加速可操作性\n- 警示: EPS修正downward而估值基本匹配，追高需防修正压力",
-    "AMAT": "- 综合: 信号缺失偏观望，期权上有$485 pin、下有$450防守；CROIC下行，Piotroski中性，借款可控；市场预期偏低\n- 攻防: 防守$450距spot 2.53%较近可控，进攻$485距5.05%需放量确认\n- 警示: EPS修正upward且估值仍偏低，是潜在机会但需等交易信号",
-    "CBRS": "- 综合: 偏多关注但期权仅轻度共振，$190上方磁吸；CROIC修复，Piotroski弱，无借款；利好已充分计价\n- 攻防: 防守$165距spot 7.86%，进攻$190距6.10%，区间宽导致操作弹性一般\n- 警示: EPS修正upward但估值已贵，目标锚中位为负，存在估值背离",
-    "DRAM": "- 综合: 弱多观望，期权多空均衡无挤压；CROIC低位改善，Piotroski中性，借款需留意；市场预期偏低\n- 攻防: 防守$52距spot 6.86%，进攻$60距7.47%，两侧都远，等待突破或回踩\n- 警示: EPS修正upward与低估值同向，但conf仅1，信号未确认",
-    "GOOGL": "- 综合: 信号缺失偏观望，期权成交偏多且$375为上方pin；CROIC下行，Piotroski中性，借款高；市场预期偏低\n- 攻防: 防守$330距spot 4.79%，进攻$375距8.20%，上行需先穿越gamma带\n- 警示: EPS修正upward但Forward EPS增长为负，估值低预期与盈利下滑有分歧",
-    "KLAC": "- 综合: 信号缺失偏观望，$175近ATM put wall有防守与pin效应；CROIC回升，Piotroski强，借款中等\n- 攻防: 防守$175距spot 0.31%很近，进攻$187.5距6.81%，更适合守位后再看多\n- 警示: C/P成交4.82偏热，若跌破$175则近端护盘失效",
-    "LITE": "- 综合: 弱多观望，期权偏多但无挤压；CROIC持续为负，Piotroski中性，借款需留意；利好已充分计价\n- 攻防: 防守$870距spot 2.79%可操作，进攻$950距6.15%需突破确认\n- 警示: EPS修正upward但多锚估值中位-21.6%，修正与估值明显背离",
-    "MSFT": "- 综合: 偏多关注，$535 call wall形成上方磁吸但下方护盘薄；CROIC下行，Piotroski中性，借款高；市场预期偏低\n- 攻防: 防守$500距spot 2.63%但Put OI弱，进攻$535距4.18%突破后才有gamma带助推\n- 警示: EPS修正upward与低预期同向；Put/Call严重失衡意味着下方无护盘",
-    "MULL": "- 综合: 弱多观望，MU期权$950上方pin、$850远端保险；CROIC低位改善，Piotroski中性，借款需留意；市场预期偏低\n- 攻防: 防守$850距spot 8.88%偏远，进攻$950距1.84%较近但conf仅1\n- 警示: EPS修正upward与低估值同向，但交易信号不足，不宜当明确机会",
-    "NBIS": "- 综合: 中性观望，$215/$200双墙夹击偏max pain；CROIC大幅恶化，Piotroski中性，借款激增需警惕；估值与修正信号分歧\n- 攻防: 防守$200距spot 4.39%，进攻$215距2.78%，区间交易优先\n- 警示: EPS修正downward但目标价差为正，估值与盈利修正背离",
-    "NVDA": "- 综合: 明确偏多机会，conf=5且$235 call wall与gamma带共振；CROIC高位回落，Piotroski弱，借款可控；市场预期偏低\n- 攻防: 防守$200距spot 8.07%偏远且弱，进攻$235距8.02%，突破call wall后上行加速\n- 警示: EPS修正upward与低估值同向；Put/Call严重失衡表示下方无护盘",
-    "SOXL": "- 综合: 弱多观望，SOXX期权上方$550为信号源但SOXL换算缺失；CROIC高位回落，Piotroski弱，借款可控；市场预期偏低\n- 攻防: 等待SOXL即时换算，禁止用SOXX $490/$550作挂单；触发时重新换算，期限较长需防每日重置/路径依赖\n- 警示: EPS修正upward与低估值同向；SOXL spot为nan，路径估价也不可用",
-    "TQQQ": "- 综合: 偏空风险优先，QQQ put_break high显示跌破put wall会加速下跌；CROIC高位回落，Piotroski弱，借款可控；市场预期偏低\n- 攻防: 等待TQQQ即时换算，禁止用QQQ $710/$730作挂单；期限较长需防每日重置/路径依赖\n- 警示: EPS修正upward与低估值同向，但期权下破挤压高，TQQQ spot为nan不可定价",
-    "TSLA": "- 综合: 弱多观望，$360 call wall有磁吸但信号conf低；CROIC低位回升，Piotroski弱，借款需留意；预期透支\n- 攻防: 防守$330距spot 5.38%，进攻$360距3.23%，接近阻力但需确认突破\n- 警示: EPS修正downward且Forward PE 161.56x，估值与修正背离风险高",
-    "USO": "- 综合: 明确偏多机会，conf=4且$130近ATM call wall与high gamma_up强共振\n- 攻防: 防守$118距spot 9.02%属远端廉价保险，进攻$130距0.23%，突破易加速\n- 警示: Put OI虽大但远OTM，更像保险而非真恐慌；看多成交偏热防假突破",
-    "XLV": "- 综合: 偏多但期权不完全共振，$170近ATM put OI更像真防守/恐慌，$181为上方pin\n- 攻防: 防守$170距spot 0.68%很关键，进攻$181距5.75%，守住后才有上攻空间\n- 警示: 信号看多但ATM附近Put OI堆积，存在divergence"
+    "AAPL": "- 综合: 偏多但非明确机会；320 call wall 与 high gamma_up 共振，CROIC高位回落、Piotroski强，预期与股价基本匹配\n- 攻防: 进攻位320距spot 0.09%，突破易加速；防守300距6.16%，偏远端保险\n- 警示: EPS修正向下但估值基本匹配，短线需防看多情绪偏热",
+    "AMAT": "- 综合: 信号缺失偏观望；期权看空成交极端但未形成挤压，CROIC下行、Piotroski中性，市场预期偏低\n- 攻防: 防守450距spot 2.53%更可操作；进攻485距5.05%，需放量突破才有效\n- 警示: EPS上修与估值偏低一致，机会在预期修复；但CROIC显著走弱",
+    "CBRS": "- 综合: 偏多关注但期权仅均衡支撑，CROIC修复、Piotroski偏弱，利好已充分计价\n- 攻防: 防守165距spot 7.86%偏远；进攻190距6.1%，上方call wall是磁吸位\n- 警示: EPS上修但估值已高，存在修正利好与估值压力背离",
+    "DRAM": "- 综合: 弱多观望；期权多空均衡无挤压，CROIC低位改善、Piotroski中性，市场预期偏低\n- 攻防: 防守52距spot 6.86%，进攻60距7.47%，两端都偏远，等待接近区间边界\n- 警示: EPS上修与低估值一致，但量比低、信号conf仅1",
+    "GOOGL": "- 综合: 信号缺失偏观望；成交偏多且medium gamma_band_up，CROIC下行、Piotroski中性，市场预期偏低\n- 攻防: 防守330距spot 4.79%可作回撤观察；进攻375距8.2%，更像上方磁吸\n- 警示: EPS修正上行但Forward EPS增长为负，估值修复逻辑需确认",
+    "KLAC": "- 综合: 信号缺失偏观望；期权看多偏热但主要受max pain牵引，CROIC回升、Piotroski强\n- 攻防: 防守175距spot 0.31%极近，失守转弱；进攻187.5距6.81%，需突破确认\n- 警示: 暂无",
+    "LITE": "- 综合: 弱多观望；期权偏多但无挤压，CROIC为负且低位徘徊、Piotroski中性，利好已充分计价\n- 攻防: 防守870距spot 2.79%较关键；进攻950距6.15%，偏远磁吸\n- 警示: EPS上修但估值隐含价差中位为负，存在修正与估值背离",
+    "MSFT": "- 综合: 偏多关注；535 call wall 与medium gamma_band_up轻度共振，CROIC下行、Piotroski中性，市场预期偏低\n- 攻防: 防守500距spot 2.63%但Put弱；进攻535距4.18%，突破后上行动能增强\n- 警示: Call OI远大于Put OI，上方有pin磁吸但下方护盘薄",
+    "MULL": "- 综合: 弱多观望；950 call wall 与medium gamma_band_up轻度共振，CROIC低位改善、Piotroski中性，市场预期偏低\n- 攻防: 进攻950距spot 1.84%较近；防守850距8.88%偏远，更像廉价保险\n- 警示: EPS上修与低估值一致，但信号conf仅1，追涨胜率不足",
+    "NBIS": "- 综合: 中性观望；215/200期权夹击且max pain牵引，CROIC大幅转负、Piotroski中性，估值与修正信号分歧\n- 攻防: 进攻215距spot 2.78%，防守200距4.39%，区间交易优先\n- 警示: EPS修正向下但目标价差偏正，估值与盈利修正背离",
+    "NVDA": "- 综合: 明确偏多机会；235 call wall 与medium gamma_band_up共振，CROIC高位回落、Piotroski偏弱，市场预期偏低\n- 攻防: 进攻235距spot 8.02%，突破才易加速；防守200距8.07%且Put弱\n- 警示: Call OI远大于Put OI，下方无护盘；EPS上修与估值偏低一致但情绪偏热",
+    "SOXL": "- 综合: 弱多观望；SOXX call wall信号偏上但无挤压，代理NVDA为CROIC高位回落、Piotroski偏弱，市场预期偏低\n- 攻防: SOXL即时换算缺失，买入/支撑/阻力等待换算；SOXX 550/490仅作信号源\n- 警示: EPS上修与估值偏低一致；每日重置/路径依赖显著，触发时需重新换算",
+    "TQQQ": "- 综合: 偏空风险观望；QQQ put_break high 指向跌破put wall后加速，代理NVDA为CROIC高位回落、Piotroski偏弱，市场预期偏低\n- 攻防: TQQQ即时换算缺失，禁止用QQQ 730/710挂单；等待触发时重新换算\n- 警示: EPS上修与估值偏低一致；每日重置/路径依赖显著，且put_break high为主要风险",
+    "TSLA": "- 综合: 弱多观望；360 call wall 与medium gamma_band_up轻度共振，CROIC低位回升、Piotroski中性，预期透支\n- 攻防: 进攻360距spot 3.23%可观察；防守330距5.38%，下方保护中等\n- 警示: EPS修正向下且Forward PE高，估值与盈利修正背离；Call OI偏多使下方护盘不足",
+    "USO": "- 综合: 明确偏多机会；130 call wall 与high gamma_up强共振\n- 攻防: 进攻130距spot 0.23%，突破可加速；防守118距9.02%，Put OI远端更像廉价保险\n- 警示: 看多成交极热，若无法站稳130易被反向pin",
+    "XLV": "- 综合: 偏多关注但期权未共振；170 put wall近端提供防守，181 call wall为上方磁吸\n- 攻防: 防守170距spot 0.68%很近且可操作；进攻181距5.75%，需突破确认\n- 警示: 暂无"
   },
   "sources": {
     "AAPL": "live",
@@ -37,7 +37,7 @@
     "XLV": "live"
   },
   "live_state": "cached",
-  "live_generated": "2026-08-29T13:18:57.870075+00:00",
+  "live_generated": "2026-08-29T17:14:49.720370+00:00",
   "snapshot_path": "ai_analysis_snapshot_20260828_222652.md",
   "snapshot_mtime": "2026-08-28T22:26:52.402331"
 }
