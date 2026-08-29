@@ -23,14 +23,14 @@
     "peg_fair_price": 742.56,
     "peg_ratio": 0.69,
     "hist_pe_median": 35.79,
-    "hist_pe_p25": 33.21,
+    "hist_pe_p25": 33.24,
     "hist_pe_p75": 38.32,
-    "hist_pe_n_days": 794,
+    "hist_pe_n_days": 793,
     "implied_hist_median": 843.69,
-    "implied_hist_p25": 782.87,
+    "implied_hist_p25": 783.58,
     "implied_hist_p75": 903.33,
     "implied_hist_upside": 64.3,
-    "peer_pe_median": 17.9,
+    "peer_pe_median": 23.37,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
@@ -42,20 +42,20 @@
         "pe": 23.37
       },
       {
+        "ticker": "AAPL",
+        "pe": 33.52
+      },
+      {
         "ticker": "ORCL",
         "pe": 13.81
       },
       {
         "ticker": "CRM",
         "pe": 16.19
-      },
-      {
-        "ticker": "IBM",
-        "pe": 17.9
       }
     ],
-    "implied_peer_median": 421.96,
-    "implied_peer_upside": -17.8,
+    "implied_peer_median": 550.91,
+    "implied_peer_upside": 7.3,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -220,8 +220,8 @@
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 421.96,
-        "gap_pct": -17.8
+        "implied_price": 550.91,
+        "gap_pct": 7.3
       }
     ],
     "median_gap_pct": 21.2,
@@ -236,11 +236,11 @@
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-28T23:05:50.375723+00:00",
+  "fetched_at": "2026-08-29T05:06:14.019611+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-29T08:05:50.376723",
-    "age_sec": 16035,
+    "cached_at": "2026-08-29T14:06:14.020653",
+    "age_sec": 1610,
     "stale": false,
     "refreshing": false
   },

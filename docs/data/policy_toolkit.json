@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-08-29T06:15:19.548658",
-  "count_total_actions": 115,
+  "as_of": "2026-08-29T14:09:29.194003",
+  "count_total_actions": 137,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -12,22 +12,18 @@
       "status": "已用",
       "last_action": {
         "tool_key": "long_end_buyback",
-        "action_type": "announced",
-        "date": "2026-08-27",
-        "actor": "Bessent",
+        "action_type": "opposed",
+        "date": "2026-08-28",
+        "actor": "ex-official",
         "amount_desc": "",
-        "commentary": "财政部长直接介入债市，政策信号强，但易激化独立性争议。",
-        "verbatim": "Scott Bessent takes on the bond market",
+        "commentary": "前官员称干预令人困惑，显示政策目标和机制沟通不足。",
+        "verbatim": "Bessent's bond intervention 'puzzling,' needs explanation: ex-official",
         "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxOQ1BXd09GOVlUU1dNckllRHpRenlFR0dNeHVRaUFnS3lkWV94UlVsdWxXXzg0V0hLYWhWTHhlbzJDenhCZGliUG5PbGNHN0RwNmN6QnZTcy1PN0dQa3lnUzhPSzFNTHFVelAxTGJhQUhfTE1POTY1akhDS2tmajR3VnN6T0dRc3hvcG8zVV9pUlV3XzV1T3JBeTh1b19TZw?oc=5",
-        "confidence": 7
+        "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOU0tiQXNSakJFTGhSRlI1SlZfNVAzLWJaRmVzLWhfcVZYcnExYnFXUGRKRDZJcm1NcWdFNGtGVW56Y25BN3VDQlJoYTFHYUFvc1ZKVG9nRmtueXEydXMxb1hxVFNzTTl0WXREQlI5LS1yUC11SUxDY05XWkNjVUZvYUwtSzBiazcyOVBncXU1cHFsWHNyZV9adk5xTjhlaFd4S2xXd3NmUWhvdGtZY3JYOVJFTDZ1dw?oc=5",
+        "confidence": 6
       },
-      "yield_reaction_30y": {
-        "t0_bp": 0.5,
-        "yield_at_close": 5.191,
-        "t1d_bp": 1.5
-      },
-      "event_count_180d": 55
+      "yield_reaction_30y": {},
+      "event_count_180d": 57
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -73,7 +69,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 1
+      "event_count_180d": 2
     },
     {
       "tool_key": "ycc",
@@ -96,7 +92,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 4
+      "event_count_180d": 5
     },
     {
       "tool_key": "duration_shortening",
@@ -151,21 +147,21 @@
       "feasibility": "high",
       "canonical_desc": "官员讲话暗示维持高利率或加息",
       "invalidation": "会推高长端收益率 → 反救市信号",
-      "status": "被否",
+      "status": "口头/待发",
       "last_action": {
         "tool_key": "fed_hawkish_signal",
-        "action_type": "opposed",
-        "date": "2026-08-27",
+        "action_type": "signaled",
+        "date": "2026-08-28",
         "actor": "Warsh",
         "amount_desc": "",
-        "commentary": "Warsh介入意味着联储鹰派可能抵消财政部救长债效果。",
-        "verbatim": "Warsh steps into spotlight after Bessent’s bond move",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNZDN4U0hIM256SWdfV0hXUDE4dzdfdzZNLXg2S00yQnoyZFFBbnpUVTEyeDdkdG5DTFl5Y0haSGJQSXVyZkNyRmlpbGFZSUlYYklBVHRwTUpYMGhsbWVXUXlVRVVwdzgwRkpESmdWZnlJdzVUbHJIM2Rheld1SE05Vk9heWpZRkJ1LUZZRUVqYmp6aVFFdmNERVpqUzZsX0V2Z0I5eFNka3JNelpXU2U5VTNvNDg2dw?oc=5",
-        "confidence": 6
+        "commentary": "强调通胀并主张更克制的央行，削弱救债市宽松预期。",
+        "verbatim": "expresses concern about inflation, advocates for 'quieter' central bank",
+        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
+        "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPSDgxMWMxLTZHbGRNUGgxeExaV0VyY2dqZ0ZaeVJaZTNsQ28wSldKeEpYRGN5NEpRNmV1Vjl3QWdheHFoSHFGQ3ZRSEVQQnZWd3R1OWw2dEhlQzBDS1hoanFlWlRaN0YwbVZIN2tUTE91LTRWWEI2MXBVVl9VczFCNm1LVjFFY0c5a3FCZHpFdDDSAZYBQVVfeXFMUC1lQUszSmUyc2dXV1FDVFA0QnFtWXVsLXVicFp0NDk5MVUzX01jOHhaRTBvcm1PbDRpWTFRUWZOa1I1LXNMUnJHX1pxNnlmbWdSUExuLTh6SU5qdEJJVU5vUU1FMDdpSkJMb0dvWUpDeFFjV0VoVWQtRXhpYmozS3pnc0Q4T1BjZXZ3VEpBT0JKOHV6eEpB?oc=5",
+        "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 26
+      "event_count_180d": 44
     },
     {
       "tool_key": "fx_intervention",
