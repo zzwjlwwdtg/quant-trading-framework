@@ -166,7 +166,7 @@ _RULES = {
         "dovish_hold": {
             "desc": "维持 + dot plot 转鸽 / 释放降息信号",
             "delta_pp": +8,
-            "prob_note": "Powell 发言暗示降息临近",
+            "prob_note": "Fed Chair 发言暗示降息临近",
         },
         "base": {
             "desc": "维持 + 中性发言",
@@ -176,7 +176,7 @@ _RULES = {
         "hawkish_hold": {
             "desc": "维持 + 强调通胀风险 / 推迟降息",
             "delta_pp": -8,
-            "prob_note": "Powell 明确 pushback",
+            "prob_note": "Fed Chair 明确 pushback",
         },
         "surprise_hike": {
             "desc": "加息 (极端反常)",

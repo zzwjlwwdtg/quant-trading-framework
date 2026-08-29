@@ -1,8 +1,8 @@
-"""fed_watch.py — CME FedWatch 加息/降息预期抓取 via Claude CLI + WebFetch.
+"""fed_watch.py — CME FedWatch 加息/降息预期抓取 via AI CLI + live web search.
 
 CME FedWatch Tool 显示市场对未来 FOMC 会议 rate action 的概率分布，
-数据来自 Fed Fund Futures 反推。JS 后台 AJAX 数据难直接爬，用 Claude
-CLI 的 WebFetch 抓页面文本 → 解析成结构化 JSON。
+数据来自 Fed Fund Futures 反推。JS 后台 AJAX 数据难直接爬，用统一
+AI CLI 的 live web search 抓页面文本 → 解析成结构化 JSON。
 
 缓存 2h（rate expectations 变化慢）。
 """
@@ -18,8 +18,8 @@ from typing import Optional
 CME_FEDWATCH_URL = "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html"
 
 
-def _fetch_fed_watch_via_claude() -> Optional[dict]:
-    """Claude CLI + WebFetch 抓 CME FedWatch, 解析成结构化 JSON."""
+def _fetch_fed_watch_via_ai() -> Optional[dict]:
+    """AI CLI + live web search 抓 CME FedWatch, 解析成结构化 JSON."""
     try:
         from ai_prompt import query_ai_cli
     except Exception:
@@ -36,7 +36,7 @@ def _fetch_fed_watch_via_claude() -> Optional[dict]:
 
 要求：
 1. 使用 WebFetch 或 WebSearch 拉最新数据 —— **必须**明确写出数据 snapshot 日期
-2. **鉴别关键近期事件是否已反映**：查最近 7 天内是否有 NFP / CPI / PPI / FOMC / Powell 讲话，若有则数据必须在该事件**之后**发布
+2. **鉴别关键近期事件是否已反映**：查最近 7 天内是否有 NFP / CPI / PPI / FOMC / Fed Chair 讲话 (2026 为 Warsh, 之前为 Powell)，若有则数据必须在该事件**之后**发布
 3. 若能证明数据 >2 天旧且期间发生过就业/通胀数据 → 返 confidence="low" 并在 commentary 里明确 "数据滞后" 警告
 4. 提取未来 3-4 次 FOMC meeting 日期 + 每种 rate action 的市场隐含概率
 5. Actions 用简化标签：
@@ -77,7 +77,9 @@ def _fetch_fed_watch_via_claude() -> Optional[dict]:
 如果找不到最新数据，返 {{"error": "no_recent_data", "confidence": "low"}}
 """
     to = int(os.environ.get("FED_WATCH_TIMEOUT", "180"))
-    out, status, provider, _ = query_ai_cli(prompt, timeout=to)
+    out, status, provider, _ = query_ai_cli(
+        prompt, timeout=to, web_search=True
+    )
     provider = provider.lower()
     if not out:
         return {"error": f"{provider}_{status[:120]}"}
@@ -104,7 +106,7 @@ def get_fed_watch() -> dict:
     """入口。可选 env: FED_WATCH_ENABLED=0 完全关掉。"""
     if os.environ.get("FED_WATCH_ENABLED", "1") == "0":
         return {"error": "disabled_by_env", "confidence": "unknown"}
-    result = _fetch_fed_watch_via_claude()
+    result = _fetch_fed_watch_via_ai()
     if not result:
         return {"error": "cli_unavailable"}
     return result

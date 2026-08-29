@@ -237,7 +237,7 @@ _PROMPT = """你是 Trump Truth Social 推文 → 美股交易信号 的解析�
 请把每条推文严格分类（event_type 枚举）：
 - TARIFF       : 关税相关（threats / agreement / 取消 / 调整）
 - DEAL         : 重大商业 / 贸易协议 / 投资承诺
-- FED          : 联储 / 利率 / Powell / 货币政策评论
+- FED          : 联储 / 利率 / Fed Chair (Powell/Warsh) / 货币政策评论
 - GEOPOLITICAL : 地缘冲突 / 制裁 / 战争 / 外交
 - MARKET       : 直接喊单（"buy stocks now"）/ 谈具体行业 / 谈具体公司
 - DOMESTIC_POLICY : 国内政策 / 财政 / 监管 / 移民等不直接动行业
@@ -331,7 +331,7 @@ def _normalize_item(raw: dict, post: dict) -> dict:
 
 def analyze_posts(posts: list[dict], *, cli_timeout: int = 90,
                    max_posts_per_call: int = 5) -> dict:
-    """调 Claude CLI 把推文拆成结构化信号。
+    """调统一 AI CLI 把推文拆成结构化信号。
 
     超过 max_posts_per_call 时分批调用（避免 prompt 过大或 stdin 限制）。
     """
@@ -342,6 +342,7 @@ def analyze_posts(posts: list[dict], *, cli_timeout: int = 90,
     if len(posts) > max_posts_per_call:
         all_items: list[dict] = []
         statuses: list[str] = []
+        providers: set[str] = set()
         any_ok = False
         for i in range(0, len(posts), max_posts_per_call):
             chunk = posts[i:i + max_posts_per_call]
@@ -350,12 +351,14 @@ def analyze_posts(posts: list[dict], *, cli_timeout: int = 90,
             all_items.extend(sub.get("items", []))
             if sub.get("cli_status"):
                 statuses.append(sub["cli_status"])
+            if sub.get("provider"):
+                providers.add(str(sub["provider"]))
             if not sub.get("fallback"):
                 any_ok = True
         return {
             "items": all_items, "fallback": (not any_ok),
             "n_posts": len(posts),
-            "provider": "Claude",
+            "provider": next(iter(providers)) if len(providers) == 1 else "Mixed",
             "ts": datetime.now().isoformat(),
             "cli_status": " | ".join(statuses)[:300] if statuses else "",
         }
