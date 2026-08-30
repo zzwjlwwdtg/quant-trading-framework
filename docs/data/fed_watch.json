@@ -3,85 +3,90 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 17,
+      "days_until": 16,
       "probabilities": {
-        "hold": 44.1,
-        "hike_25": 55.9
+        "hold": 48,
+        "hike_25": 52,
+        "hike_50": 0,
+        "cut_25": 0,
+        "cut_50": 0
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 59,
+      "days_until": 58,
       "probabilities": {
-        "hold": 30.0,
-        "hike_25": 52.1,
-        "hike_50": 18.0
+        "hold": 22,
+        "hike_25": 78,
+        "hike_50": 0,
+        "cut_25": 0,
+        "cut_50": 0
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2026-12-09",
-      "days_until": 101,
+      "days_until": 100,
       "probabilities": {
-        "hold": 11.6,
-        "hike_25": 38.5,
-        "hike_50": 49.9
+        "hold": 38,
+        "hike_25": 62,
+        "hike_50": 0,
+        "cut_25": 0,
+        "cut_50": 0
       },
-      "most_likely": "hike_50",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 150,
+      "days_until": 149,
       "probabilities": {
-        "hold": 8.3,
-        "hike_25": 30.8,
-        "hike_50": 60.9
+        "hold": 75,
+        "hike_25": 25,
+        "hike_50": 0,
+        "cut_25": 0,
+        "cut_50": 0
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25 modal; expected midpoint peaks near 4.25",
+  "implied_terminal_rate": "4.00-4.25",
   "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-08-29",
-  "recent_event_impact": "最近7天内未发现NFP/CPI/PPI/FOMC发布；8/28/2026 Fed主席Kevin Warsh Jackson Hole讲话偏鹰，市场将9月加息概率推升至约55.9%。此前7/2026 NFP为-23K、失业率4.1%，偏弱就业限制加息幅度；7月CPI +0.1% m/m、+3.4% y/y，PPI持平但+4.7% y/y，通胀仍高使降息定价消退。",
-  "commentary": "Snapshot为2026-08-29 12:35AM EDT，已覆盖8/28 Warsh讲话这一最近关键事件；该讲话后曲线明显转鹰。7月就业转弱本应压低加息空间，但CPI 3.4%与PPI 4.7%的通胀背景主导定价，市场目前更偏向未来数次会议继续上调政策利率。",
+  "data_snapshot_date": "2026-08-28",
+  "recent_event_impact": "最近7天内未发现NFP/CPI/PPI/FOMC决议发布；关键事件为2026-08-28 Jackson Hole Warsh讲话，市场将9月加息概率推高至约52%-57%。此前最新就业/通胀数据为8/7就业、8/12 CPI、8/13 PPI，随后7月PCE显示 headline 3.7%、core 3.3%，强化鹰派定价。",
+  "commentary": "Data snapshot 为2026-08-28，属于2026-08-31前的最近1个交易日，且已反映8/28 Jackson Hole讲话后的重新定价。最新NFP/CPI/PPI不在过去7天内，但7月就业走弱与CPI/PPI/PCE仍显示通胀压力偏高，市场整体从降息/观望转向未来数次会议连续加息的鹰派路径。",
   "sources": [
-    {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=0b9LLo",
-      "type": "cme_derived_fedwatch_snapshot"
-    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "url": "https://www.fedchirp.com/",
+      "type": "fed_funds_futures_curve"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=tzA9ae",
+      "type": "cme_fed_funds_futures_proxy"
     },
     {
-      "url": "https://www.bls.gov/news.release/ppi.htm",
-      "type": "ppi"
+      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
+      "type": "recent_fed_event"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/2026-speeches.htm",
-      "type": "fed_speech"
+      "url": "https://www.bls.gov/schedule/2026/home.htm",
+      "type": "economic_release_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-30T08:23:52+00:00",
+  "fetched_at": "2026-08-30T16:25:25+00:00",
   "_meta": {
-    "cached_at": "2026-08-30T17:23:52.322312",
-    "age_sec": 25751,
+    "cached_at": "2026-08-31T01:25:25.233308",
+    "age_sec": 4058,
     "stale": false,
     "refreshing": false
   }

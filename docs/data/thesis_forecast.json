@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-08-30",
+  "as_of": "2026-08-31",
   "days_ahead": 45,
-  "count": 8,
+  "count": 10,
   "events": [
     {
       "date": "2026-09-04",
-      "days_until": 5,
+      "days_until": 4,
       "event": "NFP Release",
       "impact": "critical",
       "event_type": "NFP",
@@ -70,7 +70,7 @@
     },
     {
       "date": "2026-09-10",
-      "days_until": 11,
+      "days_until": 10,
       "event": "PPI Release",
       "impact": "high",
       "event_type": "PPI",
@@ -120,7 +120,7 @@
     },
     {
       "date": "2026-09-11",
-      "days_until": 12,
+      "days_until": 11,
       "event": "CPI Release",
       "impact": "high",
       "event_type": "CPI",
@@ -186,7 +186,7 @@
     },
     {
       "date": "2026-09-16",
-      "days_until": 17,
+      "days_until": 16,
       "event": "FOMC Decision",
       "impact": "critical",
       "event_type": "FOMC",
@@ -249,7 +249,7 @@
     },
     {
       "date": "2026-09-16",
-      "days_until": 17,
+      "days_until": 16,
       "event": "Retail Sales",
       "impact": "high",
       "event_type": "Retail Sales",
@@ -293,7 +293,7 @@
     },
     {
       "date": "2026-09-30",
-      "days_until": 31,
+      "days_until": 30,
       "event": "PCE Release",
       "impact": "critical",
       "event_type": "PCE",
@@ -353,7 +353,7 @@
     },
     {
       "date": "2026-10-02",
-      "days_until": 33,
+      "days_until": 32,
       "event": "NFP Release",
       "impact": "critical",
       "event_type": "NFP",
@@ -418,7 +418,7 @@
     },
     {
       "date": "2026-10-14",
-      "days_until": 45,
+      "days_until": 44,
       "event": "CPI Release",
       "impact": "high",
       "event_type": "CPI",
@@ -481,13 +481,107 @@
         "bond_yield_bps": 23.7,
         "spx_pct_est": -1.19
       }
+    },
+    {
+      "date": "2026-10-15",
+      "days_until": 45,
+      "event": "PPI Release",
+      "impact": "high",
+      "event_type": "PPI",
+      "scenarios": {
+        "dovish": {
+          "desc": "PPI MoM < 0% (生产端通胀降)",
+          "delta_pp": 3,
+          "prob_note": "通胀领先指标降",
+          "probability": 0.2
+        },
+        "base": {
+          "desc": "PPI MoM 符合预期",
+          "delta_pp": 0,
+          "prob_note": "无方向",
+          "probability": 0.5
+        },
+        "hawkish": {
+          "desc": "PPI MoM > +0.3%",
+          "delta_pp": -3,
+          "prob_note": "上游通胀有压力",
+          "probability": 0.3
+        }
+      },
+      "delta_range_pp": [
+        -3,
+        3
+      ],
+      "range_desc": "(-3pp ~ +3pp)",
+      "expected_delta_pp": -0.3,
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "偏空",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "hawkish",
+        "long_favored": [
+          "能源/材料",
+          "大宗商品 (USO/GLD)"
+        ],
+        "long_hurt": [
+          "制造业 (成本升)",
+          "长债"
+        ],
+        "bond_yield_bps": 0.9,
+        "spx_pct_est": -0.01
+      }
+    },
+    {
+      "date": "2026-10-15",
+      "days_until": 45,
+      "event": "Retail Sales",
+      "impact": "high",
+      "event_type": "Retail Sales",
+      "scenarios": {
+        "dovish": {
+          "desc": "零售 MoM < 0% (消费明显走弱)",
+          "delta_pp": 3,
+          "prob_note": "支持降息保消费",
+          "probability": 0.2
+        },
+        "base": {
+          "desc": "零售 MoM 0-0.5% (中性)",
+          "delta_pp": 0,
+          "prob_note": "无方向",
+          "probability": 0.55
+        },
+        "hawkish": {
+          "desc": "零售 MoM > 0.5% (消费强)",
+          "delta_pp": -2,
+          "prob_note": "略微推迟降息",
+          "probability": 0.25
+        }
+      },
+      "delta_range_pp": [
+        -2,
+        3
+      ],
+      "range_desc": "(-2pp ~ +3pp)",
+      "expected_delta_pp": 0.1,
+      "probability_source": "prior",
+      "market_impact": {
+        "bond": "无明显方向",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "neutral",
+        "long_favored": [],
+        "long_hurt": [],
+        "bond_yield_bps": -0.3,
+        "spx_pct_est": 0.01
+      }
     }
   ],
-  "generated_at": "2026-08-30T18:54:43",
+  "generated_at": "2026-08-31T00:54:43",
   "note": "Scenarios 是规则版预测. 实际数据发布时,系统会自动对照到最近的 scenario 追加 thesis_history 验证.",
   "_meta": {
-    "cached_at": "2026-08-30T18:54:43.854371",
-    "age_sec": 20299,
+    "cached_at": "2026-08-31T00:54:43.930866",
+    "age_sec": 5899,
     "stale": false,
     "refreshing": false
   }
