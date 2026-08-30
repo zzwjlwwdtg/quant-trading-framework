@@ -1,31 +1,7 @@
 {
   "days": 180,
-  "count": 133,
+  "count": 132,
   "rows": [
-    {
-      "ts": "2026-03-03T12:00:00+00:00",
-      "date": "2026-03-03",
-      "y10": 4.06,
-      "y30": 4.7,
-      "tips": 1.77,
-      "cpi_yoy": 3.29,
-      "core_cpi_yoy": 2.6,
-      "unrate": 4.3,
-      "ig_bps": 84.0,
-      "hy_bps": 308.0,
-      "nfci": null,
-      "rrp_bn": 1.2,
-      "tga_bn": null,
-      "vix": null,
-      "dxy": null,
-      "oil_uso": null,
-      "oil_pct_20d": null,
-      "bbi": null,
-      "stablecoin_bn": null,
-      "erp": null,
-      "_source": "fred_backfill",
-      "cut_probability_pct": 50
-    },
     {
       "ts": "2026-03-04T12:00:00+00:00",
       "date": "2026-03-04",
@@ -3157,29 +3133,29 @@
     }
   ],
   "trend_30d": {
-    "n_samples": 28,
+    "n_samples": 27,
     "period_days": 30,
-    "cut_prob_start": 42,
+    "cut_prob_start": 55,
     "cut_prob_latest": 30,
-    "cut_prob_delta": -12,
-    "y10_delta_bps": -8.0,
-    "cpi_yoy_delta_pp": 0.24,
+    "cut_prob_delta": -25,
+    "y10_delta_bps": -3.0,
+    "cpi_yoy_delta_pp": 0.59,
     "unrate_delta_pp": 0.0,
     "vix_delta": null,
-    "hy_delta_bps": -22.0,
+    "hy_delta_bps": -15.0,
     "dxy_delta": null
   },
   "trend_90d": {
-    "n_samples": 70,
+    "n_samples": 69,
     "period_days": 90,
     "cut_prob_start": 45,
     "cut_prob_latest": 30,
     "cut_prob_delta": -15,
-    "y10_delta_bps": 20.0,
+    "y10_delta_bps": 21.0,
     "cpi_yoy_delta_pp": 0.08,
     "unrate_delta_pp": -0.1,
     "vix_delta": null,
-    "hy_delta_bps": -9.0,
+    "hy_delta_bps": -8.0,
     "dxy_delta": null
   }
 }
