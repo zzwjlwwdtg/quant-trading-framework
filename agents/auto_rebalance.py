@@ -111,6 +111,152 @@ def _liquidity_crisis_level(mc: dict) -> tuple[int, list[str]]:
     return level, triggers
 
 
+# ============================================================================
+# 第 8 层 overlay: 事件驱动 triggers (impact_matrix action_triggers 落地版)
+# ============================================================================
+# 目的: 让 impact_matrix 从 display-only → 实际驱动 auto_rebalance
+# 用户 memory: "不能每次都手动确认" - 事件当日应自动响应
+#
+# 5 个高价值 triggers (基于 impact_matrix 里 T+0 action_triggers 提炼):
+#   1. MOVE >= 140: 债市 crisis → 减 IEI/TLT
+#   2. MOVE >= 180: 极端 → 大幅减 duration + 加 GLD
+#   3. KBE/SPY 20d <= -10%: panic flight-to-quality → 减股加 hedge
+#   4. UST 10Y 1d 变化 >= +25bps: 长端 blow → 减 IEI
+#   5. HY OAS >= 400bps: 信用 stress 累积 → 减 cloud
+#
+# 安全阀:
+#   - 24h cool-down: 同一 trigger 一天最多触发 1 次 (查 rebalance_plan.jsonl)
+#   - dry-run 优先: default trigger 只 log, AUTO_REBALANCE_EVENT_EXEC=1 才真下单
+#   - 缓存 fresh check: bond_monitor cache 必须 < 12h
+# ============================================================================
+_EVENT_TRIGGERS = [
+    {
+        "name": "move_extreme",
+        "check": lambda mc: (mc.get("move_index") or 0) >= 180,
+        "action": {
+            "scaler_by_ticker": {"IEI": 0.5, "TLT": 0.3, "TLH": 0.4},
+            "scaler_by_class": {"hedge": 1.5},
+            "reason": "MOVE ≥180 债市极端 (2008/2020/SVB 级)",
+        },
+    },
+    {
+        "name": "move_crisis",
+        "check": lambda mc: 140 <= (mc.get("move_index") or 0) < 180,
+        "action": {
+            "scaler_by_ticker": {"IEI": 0.75, "TLT": 0.5},
+            "scaler_by_class": {"hedge": 1.3},
+            "reason": "MOVE ≥140 债市 crisis 区",
+        },
+    },
+    {
+        "name": "bank_panic",
+        "check": lambda mc: (mc.get("kbe_spy_20d_delta_pct") or 0) <= -10,
+        "action": {
+            "scaler_by_class": {"cloud": 0.3, "hedge": 1.5, "bond": 1.2, "probe": 0.0},
+            "reason": "KBE/SPY 20d ≤-10% SVB/2008 级 panic",
+        },
+    },
+    {
+        "name": "long_end_blow",
+        "check": lambda mc: False,  # 需 1d 数据, 暂空 (yields dict.chg_1d_bps 待接)
+        "action": {
+            "scaler_by_ticker": {"IEI": 0.8, "TLT": 0.5},
+            "reason": "UST 10Y 1d ≥+25bps 长端 blow",
+        },
+    },
+    {
+        "name": "hy_stress",
+        "check": lambda mc: (mc.get("cdx_hy_bps") or 0) >= 400,
+        "action": {
+            "scaler_by_class": {"cloud": 0.6, "hedge": 1.2},
+            "reason": "HY OAS ≥400bps 信用 stress",
+        },
+    },
+]
+
+
+def _load_macro_context() -> dict:
+    """从 bond_monitor_v2 cache 读 macro_context (12h 内 fresh)."""
+    from datetime import datetime
+    cache_dir = Path(SIGNALS_DIR).parent / ".webui_cache"
+    for name in ("bond_monitor_v2.json", "bond_monitor.json"):
+        cache = cache_dir / name
+        if not cache.exists():
+            continue
+        age_h = (datetime.now().timestamp() - cache.stat().st_mtime) / 3600
+        if age_h > 12:
+            continue
+        try:
+            d = json.loads(cache.read_text(encoding="utf-8"))
+            data = d.get("data") if "data" in d else d
+            # 也补 yields.10y.chg_1d_bps 到 macro_context
+            mc = dict(data.get("macro_context", {}) or {})
+            y10 = ((data.get("yields") or {}).get("10y") or {})
+            if y10.get("chg_1d_bps") is not None:
+                mc["ust_10y_1d_bps"] = y10["chg_1d_bps"]
+            return mc
+        except Exception:
+            continue
+    return {}
+
+
+def _load_event_triggers() -> list[dict]:
+    """检查所有 event triggers, 返回激活的列表."""
+    mc = _load_macro_context()
+    # 加 ust_10y_1d_bps 到 check function 可用范围
+    active = []
+    for trig in _EVENT_TRIGGERS:
+        try:
+            # rewrite check for long_end_blow (需要 ust_10y_1d_bps)
+            if trig["name"] == "long_end_blow":
+                if (mc.get("ust_10y_1d_bps") or 0) >= 25:
+                    active.append({**trig, "triggered_value": mc.get("ust_10y_1d_bps")})
+                continue
+            if trig["check"](mc):
+                # 记录触发时的值
+                value_key = {
+                    "move_extreme": "move_index",
+                    "move_crisis": "move_index",
+                    "bank_panic": "kbe_spy_20d_delta_pct",
+                    "hy_stress": "cdx_hy_bps",
+                }.get(trig["name"])
+                active.append({**trig, "triggered_value": mc.get(value_key) if value_key else None})
+        except Exception:
+            continue
+    return active
+
+
+def _check_event_trigger_cooldown(trigger_name: str, cooldown_hours: int = 24) -> bool:
+    """检查过去 24h 是否已 fire 同名 trigger. 返回 True = 可以 fire, False = 冷却中."""
+    from datetime import datetime, timedelta
+    log = Path(SIGNALS_DIR) / "rebalance_plan.jsonl"
+    if not log.exists():
+        return True
+    try:
+        cutoff = datetime.now() - timedelta(hours=cooldown_hours)
+        lines = log.read_text(encoding="utf-8").splitlines()
+        for line in reversed(lines[-100:]):  # 只看最近 100 条
+            if not line.strip():
+                continue
+            try:
+                d = json.loads(line)
+                ts_str = d.get("ts", "")
+                if not ts_str:
+                    continue
+                ts = datetime.fromisoformat(ts_str)
+                if ts < cutoff:
+                    break
+                # 若有该 trigger 记录 → cooldown 中
+                triggers = d.get("event_triggers_fired", [])
+                if trigger_name in [t.get("name") for t in triggers if isinstance(t, dict)]:
+                    return False
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return True
+
+
 def _load_stock_bond_corr() -> tuple[float | None, str]:
     """读 SPY-IEF 60d 相关性. 返回 (corr, regime_label).
     regime: hedge_ok / weakening / broken / extreme
@@ -388,6 +534,16 @@ def compute_target_weights(signals: dict, regime: str,
     # 股债 60d 相关性: 正相关 = 债券不再对冲股票 (2022 股债双杀 regime)
     sb_corr, sb_regime = _load_stock_bond_corr()
 
+    # 第 8 层: 事件驱动 triggers (impact_matrix action_triggers 落地版)
+    # 有 cool-down 保护 (24h 同 trigger 只 fire 1 次)
+    import os as _os
+    event_exec = _os.environ.get("AUTO_REBALANCE_EVENT_EXEC", "0") == "1"
+    active_event_triggers = []
+    if event_exec:  # 默认关闭, 需显式启用
+        for trig in _load_event_triggers():
+            if _check_event_trigger_cooldown(trig["name"]):
+                active_event_triggers.append(trig)
+
     targets: dict[str, float] = {}
     for tk, cfg in _TARGET_TEMPLATE.items():
         sig = signals.get(tk, {})
@@ -419,6 +575,16 @@ def compute_target_weights(signals: dict, regime: str,
                 asia_scaler = 0.4   # 长端更严重
             elif cls == "hedge":
                 asia_scaler = 1.15  # 加 GLD 因 JP 干预 = USD 弱 = 金价支持
+        # 事件驱动 triggers (第 8 层): 由 impact_matrix action_triggers 提炼
+        # 硬编码 5 个高价值 triggers, 触发时按 ticker/class scaler 叠加
+        event_scaler = 1.0
+        for trig in active_event_triggers:
+            action = trig["action"]
+            if "scaler_by_ticker" in action and tk in action["scaler_by_ticker"]:
+                event_scaler *= action["scaler_by_ticker"][tk]
+            if "scaler_by_class" in action and cls in action["scaler_by_class"]:
+                event_scaler *= action["scaler_by_class"][cls]
+
         # 股债相关性 overlay: sb_corr 是**脆弱性 gauge** 不是 crisis predictor
         # (memory: feedback_correlation_is_regime_not_predictor.md)
         # 触发时应**加 hedge (GLD)** 而非砍 bond, 因为 corr broken 只是
@@ -433,7 +599,7 @@ def compute_target_weights(signals: dict, regime: str,
             elif cls == "hedge": corr_scaler = 1.2               # 加 hedge
         elif sb_regime == "weakening":  # corr > -0.3, 对冲弱化早期
             if cls == "hedge": corr_scaler = 1.1
-        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler * asia_scaler * corr_scaler
+        target = cfg["max_pct"] * scaler * regime_scaler * chain_scaler * liq_scaler * asia_scaler * corr_scaler * event_scaler
         targets[tk] = round(target, 2)
     return targets
 
@@ -567,6 +733,18 @@ def check_and_execute_rebalance(window: str | None = None,
     chain_blocked = _load_chain_blocked_at()
     asia_repat_trigger, asia_repat_reason = _load_asia_repatriation_signal()
     sb_corr, sb_regime = _load_stock_bond_corr()
+    # 事件驱动 triggers (仅当 AUTO_REBALANCE_EVENT_EXEC=1 才生效)
+    import os as _os
+    _event_exec = _os.environ.get("AUTO_REBALANCE_EVENT_EXEC", "0") == "1"
+    event_triggers_fired = []
+    if _event_exec:
+        for trig in _load_event_triggers():
+            if _check_event_trigger_cooldown(trig["name"]):
+                event_triggers_fired.append({
+                    "name": trig["name"],
+                    "reason": trig["action"].get("reason"),
+                    "triggered_value": trig.get("triggered_value"),
+                })
     targets = compute_target_weights(signals, regime, drawdown_pct,
                                        chain_blocked_at=chain_blocked,
                                        liq_level=liq_level)
@@ -587,6 +765,8 @@ def check_and_execute_rebalance(window: str | None = None,
         "asia_repat_reason": asia_repat_reason,
         "spy_ief_60d_corr": sb_corr,
         "stock_bond_regime": sb_regime,
+        "event_triggers_fired": event_triggers_fired,
+        "auto_rebalance_event_exec": _event_exec,
         "targets": targets,
         "orders": orders,
         "n_orders": len(orders),
@@ -647,6 +827,16 @@ def _cli_main():
         print(f"🇯🇵 Asia repatriation 触发: {r.get('asia_repat_reason')} → IEI × 0.6")
     if r.get('stock_bond_regime') in ('broken', 'extreme'):
         print(f"⚡ 股债相关 {r.get('spy_ief_60d_corr'):+.2f} = {r.get('stock_bond_regime')} (脆弱性 gauge) → 加 hedge × 1.2-1.4, 微减 bond × 0.85-0.92")
+    _fired = r.get('event_triggers_fired', [])
+    if _fired:
+        print(f"🎯 事件驱动 triggers 激活 ({len(_fired)} 条):")
+        for t in _fired:
+            v = f" (值={t.get('triggered_value')})" if t.get('triggered_value') is not None else ""
+            print(f"    [{t['name']}]{v}  {t.get('reason', '')}")
+    elif r.get('auto_rebalance_event_exec'):
+        print("🎯 事件驱动 triggers: 无激活 (阈值未破 或 cool-down 中)")
+    else:
+        print("🎯 事件驱动 triggers: 未启用 (set AUTO_REBALANCE_EVENT_EXEC=1 开启)")
     print("=" * 80)
     print("\nTarget weights:")
     for tk, w in sorted(r["targets"].items(), key=lambda x: -x[1]):
