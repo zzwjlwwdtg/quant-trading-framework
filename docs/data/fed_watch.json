@@ -20,7 +20,7 @@
         "hike_50": 18.0
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-12-09",
@@ -45,43 +45,43 @@
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_rate": "4.00-4.25 modal; expected midpoint peaks near 4.25",
   "implied_terminal_date": "2027-Q2",
   "data_snapshot_date": "2026-08-29",
-  "recent_event_impact": "最近7天无NFP/CPI/PPI/FOMC；8/28 Fed Chair Warsh Jackson Hole讲话偏鹰，9月加息概率由前一日34.1%升至55.9%。较早的7月NFP为-23K、CPI为3.4% y/y、PPI为4.7% y/y，形成就业走弱但通胀仍高的混合背景。",
-  "commentary": "数据快照为2026-08-29 12:35AM EDT，已在8/28 Warsh讲话之后更新，因此反映了该偏鹰事件。7月NFP转负本应压低加息预期，但CPI 3.4% y/y、PPI 4.7% y/y和Warsh强调通胀风险，使市场重新定价为未来数次会议偏向加息；因输出标签限制，远期hike_50包含50bp及以上的累计加息概率。",
+  "recent_event_impact": "最近7天内未发现NFP/CPI/PPI/FOMC发布；8/28/2026 Fed主席Kevin Warsh Jackson Hole讲话偏鹰，市场将9月加息概率推升至约55.9%。此前7/2026 NFP为-23K、失业率4.1%，偏弱就业限制加息幅度；7月CPI +0.1% m/m、+3.4% y/y，PPI持平但+4.7% y/y，通胀仍高使降息定价消退。",
+  "commentary": "Snapshot为2026-08-29 12:35AM EDT，已覆盖8/28 Warsh讲话这一最近关键事件；该讲话后曲线明显转鹰。7月就业转弱本应压低加息空间，但CPI 3.4%与PPI 4.7%的通胀背景主导定价，市场目前更偏向未来数次会议继续上调政策利率。",
   "sources": [
+    {
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=0b9LLo",
+      "type": "cme_derived_fedwatch_snapshot"
+    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
-    },
-    {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=0b9LLo",
-      "type": "fedwatch_probability_mirror"
-    },
-    {
-      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
-      "type": "current_target_range"
     },
     {
       "url": "https://www.bls.gov/news.release/empsit.htm",
       "type": "nfp"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
+      "url": "https://www.bls.gov/news.release/cpi.htm",
       "type": "cpi"
     },
     {
-      "url": "https://www.bls.gov/ppi/",
+      "url": "https://www.bls.gov/news.release/ppi.htm",
       "type": "ppi"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/speech/2026-speeches.htm",
+      "type": "fed_speech"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-30T00:22:35+00:00",
+  "fetched_at": "2026-08-30T08:23:52+00:00",
   "_meta": {
-    "cached_at": "2026-08-30T09:22:35.748933",
-    "age_sec": 25827,
+    "cached_at": "2026-08-30T17:23:52.322312",
+    "age_sec": 4152,
     "stale": false,
     "refreshing": false
   }
