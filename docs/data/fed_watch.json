@@ -3,85 +3,85 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 18,
+      "days_until": 17,
       "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 40,
-        "hike_25": 60,
-        "hike_50": 0
+        "hold": 44.1,
+        "hike_25": 55.9
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 60,
+      "days_until": 59,
       "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 70,
-        "hike_25": 30,
-        "hike_50": 0
+        "hold": 30.0,
+        "hike_25": 52.1,
+        "hike_50": 18.0
       },
-      "most_likely": "hold",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 102,
+      "days_until": 101,
       "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 36,
-        "hike_25": 64,
-        "hike_50": 0
+        "hold": 11.6,
+        "hike_25": 38.5,
+        "hike_50": 49.9
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 150,
+      "probabilities": {
+        "hold": 8.3,
+        "hike_25": 30.8,
+        "hike_50": 60.9
+      },
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "约4.00% EFFR；目标区间约3.75-4.00至4.00-4.25",
-  "implied_terminal_date": "2026-12",
-  "data_snapshot_date": "2026-08-28",
-  "recent_event_impact": "8/28 Fed主席Kevin Warsh在Jackson Hole发表偏鹰讲话后，9月加息概率由约35%升至约58-60%；7月NFP为-23K且5-6月合计下修103K，7月CPI同比3.4%、核心CPI同比2.5%，7月PPI持平但同比4.7%，就业偏弱与通胀仍高形成拉扯。",
-  "commentary": "数据快照为2026-08-28，已覆盖当日Jackson Hole讲话这一最近7天内关键事件；未发现8/22-8/29期间新的NFP/CPI/PPI正式月度发布，下一批8月NFP/CPI/PPI分别在9/4、9/11、9/10发布。市场从7月就业疲软和CPI/PPI降温中看到部分鸽派因素，但Warsh讲话强调通胀仍高，使短端重新转向偏鹰，未来三次会议均主要定价为维持或25bp加息。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-08-29",
+  "recent_event_impact": "最近7天无NFP/CPI/PPI/FOMC；8/28 Fed Chair Warsh Jackson Hole讲话偏鹰，9月加息概率由前一日34.1%升至55.9%。较早的7月NFP为-23K、CPI为3.4% y/y、PPI为4.7% y/y，形成就业走弱但通胀仍高的混合背景。",
+  "commentary": "数据快照为2026-08-29 12:35AM EDT，已在8/28 Warsh讲话之后更新，因此反映了该偏鹰事件。7月NFP转负本应压低加息预期，但CPI 3.4% y/y、PPI 4.7% y/y和Warsh强调通胀风险，使市场重新定价为未来数次会议偏向加息；因输出标签限制，远期hike_50包含50bp及以上的累计加息概率。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_backup"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=0b9LLo",
+      "type": "fedwatch_probability_mirror"
     },
     {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_calendar"
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
+      "type": "current_target_range"
     },
     {
       "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp_release"
+      "type": "nfp"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi_release"
+      "url": "https://www.bls.gov/news.release/archives/cpi_08122026.htm",
+      "type": "cpi"
     },
     {
-      "url": "https://www.bls.gov/news.release/ppi.htm",
-      "type": "ppi_release"
-    },
-    {
-      "url": "https://www.federalreserve.gov/newsevents/2026-august.htm",
-      "type": "fed_speech_calendar"
+      "url": "https://www.bls.gov/ppi/",
+      "type": "ppi"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-29T00:19:45+00:00",
+  "fetched_at": "2026-08-30T00:22:35+00:00",
   "_meta": {
-    "cached_at": "2026-08-29T09:19:45.179951",
-    "age_sec": 25998,
+    "cached_at": "2026-08-30T09:22:35.748933",
+    "age_sec": 4227,
     "stale": false,
     "refreshing": false
   }
