@@ -1733,6 +1733,48 @@ async function loadBondAIInterpret() {
                           </div>`;
                         }).join('')}
                       </div>
+                      ${ev.impact_matrix ? (() => {
+                        const im = ev.impact_matrix;
+                        const surp = im.surprise_factor;
+                        const scenLabels = {'hawkish_shock':'🔴 Hawkish 冲击', 'base_neutral':'⚪ Base', 'dovish_surprise':'🟢 Dovish 意外', 'panic_flight_to_quality':'🚨 Panic (T+1-3 突发)'};
+                        const scenColors = {'hawkish_shock':'#f85149', 'base_neutral':'#7d8590', 'dovish_surprise':'#3fb950', 'panic_flight_to_quality':'#a371f7'};
+                        const fmtBps = v => v > 0 ? `+${v}` : `${v}`;
+                        const fmtPct = v => (v > 0 ? '+' : '') + v.toFixed(1);
+                        const barCls = v => v > 0.5 ? 'ok' : v < -0.5 ? 'bad' : 'muted';
+                        return `<details style="margin-top:4px; padding-top:3px; border-top:1px dashed rgba(139,148,158,0.15)">
+                          <summary style="cursor:pointer; list-style:none; font-size:9.5px; color:var(--muted)">
+                            📊 <b style="color:#58a6ff">影响矩阵</b> (4 情景 × 5 时间 · surprise=${(surp*100).toFixed(0)}%) ▼
+                          </summary>
+                          <div style="margin-top:4px">
+                            ${Object.entries(im.scenarios).filter(([k,v]) => v.horizons).map(([sname, scen]) => {
+                              const hEntries = Object.entries(scen.horizons);
+                              const scaler = scen.scenario_scaler != null ? ` × ${scen.scenario_scaler}` : '';
+                              return `<div style="margin-top:5px; padding:4px 6px; border-left:2px solid ${scenColors[sname]}; background:rgba(139,148,158,0.03); border-radius:2px">
+                                <div style="font-size:10px; color:${scenColors[sname]}; margin-bottom:2px"><b>${scenLabels[sname] || sname}</b> <small style="color:var(--muted)">${scaler}</small></div>
+                                <div style="display:grid; grid-template-columns:repeat(${hEntries.length}, 1fr); gap:2px; font-size:9px">
+                                  ${hEntries.map(([h, v]) => `
+                                    <div title="${v.note}" style="padding:2px 3px; background:rgba(0,0,0,0.15); border-radius:2px">
+                                      <div style="color:#7d8590; font-weight:600">${h}</div>
+                                      <div><span style="color:#7d8590">UST</span> <b class="${barCls(-v.ust_10y_bps)}">${fmtBps(v.ust_10y_bps)}bp</b></div>
+                                      <div><span style="color:#7d8590">SPX</span> <b class="${barCls(v.spx_pct)}">${fmtPct(v.spx_pct)}%</b></div>
+                                      <div><span style="color:#7d8590">HY</span> <b class="${barCls(-v.hy_oas_bps/10)}">${fmtBps(v.hy_oas_bps)}bp</b></div>
+                                      <div><span style="color:#7d8590">GLD</span> <b class="${barCls(v.gld_pct)}">${fmtPct(v.gld_pct)}%</b></div>
+                                    </div>
+                                  `).join('')}
+                                </div>
+                                ${Object.keys(scen.action_triggers || {}).length ? `
+                                  <div style="margin-top:3px; font-size:9px; color:var(--muted); line-height:1.4">
+                                    ${Object.entries(scen.action_triggers).map(([h, act]) => `<span style="color:#d29922">[${h}]</span> ${act}`).join(' &nbsp;·&nbsp; ')}
+                                  </div>` : ''}
+                              </div>`;
+                            }).join('')}
+                            <div style="font-size:9px; color:var(--muted); margin-top:5px; line-height:1.4">
+                              💡 <b>surprise factor</b> = 1 - 市场已定价概率 (${im.mkt_implied_prob}). 完全预期 → 反应量级衰减. Panic 情景独立, 不衰减.<br>
+                              <b>时间维度</b>: T+0 单次事件冲击, T+3M 是周期累积效应 (信用/盈利后置传导).
+                            </div>
+                          </div>
+                        </details>`;
+                      })() : ''}
                     </div>`;
                   }).join('')}
                   ${forecast.events.length > 6 ? `<div style="text-align:center; font-size:9px; color:var(--muted); margin-top:3px">... 还有 ${forecast.events.length - 6} 个事件</div>` : ''}

@@ -417,6 +417,159 @@ def _market_impact_from_expected(event_type: str, expected_pp: float) -> dict:
     }
 
 
+# ============================================================================
+# 影响矩阵框架 (2026-08-29 加, 响应用户 6 项综合评估建议)
+# ============================================================================
+# 3 大改进:
+#   1. 时间维度: 区分 T+0 单次事件 vs T+3M 周期累积效应
+#   2. Surprise factor: adjusted = base × (1 - mkt_implied_prob)
+#      市场若已 pricing → 实际反应 muted; 若意外 → 反应放大
+#   3. 情景完备: 3 基础 + panic flight-to-quality 第 4 情景 (T+1-3 突发)
+#
+# 量级参考 (校准, 单次事件冲击):
+#   Hawkish 25bp hike shock (surprise 100%):
+#     UST 10Y: T+0 +25bp / T+1W +40bp / T+3M +20bp (曲线 flat/invert)
+#     SPX:     T+0 -1.5% / T+1W -3% / T+3M -5% (盈利下修传导)
+#     HY OAS:  T+0 +10bp / T+1W +25bp / T+3M +80bp (信用累积 → 大头在 T+3M)
+#     GLD:     T+0 -3% / T+1W -5% / T+3M -2% (real rate 冲击, 后随市场消化)
+#   注: 用户反馈 HY spread T+0 +50-100bp 偏高, 实际是 T+3M 周期累积水平
+# ============================================================================
+
+def _impact_matrix(event_type: str, expected_pp: float,
+                   mkt_implied_prob: float | None = None) -> dict:
+    """按 4 情景 × 5 时间维度返回影响矩阵.
+
+    scenarios: hawkish_shock / base_neutral / dovish_surprise / panic_flight
+    horizons:  T+0 / T+1D / T+1W / T+1M / T+3M
+
+    surprise factor: adjusted = base × (1 - mkt_implied_prob)
+      mkt_implied_prob 从 CME FedWatch cache 拉 (只对 FOMC 精确, 其它 event 用 0.5 中性默认)
+      None → 用 0.5 (中性预期, 反应量级 = base × 0.5)
+    """
+    if mkt_implied_prob is None:
+        mkt_implied_prob = 0.5
+    surprise = max(0.0, min(1.0, 1.0 - mkt_implied_prob))
+
+    # 每种 event_type 的量级参数 (per pp cut_prob delta, at 100% surprise, T+1W peak)
+    # 单位: UST 10Y bps / SPX pct / HY OAS bps / GLD pct
+    _BASE_MAGNITUDES = {
+        "FOMC": {
+            "hawkish_shock": {
+                "T+0":  {"ust_10y_bps": +25, "spx_pct": -1.5, "hy_oas_bps": +10, "gld_pct": -3.0, "note": "即时定价冲击"},
+                "T+1D": {"ust_10y_bps": +40, "spx_pct": -2.5, "hy_oas_bps": +20, "gld_pct": -5.0, "note": "曲线短端 up, 长端跟随"},
+                "T+1W": {"ust_10y_bps": +50, "spx_pct": -3.5, "hy_oas_bps": +40, "gld_pct": -6.0, "note": "PEAK 短期反应"},
+                "T+1M": {"ust_10y_bps": +35, "spx_pct": -2.0, "hy_oas_bps": +55, "gld_pct": -4.0, "note": "股票部分回补, 信用继续扩"},
+                "T+3M": {"ust_10y_bps": +20, "spx_pct": -5.0, "hy_oas_bps": +80, "gld_pct": -2.0, "note": "CYCLICAL: 盈利下修 + 信用累积"},
+            },
+            "base_neutral": {
+                "T+0":  {"ust_10y_bps": 0, "spx_pct": 0.0, "hy_oas_bps": 0, "gld_pct": 0.0, "note": "符合预期, 无反应"},
+                "T+1D": {"ust_10y_bps": 0, "spx_pct": +0.3, "hy_oas_bps": 0, "gld_pct": 0.0, "note": "轻微 relief"},
+                "T+1W": {"ust_10y_bps": -5, "spx_pct": +0.5, "hy_oas_bps": -3, "gld_pct": 0.0, "note": "不确定性消除"},
+                "T+1M": {"ust_10y_bps": -10, "spx_pct": +1.0, "hy_oas_bps": -5, "gld_pct": +1.0, "note": "carry 环境"},
+                "T+3M": {"ust_10y_bps": -15, "spx_pct": +2.0, "hy_oas_bps": -10, "gld_pct": +2.0, "note": "低波动率 grind up"},
+            },
+            "dovish_surprise": {
+                "T+0":  {"ust_10y_bps": -20, "spx_pct": +2.0, "hy_oas_bps": -10, "gld_pct": +3.0, "note": "降息意外 → 全线 rally"},
+                "T+1D": {"ust_10y_bps": -30, "spx_pct": +3.0, "hy_oas_bps": -20, "gld_pct": +4.0, "note": "risk-on 扩散"},
+                "T+1W": {"ust_10y_bps": -40, "spx_pct": +4.0, "hy_oas_bps": -30, "gld_pct": +5.0, "note": "PEAK 反弹"},
+                "T+1M": {"ust_10y_bps": -35, "spx_pct": +3.0, "hy_oas_bps": -25, "gld_pct": +4.0, "note": "利多消化中"},
+                "T+3M": {"ust_10y_bps": -50, "spx_pct": +5.0, "hy_oas_bps": -40, "gld_pct": +6.0, "note": "CYCLICAL: 宽松环境显现"},
+            },
+            "panic_flight_to_quality": {
+                # 特殊情景: hike 或 hawkish 后立刻爆金融事件 (SVB/repo 类)
+                "T+1D": {"ust_10y_bps": -50, "spx_pct": -5.0, "hy_oas_bps": +100, "gld_pct": +5.0, "note": "flight to quality: 债 rally, 股崩, 信用扩, 金涨"},
+                "T+3D": {"ust_10y_bps": -80, "spx_pct": -8.0, "hy_oas_bps": +150, "gld_pct": +8.0, "note": "恐慌高峰"},
+                "T+1W": {"ust_10y_bps": -100, "spx_pct": -3.0, "hy_oas_bps": +200, "gld_pct": +10.0, "note": "Fed 若介入 → 股反弹, 金/债继续涨"},
+                "T+1M": {"ust_10y_bps": -80, "spx_pct": -5.0, "hy_oas_bps": +150, "gld_pct": +8.0, "note": "信心受损, 慢修复"},
+                "T+3M": {"ust_10y_bps": -60, "spx_pct": -2.0, "hy_oas_bps": +100, "gld_pct": +5.0, "note": "CYCLICAL: 信心逐步恢复"},
+            },
+        },
+        # CPI/PCE: 类似 FOMC 但量级 ~ 0.7x (间接影响 Fed 决策)
+        "CPI": None,  # 派生自 FOMC × 0.7
+        "PCE": None,  # 派生自 FOMC × 0.7
+        # NFP: 更弱的 rate 传导 (~ 0.5x FOMC), 更强的 growth 传导
+        "NFP": None,  # 派生自 FOMC × 0.5
+    }
+
+    # 派生 CPI/PCE/NFP
+    if event_type in ("CPI", "PCE") and _BASE_MAGNITUDES.get(event_type) is None:
+        base_scenarios = _BASE_MAGNITUDES["FOMC"]
+        scale = 0.7
+        derived = {}
+        for scen, horizons in base_scenarios.items():
+            derived[scen] = {}
+            for h, vals in horizons.items():
+                derived[scen][h] = {
+                    "ust_10y_bps": round(vals["ust_10y_bps"] * scale, 1),
+                    "spx_pct":     round(vals["spx_pct"] * scale, 1),
+                    "hy_oas_bps":  round(vals["hy_oas_bps"] * scale, 1),
+                    "gld_pct":     round(vals["gld_pct"] * scale, 1),
+                    "note":        vals["note"],
+                }
+        matrix = derived
+    elif event_type == "NFP":
+        base_scenarios = _BASE_MAGNITUDES["FOMC"]
+        scale = 0.5
+        derived = {}
+        for scen, horizons in base_scenarios.items():
+            derived[scen] = {}
+            for h, vals in horizons.items():
+                derived[scen][h] = {
+                    "ust_10y_bps": round(vals["ust_10y_bps"] * scale, 1),
+                    "spx_pct":     round(vals["spx_pct"] * scale, 1),
+                    "hy_oas_bps":  round(vals["hy_oas_bps"] * scale, 1),
+                    "gld_pct":     round(vals["gld_pct"] * scale, 1),
+                    "note":        vals["note"],
+                }
+        matrix = derived
+    else:
+        matrix = _BASE_MAGNITUDES.get(event_type, _BASE_MAGNITUDES.get("FOMC"))
+
+    # 应用 surprise factor: 只对"意外"情景放大, 完全预期的情景归 0
+    # 注: panic 情景独立 (概率天然 < 5%, 100% 意外), 不应用 surprise
+    adjusted = {}
+    for scen, horizons in matrix.items():
+        scen_scaler = surprise if scen != "panic_flight_to_quality" else 1.0
+        adjusted[scen] = {"horizons": {}, "scenario_scaler": round(scen_scaler, 2)}
+        for h, vals in horizons.items():
+            adjusted[scen]["horizons"][h] = {
+                "ust_10y_bps": round(vals["ust_10y_bps"] * scen_scaler, 1),
+                "spx_pct":     round(vals["spx_pct"] * scen_scaler, 2),
+                "hy_oas_bps":  round(vals["hy_oas_bps"] * scen_scaler, 1),
+                "gld_pct":     round(vals["gld_pct"] * scen_scaler, 2),
+                "note":        vals["note"],
+            }
+
+    # Action triggers (per scenario × horizon), 硬编码建议动作
+    triggers = {
+        "hawkish_shock": {
+            "T+0":  "MOVE index >140 → 减 IEI 20-30% (立刻)",
+            "T+1W": "长端 10Y +30bps 以上 → 加 GLD 3-5%, TLT 不加不减",
+            "T+3M": "HY OAS +80bps 累积 → risk_off 模式, 减 cloud 50%",
+        },
+        "dovish_surprise": {
+            "T+0":  "long duration rally → 加 IEI/TLT 至 max_pct",
+            "T+1W": "曲线 steepener → SHY 保, TLT 加",
+            "T+3M": "宽松环境 → cloud/growth 加仓, GLD 保 3-5%",
+        },
+        "panic_flight_to_quality": {
+            "T+1D": "KBE/SPY 20d < -10% → panic 模式: 减 ALL equity 到 20%",
+            "T+3D": "触发时: 加 TLT 10% + GLD 8%, 保 30% 现金",
+            "T+1W": "Fed 若干预 → 逐步 re-risk (加 SPX 5%/周)",
+        },
+    }
+    for scen in adjusted:
+        adjusted[scen]["action_triggers"] = triggers.get(scen, {})
+
+    return {
+        "event_type": event_type,
+        "mkt_implied_prob": round(mkt_implied_prob, 2),
+        "surprise_factor": round(surprise, 2),
+        "scenarios": adjusted,
+        "framework_note": "量级参考: hawkish shock 单次 T+1W peak; T+3M 是 cyclical 累积效应. Surprise=100% 时使用原参数, 已被 pricing 时衰减",
+    }
+
+
 def _compute_expected_delta(scenarios: dict, probs: dict) -> tuple[float, str]:
     """Σ prob × delta_pp. 返回 (expected_pp, source)."""
     total = 0.0
@@ -515,6 +668,17 @@ def get_forecast(days_ahead: int = 45) -> dict:
         expected_pp, ev_source = _compute_expected_delta(scenarios, probs)
 
         market_impact = _market_impact_from_expected(event_type, expected_pp)
+
+        # 影响矩阵 (2026-08-29 加, 4 情景 × 5 时间维度 + surprise factor)
+        # 用 dominant scenario 的概率作为 mkt_implied_prob (市场已 pricing 的部分)
+        # FOMC: base_hold 概率通常 60-80% → surprise ≈ 20-40%
+        # 其它: 用 0.5 中性默认
+        dominant_prob = None
+        if probs:
+            # 取最大概率场景作为"市场共识预期"
+            dominant_prob = max(probs.values()) if probs.values() else None
+        impact_matrix = _impact_matrix(event_type, expected_pp, mkt_implied_prob=dominant_prob)
+
         events_out.append({
             "date": ev["date"],
             "days_until": days_until,
@@ -526,7 +690,8 @@ def get_forecast(days_ahead: int = 45) -> dict:
             "range_desc": f"({min_d:+d}pp ~ {max_d:+d}pp)",
             "expected_delta_pp": expected_pp,
             "probability_source": prob_source,
-            "market_impact": market_impact,   # {bond, equity, equity_channel, bond_yield_bps, spx_pct_est}
+            "market_impact": market_impact,   # 老字段: 简单 bond/equity label
+            "impact_matrix": impact_matrix,   # 新字段: 4 情景 × 5 horizon × surprise-adjusted
         })
 
     events_out.sort(key=lambda x: x["days_until"])
