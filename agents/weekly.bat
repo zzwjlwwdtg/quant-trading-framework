@@ -41,6 +41,10 @@ REM Weekly: 26-year liquidity history (MOVE + funding + bank stress, monthly agg
 REM Output: signals/liquidity_history.json (dashboard 26 年图渲染的数据源)
 "%PY%" -X utf8 -u _build_liquidity_history.py
 
+REM Weekly: impact_matrix historical calibration (6 events → model vs actual diff)
+REM Output: stdout - 累积数据, 若 median diff 系统性偏离才手动调 magnitudes
+"%PY%" -X utf8 -u _backtest_impact_matrix.py
+
 REM Weekly: 经济日历动态刷新 (FRED release schedule 官方 API)
 REM Output: signals/economic_calendar.json — events_watch.py 优先读它
 REM 若 FRED 不可用 events_watch 会 fallback 到 hardcoded (可能过时)
