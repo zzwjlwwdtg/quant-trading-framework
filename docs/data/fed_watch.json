@@ -3,80 +3,80 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 16,
+      "days_until": 15,
       "probabilities": {
-        "hold": 38,
-        "hike_25": 62
+        "hold": 35.6,
+        "hike_25": 64.4
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2026-10-28",
-      "days_until": 58,
+      "days_until": 57,
       "probabilities": {
-        "hold": 70,
-        "hike_25": 30
+        "hold": 25.8,
+        "hike_25": 56.5,
+        "hike_50": 17.8
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-12-09",
-      "days_until": 100,
+      "days_until": 99,
       "probabilities": {
-        "hold": 34,
-        "hike_25": 66
+        "hold": 11.4,
+        "hike_25": 39.3,
+        "hike_50": 39.4,
+        "hike_75": 9.9
       },
-      "most_likely": "hike_25",
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 148,
+      "probabilities": {
+        "hold": 8.4,
+        "hike_25": 32.0,
+        "hike_50": 39.4,
+        "hike_75": 17.6,
+        "hike_100": 2.6
+      },
+      "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2026-12-09",
-  "data_snapshot_date": "2026-08-31",
-  "recent_event_impact": "2026-08-28 Warsh Jackson Hole讲话偏鹰，市场将9月加息概率推高至约57%-62%；2026-08-26 July PCE同比3.7%仍高于目标，强化紧缩定价。最近7天内未发现已发布的NFP/CPI/PPI，8月NFP仍待2026-09-04发布；最近CPI为2026-08-12 July CPI同比3.4%，PPI为2026-08-13 July PPI同比4.7%，July NFP为2026-08-07 -23K，弱就业此前压低加息预期但已被Warsh讲话和PCE重新定价覆盖。",
-  "commentary": "数据快照为2026-08-31，已反映2026-08-28 Fed Chair Warsh Jackson Hole讲话之后的市场重定价；近期July NFP为-23K曾提示就业走弱，但July CPI 3.4%、PPI 4.7%和July PCE 3.7%显示通胀仍粘，市场目前转向9月与12月更偏加息的路径。",
+  "implied_terminal_date": "2027-Q2/Q3",
+  "data_snapshot_date": "2026-08-31 11:35 EDT",
+  "recent_event_impact": "最近7天内未见NFP/CPI/PPI/FOMC正式发布；BLS日程显示下一次NFP为2026-09-04、PPI为2026-09-10、CPI为2026-09-11。2026-08-28 Fed主席Kevin Warsh在Jackson Hole发表偏鹰讲话后，CME/Investing.com隐含9月加息概率升至约55%-66%，推高后续会议加息路径定价。",
+  "commentary": "数据快照为2026-08-31 11:35 EDT，已晚于2026-08-28 Warsh讲话，因此反映了该偏鹰事件；最近7天没有新的NFP/CPI/PPI数据，市场主要受Warsh强调通胀仍偏高及油价/地缘通胀风险影响，9月及后续会议转向明显加息预期。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.gate.com/en-us/news/detail/cme-fedwatch-tool-september-fed-rate-hold-probability-at-431-25bps-hike-at-17856908",
-      "type": "cme_fedwatch_report"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_based_probability_snapshot"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures"
+      "url": "https://www.bls.gov/schedule/2026/home.htm",
+      "type": "economic_release_calendar"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
-      "type": "fed_event"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
-    },
-    {
-      "url": "https://www.bls.gov/ppi/",
-      "type": "ppi"
-    },
-    {
-      "url": "https://www.bea.gov/data/personal-consumption-expenditures-price-index",
-      "type": "pce"
+      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-and-nasdaq-set-to-fall-as-brent-oil-tops-90-after-u-s-strike-on-iran/card/chances-of-september-fed-rate-hike-near-66-as-iran-tensions-flare-sYUhR5cCfyLMd4F4ZA0v",
+      "type": "event_impact_crosscheck"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-31T08:28:08+00:00",
+  "fetched_at": "2026-08-31T16:29:31+00:00",
   "_meta": {
-    "cached_at": "2026-08-31T17:28:08.350111",
-    "age_sec": 27297,
+    "cached_at": "2026-09-01T01:29:31.570337",
+    "age_sec": 214,
     "stale": false,
     "refreshing": false
   }

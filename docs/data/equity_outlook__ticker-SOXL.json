@@ -5,57 +5,57 @@
   "analyst_consensus": {
     "n_analysts": 58,
     "recommendation": "strong_buy",
-    "current_price": 217.55,
+    "current_price": 219.22,
     "forward_eps": 15.31,
     "trailing_eps": 7.92,
     "eps_growth_pct": 93.3,
-    "forward_pe": 14.21,
-    "trailing_pe": 27.47,
+    "forward_pe": 14.32,
+    "trailing_pe": 27.68,
     "target_mean": 323.42,
     "target_high": 515.0,
     "target_low": 180.0,
-    "target_upside_pct": 48.7,
+    "target_upside_pct": 47.5,
     "revenue_growth_pct": 105.9,
     "earnings_growth_pct": 127.8,
     "next_earnings": "2026-11-18",
-    "implied_pe_hold": 420.43,
+    "implied_pe_hold": 423.68,
     "implied_pe_hold_upside": 93.3,
     "peg_fair_price": 1428.05,
     "peg_ratio": 0.15,
     "hist_pe_median": 62.94,
     "hist_pe_p25": 44.39,
     "hist_pe_p75": 104.97,
-    "hist_pe_n_days": 726,
+    "hist_pe_n_days": 727,
     "implied_hist_median": 963.36,
     "implied_hist_p25": 679.43,
     "implied_hist_p75": 1606.67,
-    "implied_hist_upside": 342.8,
-    "peer_pe_median": 25.64,
+    "implied_hist_upside": 339.4,
+    "peer_pe_median": 25.1,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "AMD",
-        "pe": 30.13
+        "pe": 30.12
       },
       {
         "ticker": "INTC",
-        "pe": 43.86
+        "pe": 43.67
       },
       {
         "ticker": "AVGO",
-        "pe": 18.91
+        "pe": 18.87
       },
       {
         "ticker": "GOOGL",
-        "pe": 23.37
+        "pe": 22.8
       },
       {
         "ticker": "AMZN",
-        "pe": 25.64
+        "pe": 25.1
       }
     ],
-    "implied_peer_median": 392.45,
-    "implied_peer_upside": 80.4,
+    "implied_peer_median": 384.18,
+    "implied_peer_upside": 75.2,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -203,46 +203,46 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 323.42,
-        "gap_pct": 48.7
+        "gap_pct": 47.5
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 420.43,
+        "implied_price": 423.68,
         "gap_pct": 93.3
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 963.36,
-        "gap_pct": 342.8
+        "gap_pct": 339.4
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 392.45,
-        "gap_pct": 80.4
+        "implied_price": 384.18,
+        "gap_pct": 75.2
       }
     ],
-    "median_gap_pct": 86.8,
+    "median_gap_pct": 84.2,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -56.4,
+    "required_eps_growth_pct": -56.0,
     "consensus_eps_growth_pct": 93.3,
-    "growth_cushion_pct": 149.7,
+    "growth_cushion_pct": 149.3,
     "rationale": [
-      "多口径隐含价中位数高于现价 86.8%",
+      "多口径隐含价中位数高于现价 84.2%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -56.4%，共识为 +93.3%"
+      "历史 PE 口径要求 EPS 增长 -56.0%，共识为 +93.3%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-08-31T09:33:40.282430+00:00",
+  "fetched_at": "2026-08-31T16:03:12.577447+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-08-31T18:33:40.284437",
-    "age_sec": 23369,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-01T01:03:12.647501",
+    "age_sec": 1796,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "SOXL",
   "is_proxy": true
