@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-08-31T02:13:55.037069",
-  "count_total_actions": 142,
+  "as_of": "2026-08-31T14:15:43.269655",
+  "count_total_actions": 143,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -24,29 +24,6 @@
       },
       "yield_reaction_30y": {},
       "event_count_180d": 61
-    },
-    {
-      "tool_key": "fed_dovish_signal",
-      "zh": "Fed 官员鸽派信号",
-      "owner": "Fed (口头)",
-      "feasibility": "high",
-      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
-      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "fed_dovish_signal",
-        "action_type": "signaled",
-        "date": "2026-08-18",
-        "actor": "Fed",
-        "amount_desc": "9月加息概率降至30.6%",
-        "commentary": "加息概率下降利好久期资产，但只是市场定价变化。",
-        "verbatim": "Fed September Rate Hike Odds Fall to 30.6% Ahead of FOMC Minutes",
-        "source": "GoogleNews: FOMC minutes rate expectations",
-        "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE93Rk9XZ0lBYkVCSUF3UWpHdl90N0pqTWZnT194anc2OGlRUGJCLUVZdFJpSmFTQUpLUEZSZXlaUF84NjZ2MHdfQm1uWTIzb0NMVDBsQzR6aThHTnkyVW92LU5RaUo4czY4VUpv?oc=5",
-        "confidence": 5
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 2
     },
     {
       "tool_key": "qra_wording",
@@ -164,6 +141,29 @@
       "event_count_180d": 44
     },
     {
+      "tool_key": "fed_dovish_signal",
+      "zh": "Fed 官员鸽派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
+      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
+      "status": "被否",
+      "last_action": {
+        "tool_key": "fed_dovish_signal",
+        "action_type": "opposed",
+        "date": "2026-08-26",
+        "actor": "Warsh",
+        "amount_desc": "",
+        "commentary": "若Warsh受压但坚持偏鹰框架，会削弱联储配合救债市的预期。",
+        "verbatim": "Dollar and bond markets 'on edge' ahead of Jackson Hole as Bessent's market intervention piles pressure on Warsh",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNU0hZSlJGTWhSN1dwLXpFZE41QXo1eGZXNEloblBob21wN28waFdjTjNKRFNVMDJJYkEzN2RsYy1Kb3Nib0JVMlotS2o5aHFPYzhmNGlZYjJSMTlaSzVWRUFKcTV4N1BpNGduVFFfR09zRHBscVBZbFdqSzBxNDlsQm1zX3M0NGxlcEVyWHBR0gGTAUFVX3lxTE02bThtd3JFb01NS1FtSEZGdWtoM1BKeHhJU3FNWWpPeHNVSnV5OElRQ29MOWFwWDRid19NdjFFQzdrWGduQWFwSkFHSEFZRnlBSFU3elhIbUU2VlBTSXQ1Y1hIYWtWcVd1VVNxQnpqNWxVbFB0Rnk1elZQSzY0Vm9WSThHRTlaaWYtc3QxVDBOZ2dtbw?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 3
+    },
+    {
       "tool_key": "fx_intervention",
       "zh": "汇市干预 (支撑日元)",
       "owner": "Treasury/G7",
@@ -211,6 +211,5 @@
       "yield_reaction_30y": {},
       "event_count_180d": 0
     }
-  ],
-  "warning": "cli_all_batches_empty"
+  ]
 }
