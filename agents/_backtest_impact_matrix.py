@@ -172,8 +172,42 @@ def _compute_actual_moves(event_date: date, horizons_days: dict[str, int]) -> di
 
 HORIZONS = {"T+0": 1, "T+1D": 2, "T+1W": 7, "T+1M": 30, "T+3M": 90}
 
+# 输出到 signals/ 供 ai_prompt / dashboard 未来消费 (memory: 孤儿报告清理)
+_OUT_PATH = None
+try:
+    from pathlib import Path as _Path
+    from config import SIGNALS_DIR as _SD
+    _OUT_PATH = _Path(_SD) / "impact_matrix_calibration.md"
+except Exception:
+    pass
+
+_report_lines: list[str] = []
+
+
+def _tee_print(line: str = "") -> None:
+    print(line)
+    _report_lines.append(line)
+
 
 def run():
+    # 覆盖 print 以同时收集到 report 文件
+    global print
+    _orig_print = print
+    print = _tee_print  # noqa: F841 — intentional shadowing for tee
+    try:
+        _run_impl()
+    finally:
+        print = _orig_print
+        if _OUT_PATH:
+            try:
+                _OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+                _OUT_PATH.write_text("\n".join(_report_lines), encoding="utf-8")
+                _orig_print(f"\n[report] 写入 {_OUT_PATH}")
+            except Exception as _e:
+                _orig_print(f"[report] 写入失败: {_e}")
+
+
+def _run_impl():
     print("=" * 100)
     print("Impact Matrix 历史校准回测 (model prediction vs 实际市场反应)")
     print("=" * 100)

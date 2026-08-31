@@ -19,12 +19,13 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from config import SIGNALS_DIR
+from config import SIGNALS_DIR, TICKERS as _CFG_TICKERS
 
 
 CACHE_TTL_SEC = 3600
-# 默认分析的核心+宏观 5 个标的
-DEFAULT_TICKERS = ["TQQQ", "SOXL", "DRAM", "GLD", "SPY", "QQQ"]
+# 从 config.TICKERS 派生 (去 "US." 前缀), + GLD (hedge) + SPY/QQQ (market-wide gamma)
+# 若 config.TICKERS 变动, option_walls 自动跟进; SPY/QQQ 固定作 market benchmark
+DEFAULT_TICKERS = [t.replace("US.", "") for t in _CFG_TICKERS] + ["GLD", "SPY", "QQQ"]
 
 # Leveraged ETF option walls are useful, but the deeper gamma pool often sits
 # in the unlevered proxy. Convert proxy wall levels back to the leveraged ETF's
@@ -555,6 +556,8 @@ def _convert_level(
         "proxy_pct": round(proxy_pct * 100, 2),
         "leveraged_level": round(leveraged_level, 2),
         "leveraged_pct": round(leveraged_pct, 2),
+        "mapping_method": "current_spot_daily_reset",
+        "path_dependent": True,
     }
 
 
@@ -798,7 +801,7 @@ def format_walls_report(tickers: list[str] | None = None) -> list[str]:
             )
         adjusted_groups = get_underlying_adjusted_walls(tk)
         if adjusted_groups:
-            lines.append(f"    本体期权墙换算 (proxy -> {tk}; 日内近似):")
+            lines.append(f"    本体期权墙换算 (proxy -> {tk}; 即时现价锚定):")
             for group in adjusted_groups:
                 proxy = group.get("proxy", "?")
                 label = group.get("label", proxy)
@@ -820,6 +823,11 @@ def format_walls_report(tickers: list[str] | None = None) -> list[str]:
                         lines.append(f"        {aw.get('expiry')}: {aw.get('error')}")
                         continue
                     lines.append(f"        {aw.get('expiry')} {aw.get('category')} ({aw.get('days')}d):")
+                    if (aw.get("days") or 0) >= 2:
+                        lines.append(
+                            "          ⚠ 长期限仅作当前参考：杠杆 ETF 每日重置，"
+                            "实际价会受波动折损和路径影响；触发时须按最新现价重算"
+                        )
                     acw = aw.get("call_wall")
                     apw = aw.get("put_wall")
                     amp = aw.get("max_pain")

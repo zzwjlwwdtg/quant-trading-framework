@@ -1,8 +1,7 @@
 """
-Backtest Engine — 三档系统回测：
+Backtest Engine — 两档系统回测：
   · Lite  : 信号方向命中率（5/10 天后价格 vs 信号方向）
   · Mid   : 完整 trader 模拟（10% 仓位、REDUCE 50%、kickout）+ P&L 曲线 vs B&H
-  · Heavy : with-quant vs without-quant 对比（量化加分到底贡献多少）
 
 数据源 yfinance daily K（OHLCV）。简化假设：
   · regime 固定 bull_trending（避免引入未来 SOX 因子）
@@ -33,7 +32,10 @@ from trading_contracts import (
 
 
 # ── 配置 ────────────────────────────────────────────────────────────────────
-TICKERS = ["TQQQ", "SOXL", "GLD", "DRAM", "MULL"]
+# 从 config 派生: TICKERS + GLD (backtest 需覆盖 hedge 基准)
+# 修改交易品种应改 config.TICKERS, 这里自动跟进
+from config import TICKERS as _CFG_TICKERS
+TICKERS = [t.replace("US.", "") for t in _CFG_TICKERS] + ["GLD"]
 BACKTEST_DAYS = 60      # 回测最近 N 个交易日
 FORWARD_DAYS  = [1, 5, 10]   # 信号后的 N 天检查
 INITIAL_CASH  = 1_500_000    # Mid 模拟起始资金
@@ -244,14 +246,11 @@ def run_lite(tickers=None, days=BACKTEST_DAYS) -> dict:
             df_test = df.iloc[-days:]
         events = []
         full = "US." + tk
-        # 把当前 picks/quant 引到那一天会用未来信息，所以全跑时手动关掉 quant
         for i in range(len(df_test) - 1):
             row = df_test.iloc[i]
             try:
                 mkt = build_mkt(full, row)
                 d = get_decision(mkt, fake_events, fake_macro,
-                                 quant={"buy_score":0,"sell_score":0,"n_rules":0,
-                                        "buy_hits":[],"sell_hits":[]},
                                  board_regime="bull_trending")
             except Exception:
                 continue
@@ -351,7 +350,7 @@ class SimAccount:
         return True
 
 
-def run_mid(tickers=None, days=BACKTEST_DAYS, use_quant=True) -> dict:
+def run_mid(tickers=None, days=BACKTEST_DAYS) -> dict:
     """完整模拟：每天对每个 ticker 算决策，按 trader 逻辑模拟下单。"""
     from decision_agent import _conf_scale, get_decision
     tickers = tickers or TICKERS
@@ -365,7 +364,8 @@ def run_mid(tickers=None, days=BACKTEST_DAYS, use_quant=True) -> dict:
     TARGET_PORT_VOL = {
         "bull_extended":  0.30, "bull_pulling":  0.25,
         "bull_trending":  0.22, "bull_chop":     0.15,
-        "neutral":        0.12, "overheated":    0.08,
+        "neutral_chop":   0.10, "neutral":        0.12, "overheated":    0.08,
+        "risk_off":      0.08,
         "recession_risk": 0.05, "crisis":        0.00,
     }
     ASSET_VOL = {"US.TQQQ": 0.60, "US.SOXL": 0.80, "US.GLD": 0.15}
@@ -449,9 +449,6 @@ def run_mid(tickers=None, days=BACKTEST_DAYS, use_quant=True) -> dict:
         start_price = float(histories[tk].loc[dates[0], "close"])
         bh_shares[tk] = bh_alloc / start_price
 
-    quant_kwargs = {} if use_quant else {
-        "quant": {"buy_score":0,"sell_score":0,"n_rules":0,"buy_hits":[],"sell_hits":[]}
-    }
     for d in dates:
         prices_today = {tk: float(histories[tk].loc[d, "close"]) for tk in tickers}
         power_today = account.value(prices_today)
@@ -462,7 +459,7 @@ def run_mid(tickers=None, days=BACKTEST_DAYS, use_quant=True) -> dict:
             try:
                 mkt = build_mkt(full, row)
                 dec = get_decision(mkt, fake_events, fake_macro,
-                                   board_regime=regime_today, **quant_kwargs)
+                                   board_regime=regime_today)
             except Exception:
                 continue
             action = dec.get("action", "HOLD")
@@ -569,7 +566,6 @@ def run_mid(tickers=None, days=BACKTEST_DAYS, use_quant=True) -> dict:
     sys_return = (nav_series.iloc[-1] - INITIAL_CASH) / INITIAL_CASH * 100
 
     return {
-        "use_quant":  use_quant,
         "days":       len(dates),
         "n_trades":   len(account.history),
         "final_nav":  nav_series.iloc[-1],
@@ -584,7 +580,7 @@ def run_mid(tickers=None, days=BACKTEST_DAYS, use_quant=True) -> dict:
 
 def report_mid(result: dict, label: str = "Mid") -> list[str]:
     lines = ["", "+" + "="*74 + "+",
-             f"|  {label} 回测：完整 trader 模拟 (use_quant={result['use_quant']})".ljust(75) + "|",
+             f"|  {label} 回测：完整 trader 模拟".ljust(75) + "|",
              "+" + "="*74 + "+"]
     lines.append(f"  回测天数:   {result['days']}")
     lines.append(f"  总交易笔数: {result['n_trades']}")
@@ -597,39 +593,6 @@ def report_mid(result: dict, label: str = "Mid") -> list[str]:
     return lines
 
 
-# ── Heavy: with-quant vs without-quant ablation ──────────────────────────
-def run_heavy(tickers=None, days=BACKTEST_DAYS) -> dict:
-    """跑两遍 Mid：带量化 vs 不带量化，对比 quant_signal 的真实贡献。"""
-    with_quant = run_mid(tickers, days, use_quant=True)
-    no_quant   = run_mid(tickers, days, use_quant=False)
-    return {
-        "with_quant": with_quant,
-        "no_quant":   no_quant,
-        "quant_alpha": with_quant["sys_return"] - no_quant["sys_return"],
-    }
-
-
-def report_heavy(result: dict) -> list[str]:
-    lines = ["", "+" + "="*74 + "+",
-             "|  Heavy 回测：带/不带 quant_signal 对比 (量化进化层的真实贡献)        |",
-             "+" + "="*74 + "+"]
-    w, n = result["with_quant"], result["no_quant"]
-    lines.append(f"  {'指标':<14} {'with_quant':>14} {'no_quant':>14} {'差':>14}")
-    lines.append(f"  {'-'*14} {'-'*14} {'-'*14} {'-'*14}")
-    lines.append(f"  {'总交易笔数':<14} {w['n_trades']:>14} {n['n_trades']:>14} {w['n_trades']-n['n_trades']:>+14}")
-    lines.append(f"  {'系统收益 %':<14} {w['sys_return']:>+13.2f}% {n['sys_return']:>+13.2f}% {result['quant_alpha']:>+13.2f}%")
-    lines.append(f"  {'最大回撤 %':<14} {w['max_dd']:>+13.2f}% {n['max_dd']:>+13.2f}% {w['max_dd']-n['max_dd']:>+13.2f}%")
-    lines.append(f"  {'alpha vs B&H':<14} {w['alpha']:>+13.2f}% {n['alpha']:>+13.2f}% {w['alpha']-n['alpha']:>+13.2f}%")
-    lines.append("")
-    if abs(result["quant_alpha"]) < 0.5:
-        lines.append("  💭 quant 贡献近 0 — 进化规则在这段时间几乎不影响收益")
-    elif result["quant_alpha"] > 0:
-        lines.append(f"  ✅ quant 贡献正 {result['quant_alpha']:+.2f}% — 进化规则有用")
-    else:
-        lines.append(f"  ⚠ quant 贡献负 {result['quant_alpha']:+.2f}% — 进化规则反而拖累，需要重训")
-    return lines
-
-
 # ── 主流程 ────────────────────────────────────────────────────────────────
 def main():
     out_lines = []
@@ -637,22 +600,17 @@ def main():
     out_lines.append("")
     out_lines.append(f"回测窗口: 过去 {BACKTEST_DAYS} 个交易日 (yfinance daily K)")
     out_lines.append(f"标的: {', '.join(TICKERS)}")
-    out_lines.append(f"起始资金 (Mid/Heavy): ${INITIAL_CASH:,}")
+    out_lines.append(f"起始资金 (Mid): ${INITIAL_CASH:,}")
     out_lines.append("")
 
-    print("[1/3] Lite 信号准确率...")
+    print("[1/2] Lite 信号准确率...")
     lite_events = run_lite()
     for line in report_lite(lite_events):
         print(line); out_lines.append(line)
 
-    print("\n[2/3] Mid 完整模拟...")
-    mid_result = run_mid(use_quant=True)
-    for line in report_mid(mid_result, label="Mid (with quant)"):
-        print(line); out_lines.append(line)
-
-    print("\n[3/3] Heavy ablation...")
-    heavy_result = run_heavy()
-    for line in report_heavy(heavy_result):
+    print("\n[2/2] Mid 完整模拟...")
+    mid_result = run_mid()
+    for line in report_mid(mid_result):
         print(line); out_lines.append(line)
 
     # 写入 markdown

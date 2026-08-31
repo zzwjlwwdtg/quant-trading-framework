@@ -40,6 +40,8 @@ import math
 from datetime import datetime, timedelta
 from typing import Optional
 
+from config import MOVE_WARN, MOVE_CRISIS, MOVE_EXTREME
+
 
 # Yahoo Finance yield index Close is already a percentage value.
 _YF_YIELDS = {
@@ -456,13 +458,13 @@ def get_bond_monitor() -> dict:
             if len(move_hist) >= 21:
                 move_20d = float(move_hist["Close"].iloc[-21])
                 macro_context["move_20d_delta"] = round(move_val - move_20d, 1)
-            # 阈值: <80 calm, 80-100 normal, 100-140 elevated, 140+ crisis, 180+ extreme
-            if move_val >= 180:
+            # 阈值来自 config.py (单一源): MOVE_WARN / MOVE_CRISIS / MOVE_EXTREME
+            if move_val >= MOVE_EXTREME:
                 _warn("bad",  f"MOVE {move_val} 债市极端恐慌 (2020-03 / 2023-SVB 级别)", "move_extreme")
-            elif move_val >= 140:
-                _warn("bad",  f"MOVE {move_val} 债券波动率进入 crisis 区 (>140)", "move_crisis")
-            elif move_val >= 100:
-                _warn("warn", f"MOVE {move_val} 债券波动率抬升 (>100 = 期限对冲变贵)", "move_elevated")
+            elif move_val >= MOVE_CRISIS:
+                _warn("bad",  f"MOVE {move_val} 债券波动率进入 crisis 区 (>{MOVE_CRISIS})", "move_crisis")
+            elif move_val >= MOVE_WARN:
+                _warn("warn", f"MOVE {move_val} 债券波动率抬升 (>{MOVE_WARN} = 期限对冲变贵)", "move_elevated")
     except Exception:
         pass  # MOVE 拉取失败, 静默降级 (yfinance ^MOVE 偶尔无响应)
 

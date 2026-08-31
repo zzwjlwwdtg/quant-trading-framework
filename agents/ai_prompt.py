@@ -1,5 +1,5 @@
 """
-AI Prompt Builder — 把今日 log 包成一份完整提问稿，给 Claude.ai/ChatGPT 网页用。
+AI Prompt Builder — 把今日 log 包成完整提问稿，供本地 AI CLI 或网页使用。
 
 不调 API，零成本。流程：
   1. 读取今日 log（logs/run_YYYYMMDD.log）
@@ -8,7 +8,7 @@ AI Prompt Builder — 把今日 log 包成一份完整提问稿，给 Claude.ai/
   4. 保存到 signals/ai_prompt_YYYY-MM-DD.md
   5. 同步复制到 Windows 剪贴板（subprocess clip）
 
-用户打开 Claude.ai / ChatGPT，Ctrl+V 即可。
+用户也可打开 Claude.ai / ChatGPT，Ctrl+V 手动使用。
 
 独立调用:
   python ai_prompt.py [review|morning|deep]
@@ -24,8 +24,18 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from config import BASE_DIR, SIGNALS_DIR
+
+
+# 交易日志、AI 分析和自动挂单目标都属于美股交易日。运行机器在 JST，
+# 若直接使用本地日期，纽约盘中跨过日本午夜后会突然读不到刚生成的目标。
+ET = ZoneInfo("America/New_York")
+
+
+def _market_date() -> str:
+    return datetime.now(ET).date().isoformat()
 
 
 # ── ANSI 颜色 (Windows CMD UTF-8 模式下可用) ────────────────────────────────
@@ -84,7 +94,7 @@ _NEUTRAL_KW = [
 
 
 def _colorize_markdown(text: str) -> str:
-    """把 Claude markdown 输出转成 ANSI 着色 + 去掉 markdown 标记的 CMD 友好版本。"""
+    """把 AI markdown 输出转成 ANSI 着色 + 去掉 markdown 标记的 CMD 友好版本。"""
     out = text
 
     # 表格分隔行 |---|---| 直接删（CMD 显示乱）
@@ -209,7 +219,6 @@ _JA_TERM_REPLACEMENTS = [
     ("训练胜率", "訓練勝率"),
     ("胜率", "勝率"),
     ("回测", "バックテスト"),
-    ("规则进化", "ルール進化"),
     ("规则", "ルール"),
     ("触发", "発火"),
     ("样本", "サンプル"),
@@ -239,7 +248,7 @@ def _is_ja_mode() -> bool:
 
 def _sanitize_ja_text(text: str) -> str:
     """
-    Japanese mode is fed by Chinese-heavy system logs, so keep Claude's prompt
+    Japanese mode is fed by Chinese-heavy system logs, so keep the AI prompt
     and final answer from leaking Chinese trading terms such as "夜盘".
     """
     out = text
@@ -249,9 +258,9 @@ def _sanitize_ja_text(text: str) -> str:
 
 
 def print_analysis(text: str, log_path: str | Path | None = None,
-                   provider: str = "Claude") -> None:
+                   provider: str = "Codex") -> None:
     """
-    打印 Claude 分析结果：
+    打印 AI 分析结果：
       - 控制台：带 ANSI 颜色，markdown 符号去掉
       - 文件：纯文本去 markdown（避免控制台 ANSI 转义码污染日志文件）
     """
@@ -385,13 +394,13 @@ log の各セッション・データには `[2026-05-18 昨日アフター(終�
 ⚠ **根拠タグ規則（重要）**：
 各結論・提案・価格水準の末尾に、参照したシステム block を角括弧で明記すること。
 **block 番号**：
-  ① 基礎レポート  ② ルール進化  ③ 勝率ランキング  ④ シグナル実況(共振)
-  ⑤ イベント・カレンダー  ⑥ Trump signal  ⑦ オプション・ウォール
-  ⑧ MACD+ADX  ⑨ SOX PCA
+  ① 基礎レポート  ② 固定テクニカル形態の勝率  ③ シグナル実況(共振)
+  ④ イベント・カレンダー  ⑤ Trump signal  ⑥ オプション・ウォール
+  ⑦ MACD+ADX  ⑧ SOX PCA
 **書式**：
-- 単一根拠：`[根拠: ④RSI 51 中立]`
-- 複数根拠：`[根拠: ④共振 5多 + ⑦Call Wall $82 + ⑨SOX MKT +4.06%]`
-- 矛盾根拠：`[根拠: ④共振 強気 vs ⑥Trump GEOPOLITICAL 弱気]`
+- 単一根拠：`[根拠: ③RSI 51 中立]`
+- 複数根拠：`[根拠: ③共振 5多 + ⑥Call Wall $82 + ⑧SOX MKT +4.06%]`
+- 矛盾根拠：`[根拠: ③共振 強気 vs ⑤Trump GEOPOLITICAL 弱気]`
 - 根拠なし（純推論）：`[根拠: 推論]`
 
 ⚠ **フォーマット要件**：
@@ -478,11 +487,12 @@ log の各セッション・データには `[2026-05-18 昨日アフター(終�
    - どのETFが1-4時間の短期トレードに適する？ロング/ショート？理由は？
    - エントリー価格、損切り価格、利確目標（数値を明確に）
 
-5. **バックテスト高勝率ルール**
+5. **固定テクニカルルールのバックテスト**
    - log の「テクニカル形態勝率ランキング」または「本日発火ルール」から、今日の局面に関係する高勝率ルールを引用する
    - ルール名、方向（買い/利確/警戒）、テスト勝率、サンプル数N、平均リターンがあれば必ず書く
    - 目安：勝率65%以上、または勝率55%以上かつサンプル数N>=3を優先
    - 高勝率ルールが発火していない場合は「本日は高勝率ルールの発火なし」と明記し、無理に推奨しない
+   - 対象は固定された説明可能なテクニカルルールのみ。自動進化・ランダム交叉ルールは使用しない
    - バックテストは保証ではなく、共振・イベント・プレマーケットと合わせて使う、と一言添える
 
 6. **執行プラン**（2層に分けて）
@@ -492,13 +502,13 @@ log の各セッション・データには `[2026-05-18 昨日アフター(終�
 ⚠ **根拠タグ規則（重要）**：
 各結論・提案・価格水準の末尾に、参照したシステム block を角括弧で明記すること。
 **block 番号**：
-  ① 基礎レポート  ② ルール進化  ③ 勝率ランキング  ④ シグナル実況(共振)
-  ⑤ イベント・カレンダー  ⑥ Trump signal  ⑦ オプション・ウォール
-  ⑧ MACD+ADX  ⑨ SOX PCA
+  ① 基礎レポート  ② 固定テクニカル形態の勝率  ③ シグナル実況(共振)
+  ④ イベント・カレンダー  ⑤ Trump signal  ⑥ オプション・ウォール
+  ⑦ MACD+ADX  ⑧ SOX PCA
 **書式**：
-- 単一根拠：`[根拠: ④PSAR 弱気転換]`
-- 複数根拠：`[根拠: ④PSAR 弱気 + ⑦Put Wall $72 + ⑥Trump 弱気]`
-- 矛盾根拠：`[根拠: ④共振 強気 vs ⑥Trump 地政学 弱気]`
+- 単一根拠：`[根拠: ③PSAR 弱気転換]`
+- 複数根拠：`[根拠: ③PSAR 弱気 + ⑥Put Wall $72 + ⑤Trump 弱気]`
+- 矛盾根拠：`[根拠: ③共振 強気 vs ⑤Trump 地政学 弱気]`
 - 純推論：`[根拠: 推論]`
 
 ⚠ **フォーマット要件**：
@@ -536,10 +546,10 @@ log の各セッション・データには `[2026-05-18 昨日アフター(終�
 
 ⚠ **根拠タグ規則（重要）**：
 各結論・価格水準・確率の末尾に、参照したシステム block を角括弧で明記。
-**block 番号**：① 基礎レポート ② ルール進化 ③ 勝率ランキング ④ シグナル実況(共振)
-              ⑤ イベント・カレンダー ⑥ Trump signal ⑦ オプション・ウォール
-              ⑧ MACD+ADX ⑨ SOX PCA
-**書式**：`[根拠: ④PSAR 弱気 + ⑦Put Wall $72]` / 矛盾は `vs` / 純推論は `[根拠: 推論]`
+**block 番号**：① 基礎レポート ② 固定テクニカル形態の勝率 ③ シグナル実況(共振)
+              ④ イベント・カレンダー ⑤ Trump signal ⑥ オプション・ウォール
+              ⑦ MACD+ADX ⑧ SOX PCA
+**書式**：`[根拠: ③PSAR 弱気 + ⑥Put Wall $72]` / 矛盾は `vs` / 純推論は `[根拠: 推論]`
 
 ⚠ **フォーマット要件**：
 - markdown テーブル禁止（CMD で崩れる）
@@ -621,12 +631,12 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
 ⚠ **依据标注规则（重要）**：
 每个具体结论 / 建议 / 价位都必须在末尾用方括号标注引用了哪些系统模块（block）。
 **系统 block 编号**：
-  ① 基础报告  ② 规则进化  ③ 胜率排行  ④ 信号实况(共振)
-  ⑤ 事件日历  ⑥ Trump signal  ⑦ 期权墙  ⑧ MACD+ADX  ⑨ SOX PCA
+  ① 基础报告  ② 固定技术形态胜率  ③ 信号实况(共振)
+  ④ 事件日历  ⑤ Trump signal  ⑥ 期权墙  ⑦ MACD+ADX  ⑧ SOX PCA
 **标注格式**：
-- 单依据：`[依据: ④RSI 51 中性]`
-- 多依据：`[依据: ④共振 5多 + ⑦Call Wall $82 + ⑨SOX MKT +4.06%]`
-- 矛盾依据：`[依据: ④共振偏多 vs ⑥Trump GEOPOLITICAL bearish]`
+- 单依据：`[依据: ③RSI 51 中性]`
+- 多依据：`[依据: ③共振 5多 + ⑥Call Wall $82 + ⑧SOX MKT +4.06%]`
+- 矛盾依据：`[依据: ③共振偏多 vs ⑤Trump GEOPOLITICAL bearish]`
 - 纯推理无 block 支持：`[依据: 推断]`
 
 ⚠ **格式要求**：
@@ -715,11 +725,12 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
    - 哪只 ETF 适合 1-4 小时短线？做多还是做空？为什么？
    - 入场价位、止损价位、目标价位（必须明确数字）
 
-5. **高胜率回测规则**
+5. **固定技术规则回测**
    - 从 log 的「技术形态胜率排行」或「今日触发规则」里，引用今天相关的高胜率规则
    - 必须写清：规则名、方向（买入/减仓/警戒）、测试胜率、样本数N、如有平均收益也写上
    - 优先引用：胜率≥65%，或胜率≥55% 且样本数N>=3 的规则
    - 如果今天没有高胜率规则触发，要明确说「今天没有高胜率规则触发」，不要硬凑结论
+   - 只允许引用固定、可解释的技术规则；系统不再使用自动进化或随机交叉规则
    - 提醒：回测不是保证，只能和共振、事件、盘前走势一起判断
 
 6. **执行建议**（分两层）
@@ -734,24 +745,24 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
 ⚠ **依据标注规则（重要）**：
 每个具体结论 / 建议 / 价位都必须在末尾用方括号标注引用了哪些系统模块（block）。
 **系统 block 编号**：
-  ① 基础报告  ② 规则进化  ③ 胜率排行  ④ 信号实况(共振)
-  ⑤ 事件日历  ⑥ Trump signal  ⑦ 期权墙  ⑧ MACD+ADX  ⑨ SOX PCA
-  ⑩ 黄金宏观 (real_rate / DXY / WALCL / FOMC / 10Y / 油价)
-  ⑪ 期权风险（三巫日 / GEX / Gamma 挤压）— 来自 events.options_risk
-  ⑫ JP 博主推荐 — 日股 YouTuber 推荐标的，含星标 / 看好逻辑 / 历史胜率
+  ① 基础报告  ② 固定技术形态胜率  ③ 信号实况(共振)
+  ④ 事件日历  ⑤ Trump signal  ⑥ 期权墙  ⑦ MACD+ADX  ⑧ SOX PCA
+  ⑨ 黄金宏观 (real_rate / DXY / WALCL / FOMC / 10Y / 油价)
+  ⑩ 期权风险（三巫日 / GEX / Gamma 挤压）— 来自 events.options_risk
+  ⑪ JP 博主推荐 — 日股 YouTuber 推荐标的，含星标 / 看好逻辑 / 历史胜率
 **标注格式**：
-- 单依据：`[依据: ④PSAR 转空]`
-- 多依据：`[依据: ④PSAR 转空 + ⑦Put Wall $72 + ⑥Trump bearish]`
-- 矛盾依据：`[依据: ④共振 5多0空 vs ⑥Trump GEOPOLITICAL bearish]`
+- 单依据：`[依据: ③PSAR 转空]`
+- 多依据：`[依据: ③PSAR 转空 + ⑥Put Wall $72 + ⑤Trump bearish]`
+- 矛盾依据：`[依据: ③共振 5多0空 vs ⑤Trump GEOPOLITICAL bearish]`
 - 纯推理无 block 支持：`[依据: 推断]`
-例句：「TQQQ 短线偏空 [依据: ④PSAR 转空 + ⑥Trump GEOPOLITICAL large bearish + ⑦Put Wall $72]」
-**⑩ 黄金宏观特别说明**（对 GLD 决策）：
+例句：「TQQQ 短线偏空 [依据: ③PSAR 转空 + ⑤Trump GEOPOLITICAL large bearish + ⑥Put Wall $72]」
+**⑨ 黄金宏观特别说明**（对 GLD 决策）：
 - 系统不再用 keyword 关键词推断黄金 bias，而是用 6 因子加权聚合（实际利率最重）
 - 回测发现宏观直接驱动决策会退化 → 系统决策仍以技术面为主
-- 你看到 ⑩ banner 时，**用宏观信号作为"基本面背景"**给用户解读"宏观 vs 技术分歧"
-- 例：「GLD 当前宏观转 bullish（real_rate 低 + Fed 扩表 + DXY 平），但技术 PSAR 仍空头 + MA 空排 — 等技术确认（PSAR 翻多 + 收回 MA20）再考虑入场 [依据: ⑩real_rate 2.16 mid + WALCL 扩表 vs ④PSAR 空 + MA 空排]」
+- 你看到 ⑨ banner 时，**用宏观信号作为"基本面背景"**给用户解读"宏观 vs 技术分歧"
+- 例：「GLD 当前宏观转 bullish（real_rate 低 + Fed 扩表 + DXY 平），但技术 PSAR 仍空头 + MA 空排 — 等技术确认（PSAR 翻多 + 收回 MA20）再考虑入场 [依据: ⑨real_rate 2.16 mid + WALCL 扩表 vs ③PSAR 空 + MA 空排]」
 
-**⑫ JP 博主推荐特别说明**（日股 YouTuber 跟踪）：
+**⑪ JP 博主推荐特别说明**（日股 YouTuber 跟踪）：
 - 跟踪 higedura24 / SHO1112 / LA_Banker / NaNaShuoMeiGu / RhinoFinance 等日语博主
 - 每只标的有星标（按"提及次数 × 涉及创作者数"）：
   · ★★★★★：≥3 创作者 OR ≥5 mentions（最高共识）
@@ -765,7 +776,7 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
 - **特别强调**：≥★★★ 的标的（多博主共识）必须列入早盘可参考清单，给具体看好逻辑
   + 创作者胜率 + 回测命中。≤★★ 的提及一笔带过即可
 - 日股代码 JP.XXXX，需要 moomoo OpenD 日股报价（如未订阅则仅参考）
-- 例：「JP.7203 丰田 ★★★★ 多头共识 [依据: ⑫higedura24+SHO1112 共 4 mentions / 历史 5d 67% / 20d 71% / 逻辑: 円安 + 出来高强 + 个股盈利预期上调]」
+- 例：「JP.7203 丰田 ★★★★ 多头共识 [依据: ⑪higedura24+SHO1112 共 4 mentions / 历史 5d 67% / 20d 71% / 逻辑: 円安 + 出来高强 + 个股盈利预期上调]」
 - events.options_risk 含三巫日识别 (phase: today/adjacent/approaching/far) + 每只标的 GEX 代理方向
 - **三巫日（每季 3/6/9/12 月第三个周五）gamma 集中到期** — Claude 必须明示
 - GEX 方向解读：
@@ -802,6 +813,8 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
 - `entry_ref`: 你说的"等回踩到 $X"价位。如果建议立即入场就给当前价，如果不建议入场给 null
 - `stop_ref`: 你说的"跌破 $Y 走"价位。**必须低于 entry_ref**。无明确技术止损位给 null
 - `use_limit`: 等回踩到 entry_ref 才进 = true；立即吃单 = false
+- **杠杆 ETF 价格单位（强制）**：TQQQ 引用 QQQ 期权墙、SOXL 引用 SOXX/SMH 期权墙时，QQQ/SOXX/SMH 的 strike 只能作为结构触发条件；`entry_ref` / `stop_ref` / `target_ref` 必须填写日志中 `=> TQQQ≈$X` / `=> SOXL≈$X` 的换算价，严禁直接填底层 ETF 的原始 strike；若日志没有换算价，对应字段填 `null`，不能猜
+- **每日重置与折损**：3x ETF 的换算是触发时的现价锚定近似。期限超过 1 天必须提示波动折损和路径依赖；挂单优先使用最新即时换算价，不把较长期到期估算当成精确成交价
 - 所有数字带 2 位小数，不带 $ 符号
 - 标的全部输出（包括 hold 的，方便系统对比）
 
@@ -841,9 +854,9 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
 
 ⚠ **依据标注规则（重要）**：
 每个具体结论 / 价位 / 概率都必须在末尾用方括号标注引用的系统模块（block）。
-**block 编号**：① 基础报告 ② 规则进化 ③ 胜率排行 ④ 信号实况(共振) ⑤ 事件日历
-              ⑥ Trump signal ⑦ 期权墙 ⑧ MACD+ADX ⑨ SOX PCA
-**标注格式**：`[依据: ④PSAR 转空 + ⑦Put Wall $72]` / 矛盾用 `vs` / 纯推理用 `[依据: 推断]`
+**block 编号**：① 基础报告 ② 固定技术形态胜率 ③ 信号实况(共振) ④ 事件日历
+              ⑤ Trump signal ⑥ 期权墙 ⑦ MACD+ADX ⑧ SOX PCA
+**标注格式**：`[依据: ③PSAR 转空 + ⑥Put Wall $72]` / 矛盾用 `vs` / 纯推理用 `[依据: 推断]`
 
 ⚠ **格式要求**：
 - 不要用 markdown 表格（`|...|...|` 在 CMD 显示会乱）
@@ -855,15 +868,22 @@ log 里每个时段数据都带方括号前缀，例如 `[2026-05-18 昨日盘�
 
 
 def _read_today_log() -> str:
-    """读取今日 log（UTF-8）。"""
-    today_yyyymmdd = datetime.now().strftime("%Y%m%d")
-    log_path = Path(BASE_DIR) / "logs" / f"run_{today_yyyymmdd}.log"
-    if not log_path.exists():
-        return ""
-    try:
-        return log_path.read_text(encoding="utf-8", errors="replace")
-    except Exception:
-        return ""
+    """读取当前美股交易日相关 log（UTF-8）。
+
+    旧 logger 仍按机器本地日切文件；JST 午夜后的同一个纽约交易日可能横跨
+    两个文件。因此同时读取 ET 日和本地日，既不丢盘前内容，也不丢午夜后刷新。
+    """
+    day_keys = [_market_date().replace("-", ""), datetime.now().strftime("%Y%m%d")]
+    parts = []
+    for day_key in dict.fromkeys(day_keys):
+        log_path = Path(BASE_DIR) / "logs" / f"run_{day_key}.log"
+        if not log_path.exists():
+            continue
+        try:
+            parts.append(log_path.read_text(encoding="utf-8", errors="replace"))
+        except Exception:
+            continue
+    return "\n".join(parts)
 
 
 # 过滤掉的噪音行（moomoo 连接日志、TodoWrite 提示等）
@@ -883,7 +903,7 @@ _LOG_TS_SEPARATOR_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ={20,}\
 
 
 def _strip_prior_ai_outputs(log_text: str) -> str:
-    """Remove previous Claude answers before building the next prompt."""
+    """Remove previous AI answers before building the next prompt."""
     out_lines = []
     skipping = False
     for line in log_text.splitlines():
@@ -910,7 +930,7 @@ def _denoise(log_text: str) -> str:
 
 def _trim_to_last_cycles(log_text: str, max_chars: int = 28000) -> str:
     """
-    截取最后 N 字符——Claude 免费版 / ChatGPT Plus 都能轻松吞 30K 字符。
+    截取最后 N 字符，控制本地 CLI / 网页模型的上下文大小。
     优先从分隔符（======）切断，保持语义完整。
     """
     if len(log_text) <= max_chars:
@@ -935,7 +955,7 @@ def _copy_to_clipboard(text: str) -> bool:
 
 
 def _read_module_accuracy() -> str:
-    """读取 signals/module_accuracy.md 准确率报告，注入 Claude prompt 作为参考。
+    """读取 signals/module_accuracy.md 准确率报告，注入 AI prompt 作为参考。
     报告由 _backtest_modules_accuracy.py 生成，建议每周末更新一次。
     报告超过 14 天会标注"过期"提示，但仍注入。"""
     p = Path(SIGNALS_DIR) / "module_accuracy.md"
@@ -945,8 +965,28 @@ def _read_module_accuracy() -> str:
         content = p.read_text(encoding="utf-8").strip()
     except Exception:
         return ""
+    # 拒绝旧版含进化/quant 模块的缓存报告，防止已删除的数据重新进入 AI 上下文。
+    if "quant_signal" in content or "### quant" in content or "进化规则" in content:
+        return ""
     age_days = (datetime.now().timestamp() - p.stat().st_mtime) / 86400
     stale = f"\n⚠ 此报告已 {age_days:.0f} 天未更新，建议跑 backtest.bat → 选 6 刷新\n" if age_days > 14 else ""
+    return content + stale
+
+
+def _read_trade_postmortem() -> str:
+    """读取 signals/trade_postmortem.md 交易复盘, 注入 AI prompt 作参考.
+    由 _trade_postmortem.py 每周生成 (weekly.bat). 超过 14 天标 stale."""
+    p = Path(SIGNALS_DIR) / "trade_postmortem.md"
+    if not p.exists():
+        return ""
+    try:
+        content = p.read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+    if not content:
+        return ""
+    age_days = (datetime.now().timestamp() - p.stat().st_mtime) / 86400
+    stale = f"\n⚠ 此复盘已 {age_days:.0f} 天未更新, 建议跑 weekly.bat 刷新\n" if age_days > 14 else ""
     return content + stale
 
 
@@ -984,7 +1024,7 @@ def generate_ai_prompt(mode: str = "review") -> tuple[Path | None, bool]:
     clean_log = _strip_prior_ai_outputs(_denoise(raw_log))
     trimmed   = _trim_to_last_cycles(clean_log)
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = _market_date()
     # OUTPUT_LANG=ja → 日本語テンプレートを使用（run_ja.bat 経由）
     import os
     ja_mode = os.environ.get("OUTPUT_LANG", "").lower() == "ja"
@@ -993,13 +1033,21 @@ def generate_ai_prompt(mode: str = "review") -> tuple[Path | None, bool]:
         trimmed = _sanitize_ja_text(trimmed)
 
     # 注入模块准确率报告（历史回测 250 天，1d/5d/10d/20d）
-    # 让 Claude 判断信号矛盾时知道"该信谁、信什么周期"
+    # 让 AI 判断信号矛盾时知道"该信谁、信什么周期"
     module_acc = _read_module_accuracy()
     if module_acc:
         header = ("\n\n=== 模块历史准确率（历史 250 日回测，参考） ===\n"
                   if not ja_mode else
                   "\n\n=== モジュール過去精度（過去250日バックテスト） ===\n")
         trimmed = trimmed + header + module_acc + "\n=== END 模块准确率 ===\n"
+
+    # 交易复盘 (weekly _trade_postmortem.py 生成) — 让 AI 看到实盘表现校准建议
+    postmortem = _read_trade_postmortem()
+    if postmortem:
+        header = ("\n\n=== 近期交易复盘（weekly, 参考） ===\n"
+                  if not ja_mode else
+                  "\n\n=== 直近取引の振り返り (weekly) ===\n")
+        trimmed = trimmed + header + postmortem + "\n=== END 交易复盘 ===\n"
 
     # 可选：手动 moomoo AI 输入（用户在 app 里问 AI 后粘贴的回答）
     manual_ai = _read_manual_moomoo_ai(today)
@@ -1028,7 +1076,20 @@ def generate_ai_prompt(mode: str = "review") -> tuple[Path | None, bool]:
     return out_path, clip_ok
 
 
-# ── 自动调用 Claude Code CLI（走订阅，零 API 费用）─────────────────────────────
+# ── 自动调用本地 AI CLI（默认 Codex；可显式切回 Claude）──────────────────────
+def _hidden_cli_subprocess_kwargs() -> dict:
+    """Prevent background CLI processes from opening a Windows console window."""
+    if os.name != "nt":
+        return {}
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+    return {
+        "creationflags": subprocess.CREATE_NO_WINDOW,
+        "startupinfo": startupinfo,
+    }
+
+
 def _find_claude_cli() -> str | None:
     """Windows: claude.exe / claude.cmd / claude；按优先级查 PATH。"""
     for name in ("claude.exe", "claude.cmd", "claude"):
@@ -1036,8 +1097,10 @@ def _find_claude_cli() -> str | None:
         if found:
             return found
         try:
-            r = subprocess.run(["where", name], capture_output=True,
-                               text=True, timeout=5)
+            r = subprocess.run(
+                ["where", name], capture_output=True, text=True, timeout=5,
+                **_hidden_cli_subprocess_kwargs(),
+            )
             if r.returncode == 0 and r.stdout.strip():
                 return r.stdout.strip().splitlines()[0]
         except Exception:
@@ -1055,8 +1118,10 @@ def _find_codex_cli() -> str | None:
         if found:
             return found
         try:
-            r = subprocess.run(["where", name], capture_output=True,
-                               text=True, timeout=5)
+            r = subprocess.run(
+                ["where", name], capture_output=True, text=True, timeout=5,
+                **_hidden_cli_subprocess_kwargs(),
+            )
             if r.returncode == 0 and r.stdout.strip():
                 return r.stdout.strip().splitlines()[0]
         except Exception:
@@ -1083,6 +1148,7 @@ def query_claude_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
             encoding="utf-8",
             errors="replace",
             timeout=timeout,
+            **_hidden_cli_subprocess_kwargs(),
         )
         if result.returncode == 0:
             return result.stdout.strip(), "ok"
@@ -1153,9 +1219,10 @@ def _codex_safe_env() -> dict[str, str]:
     }
 
 
-def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
+def query_codex_cli(prompt: str, timeout: int = 300, *,
+                    web_search: bool = False) -> tuple[str | None, str]:
     """
-    用 Codex CLI 非交互模式跑一次查询，作为 Claude 额度耗尽时的 fallback。
+    用 Codex CLI 的 ``codex exec`` 非交互模式跑一次查询。
 
     安全边界：在空临时目录、只读 sandbox、ephemeral session 中运行；不继承
     API key/token/secret/password 类环境变量，只复用本机 Codex CLI 已保存登录。
@@ -1165,7 +1232,7 @@ def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
         return None, "codex_not_installed"
 
     try:
-        with tempfile.TemporaryDirectory(prefix="codex_ai_fallback_") as run_dir:
+        with tempfile.TemporaryDirectory(prefix="codex_ai_run_") as run_dir:
             out_path = Path(run_dir) / "last_message.txt"
             prefix = (
                 "以下の投資分析依頼に直接回答してください。ファイル変更やコマンド実行は不要です。"
@@ -1174,9 +1241,11 @@ def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
                 else "请直接回答下面的投资分析请求。不要修改文件，不要运行命令，只输出最终分析正文。"
             )
             codex_prompt = f"{prefix}\n\n{prompt}"
-            result = subprocess.run(
-                [
-                    cli_path,
+            command = [cli_path]
+            if web_search:
+                # Global flag: switch Codex from cached search to live search.
+                command.append("--search")
+            command.extend([
                     "exec",
                     "--ephemeral",
                     "--ignore-user-config",
@@ -1186,7 +1255,9 @@ def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
                     "--cd", run_dir,
                     "--output-last-message", str(out_path),
                     "-",
-                ],
+                ])
+            result = subprocess.run(
+                command,
                 input=codex_prompt,
                 capture_output=True,
                 text=True,
@@ -1195,6 +1266,7 @@ def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
                 timeout=timeout,
                 cwd=run_dir,
                 env=_codex_safe_env(),
+                **_hidden_cli_subprocess_kwargs(),
             )
             output = ""
             try:
@@ -1213,37 +1285,85 @@ def query_codex_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
         return None, f"codex_error: {_redact_cli_text(str(e))}"
 
 
+_AI_CLI_PROVIDERS = {"codex", "claude"}
+
+
+def get_ai_cli_policy() -> dict[str, str]:
+    """Return the centrally configured CLI provider order.
+
+    ``AI_CLI_PRIMARY`` defaults to Codex. ``AI_CLI_FALLBACK`` defaults to
+    ``none`` so a transient Codex failure cannot silently spend Claude quota,
+    especially from the 30-minute public snapshot job.  Operators can opt in
+    to the old behavior with ``AI_CLI_PRIMARY=claude`` and
+    ``AI_CLI_FALLBACK=codex``, or allow exceptional Claude fallback with
+    ``AI_CLI_FALLBACK=claude``.
+    """
+    primary = (
+        os.environ.get("AI_CLI_PRIMARY")
+        or os.environ.get("AI_CLI_PROVIDER")  # early compatibility name
+        or "codex"
+    ).strip().lower()
+    fallback = os.environ.get("AI_CLI_FALLBACK", "none").strip().lower()
+    if primary not in _AI_CLI_PROVIDERS:
+        primary = "codex"
+    if fallback not in _AI_CLI_PROVIDERS or fallback == primary:
+        fallback = "none"
+    return {"primary": primary, "fallback": fallback}
+
+
+def _query_named_cli(provider: str, prompt: str, timeout: int,
+                     web_search: bool = False) -> tuple[str | None, str]:
+    if provider == "codex":
+        if web_search:
+            return query_codex_cli(prompt, timeout=timeout, web_search=True)
+        return query_codex_cli(prompt, timeout=timeout)
+    return query_claude_cli(prompt, timeout=timeout)
+
+
 def query_ai_cli(
     prompt: str,
     timeout: int = 300,
     *,
     fallback_on_unavailable: bool = False,
+    web_search: bool = False,
 ) -> tuple[str | None, str, str, str]:
-    """Query Claude first, then Codex only for quota/rate-limit exhaustion.
+    """Query the configured local CLI, Codex-first by default.
 
-    Returns ``(output, status, provider, fallback_reason)``. Callers that can
-    operate without Claude installed may opt into the same Codex fallback with
-    ``fallback_on_unavailable=True``.
+    Returns ``(output, status, provider, fallback_reason)``. Claude is never
+    called by the default policy. ``fallback_on_unavailable`` remains as a
+    compatibility escape hatch for callers using an older environment: when
+    the primary CLI is missing and no fallback was configured, try the other
+    CLI once.
     """
-    output, status = query_claude_cli(prompt, timeout=timeout)
-    if output:
-        return output, status, "Claude", ""
+    policy = get_ai_cli_policy()
+    primary = policy["primary"]
+    fallback = policy["fallback"]
 
-    unavailable = status in {"not_installed", "claude_not_installed"}
-    if not _is_claude_quota_status(status) and not (fallback_on_unavailable and unavailable):
-        return None, status, "Claude", ""
-
-    fallback_reason = _redact_cli_text(status)
-    output, codex_status = query_codex_cli(prompt, timeout=timeout)
+    output, status = _query_named_cli(primary, prompt, timeout, web_search)
     if output:
-        return output, codex_status, "Codex", fallback_reason
-    combined = f"claude_unavailable: {fallback_reason}; codex={codex_status}"
-    return None, _redact_cli_text(combined), "Codex", fallback_reason
+        return output, status, primary.title(), ""
+
+    unavailable = status in {
+        "not_installed", "claude_not_installed", "codex_not_installed",
+    }
+    if fallback == "none" and fallback_on_unavailable and unavailable:
+        fallback = "claude" if primary == "codex" else "codex"
+    if fallback == "none":
+        return None, status, primary.title(), ""
+
+    fallback_reason = f"{primary}: {_redact_cli_text(status)}"
+    output, fallback_status = _query_named_cli(
+        fallback, prompt, timeout, web_search
+    )
+    if output:
+        return output, fallback_status, fallback.title(), fallback_reason
+    combined = f"{fallback_reason}; {fallback}={fallback_status}"
+    return None, _redact_cli_text(combined), fallback.title(), fallback_reason
 
 
 def auto_analyze(mode: str = "review") -> dict:
     """
-    一站式：生成 prompt → 调用本地 Claude CLI → 必要时 Codex CLI fallback → 保存结果。
+    一站式：生成 prompt → 按统一策略调用本地 AI CLI → 保存结果。
     返回 {prompt_path, analysis_path, status, output}
     """
     prompt_path, clip_ok = generate_ai_prompt(mode)
@@ -1253,7 +1373,7 @@ def auto_analyze(mode: str = "review") -> dict:
     prompt = prompt_path.read_text(encoding="utf-8")
     output, status, provider, fallback_reason = query_ai_cli(prompt)
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = _market_date()
     analysis_path = Path(SIGNALS_DIR) / f"ai_analysis_{mode}_{today}.md"
 
     if output and _is_ja_mode():
@@ -1272,7 +1392,7 @@ def auto_analyze(mode: str = "review") -> dict:
                 encoding="utf-8")
         except Exception:
             pass
-        # 提取并保存 Claude 输出的结构化目标 JSON（A 方案：paper_trader 消费）
+        # 提取并保存 AI 输出的结构化目标 JSON（A 方案：paper_trader 消费）
         try:
             targets_path = _save_ai_targets(output, today)
         except Exception:
@@ -1290,17 +1410,17 @@ def auto_analyze(mode: str = "review") -> dict:
     }
 
 
-# ── A 方案：Claude 结构化目标 JSON 提取 + 保存 ────────────────────────────
+# ── A 方案：AI 结构化目标 JSON 提取 + 保存 ───────────────────────────────
 import json as _json_mod
 _TARGETS_JSON_RE = re.compile(r"```json\s*(\{[\s\S]+?\})\s*```", re.MULTILINE)
 _AI_TARGETS_PATH_PREFIX = "ai_targets_"
 
 
-def _extract_targets_block(claude_output: str) -> dict | None:
-    """从 Claude 输出里抠出 ```json``` 围栏内含 'targets' 数组的 dict。"""
-    if not claude_output:
+def _extract_targets_block(ai_output: str) -> dict | None:
+    """从 AI 输出里抠出 ```json``` 围栏内含 'targets' 数组的 dict。"""
+    if not ai_output:
         return None
-    for m in _TARGETS_JSON_RE.finditer(claude_output):
+    for m in _TARGETS_JSON_RE.finditer(ai_output):
         try:
             obj = _json_mod.loads(m.group(1))
         except Exception:
@@ -1349,13 +1469,13 @@ def _normalize_target(t: dict) -> dict | None:
     }
 
 
-def _save_ai_targets(claude_output: str, today: str) -> Path | None:
-    """从 Claude 输出抠 JSON 并保存到 signals/ai_targets_<date>.json。
+def _save_ai_targets(ai_output: str, today: str) -> Path | None:
+    """从 AI 输出抠 JSON 并保存到 signals/ai_targets_<date>.json。
 
     paper_trader 启动时会读这个文件，按 entry_ref/stop_ref/use_limit 改下单。
     没有 JSON / 解析失败时返回 None（不影响下单，paper_trader 走默认流程）。
     """
-    obj = _extract_targets_block(claude_output)
+    obj = _extract_targets_block(ai_output)
     if not obj:
         return None
     normalized = []
@@ -1379,7 +1499,7 @@ def _save_ai_targets(claude_output: str, today: str) -> Path | None:
 
 def load_ai_target(ticker: str) -> dict | None:
     """paper_trader 用：读今日 ai_targets，返回指定 ticker 的 target dict 或 None。"""
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = _market_date()
     path = Path(SIGNALS_DIR) / f"{_AI_TARGETS_PATH_PREFIX}{today}.json"
     if not path.exists():
         return None
@@ -1390,7 +1510,12 @@ def load_ai_target(ticker: str) -> dict | None:
     tk_full = ticker if ticker.startswith("US.") else f"US.{ticker}"
     for t in data.get("targets") or []:
         if t.get("ticker") == tk_full:
-            return t
+            return {
+                **t,
+                "_source_date": data.get("source_date") or today,
+                "_source_ts": data.get("ts"),
+                "_source_mtime": path.stat().st_mtime,
+            }
     return None
 
 
@@ -1399,26 +1524,26 @@ def cli_main():
     auto = "--auto" in sys.argv or "-a" in sys.argv
 
     if auto:
-        print(f"[{mode}] 生成提问稿并调用 Claude CLI 分析（额度满时自动切 Codex CLI）...")
+        print(f"[{mode}] 生成提问稿并调用 AI CLI 分析（默认 Codex，不自动回退 Claude）...")
         r = auto_analyze(mode)
         if r.get("status") == "no_log":
             print("未找到今日 log，先跑一遍 run.bat")
             return
         print(f"  提问稿: {r['prompt_path']}")
         if r["status"] == "ok":
-            print(f"  使用模型CLI: {r.get('provider', 'Claude')}")
+            print(f"  使用模型CLI: {r.get('provider', 'Codex')}")
             if r.get("fallback_reason"):
-                print(f"  Claude 不可用，已 fallback 到 Codex: {r['fallback_reason']}")
+                print(f"  主 CLI 不可用，已按显式策略 fallback: {r['fallback_reason']}")
             print(f"  分析结果: {r['analysis_path']}")
             print("\n" + "="*60)
             print(r["output"])
             print("="*60)
-        elif r["status"] == "not_installed":
-            print("  未找到 claude CLI；提问稿已复制到剪贴板，手动粘贴到网页")
-        elif r["status"] == "timeout":
-            print(f"  Claude CLI 超时；提问稿可手动粘贴到网页")
+        elif str(r["status"]).endswith("not_installed"):
+            print("  未找到配置的 AI CLI；提问稿已复制到剪贴板，可手动粘贴到网页")
+        elif str(r["status"]).endswith("timeout"):
+            print("  AI CLI 超时；提问稿可手动粘贴到网页")
         else:
-            print(f"  Claude CLI 调用失败: {r['status']}；提问稿可手动粘贴")
+            print(f"  AI CLI 调用失败: {r['status']}；提问稿可手动粘贴")
         return
 
     # 默认行为：只生成提问稿 + 复制到剪贴板
@@ -1429,7 +1554,7 @@ def cli_main():
             print("已复制到剪贴板，直接 Ctrl+V 粘贴到 Claude.ai / ChatGPT 即可")
         else:
             print("剪贴板复制失败，请手动打开文件复制内容")
-        print("\n提示: 加 --auto 让本地 claude CLI 自动跑分析")
+        print("\n提示: 加 --auto 让本地 AI CLI（默认 Codex）自动跑分析")
         print("      python ai_prompt.py review --auto")
     else:
         print("未找到今日 log，先跑一遍 run.bat")

@@ -28,11 +28,29 @@ from config import (OPENAI_API_KEY, DECISION_MODEL, RSI_OVERBOUGHT, RSI_OVERSOLD
 from trading_contracts import BULLISH_SIGNAL_ACTIONS, BUY_ACTIONS, confidence_min
 
 
+_HMM_MAX_AGE_HOURS = 72   # weekly.bat 重训, > 72h 视为 stale (跨长周末+1d buffer)
+
+
 def _get_hmm_meta_state() -> str | None:
-    """读 signals/hmm_state.json 的 current_label。失败 → None。
-    用于 _etf_rules 仅做"更保守方向"的阈值微调（不会放宽）。"""
+    """读 signals/hmm_state.json 的 current_label。失败/stale → None。
+    用于 _etf_rules 仅做"更保守方向"的阈值微调（不会放宽）。
+    加 TTL check: 若 hmm_state.json mtime > 72h → 视为 stale, 忽略."""
     try:
-        from hmm_regime import load as _hmm_load
+        from hmm_regime import load as _hmm_load, HMM_STATE_PATH
+        import time
+        if HMM_STATE_PATH.exists():
+            age_h = (time.time() - HMM_STATE_PATH.stat().st_mtime) / 3600
+            if age_h > _HMM_MAX_AGE_HOURS:
+                # 只 warn 一次, 避免日志刷屏
+                global _HMM_STALE_WARNED
+                if not globals().get("_HMM_STALE_WARNED"):
+                    _HMM_STALE_WARNED = True
+                    try:
+                        from notifier import logger as _lg
+                        _lg.warning(f"[decision_agent] hmm_state.json stale ({age_h:.0f}h > {_HMM_MAX_AGE_HOURS}h), 忽略 HMM meta")
+                    except Exception:
+                        pass
+                return None
         info = _hmm_load()
         if info and info.get("current_prob", 0) >= 0.6:   # 状态置信度要够
             return info.get("current_label")
@@ -52,49 +70,28 @@ TICKER_TO_SECTOR = {
     "US.MULL": "SMH",   # 2x MU → 参考半导体
     "US.GLD":  "GLD",   # 黄金 → 参考自己
     "US.TLT":  "TLT",   # 长期债券
+    # TRACKED_TICKERS 补齐 (config.py L154+)
+    "US.NVDA": "SMH",   # 半导体链条领头
+    "US.MSFT": "QQQ",   # 云 AI + FAANG (Nasdaq 权重)
+    "US.AAPL": "QQQ",   # QQQ 最大权重
+    "US.NBIS": "SMH",   # AI cloud, 情绪同 semis
+    "US.LITE": "SMH",   # 光通信, 跟半导体
+    "US.CBRS": "SMH",   # AI 芯片
+    "US.SHY":  "IEI",   # 短端债 → 中端债 ETF 作 proxy
+    "US.IEI":  "IEI",   # 中端债 → 自己
+    "US.USO":  "USO",   # 原油 → 自己
+    "US.XLV":  "XLV",   # 医疗防御 → 自己
 }
-_SECTOR_REGIME_CACHE = {"ts": 0, "data": {}}
-
-
 def _get_sector_regime(ticker: str) -> str | None:
     """按 ticker → 板块基准计算方向与短线震荡。
-    返回风险标签或 None；只做单向收紧，绝不因板块标签放宽买入。
+    只做单向收紧，绝不因板块标签放宽买入。
+    统一实现: 委托给 sector_regime.classify_ticker_sector (单一源).
     """
-    import time
-    import yfinance as yf
-    sector = TICKER_TO_SECTOR.get(ticker)
-    if not sector:
-        return None
+    from sector_regime import classify_ticker_sector
+    return classify_ticker_sector(ticker, TICKER_TO_SECTOR)
 
-    # 板块数据 15 分钟缓存
-    now = time.time()
-    if now - _SECTOR_REGIME_CACHE["ts"] > 900:
-        _SECTOR_REGIME_CACHE["data"] = {}
-        _SECTOR_REGIME_CACHE["ts"] = now
-    if sector in _SECTOR_REGIME_CACHE["data"]:
-        return _SECTOR_REGIME_CACHE["data"][sector]
 
-    try:
-        df = yf.Ticker(sector).history(period="3mo", interval="1d", auto_adjust=True)
-        if df.empty or len(df) < 21:
-            return None
-        close = df["Close"].astype(float)
-        price = float(close.iloc[-1])
-        p5  = ((price / float(close.iloc[-6])  - 1) * 100)
-        p20 = ((price / float(close.iloc[-21]) - 1) * 100)
-        # 用与 dashboard /api/sectors 一致的方向阈值。
-        if p20 <= -10:  regime = "sector_bear"
-        elif p5 <= -5:  regime = "sector_crisis"
-        elif p20 <= -5: regime = "sector_weak"
-        elif p5 <= -2:  regime = "sector_pullback"
-        else:
-            from market_style import analyze_price_style
-            style = analyze_price_style(close, df["High"], df["Low"])
-            regime = "sector_chop" if style.get("is_choppy") else None
-    except Exception:
-        regime = None
-    _SECTOR_REGIME_CACHE["data"][sector] = regime
-    return regime
+_TECHNICAL_ONLY_LOGGED = False
 
 
 def _is_technical_only() -> bool:
@@ -107,8 +104,20 @@ def _is_technical_only() -> bool:
       · earnings IM guard（期权市场隐含定价，不是新闻）
 
     默认 ON（env var TECHNICAL_ONLY=0 才关）。
+    首次调用时 log 显式模式, 防止子进程 env-strip 静默反转 event_score 语义.
     """
-    return os.environ.get("TECHNICAL_ONLY", "1") != "0"
+    global _TECHNICAL_ONLY_LOGGED
+    raw = os.environ.get("TECHNICAL_ONLY", "1")
+    is_on = raw != "0"
+    if not _TECHNICAL_ONLY_LOGGED:
+        _TECHNICAL_ONLY_LOGGED = True
+        try:
+            from notifier import logger as _lg
+            _lg.info(f"[decision_agent] TECHNICAL_ONLY={raw!r} → mode={'ON' if is_on else 'OFF'} "
+                     f"(msg/event signals {'ignored' if is_on else 'weighted'})")
+        except Exception:
+            pass
+    return is_on
 
 
 def _scaled_pct(pct: float, ticker: str | None) -> float:
@@ -1187,12 +1196,24 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
         try:
             from regime_today import get_today_regime
             board_regime = get_today_regime()
-        except Exception:
+        except Exception as _e:
             board_regime = None
+            try:
+                from notifier import logger as _lg
+                _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
+            except Exception:
+                pass
     if board_regime:
         pct_eff_t = _scaled_pct(market.get("pct_chg", 0) or 0, market.get("ticker"))
         regime = "crisis" if pct_eff_t <= -5 else board_regime
     else:
+        # fallback per-ticker: 已违反单一源 (memory: feedback_regime_first) → 显式 warn
+        try:
+            from notifier import logger as _lg
+            _lg.warning(f"[decision_agent] board_regime=None for {market.get('ticker')}, "
+                        f"fallback per-ticker get_regime (检查 regime_state.json)")
+        except Exception:
+            pass
         regime = get_regime(macro, market)
     # 若调用方没传 confluence，本地算一次（避免显示错位）
     if confluence is None:
@@ -1245,12 +1266,24 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
         try:
             from regime_today import get_today_regime
             board_regime = get_today_regime()
-        except Exception:
+        except Exception as _e:
             board_regime = None
+            try:
+                from notifier import logger as _lg
+                _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
+            except Exception:
+                pass
     if board_regime:
         pct_eff_t = _scaled_pct(market.get("pct_chg", 0) or 0, market.get("ticker"))
         regime = "crisis" if pct_eff_t <= -5 else board_regime
     else:
+        # fallback per-ticker: 已违反单一源 (memory: feedback_regime_first) → 显式 warn
+        try:
+            from notifier import logger as _lg
+            _lg.warning(f"[decision_agent] board_regime=None for {market.get('ticker')}, "
+                        f"fallback per-ticker get_regime (检查 regime_state.json)")
+        except Exception:
+            pass
         regime = get_regime(macro, market)
     # 先算 confluence (asset_class=commodity → rsi_overbought 等权重=0)
     try:

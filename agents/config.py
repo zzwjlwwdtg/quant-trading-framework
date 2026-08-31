@@ -220,6 +220,25 @@ RSI_OVERSOLD = 38
 VOL_DIVERGE_WARN = 0.78   # new high but vol < this ratio = divergence
 VOL_DIVERGE_STRONG = 0.70 # strong divergence threshold
 
+# --- MOVE (bond volatility) 阈值 ---
+# 三档: warn / crisis / extreme
+# 100+   : 抬升 (债市开始紧张)   → L1 liquidity level
+# 140+   : 危机区 (2020-03 COVID / 2023-03 SVB)  → L2
+# 180+   : 极端 (历史 top 1%)     → L3
+# 修改必须同步验证 auto_rebalance._liquidity_crisis_level 和 bond_monitor
+MOVE_WARN = 100
+MOVE_CRISIS = 140
+MOVE_EXTREME = 180
+
+# --- VIX 阈值 (regime + gate) ---
+VIX_OVERHEATED = 20       # + fg>70 → overheated regime
+VIX_CRISIS = 30           # + trend=down → crisis regime
+VIX_BULL_MAX = 18         # < 此 + trend=up → bull_trending 前提
+
+# --- HY OAS 阈值 (信用利差) ---
+HY_OAS_WARN_BPS = 400     # 信用市场紧张
+HY_OAS_CRISIS_BPS = 500   # 危机区
+
 # --- Paths ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SIGNALS_DIR = os.path.join(BASE_DIR, "signals")

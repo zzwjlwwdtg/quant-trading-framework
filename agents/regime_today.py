@@ -12,7 +12,10 @@ RegimeToday — 系统级"今日 regime"单一源。
   · 宏观: VIX, F&G, T10Y2Y
   · SPY 当日涨跌（broad-market sanity）
 
-输出: {bull_trending / overheated / recession_risk / crisis / neutral}
+输出同时保留三层含义：
+  · HMM（另一个文件）= 慢周期宏观背景，不是买入信号
+  · base_regime = 日线方向前提
+  · regime = 叠加短线风格后的实际交易前提
 
 decision_agent.get_decision 接 board_regime=... 后用本日 regime；
 只有单股**当日暴跌 ≤ -5%** 才被允许 override 成 crisis（保护该单股）。
@@ -27,6 +30,7 @@ from zoneinfo import ZoneInfo
 
 from notifier import logger
 from atomic_io import atomic_write_json
+from market_style import analyze_price_style, effective_board_regime
 
 
 REGIME_STATE_PATH = Path(__file__).parent / "regime_state.json"
@@ -76,26 +80,24 @@ def _fetch_spy_today_pct() -> Optional[float]:
         return None
 
 
-def _fetch_spy_extension_and_atr() -> tuple[Optional[float], Optional[float]]:
-    """返回 (SPY 现价相对 MA50 偏离 %, 5日 ATR / 20日 ATR 比)。用于 bull 子类判断。"""
+def _fetch_spy_context() -> dict:
+    """一次拉取 SPY，返回位置、ATR 与独立短线风格。"""
     try:
         import yfinance as yf
-        import numpy as np
         h = yf.Ticker("SPY").history(period="80d", interval="1d")
-        if len(h) < 50: return (None, None)
-        close = h["Close"]
-        ma50 = close.rolling(50).mean().iloc[-1]
-        extension = (close.iloc[-1] - ma50) / ma50 * 100
-        # True Range
-        tr = np.maximum(h["High"] - h["Low"],
-                        np.maximum(abs(h["High"] - h["Close"].shift()),
-                                   abs(h["Low"] - h["Close"].shift())))
-        atr5  = tr.tail(5).mean()
-        atr20 = tr.tail(20).mean()
-        atr_ratio = atr5 / atr20 if atr20 > 0 else None
-        return (float(extension), float(atr_ratio) if atr_ratio else None)
-    except Exception:
-        return (None, None)
+        if len(h) < 21:
+            return {}
+        style = analyze_price_style(h["Close"], h["High"], h["Low"])
+        metrics = style.get("metrics") or {}
+        return {
+            "spy_extension_pct": metrics.get("dist_ma50_pct"),
+            "spy_dist_ma20_pct": metrics.get("dist_ma20_pct"),
+            "spy_atr_ratio": metrics.get("atr_5_20_ratio"),
+            "short_style": style,
+        }
+    except Exception as e:
+        logger.warning(f"[regime] SPY 短线风格拉取失败: {e}")
+        return {}
 
 
 def _build_board_inputs() -> dict:
@@ -117,11 +119,9 @@ def _build_board_inputs() -> dict:
             out["sox_mkt_20d_pct"]   = float(mkt.tail(20).mean() * 100)
     except Exception as e:
         logger.warning(f"[regime] SOX 因子拉取失败: {e}")
-    # SPY 当日 + 子类指标
+    # SPY 当日 + 子类指标 + 短线风格（与 HMM 慢周期严格分开）
     out["spy_today_pct"] = _fetch_spy_today_pct()
-    ext, atr_r = _fetch_spy_extension_and_atr()
-    out["spy_extension_pct"] = ext
-    out["spy_atr_ratio"]     = atr_r
+    out.update(_fetch_spy_context())
     # 宏观
     try:
         from data_feeds import fetch_vix, fetch_fear_greed
@@ -139,12 +139,13 @@ def _build_board_inputs() -> dict:
 
 def _classify(inp: dict) -> str:
     """
-    板块级输入 → 8 种 regime。
-    base 5 个: bull_trending / overheated / recession_risk / crisis / neutral
+    板块级输入 → 交易 regime。
+    base: bull_trending / overheated / recession_risk / risk_off / crisis / neutral
     Layer 1 新增 bull 3 子类:
       bull_extended : 现价远高于 MA50 (>10% extension)，强动量延续，**完全 disable REDUCE**
       bull_pulling  : 现价靠近 MA20 (回调买入区)，dip = BUY 机会
-      bull_chop     : 5d ATR > 2x 20d ATR (波动放大)，紧仓 + 高 conf 才下单
+      bull_chop     : 宏观/日线偏多，但短线多项震荡指标共振
+      neutral_chop  : 日线中性且短线震荡，收紧加仓并降低目标波动
     """
     sox_today = inp.get("sox_mkt_today_pct") or 0
     spy_today = inp.get("spy_today_pct")     or 0
@@ -167,20 +168,36 @@ def _classify(inp: dict) -> str:
         logger.warning(f"[regime] classify 失败: {e}")
         return "neutral"
 
-    # 仅 bull_trending 拆子类
+    # ``get_regime`` 的历史规则会把“单日跌幅<-2% + 趋势向下”也命名成
+    # recession_risk。这里是系统级市场标签，必须区分价格风险与宏观衰退：
+    # 曲线未倒挂时，只能称为 risk_off，不能误导成宏观衰退判断。
+    if (base == "recession_risk" and (inp.get("t10y2y") is None or inp.get("t10y2y") >= 0)
+            and board_mkt["pct_chg_zone"] == "drop" and board_mkt["trend"] == "down"):
+        base = "risk_off"
+
+    # 短线震荡是交易层 overlay，不改写 HMM 的慢周期背景。
+    short_style = inp.get("short_style") or {}
+    effective = effective_board_regime(base, short_style)
+    if effective != base:
+        return effective
+
+    # 只有非震荡 bull_trending 才继续拆趋势位置子类。
     if base != "bull_trending":
         return base
 
     # 用 SPY 的位置 + 波动估算子类
     try:
         spy_extension = inp.get("spy_extension_pct")  # 现价 vs MA50
-        atr_ratio     = inp.get("spy_atr_ratio")      # 5d ATR / 20d ATR
         if spy_extension is not None and spy_extension > 10:
             return "bull_extended"   # 强动量延续
-        if atr_ratio is not None and atr_ratio > 2.0:
-            return "bull_chop"       # 波动放大
-        if spy_extension is not None and abs(spy_extension) < 3:
-            return "bull_pulling"    # 接近 MA20 = 回调买入区
+        dist_ma20 = inp.get("spy_dist_ma20_pct")
+        sox_20d   = inp.get("sox_mkt_20d_pct") or 0
+        if dist_ma20 is not None and abs(dist_ma20) < 3:
+            # 只有 20 天动量仍正（SOX 20d > 0），才算真回调而非崩盘穿越 MA20。
+            # 回测证据: 2026-06-08 期间 17 个 bull_pulling 样本 avg -36.56%，
+            # 因为 SOX 从 ATH 回落时会穿过 MA20，那一瞬被误标"回调低吸区"。
+            if sox_20d > 0:
+                return "bull_pulling"    # 接近 MA20 且慢周期上行 = 真回调
     except Exception:
         pass
     return "bull_trending"           # 默认还是粗 bull
@@ -195,6 +212,8 @@ def detect_and_save_regime() -> dict:
     info = {
         "date":   today,
         "regime": regime,
+        "base_regime": _classify({**inputs, "short_style": {}}),
+        "short_style": inputs.get("short_style") or {},
         "ts":     now_utc.isoformat(),
         "ts_et":  now_utc.astimezone(ET).isoformat(),
         "inputs": inputs,
@@ -247,6 +266,11 @@ def get_today_info(*, allow_stale: bool = False) -> dict:
 
 _REGIME_LABEL = {
     "bull_trending":  "牛市延续 (追趋势, 偏多)",
+    "bull_extended":  "牛市延伸 (强趋势, 防追高)",
+    "bull_pulling":   "牛市回调 (等待确认后低吸)",
+    "bull_chop":      "偏多震荡 (不把宏观偏多当追涨信号)",
+    "neutral_chop":   "中性震荡 (提高加仓门槛)",
+    "risk_off":       "风险收缩 (价格/板块急跌，非宏观衰退结论)",
     "overheated":     "过热警戒 (反转/减仓为主)",
     "recession_risk": "衰退风险 (避险偏向, 仅极端入场)",
     "crisis":         "危机防御 (现金为王, 几乎不动)",
@@ -260,6 +284,7 @@ def format_regime_banner(info: dict) -> list[str]:
     regime = info.get("regime", "neutral")
     label  = _REGIME_LABEL.get(regime, regime)
     inputs = info.get("inputs") or {}
+    short_style = info.get("short_style") or inputs.get("short_style") or {}
 
     def _fmt(v, suffix=""):
         if v is None: return "N/A"
@@ -277,11 +302,19 @@ def format_regime_banner(info: dict) -> list[str]:
         f"VIX={_fmt(inputs.get('vix')):>6}  "
         f"F&G={_fmt(inputs.get('fg')):>5}  "
         f"T10Y2Y={_fmt(inputs.get('t10y2y')):>6}",
+        f"  短线风格: {short_style.get('style_zh', 'N/A')}  "
+        f"震荡分={short_style.get('chop_score', 'N/A')}  "
+        f"依据={short_style.get('reason', 'N/A')}",
         f"  写入: {REGIME_STATE_PATH.name}  ts={info.get('ts','')[:19]}",
     ]
     # 解读
     rules = {
         "bull_trending":  "  规则: 顺动量, 高残差 z>+2σ 跟仓；REDUCE 阈值放宽",
+        "bull_extended":  "  规则: 趋势仍强，但严禁把慢周期标签理解为无条件追涨",
+        "bull_pulling":   "  规则: 等待价格止跌与动量/期权流确认后再低吸",
+        "bull_chop":      "  规则: 提高加仓门槛、降低目标波动、禁止仅凭宏观偏多追涨",
+        "neutral_chop":   "  规则: 来回震荡，减少加仓频率，只做多因子确认",
+        "risk_off":       "  规则: 板块价格急跌，暂停追涨、等待止跌；不解读为宏观衰退",
         "overheated":     "  规则: 反转候选, 低残差 z<-2σ 反弹；REDUCE 阈值收紧",
         "recession_risk": "  规则: 仅 |z|>2.5σ 才动, 反转策略 + 风控优先",
         "crisis":         "  规则: 不开新仓, 卫星仓全空, 核心仓减半",

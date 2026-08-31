@@ -23,7 +23,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from config import SIGNALS_DIR
+from config import SIGNALS_DIR, MOVE_WARN, MOVE_CRISIS, MOVE_EXTREME, HY_OAS_WARN_BPS
 from notifier import logger
 
 
@@ -86,11 +86,11 @@ def _liquidity_crisis_level(mc: dict) -> tuple[int, list[str]]:
     level = 0
     move = mc.get("move_index")
     if move is not None:
-        if move >= 180:
+        if move >= MOVE_EXTREME:
             level = max(level, 3); triggers.append(f"MOVE {move} 极端")
-        elif move >= 140:
+        elif move >= MOVE_CRISIS:
             level = max(level, 2); triggers.append(f"MOVE {move} 危机区")
-        elif move >= 100:
+        elif move >= MOVE_WARN:
             level = max(level, 1); triggers.append(f"MOVE {move} 抬升")
     sofr = mc.get("sofr_iorb_spread_bps")
     if sofr is not None:
@@ -427,15 +427,28 @@ def _load_current_positions() -> tuple[dict, float, float]:
     return open_pos, cash, nav
 
 
+_SIGNAL_MAX_AGE_HOURS = 48   # 周末 fresh window; > 48h 视为 stale 跳过
+
+
 def _load_signals() -> tuple[dict, dict]:
     """每 ticker 最新信号. 返回 (signals dict, prices dict).
-    prices 里含所有有 market.price 的 ticker, 供未持仓 BUY 的定价."""
+    prices 里含所有有 market.price 的 ticker, 供未持仓 BUY 的定价.
+    过滤 mtime > 48h 的文件, 防止 weekend stale / 已删 ticker 老数据驱动今日仓位.
+    """
     import glob
+    import time
     signals: dict = {}
     prices: dict = {}
+    now = time.time()
+    max_age_sec = _SIGNAL_MAX_AGE_HOURS * 3600
+    skipped: list[str] = []
     for p in glob.glob(f"{SIGNALS_DIR}/*_latest.json"):
         tk = Path(p).stem.replace("_latest", "")
         try:
+            age_sec = now - Path(p).stat().st_mtime
+            if age_sec > max_age_sec:
+                skipped.append(f"{tk}({age_sec/3600:.0f}h)")
+                continue
             sig = json.loads(Path(p).read_text(encoding="utf-8"))
             dec = sig.get("decision", {})
             mkt = sig.get("market", {})
@@ -450,6 +463,8 @@ def _load_signals() -> tuple[dict, dict]:
                 prices[tk] = float(mkt["price"])
         except Exception:
             continue
+    if skipped:
+        logger.warning(f"[auto_rebalance] 跳过 stale signals (>{_SIGNAL_MAX_AGE_HOURS}h): {', '.join(skipped)}")
     return signals, prices
 
 
@@ -479,6 +494,30 @@ _REGIME_SCALER = {
     ("recession_risk", "cloud"): 0.6,
     ("recession_risk", "hedge"): 1.0,
     ("recession_risk", "probe"): 0.3,
+    # 追涨/顶部 regime — 减 probe, 加 hedge, cloud 稍减
+    ("overheated", "bond"):  1.0,
+    ("overheated", "cloud"): 0.7,
+    ("overheated", "hedge"): 1.2,
+    ("overheated", "probe"): 0.3,
+    # 强动量延续 — 保仓但 probe 谨慎
+    ("bull_extended", "bond"):  0.9,
+    ("bull_extended", "cloud"): 1.0,
+    ("bull_extended", "hedge"): 0.9,
+    ("bull_extended", "probe"): 0.7,
+    # 健康回调低吸区 — cloud 加, probe 允许
+    ("bull_pulling", "bond"):  1.0,
+    ("bull_pulling", "cloud"): 1.1,
+    ("bull_pulling", "hedge"): 0.9,
+    ("bull_pulling", "probe"): 1.0,
+    # 震荡 chop — 减 leverage, 稍加 hedge
+    ("neutral_chop", "bond"):  1.0,
+    ("neutral_chop", "cloud"): 0.8,
+    ("neutral_chop", "hedge"): 1.1,
+    ("neutral_chop", "probe"): 0.5,
+    ("bull_chop", "bond"):  1.0,
+    ("bull_chop", "cloud"): 0.9,
+    ("bull_chop", "hedge"): 1.0,
+    ("bull_chop", "probe"): 0.6,
 }
 
 

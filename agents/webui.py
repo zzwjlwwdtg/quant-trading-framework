@@ -1170,18 +1170,13 @@ def api_sectors() -> dict:
 
 
 def _compute_sectors() -> dict:
-    """板块级 regime 概览 —— 用 yfinance 拉基准 ETF 最近走势，给 dashboard 板块卡。
+    """板块级 regime 概览 —— dashboard 用. 现委托给 sector_regime (单一源).
 
-    每个板块返回：方向 regime + 独立短线 style。短线 style 优先展示，
-    避免把中期仍向上误读为当前适合追涨。
-    regime 判定（简版，不涉及 HMM）：
-      · 5d ≤ -5% → 危机
-      · 5d ≤ -2% → 弱势
-      · 5d 在 ±2% 内 → 中性
-      · 5d ≥ +2% → 强势
-      · 5d ≥ +5% → 过热
+    与 canonical 市场级 regime (regime_state.json) 对比: 若板块 regime 与
+    canonical 分歧 → 写 signals/regime_disagreement.jsonl (shadow verifier
+    pattern: dashboard 保留独立算, 但主动 log 分歧供人工排查).
     """
-    import yfinance as yf
+    from sector_regime import classify_sector
     SECTORS = [
         {"key": "SPY",  "zh": "大盘 S&P500",   "linked": "参考"},
         {"key": "QQQ",  "zh": "纳斯达克 100",   "linked": "TQQQ 3x"},
@@ -1189,58 +1184,82 @@ def _compute_sectors() -> dict:
         {"key": "GLD",  "zh": "黄金 GLD",     "linked": "GLD 1x"},
     ]
     out = []
+    disagreements: list[dict] = []
+    # 拉 canonical 市场 regime 供对比
+    canonical_regime = None
+    try:
+        from regime_today import get_today_regime
+        canonical_regime = get_today_regime()
+    except Exception:
+        pass
+
     for s in SECTORS:
+        info = classify_sector(s["key"])
+        if not info:
+            out.append({"key": s["key"], "zh": s["zh"], "linked": s["linked"], "error": "no data"})
+            continue
+        style = info.get("style") or {}
+        entry = {
+            "key":         s["key"],
+            "zh":          s["zh"],
+            "linked":      s["linked"],
+            "price":       info["price"],
+            "pct_5d":      info["pct_5d"],
+            "pct_20d":     info["pct_20d"],
+            "dist_ma20":   info["dist_ma20_pct"],
+            "trend":       info["trend"],
+            "regime":      info["regime_full"],
+            "regime_zh":   info["regime_zh"],
+            "style":       style.get("style"),
+            "style_zh":    style.get("style_zh"),
+            "chop_score":  style.get("chop_score"),
+            "is_choppy":   style.get("is_choppy"),
+            "style_reason": style.get("reason"),
+            "style_metrics": style.get("metrics") or {},
+            "policy_note": style.get("policy_note"),
+        }
+        # Shadow verifier: SPY 板块 regime 应该跟 canonical 市场 regime 语义大体一致
+        # (bull_trending vs strong / risk_off vs weak 等). 若 SPY 出现极端分歧则记录.
+        # 语义配对: canonical crisis|risk_off ↔ sector bear|crisis|weak, 反向属分歧
+        if s["key"] == "SPY" and canonical_regime:
+            sector_reg = info["regime_full"]
+            _defensive_canonical = {"crisis", "risk_off", "recession_risk"}
+            _bullish_sector = {"strong", "overheated"}
+            _defensive_sector = {"bear", "crisis", "weak"}
+            _bullish_canonical = {"bull_trending", "bull_pulling", "bull_extended", "overheated"}
+            disagree = (
+                (canonical_regime in _defensive_canonical and sector_reg in _bullish_sector)
+                or (canonical_regime in _bullish_canonical and sector_reg in _defensive_sector)
+            )
+            if disagree:
+                disagreements.append({
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "canonical_regime": canonical_regime,
+                    "sector_key": s["key"],
+                    "sector_regime": sector_reg,
+                    "pct_5d": info["pct_5d"],
+                    "pct_20d": info["pct_20d"],
+                })
+        out.append(entry)
+
+    # log 分歧 (append-only, 加锁)
+    if disagreements:
         try:
-            df = yf.Ticker(s["key"]).history(period="3mo", interval="1d", auto_adjust=True)
-            if df.empty:
-                continue
-            close = df["Close"].astype(float)
-            price = float(close.iloc[-1])
-            pct_5d  = ((price / float(close.iloc[-6])  - 1) * 100) if len(close) >= 6  else None
-            pct_20d = ((price / float(close.iloc[-21]) - 1) * 100) if len(close) >= 21 else None
-            ma20    = float(close.tail(20).mean()) if len(close) >= 20 else None
-            trend   = "up" if ma20 and price > ma20 else "down"
-            dist_ma = ((price - ma20) / ma20 * 100) if ma20 else None
-            # regime 综合判定：短期（5d）+ 中期（20d）+ 均线相对位置
-            # 优先级：20d 深亏 → 技术熊 / 5d 深亏 → 危机 / 双正 → 强势 / 其它 → 中性
-            regime = "neutral"
-            regime_zh = "中性"
-            if pct_20d is not None and pct_20d <= -10:
-                regime, regime_zh = "bear", "技术熊"
-            elif pct_5d is not None and pct_5d <= -5:
-                regime, regime_zh = "crisis", "危机（单日大跌）"
-            elif pct_20d is not None and pct_20d <= -5:
-                regime, regime_zh = "weak", "弱势"
-            elif pct_5d is not None and pct_5d <= -2:
-                regime, regime_zh = "pullback", "回调"
-            elif pct_5d is not None and pct_20d is not None and pct_5d >= 5 and pct_20d >= 10:
-                regime, regime_zh = "overheated", "过热"
-            elif pct_5d is not None and pct_20d is not None and pct_5d >= 2 and pct_20d >= 2:
-                regime, regime_zh = "strong", "强势"
-            from market_style import analyze_price_style
-            style = analyze_price_style(close, df["High"], df["Low"])
-            out.append({
-                "key":       s["key"],
-                "zh":        s["zh"],
-                "linked":    s["linked"],
-                "price":     round(price, 2),
-                "pct_5d":    round(pct_5d, 2) if pct_5d is not None else None,
-                "pct_20d":   round(pct_20d, 2) if pct_20d is not None else None,
-                "dist_ma20": round(dist_ma, 2) if dist_ma is not None else None,
-                "trend":     trend,
-                "regime":    regime,
-                "regime_zh": regime_zh,
-                "style":     style.get("style"),
-                "style_zh":  style.get("style_zh"),
-                "chop_score": style.get("chop_score"),
-                "is_choppy": style.get("is_choppy"),
-                "style_reason": style.get("reason"),
-                "style_metrics": style.get("metrics") or {},
-                "policy_note": style.get("policy_note"),
-            })
-        except Exception as e:
-            out.append({"key": s["key"], "zh": s["zh"], "linked": s["linked"], "error": str(e)})
-    return {"sectors": out, "ts": datetime.now(timezone.utc).isoformat()}
+            from atomic_io import append_jsonl
+            from config import SIGNALS_DIR as _SD
+            from pathlib import Path as _P
+            dis_path = _P(_SD) / "regime_disagreement.jsonl"
+            for d in disagreements:
+                append_jsonl(dis_path, d)
+        except Exception:
+            pass
+
+    return {
+        "sectors": out,
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "canonical_regime": canonical_regime,
+        "n_disagreements_this_call": len(disagreements),
+    }
 
 
 def api_ai_analysis() -> dict:

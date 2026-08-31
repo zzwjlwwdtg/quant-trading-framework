@@ -396,8 +396,8 @@ def _update_nav_peak(current_nav: float) -> None:
             "peak":    round(float(peak), 2),
             "dd_pct":  round(dd_pct, 2),
         }
-        with open(hist_path, "a", encoding="utf-8") as f:
-            f.write(__import__("json").dumps(entry, ensure_ascii=False) + "\n")
+        from atomic_io import append_jsonl
+        append_jsonl(hist_path, entry)
     except Exception:
         pass   # history is best-effort; trading must not fail because of logging
 
