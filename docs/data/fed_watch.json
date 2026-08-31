@@ -33,38 +33,50 @@
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2026-12",
+  "implied_terminal_date": "2026-12-09",
   "data_snapshot_date": "2026-08-31",
-  "recent_event_impact": "2026-08-28 Powell/Warsh Jackson Hole speech was hawkish and came after the latest scheduled July NFP/CPI/PPI releases: NFP on 2026-08-07, CPI on 2026-08-12, PPI on 2026-08-13. Market reports show September hike odds rose from about 35%-40% before the speech to roughly 57%-62% after it.",
-  "commentary": "Data snapshot is 2026-08-31 and therefore reflects the 2026-08-28 Jackson Hole speech as well as the latest July NFP, CPI, and PPI releases. The curve has shifted hawkish: markets now price a September hike as more likely than a hold, with another hike risk concentrated by December.",
+  "recent_event_impact": "2026-08-28 Warsh Jackson Hole讲话偏鹰，市场将9月加息概率推高至约57%-62%；2026-08-26 July PCE同比3.7%仍高于目标，强化紧缩定价。最近7天内未发现已发布的NFP/CPI/PPI，8月NFP仍待2026-09-04发布；最近CPI为2026-08-12 July CPI同比3.4%，PPI为2026-08-13 July PPI同比4.7%，July NFP为2026-08-07 -23K，弱就业此前压低加息预期但已被Warsh讲话和PCE重新定价覆盖。",
+  "commentary": "数据快照为2026-08-31，已反映2026-08-28 Fed Chair Warsh Jackson Hole讲话之后的市场重定价；近期July NFP为-23K曾提示就业走弱，但July CPI 3.4%、PPI 4.7%和July PCE 3.7%显示通胀仍粘，市场目前转向9月与12月更偏加息的路径。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_backup"
-    },
-    {
       "url": "https://www.gate.com/en-us/news/detail/cme-fedwatch-tool-september-fed-rate-hold-probability-at-431-25bps-hike-at-17856908",
       "type": "cme_fedwatch_report"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/08_sched_list.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fed_funds_futures"
     },
     {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_calendar"
+      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
+      "type": "fed_event"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/cpi.htm",
+      "type": "cpi"
+    },
+    {
+      "url": "https://www.bls.gov/ppi/",
+      "type": "ppi"
+    },
+    {
+      "url": "https://www.bea.gov/data/personal-consumption-expenditures-price-index",
+      "type": "pce"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-31T00:26:39+00:00",
+  "fetched_at": "2026-08-31T08:28:08+00:00",
   "_meta": {
-    "cached_at": "2026-08-31T09:26:39.850978",
-    "age_sec": 27387,
+    "cached_at": "2026-08-31T17:28:08.350111",
+    "age_sec": 296,
     "stale": false,
     "refreshing": false
   }
