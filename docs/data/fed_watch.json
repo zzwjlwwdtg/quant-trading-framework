@@ -1,79 +1,86 @@
 {
-  "current_target_range": "3.50-3.75",
+  "current_target_range": "4.00-4.25",
   "meetings": [
     {
       "date": "2026-09-16",
       "days_until": 15,
       "probabilities": {
-        "hold": 35.6,
-        "hike_25": 64.4
+        "cut_50": 33.6,
+        "cut_25": 66.4
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 57,
       "probabilities": {
-        "hold": 25.8,
-        "hike_25": 56.5,
-        "hike_50": 17.8
+        "cut_50": 24.3,
+        "cut_25": 57.4,
+        "hold": 18.3
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "cut_25",
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 99,
       "probabilities": {
-        "hold": 10.8,
-        "hike_25": 38.6,
-        "hike_50": 50.6
+        "cut_50": 10.7,
+        "cut_25": 38.8,
+        "hold": 40.2,
+        "hike_25": 10.3
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "balanced"
     },
     {
       "date": "2027-01-27",
       "days_until": 148,
       "probabilities": {
-        "hold": 8.2,
-        "hike_25": 32.0,
-        "hike_50": 59.9
+        "cut_50": 8.1,
+        "cut_25": 32.1,
+        "hold": 39.9,
+        "hike_25": 17.4,
+        "hike_50": 2.5
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "balanced"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q1/Q2",
-  "data_snapshot_date": "2026-08-31 18:45 EDT",
-  "recent_event_impact": "近7天内未见已发布的NFP/CPI/PPI/FOMC决议；最新关键事件为2026-08-28 Fed Chair Kevin Warsh Jackson Hole讲话，强调通胀仍偏高，使9月加息概率从约35%-43%升至约64%-66%。下一批就业/通胀数据为2026-09-04 NFP、2026-09-10 PPI、2026-09-11 CPI，尚未反映。",
-  "commentary": "数据快照为2026-08-31 18:45 EDT，已在2026-08-28 Warsh讲话之后；过去7天没有新的NFP/CPI/PPI发布，因此当前定价主要反映Warsh偏鹰表态和油价/通胀担忧，而非新的就业或通胀实数。最新已知的就业、CPI、PPI数据均早于本快照超过7天，市场正等待9月4日NFP与9月10-11日PPI/CPI来验证加息定价。",
+  "implied_terminal_rate": "not_available",
+  "implied_terminal_date": "not_available",
+  "data_snapshot_date": "2026-09-01",
+  "recent_event_impact": "最近7天内未见已发布的NFP/CPI/PPI/FOMC决议；8/28 Warsh Jackson Hole讲话偏鹰，削弱降息定价。最新已发布数据为8/7 NFP -23K、8/12 CPI +0.1% m/m、8/13 PPI持平，均已早于9/1 snapshot并被市场吸收。",
+  "commentary": "Data snapshot为2026-09-01 03:55 EDT，满足最近1交易日要求；8/7 NFP转负和8/12 CPI、8/13 PPI偏温和仍支持9月/10月降息倾向，但8/28 Warsh讲话后远期会议出现更高的hold与hike尾部。未发现snapshot之后又有新的NFP/CPI/PPI发布，因此没有数据滞后警告。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=tzA9ae",
-      "type": "fed_funds_futures_probability_snapshot"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "fedwatch_derived_snapshot"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_action_probabilities"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.bls.gov/news.release/cpi.htm",
+      "type": "cpi"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/ppi.htm",
+      "type": "ppi"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-01T00:30:35+00:00",
+  "fetched_at": "2026-09-01T08:32:22+00:00",
   "_meta": {
-    "cached_at": "2026-09-01T09:30:35.859751",
-    "age_sec": 27151,
+    "cached_at": "2026-09-01T17:32:22.219861",
+    "age_sec": 42,
     "stale": false,
     "refreshing": false
   }
