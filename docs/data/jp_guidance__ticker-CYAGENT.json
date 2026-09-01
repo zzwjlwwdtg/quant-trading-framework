@@ -1,74 +1,81 @@
 {
   "ticker": "CYAGENT",
   "source_stock": "4751.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
-  "last_update": null,
+  "direction": "上修",
+  "revision_type": "upward",
+  "magnitude": "大",
+  "last_update": "2026-08-07",
   "next_earnings": "2026-11-11",
-  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
-  "revision_reason": null,
-  "market_reaction": "不明",
-  "confidence": "unverified",
+  "guidance_note": "2026年9月期通期予想は売上高9,500億円、営業利益770億円、親会社株主帰属純利益410億円、EPS80.85円。純利益は前期実績316.67億円比で約+29.5%。",
+  "revision_reason": "主要3事業（メディア＆IP、インターネット広告、ゲーム）が好調に推移したため上方修正。売上高8,800億円→9,500億円（+8.0%）、営業利益500-600億円→770億円（+28.3-54.0%）、純利益250-300億円→410億円（+36.7-64.0%）。",
+  "market_reaction": "低",
+  "confidence": "high",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-08-29T08:52:39.486465+00:00",
-  "ai_error": "codex_codex_error: exit=1 stderr=2026-08-29T08:52:39.691728Z ERROR codex_models_manager::cache: failed to load models cache: u",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-09-01T08:52:50.378143+00:00",
+  "sources": [
+    {
+      "url": "https://www.cyberagent.co.jp/ir/calendar/id=20064",
+      "type": "IR",
+      "title": "IRカレンダー"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 1335.5,
+    "current_price": 1330.5,
     "forward_eps": 51.25,
-    "trailing_eps": 80.26,
-    "eps_growth_pct": -36.1,
-    "forward_pe": 26.06,
-    "trailing_pe": 16.64,
+    "trailing_eps": 80.35,
+    "eps_growth_pct": -36.2,
+    "forward_pe": 25.96,
+    "trailing_pe": 16.56,
     "target_mean": 1855.62,
     "target_high": 2200.0,
     "target_low": 1470.0,
-    "target_upside_pct": 38.9,
+    "target_upside_pct": 39.5,
     "revenue_growth_pct": 9.4,
     "earnings_growth_pct": 5.8,
     "next_earnings": "2026-11-11",
-    "implied_pe_hold": 852.78,
-    "implied_pe_hold_upside": -36.1,
+    "implied_pe_hold": 848.64,
+    "implied_pe_hold_upside": -36.2,
     "peg_fair_price": null,
     "peg_ratio": null,
-    "hist_pe_median": 34.07,
-    "hist_pe_p25": 23.95,
+    "hist_pe_median": 33.99,
+    "hist_pe_p25": 23.94,
     "hist_pe_p75": 80.47,
-    "hist_pe_n_days": 957,
-    "implied_hist_median": 1746.09,
-    "implied_hist_p25": 1227.44,
+    "hist_pe_n_days": 959,
+    "implied_hist_median": 1741.99,
+    "implied_hist_p25": 1226.92,
     "implied_hist_p75": 4124.09,
-    "implied_hist_upside": 30.7,
-    "peer_pe_median": 17.79,
+    "implied_hist_upside": 30.9,
+    "peer_pe_median": 18.04,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "4324.T",
-        "pe": 11.34
+        "pe": 11.54
       },
       {
         "ticker": "2433.T",
-        "pe": 24.23
+        "pe": 24.54
       },
       {
         "ticker": "2432.T",
-        "pe": 26.77
+        "pe": 27.36
       },
       {
         "ticker": "9418.T",
-        "pe": 5.52
+        "pe": 5.57
       }
     ],
-    "implied_peer_median": 911.74,
-    "implied_peer_upside": -31.7,
+    "implied_peer_median": 924.55,
+    "implied_peer_upside": -30.5,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-29T17:52:46.747084",
-    "age_sec": 258020,
+    "cached_at": "2026-09-01T17:53:56.664037",
+    "age_sec": 550,
     "stale": false,
     "refreshing": false
   }

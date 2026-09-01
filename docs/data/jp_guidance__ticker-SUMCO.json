@@ -4,29 +4,36 @@
   "direction": "待核验",
   "revision_type": "unverified",
   "magnitude": "不明",
-  "last_update": null,
-  "next_earnings": "2026-11-11",
-  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
-  "revision_reason": null,
-  "market_reaction": "不明",
-  "confidence": "unverified",
+  "last_update": "2026-08-06",
+  "next_earnings": "2026-11-05",
+  "guidance_note": "未找到最近90天内官方发布的2026年12月期通期業績予想；公司在8月6日短信中仅披露2026年12月期第3四半期累計予想：売上高333,000百万円、営業利益△6,300百万円、純利益△12,800百万円、EPS△36.60円。",
+  "revision_reason": "通期予想的売上/営業利益/純利益/EPS均未披露，无法核验上修或下修；直近可核验的季度累計予想为前回発表予想「―」→今回予想：売上高333,000百万円、営業利益△6,300百万円、純利益△12,800百万円、EPS△36.60円。",
+  "market_reaction": "高",
+  "confidence": "low",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-08-29T08:53:39.471868+00:00",
-  "ai_error": "codex_codex_error: exit=1 stderr=2026-08-29T08:53:39.822954Z ERROR codex_models_manager::cache: failed to load models cache: u",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-09-01T08:53:51.301424+00:00",
+  "sources": [
+    {
+      "url": "https://www.sumcosi.com/ir/library/presentations.html",
+      "type": "IR",
+      "title": "決算短信・決算説明会資料｜株式会社SUMCO"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "hold",
-    "current_price": 3434.0,
+    "current_price": 3317.0,
     "forward_eps": 49.23,
     "trailing_eps": -79.33,
     "eps_growth_pct": null,
-    "forward_pe": 69.75,
+    "forward_pe": 67.38,
     "trailing_pe": null,
-    "target_mean": 3870.0,
+    "target_mean": 3901.25,
     "target_high": 6500.0,
     "target_low": 1300.0,
-    "target_upside_pct": 12.7,
+    "target_upside_pct": 17.6,
     "revenue_growth_pct": 10.4,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-11",
@@ -41,26 +48,26 @@
     "implied_hist_median": 613.9,
     "implied_hist_p25": 476.55,
     "implied_hist_p75": 936.85,
-    "implied_hist_upside": -82.1,
-    "peer_pe_median": 28.16,
+    "implied_hist_upside": -81.5,
+    "peer_pe_median": 28.99,
     "peer_pe_n_peers": 2,
     "peer_pe_details": [
       {
         "ticker": "4063.T",
-        "pe": 18.2
+        "pe": 18.1
       },
       {
         "ticker": "SOI.PA",
-        "pe": 38.13
+        "pe": 39.88
       }
     ],
-    "implied_peer_median": 1386.32,
-    "implied_peer_upside": -59.6,
+    "implied_peer_median": 1427.18,
+    "implied_peer_upside": -57.0,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-08-29T17:53:46.512215",
-    "age_sec": 257960,
+    "cached_at": "2026-09-01T17:54:40.932844",
+    "age_sec": 505,
     "stale": false,
     "refreshing": false
   }
