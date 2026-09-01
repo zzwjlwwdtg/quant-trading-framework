@@ -1,87 +1,101 @@
 {
-  "current_target_range": "4.00-4.25",
+  "current_target_range": "3.50-3.75",
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 15,
+      "days_until": 14,
       "probabilities": {
-        "cut_50": 33.6,
-        "cut_25": 66.4
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 33.6,
+        "hike_25": 66.4,
+        "hike_50": 0
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 57,
+      "days_until": 56,
       "probabilities": {
-        "cut_50": 24.3,
-        "cut_25": 57.4,
-        "hold": 18.3
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 24.3,
+        "hike_25": 57.4,
+        "hike_50": 18.3
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 99,
+      "days_until": 98,
       "probabilities": {
-        "cut_50": 10.7,
-        "cut_25": 38.8,
-        "hold": 40.2,
-        "hike_25": 10.3
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 10.2,
+        "hike_25": 38.1,
+        "hike_50": 51.7
       },
-      "most_likely": "hold",
-      "consensus_direction": "balanced"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2027-01-27",
-      "days_until": 148,
+      "days_until": 147,
       "probabilities": {
-        "cut_50": 8.1,
-        "cut_25": 32.1,
-        "hold": 39.9,
-        "hike_25": 17.4,
-        "hike_50": 2.5
+        "cut_50": 0,
+        "cut_25": 0,
+        "hold": 7.7,
+        "hike_25": 31.5,
+        "hike_50": 60.8
       },
-      "most_likely": "hold",
-      "consensus_direction": "balanced"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": "not_available",
-  "implied_terminal_date": "not_available",
-  "data_snapshot_date": "2026-09-01",
-  "recent_event_impact": "最近7天内未见已发布的NFP/CPI/PPI/FOMC决议；8/28 Warsh Jackson Hole讲话偏鹰，削弱降息定价。最新已发布数据为8/7 NFP -23K、8/12 CPI +0.1% m/m、8/13 PPI持平，均已早于9/1 snapshot并被市场吸收。",
-  "commentary": "Data snapshot为2026-09-01 03:55 EDT，满足最近1交易日要求；8/7 NFP转负和8/12 CPI、8/13 PPI偏温和仍支持9月/10月降息倾向，但8/28 Warsh讲话后远期会议出现更高的hold与hike尾部。未发现snapshot之后又有新的NFP/CPI/PPI发布，因此没有数据滞后警告。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-01 11:55 EDT",
+  "recent_event_impact": "近7天内未发布新的NFP/CPI/PPI/FOMC决议；8/28/2026 Fed Chair Warsh Jackson Hole鹰派讲话已反映在9/1快照中，9月加息概率升至约66%。最新NFP为8/7/2026发布的7月-23K、低于85K预期；最新CPI为8/12/2026发布的7月CPI同比3.4%、核心同比2.5%；最新PPI为8/13/2026发布的7月PPI同比4.7%、低于4.9%预期。",
+  "commentary": "数据快照为2026-09-01 11:55 EDT，已晚于8/28 Warsh Jackson Hole讲话，因此市场对9月加息的重新定价已反映；但8月NFP、PPI、CPI分别将在2026-09-04、09-10、09-11发布，尚未进入当前概率。最新已公布的7月NFP明显弱于预期压低紧缩确定性，而7月CPI/PPI仍显示通胀高于目标，叠加Warsh鹰派讲话，使未来3-4次会议整体呈鹰派倾斜。远期会议的hike_50按相对当前3.50-3.75目标区间的累计上调50bp或以上归入简化标签。",
   "sources": [
+    {
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "backup_cme_derived"
+    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "fedwatch_derived_snapshot"
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
+      "type": "official_fomc"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "url": "https://www.bls.gov/schedule/2026/",
+      "type": "official_release_calendar"
     },
     {
       "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "type": "official_cpi"
     },
     {
-      "url": "https://www.bls.gov/news.release/ppi.htm",
-      "type": "ppi"
+      "url": "https://www.bls.gov/ppi/",
+      "type": "official_ppi"
+    },
+    {
+      "url": "https://www.investing.com/economic-calendar/nonfarm-payrolls-227",
+      "type": "nfp_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-01T08:32:22+00:00",
+  "fetched_at": "2026-09-01T16:34:16+00:00",
   "_meta": {
-    "cached_at": "2026-09-01T17:32:22.219861",
-    "age_sec": 28843,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-02T01:34:16.246469",
+    "age_sec": 1727,
+    "stale": false,
+    "refreshing": false
   }
 }
