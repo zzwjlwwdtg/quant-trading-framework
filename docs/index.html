@@ -111,7 +111,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-09-01T10:03:05", "endpoints_ok": 130, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-09-01T11:03:05", "endpoints_ok": 130, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -3602,7 +3602,26 @@ const STYLE_CLS = {
 async function loadSectors() {
   const r = await fetchJson('/api/sectors');
   const sf = $('sectors-freshness');
-  if (sf) sf.innerHTML = 'Sector Regimes ' + metaHint(r && r._meta);
+  if (sf) {
+    let hdr = 'Sector Regimes ' + metaHint(r && r._meta);
+    // rotation_speed 徽章 (backtest verifier only, 不入 confluence 决策)
+    // 低 rotation → momentum 强 (5d win 68%); 高 rotation → momentum 弱 (5d win 50%)
+    if (r && r.rotation_speed) {
+      const rs = r.rotation_speed;
+      const speed = rs.rotation_speed;
+      const win = rs.window_weeks;
+      let cls = 'info', hint = '';
+      if (speed <= win / 3)      { cls = 'ok';   hint = '低轮动·momentum 强'; }
+      else if (speed >= win*2/3) { cls = 'warn'; hint = '高轮动·momentum 弱'; }
+      else                       { cls = 'info'; hint = '中等轮动'; }
+      const historyStr = (rs.recent_top1_history || []).join(' → ');
+      hdr += ` · <span class="badge ${cls}" style="font-size:11px" ` +
+             `title="${win} 周内 top-1 sector 换 ${speed} 次\n${hint}\n历史: ${historyStr}\n` +
+             `verifier only, 不入 confluence (backtest 2/4 pass)">🔄 轮动 ${speed}/${win}` +
+             ` · 领涨 ${rs.current_top1 || '?'}</span>`;
+    }
+    sf.innerHTML = hdr;
+  }
   if (!r || !r.sectors) { $('sectors').innerHTML = '<small>暂无板块数据</small>'; return; }
   $('sectors').innerHTML = r.sectors.map(s => {
     if (s.error) return `<div class="signal-card"><b>${s.zh}</b><br><small class="bad">${s.error}</small></div>`;
