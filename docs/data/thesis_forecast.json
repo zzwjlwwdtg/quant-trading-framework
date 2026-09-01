@@ -497,31 +497,31 @@
           "desc": "CPI MoM < -0.15% (通胀明显冷却)",
           "delta_pp": 8,
           "prob_note": "让 Fed 有明确借口降息",
-          "probability": 0.1
+          "probability": 0.0
         },
         "mild_dovish": {
           "desc": "CPI MoM -0.15% ~ -0.05% (略冷)",
           "delta_pp": 3,
           "prob_note": "略微支持降息",
-          "probability": 0.15
+          "probability": 0.001
         },
         "base": {
           "desc": "CPI MoM -0.05% ~ +0.05% (符合共识)",
           "delta_pp": 0,
           "prob_note": "无明显方向",
-          "probability": 0.35
+          "probability": 0.018
         },
         "mild_hawkish": {
           "desc": "CPI MoM +0.05% ~ +0.15% (略强)",
           "delta_pp": -3,
           "prob_note": "略微推迟降息",
-          "probability": 0.25
+          "probability": 0.121
         },
         "hawkish": {
           "desc": "CPI MoM > +0.15% (通胀反弹)",
           "delta_pp": -8,
           "prob_note": "Fed 会推迟降息",
-          "probability": 0.15
+          "probability": 0.86
         }
       },
       "delta_range_pp": [
@@ -529,11 +529,11 @@
         8
       ],
       "range_desc": "(-8pp ~ +8pp)",
-      "expected_delta_pp": -0.7,
-      "probability_source": "prior",
+      "expected_delta_pp": -7.24,
+      "probability_source": "cleveland_fed_nowcast",
       "market_impact": {
-        "bond": "偏空",
-        "equity": "偏空",
+        "bond": "强利空",
+        "equity": "强利空",
         "equity_channel": "利率驱动",
         "direction": "hawkish",
         "long_favored": [
@@ -548,53 +548,53 @@
           "REITs",
           "growth 股"
         ],
-        "bond_yield_bps": 2.1,
-        "spx_pct_est": -0.1
+        "bond_yield_bps": 21.7,
+        "spx_pct_est": -1.09
       },
       "impact_matrix": {
         "event_type": "CPI",
-        "mkt_implied_prob": 0.35,
-        "surprise_factor": 0.65,
+        "mkt_implied_prob": 0.86,
+        "surprise_factor": 0.14,
         "scenarios": {
           "hawkish_shock": {
             "horizons": {
               "T+0": {
-                "ust_10y_bps": 11.4,
-                "spx_pct": -0.65,
-                "hy_oas_bps": 4.5,
-                "gld_pct": -1.37,
+                "ust_10y_bps": 2.5,
+                "spx_pct": -0.14,
+                "hy_oas_bps": 1.0,
+                "gld_pct": -0.29,
                 "note": "即时定价冲击"
               },
               "T+1D": {
-                "ust_10y_bps": 18.2,
-                "spx_pct": -1.17,
-                "hy_oas_bps": 9.1,
-                "gld_pct": -2.27,
+                "ust_10y_bps": 3.9,
+                "spx_pct": -0.25,
+                "hy_oas_bps": 2.0,
+                "gld_pct": -0.49,
                 "note": "曲线短端 up, 长端跟随"
               },
               "T+1W": {
-                "ust_10y_bps": 22.8,
-                "spx_pct": -1.56,
-                "hy_oas_bps": 18.2,
-                "gld_pct": -2.73,
+                "ust_10y_bps": 4.9,
+                "spx_pct": -0.34,
+                "hy_oas_bps": 3.9,
+                "gld_pct": -0.59,
                 "note": "PEAK 短期反应"
               },
               "T+1M": {
-                "ust_10y_bps": 15.9,
-                "spx_pct": -0.91,
-                "hy_oas_bps": 25.0,
-                "gld_pct": -1.82,
+                "ust_10y_bps": 3.4,
+                "spx_pct": -0.2,
+                "hy_oas_bps": 5.4,
+                "gld_pct": -0.39,
                 "note": "股票部分回补, 信用继续扩"
               },
               "T+3M": {
-                "ust_10y_bps": 9.1,
-                "spx_pct": -2.27,
-                "hy_oas_bps": 36.4,
-                "gld_pct": -0.91,
+                "ust_10y_bps": 2.0,
+                "spx_pct": -0.49,
+                "hy_oas_bps": 7.8,
+                "gld_pct": -0.2,
                 "note": "CYCLICAL: 盈利下修 + 信用累积"
               }
             },
-            "scenario_scaler": 0.65,
+            "scenario_scaler": 0.14,
             "action_triggers": {
               "T+0": "MOVE index >140 → 减 IEI 20-30% (立刻)",
               "T+1W": "长端 10Y +30bps 以上 → 加 GLD 3-5%, TLT 不加不减",
@@ -612,75 +612,75 @@
               },
               "T+1D": {
                 "ust_10y_bps": 0.0,
-                "spx_pct": 0.13,
+                "spx_pct": 0.03,
                 "hy_oas_bps": 0.0,
                 "gld_pct": 0.0,
                 "note": "轻微 relief"
               },
               "T+1W": {
-                "ust_10y_bps": -2.3,
-                "spx_pct": 0.2,
-                "hy_oas_bps": -1.4,
+                "ust_10y_bps": -0.5,
+                "spx_pct": 0.04,
+                "hy_oas_bps": -0.3,
                 "gld_pct": 0.0,
                 "note": "不确定性消除"
               },
               "T+1M": {
-                "ust_10y_bps": -4.5,
-                "spx_pct": 0.45,
-                "hy_oas_bps": -2.3,
-                "gld_pct": 0.45,
+                "ust_10y_bps": -1.0,
+                "spx_pct": 0.1,
+                "hy_oas_bps": -0.5,
+                "gld_pct": 0.1,
                 "note": "carry 环境"
               },
               "T+3M": {
-                "ust_10y_bps": -6.8,
-                "spx_pct": 0.91,
-                "hy_oas_bps": -4.5,
-                "gld_pct": 0.91,
+                "ust_10y_bps": -1.5,
+                "spx_pct": 0.2,
+                "hy_oas_bps": -1.0,
+                "gld_pct": 0.2,
                 "note": "低波动率 grind up"
               }
             },
-            "scenario_scaler": 0.65,
+            "scenario_scaler": 0.14,
             "action_triggers": {}
           },
           "dovish_surprise": {
             "horizons": {
               "T+0": {
-                "ust_10y_bps": -9.1,
-                "spx_pct": 0.91,
-                "hy_oas_bps": -4.5,
-                "gld_pct": 1.37,
+                "ust_10y_bps": -2.0,
+                "spx_pct": 0.2,
+                "hy_oas_bps": -1.0,
+                "gld_pct": 0.29,
                 "note": "降息意外 → 全线 rally"
               },
               "T+1D": {
-                "ust_10y_bps": -13.7,
-                "spx_pct": 1.37,
-                "hy_oas_bps": -9.1,
-                "gld_pct": 1.82,
+                "ust_10y_bps": -2.9,
+                "spx_pct": 0.29,
+                "hy_oas_bps": -2.0,
+                "gld_pct": 0.39,
                 "note": "risk-on 扩散"
               },
               "T+1W": {
-                "ust_10y_bps": -18.2,
-                "spx_pct": 1.82,
-                "hy_oas_bps": -13.7,
-                "gld_pct": 2.27,
+                "ust_10y_bps": -3.9,
+                "spx_pct": 0.39,
+                "hy_oas_bps": -2.9,
+                "gld_pct": 0.49,
                 "note": "PEAK 反弹"
               },
               "T+1M": {
-                "ust_10y_bps": -15.9,
-                "spx_pct": 1.37,
-                "hy_oas_bps": -11.4,
-                "gld_pct": 1.82,
+                "ust_10y_bps": -3.4,
+                "spx_pct": 0.29,
+                "hy_oas_bps": -2.5,
+                "gld_pct": 0.39,
                 "note": "利多消化中"
               },
               "T+3M": {
-                "ust_10y_bps": -22.8,
-                "spx_pct": 2.27,
-                "hy_oas_bps": -18.2,
-                "gld_pct": 2.73,
+                "ust_10y_bps": -4.9,
+                "spx_pct": 0.49,
+                "hy_oas_bps": -3.9,
+                "gld_pct": 0.59,
                 "note": "CYCLICAL: 宽松环境显现"
               }
             },
-            "scenario_scaler": 0.65,
+            "scenario_scaler": 0.14,
             "action_triggers": {
               "T+0": "long duration rally → 加 IEI/TLT 至 max_pct",
               "T+1W": "曲线 steepener → SHY 保, TLT 加",
@@ -1222,25 +1222,25 @@
           "desc": "核心 PCE MoM < 0.15% (通胀冷却)",
           "delta_pp": 5,
           "prob_note": "Fed 主看这个数据",
-          "probability": 0.15
+          "probability": 0.099
         },
         "base": {
           "desc": "核心 PCE MoM 0.15-0.25% (中性)",
           "delta_pp": 0,
           "prob_note": "无明显方向",
-          "probability": 0.45
+          "probability": 0.287
         },
         "hawkish": {
           "desc": "核心 PCE MoM 0.25-0.30% (略强)",
           "delta_pp": -3,
           "prob_note": "略推迟降息",
-          "probability": 0.25
+          "probability": 0.197
         },
         "very_hawkish": {
           "desc": "核心 PCE MoM > 0.30% (通胀反弹)",
           "delta_pp": -8,
           "prob_note": "Fed 会明确 pushback",
-          "probability": 0.15
+          "probability": 0.417
         }
       },
       "delta_range_pp": [
@@ -1248,11 +1248,11 @@
         5
       ],
       "range_desc": "(-8pp ~ +5pp)",
-      "expected_delta_pp": -1.2,
-      "probability_source": "prior",
+      "expected_delta_pp": -3.43,
+      "probability_source": "cleveland_fed_nowcast",
       "market_impact": {
-        "bond": "利空",
-        "equity": "利空",
+        "bond": "强利空",
+        "equity": "强利空",
         "equity_channel": "利率驱动",
         "direction": "hawkish",
         "long_favored": [
@@ -1267,53 +1267,53 @@
           "REITs",
           "growth 股"
         ],
-        "bond_yield_bps": 3.6,
-        "spx_pct_est": -0.18
+        "bond_yield_bps": 10.3,
+        "spx_pct_est": -0.51
       },
       "impact_matrix": {
         "event_type": "PCE",
-        "mkt_implied_prob": 0.45,
-        "surprise_factor": 0.55,
+        "mkt_implied_prob": 0.42,
+        "surprise_factor": 0.58,
         "scenarios": {
           "hawkish_shock": {
             "horizons": {
               "T+0": {
-                "ust_10y_bps": 9.6,
-                "spx_pct": -0.55,
-                "hy_oas_bps": 3.9,
-                "gld_pct": -1.16,
+                "ust_10y_bps": 10.2,
+                "spx_pct": -0.58,
+                "hy_oas_bps": 4.1,
+                "gld_pct": -1.22,
                 "note": "即时定价冲击"
               },
               "T+1D": {
-                "ust_10y_bps": 15.4,
-                "spx_pct": -0.99,
-                "hy_oas_bps": 7.7,
-                "gld_pct": -1.93,
+                "ust_10y_bps": 16.3,
+                "spx_pct": -1.05,
+                "hy_oas_bps": 8.2,
+                "gld_pct": -2.04,
                 "note": "曲线短端 up, 长端跟随"
               },
               "T+1W": {
-                "ust_10y_bps": 19.2,
-                "spx_pct": -1.32,
-                "hy_oas_bps": 15.4,
-                "gld_pct": -2.31,
+                "ust_10y_bps": 20.4,
+                "spx_pct": -1.4,
+                "hy_oas_bps": 16.3,
+                "gld_pct": -2.45,
                 "note": "PEAK 短期反应"
               },
               "T+1M": {
-                "ust_10y_bps": 13.5,
-                "spx_pct": -0.77,
-                "hy_oas_bps": 21.2,
-                "gld_pct": -1.54,
+                "ust_10y_bps": 14.3,
+                "spx_pct": -0.82,
+                "hy_oas_bps": 22.4,
+                "gld_pct": -1.63,
                 "note": "股票部分回补, 信用继续扩"
               },
               "T+3M": {
-                "ust_10y_bps": 7.7,
-                "spx_pct": -1.93,
-                "hy_oas_bps": 30.8,
-                "gld_pct": -0.77,
+                "ust_10y_bps": 8.2,
+                "spx_pct": -2.04,
+                "hy_oas_bps": 32.6,
+                "gld_pct": -0.82,
                 "note": "CYCLICAL: 盈利下修 + 信用累积"
               }
             },
-            "scenario_scaler": 0.55,
+            "scenario_scaler": 0.58,
             "action_triggers": {
               "T+0": "MOVE index >140 → 减 IEI 20-30% (立刻)",
               "T+1W": "长端 10Y +30bps 以上 → 加 GLD 3-5%, TLT 不加不减",
@@ -1331,75 +1331,75 @@
               },
               "T+1D": {
                 "ust_10y_bps": 0.0,
-                "spx_pct": 0.11,
+                "spx_pct": 0.12,
                 "hy_oas_bps": 0.0,
                 "gld_pct": 0.0,
                 "note": "轻微 relief"
               },
               "T+1W": {
-                "ust_10y_bps": -1.9,
+                "ust_10y_bps": -2.0,
                 "spx_pct": 0.17,
                 "hy_oas_bps": -1.2,
                 "gld_pct": 0.0,
                 "note": "不确定性消除"
               },
               "T+1M": {
-                "ust_10y_bps": -3.9,
-                "spx_pct": 0.39,
-                "hy_oas_bps": -1.9,
-                "gld_pct": 0.39,
+                "ust_10y_bps": -4.1,
+                "spx_pct": 0.41,
+                "hy_oas_bps": -2.0,
+                "gld_pct": 0.41,
                 "note": "carry 环境"
               },
               "T+3M": {
-                "ust_10y_bps": -5.8,
-                "spx_pct": 0.77,
-                "hy_oas_bps": -3.9,
-                "gld_pct": 0.77,
+                "ust_10y_bps": -6.1,
+                "spx_pct": 0.82,
+                "hy_oas_bps": -4.1,
+                "gld_pct": 0.82,
                 "note": "低波动率 grind up"
               }
             },
-            "scenario_scaler": 0.55,
+            "scenario_scaler": 0.58,
             "action_triggers": {}
           },
           "dovish_surprise": {
             "horizons": {
               "T+0": {
-                "ust_10y_bps": -7.7,
-                "spx_pct": 0.77,
-                "hy_oas_bps": -3.9,
-                "gld_pct": 1.16,
+                "ust_10y_bps": -8.2,
+                "spx_pct": 0.82,
+                "hy_oas_bps": -4.1,
+                "gld_pct": 1.22,
                 "note": "降息意外 → 全线 rally"
               },
               "T+1D": {
-                "ust_10y_bps": -11.6,
-                "spx_pct": 1.16,
-                "hy_oas_bps": -7.7,
-                "gld_pct": 1.54,
+                "ust_10y_bps": -12.2,
+                "spx_pct": 1.22,
+                "hy_oas_bps": -8.2,
+                "gld_pct": 1.63,
                 "note": "risk-on 扩散"
               },
               "T+1W": {
-                "ust_10y_bps": -15.4,
-                "spx_pct": 1.54,
-                "hy_oas_bps": -11.6,
-                "gld_pct": 1.93,
+                "ust_10y_bps": -16.3,
+                "spx_pct": 1.63,
+                "hy_oas_bps": -12.2,
+                "gld_pct": 2.04,
                 "note": "PEAK 反弹"
               },
               "T+1M": {
-                "ust_10y_bps": -13.5,
-                "spx_pct": 1.16,
-                "hy_oas_bps": -9.6,
-                "gld_pct": 1.54,
+                "ust_10y_bps": -14.3,
+                "spx_pct": 1.22,
+                "hy_oas_bps": -10.2,
+                "gld_pct": 1.63,
                 "note": "利多消化中"
               },
               "T+3M": {
-                "ust_10y_bps": -19.2,
-                "spx_pct": 1.93,
-                "hy_oas_bps": -15.4,
-                "gld_pct": 2.31,
+                "ust_10y_bps": -20.4,
+                "spx_pct": 2.04,
+                "hy_oas_bps": -16.3,
+                "gld_pct": 2.45,
                 "note": "CYCLICAL: 宽松环境显现"
               }
             },
-            "scenario_scaler": 0.55,
+            "scenario_scaler": 0.58,
             "action_triggers": {
               "T+0": "long duration rally → 加 IEI/TLT 至 max_pct",
               "T+1W": "曲线 steepener → SHY 保, TLT 加",
@@ -1715,31 +1715,31 @@
           "desc": "CPI MoM < -0.15% (通胀明显冷却)",
           "delta_pp": 8,
           "prob_note": "让 Fed 有明确借口降息",
-          "probability": 0.1
+          "probability": 0.0
         },
         "mild_dovish": {
           "desc": "CPI MoM -0.15% ~ -0.05% (略冷)",
           "delta_pp": 3,
           "prob_note": "略微支持降息",
-          "probability": 0.15
+          "probability": 0.001
         },
         "base": {
           "desc": "CPI MoM -0.05% ~ +0.05% (符合共识)",
           "delta_pp": 0,
           "prob_note": "无明显方向",
-          "probability": 0.35
+          "probability": 0.018
         },
         "mild_hawkish": {
           "desc": "CPI MoM +0.05% ~ +0.15% (略强)",
           "delta_pp": -3,
           "prob_note": "略微推迟降息",
-          "probability": 0.25
+          "probability": 0.121
         },
         "hawkish": {
           "desc": "CPI MoM > +0.15% (通胀反弹)",
           "delta_pp": -8,
           "prob_note": "Fed 会推迟降息",
-          "probability": 0.15
+          "probability": 0.86
         }
       },
       "delta_range_pp": [
@@ -1747,11 +1747,11 @@
         8
       ],
       "range_desc": "(-8pp ~ +8pp)",
-      "expected_delta_pp": -0.7,
-      "probability_source": "prior",
+      "expected_delta_pp": -7.24,
+      "probability_source": "cleveland_fed_nowcast",
       "market_impact": {
-        "bond": "偏空",
-        "equity": "偏空",
+        "bond": "强利空",
+        "equity": "强利空",
         "equity_channel": "利率驱动",
         "direction": "hawkish",
         "long_favored": [
@@ -1766,53 +1766,53 @@
           "REITs",
           "growth 股"
         ],
-        "bond_yield_bps": 2.1,
-        "spx_pct_est": -0.1
+        "bond_yield_bps": 21.7,
+        "spx_pct_est": -1.09
       },
       "impact_matrix": {
         "event_type": "CPI",
-        "mkt_implied_prob": 0.35,
-        "surprise_factor": 0.65,
+        "mkt_implied_prob": 0.86,
+        "surprise_factor": 0.14,
         "scenarios": {
           "hawkish_shock": {
             "horizons": {
               "T+0": {
-                "ust_10y_bps": 11.4,
-                "spx_pct": -0.65,
-                "hy_oas_bps": 4.5,
-                "gld_pct": -1.37,
+                "ust_10y_bps": 2.5,
+                "spx_pct": -0.14,
+                "hy_oas_bps": 1.0,
+                "gld_pct": -0.29,
                 "note": "即时定价冲击"
               },
               "T+1D": {
-                "ust_10y_bps": 18.2,
-                "spx_pct": -1.17,
-                "hy_oas_bps": 9.1,
-                "gld_pct": -2.27,
+                "ust_10y_bps": 3.9,
+                "spx_pct": -0.25,
+                "hy_oas_bps": 2.0,
+                "gld_pct": -0.49,
                 "note": "曲线短端 up, 长端跟随"
               },
               "T+1W": {
-                "ust_10y_bps": 22.8,
-                "spx_pct": -1.56,
-                "hy_oas_bps": 18.2,
-                "gld_pct": -2.73,
+                "ust_10y_bps": 4.9,
+                "spx_pct": -0.34,
+                "hy_oas_bps": 3.9,
+                "gld_pct": -0.59,
                 "note": "PEAK 短期反应"
               },
               "T+1M": {
-                "ust_10y_bps": 15.9,
-                "spx_pct": -0.91,
-                "hy_oas_bps": 25.0,
-                "gld_pct": -1.82,
+                "ust_10y_bps": 3.4,
+                "spx_pct": -0.2,
+                "hy_oas_bps": 5.4,
+                "gld_pct": -0.39,
                 "note": "股票部分回补, 信用继续扩"
               },
               "T+3M": {
-                "ust_10y_bps": 9.1,
-                "spx_pct": -2.27,
-                "hy_oas_bps": 36.4,
-                "gld_pct": -0.91,
+                "ust_10y_bps": 2.0,
+                "spx_pct": -0.49,
+                "hy_oas_bps": 7.8,
+                "gld_pct": -0.2,
                 "note": "CYCLICAL: 盈利下修 + 信用累积"
               }
             },
-            "scenario_scaler": 0.65,
+            "scenario_scaler": 0.14,
             "action_triggers": {
               "T+0": "MOVE index >140 → 减 IEI 20-30% (立刻)",
               "T+1W": "长端 10Y +30bps 以上 → 加 GLD 3-5%, TLT 不加不减",
@@ -1830,75 +1830,75 @@
               },
               "T+1D": {
                 "ust_10y_bps": 0.0,
-                "spx_pct": 0.13,
+                "spx_pct": 0.03,
                 "hy_oas_bps": 0.0,
                 "gld_pct": 0.0,
                 "note": "轻微 relief"
               },
               "T+1W": {
-                "ust_10y_bps": -2.3,
-                "spx_pct": 0.2,
-                "hy_oas_bps": -1.4,
+                "ust_10y_bps": -0.5,
+                "spx_pct": 0.04,
+                "hy_oas_bps": -0.3,
                 "gld_pct": 0.0,
                 "note": "不确定性消除"
               },
               "T+1M": {
-                "ust_10y_bps": -4.5,
-                "spx_pct": 0.45,
-                "hy_oas_bps": -2.3,
-                "gld_pct": 0.45,
+                "ust_10y_bps": -1.0,
+                "spx_pct": 0.1,
+                "hy_oas_bps": -0.5,
+                "gld_pct": 0.1,
                 "note": "carry 环境"
               },
               "T+3M": {
-                "ust_10y_bps": -6.8,
-                "spx_pct": 0.91,
-                "hy_oas_bps": -4.5,
-                "gld_pct": 0.91,
+                "ust_10y_bps": -1.5,
+                "spx_pct": 0.2,
+                "hy_oas_bps": -1.0,
+                "gld_pct": 0.2,
                 "note": "低波动率 grind up"
               }
             },
-            "scenario_scaler": 0.65,
+            "scenario_scaler": 0.14,
             "action_triggers": {}
           },
           "dovish_surprise": {
             "horizons": {
               "T+0": {
-                "ust_10y_bps": -9.1,
-                "spx_pct": 0.91,
-                "hy_oas_bps": -4.5,
-                "gld_pct": 1.37,
+                "ust_10y_bps": -2.0,
+                "spx_pct": 0.2,
+                "hy_oas_bps": -1.0,
+                "gld_pct": 0.29,
                 "note": "降息意外 → 全线 rally"
               },
               "T+1D": {
-                "ust_10y_bps": -13.7,
-                "spx_pct": 1.37,
-                "hy_oas_bps": -9.1,
-                "gld_pct": 1.82,
+                "ust_10y_bps": -2.9,
+                "spx_pct": 0.29,
+                "hy_oas_bps": -2.0,
+                "gld_pct": 0.39,
                 "note": "risk-on 扩散"
               },
               "T+1W": {
-                "ust_10y_bps": -18.2,
-                "spx_pct": 1.82,
-                "hy_oas_bps": -13.7,
-                "gld_pct": 2.27,
+                "ust_10y_bps": -3.9,
+                "spx_pct": 0.39,
+                "hy_oas_bps": -2.9,
+                "gld_pct": 0.49,
                 "note": "PEAK 反弹"
               },
               "T+1M": {
-                "ust_10y_bps": -15.9,
-                "spx_pct": 1.37,
-                "hy_oas_bps": -11.4,
-                "gld_pct": 1.82,
+                "ust_10y_bps": -3.4,
+                "spx_pct": 0.29,
+                "hy_oas_bps": -2.5,
+                "gld_pct": 0.39,
                 "note": "利多消化中"
               },
               "T+3M": {
-                "ust_10y_bps": -22.8,
-                "spx_pct": 2.27,
-                "hy_oas_bps": -18.2,
-                "gld_pct": 2.73,
+                "ust_10y_bps": -4.9,
+                "spx_pct": 0.49,
+                "hy_oas_bps": -3.9,
+                "gld_pct": 0.59,
                 "note": "CYCLICAL: 宽松环境显现"
               }
             },
-            "scenario_scaler": 0.65,
+            "scenario_scaler": 0.14,
             "action_triggers": {
               "T+0": "long duration rally → 加 IEI/TLT 至 max_pct",
               "T+1W": "曲线 steepener → SHY 保, TLT 加",
@@ -2417,11 +2417,11 @@
       }
     }
   ],
-  "generated_at": "2026-09-02T00:57:59",
+  "generated_at": "2026-09-02T06:58:24",
   "note": "Scenarios 是规则版预测. 实际数据发布时,系统会自动对照到最近的 scenario 追加 thesis_history 验证.",
   "_meta": {
-    "cached_at": "2026-09-02T00:57:59.231794",
-    "age_sec": 20105,
+    "cached_at": "2026-09-02T06:58:24.960043",
+    "age_sec": 279,
     "stale": false,
     "refreshing": false
   }
