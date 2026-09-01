@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-02T07:22",
+  "asof": "2026-09-02T07:53",
   "yields": {
     "10y": {
       "value": 4.796,
@@ -263,12 +263,12 @@
     },
     {
       "level": "bad",
-      "msg": "USDJPY 160.16 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
+      "msg": "USDJPY 160.21 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
       "key": "jpy_intervention_risk"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1374.2 韩元明显走弱",
+      "msg": "KRW/USD 1374.3 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -308,7 +308,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $256.8B (USDT $183B + USDC $73B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $256.9B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -341,10 +341,10 @@
     "sofr_pct": 3.68,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 3.0,
-    "usdjpy": 160.16,
-    "usdjpy_20d_pct": 1.67,
-    "krw_usd": 1374.2,
-    "krw_20d_pct": -3.8,
+    "usdjpy": 160.21,
+    "usdjpy_20d_pct": 1.7,
+    "krw_usd": 1374.3,
+    "krw_20d_pct": -3.79,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 212.6,
@@ -410,31 +410,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7642.0,
-        "chg_pct": -0.74
+        "price": 7643.5,
+        "chg_pct": -0.72
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29110.5,
-        "chg_pct": -1.36
+        "price": 29117.75,
+        "chg_pct": -1.34
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 90.97,
-        "chg_pct": 6.08
+        "price": 90.85,
+        "chg_pct": 5.94
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4375.7,
-        "chg_pct": -1.25
+        "price": 4373.7,
+        "chg_pct": -1.3
       }
     },
     "oil_uso": 141.0,
     "oil_pct_20d": 21.78,
-    "oil_wti": 90.97,
+    "oil_wti": 90.85,
     "eem_pct_20d": 3.81,
     "eem_vs_spx_20d": 5.05,
     "volume_confirm": {
@@ -516,9 +516,9 @@
     "core_cpi_yoy_pct": 2.79,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-07-01",
-    "stablecoin_total_bn": 256.8,
+    "stablecoin_total_bn": 256.9,
     "usdt_bn": 183.3,
-    "usdc_bn": 73.5,
+    "usdc_bn": 73.6,
     "vix": 16.34,
     "bbi_score": 1.06,
     "bbi_components": {
@@ -529,8 +529,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-02T07:22:36.178371",
-    "age_sec": 629,
+    "cached_at": "2026-09-02T07:53:39.190733",
+    "age_sec": 566,
     "stale": false,
     "refreshing": false
   }
