@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-01T18:45",
+  "asof": "2026-09-01T19:18",
   "yields": {
     "10y": {
       "value": 4.758,
@@ -262,9 +262,9 @@
       "key": "reserves_neutral"
     },
     {
-      "level": "warn",
-      "msg": "USDJPY 159.98 进入 155-160 口头干预区间 (JP MoF)",
-      "key": "jpy_verbal_zone"
+      "level": "bad",
+      "msg": "USDJPY 160.03 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
+      "key": "jpy_intervention_risk"
     },
     {
       "level": "warn",
@@ -341,8 +341,8 @@
     "sofr_pct": 3.65,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 0.0,
-    "usdjpy": 159.98,
-    "usdjpy_20d_pct": 1.56,
+    "usdjpy": 160.03,
+    "usdjpy_20d_pct": 1.59,
     "krw_usd": 1373.3,
     "krw_20d_pct": -3.86,
     "jgb_10y_pct": 2.67,
@@ -361,9 +361,9 @@
     "kbe_spy_20d_delta_pct": -3.83,
     "cdx_ig_bps": 79.0,
     "cdx_hy_bps": 260.0,
-    "dxy": 99.56,
-    "dxy_pct_20d": -0.4,
-    "dxy_z_60d": -0.65,
+    "dxy": 99.58,
+    "dxy_pct_20d": -0.38,
+    "dxy_z_60d": -0.63,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -410,31 +410,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7652.5,
-        "chg_pct": -0.6
+        "price": 7654.0,
+        "chg_pct": -0.58
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29200.75,
-        "chg_pct": -1.06
+        "price": 29211.0,
+        "chg_pct": -1.02
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 87.94,
-        "chg_pct": 2.54
+        "price": 87.9,
+        "chg_pct": 2.5
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4418.7,
-        "chg_pct": -0.28
+        "price": 4422.8,
+        "chg_pct": -0.19
       }
     },
     "oil_uso": 133.7,
     "oil_pct_20d": 9.48,
-    "oil_wti": 87.94,
+    "oil_wti": 87.9,
     "eem_pct_20d": 4.57,
     "eem_vs_spx_20d": 3.33,
     "volume_confirm": {
@@ -519,19 +519,19 @@
     "stablecoin_total_bn": 256.7,
     "usdt_bn": 183.3,
     "usdc_bn": 73.4,
-    "vix": 15.89,
-    "bbi_score": 1.15,
+    "vix": 15.87,
+    "bbi_score": 1.16,
     "bbi_components": {
-      "vix": -0.35,
+      "vix": -0.36,
       "ig": -1.46,
       "hy": -1.27,
       "erp": 1.55
     }
   },
   "_meta": {
-    "cached_at": "2026-09-01T18:45:28.991901",
-    "age_sec": 1056,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-01T19:18:47.990953",
+    "age_sec": 856,
+    "stale": false,
+    "refreshing": false
   }
 }
