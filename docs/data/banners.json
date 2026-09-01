@@ -8,32 +8,97 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "DOMESTIC_POLICY": 3,
-      "MARKET": 2,
-      "NOISE": 2
+      "DOMESTIC_POLICY": 18,
+      "MARKET": 3,
+      "NOISE": 2,
+      "GEOPOLITICAL": 2,
+      "DEAL": 1
     },
     "breaking": [
       {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "extreme",
+        "confidence": 10,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "TQQQ",
+          "SOXL",
+          "NVDA",
+          "GLD"
+        ],
+        "preview": "The United States is, as we speak, striking Iranian Targets near the Strait of Hormuz. The strikes are large and powerfu",
+        "verbatim": "striking Iranian Targets near the Strait of Hormuz. The strikes are large and powerful",
+        "post_time": "2026-09-01T17:25:46.411Z"
+      },
+      {
+        "event_type": "DEAL",
+        "direction": "bullish",
+        "magnitude": "large",
+        "confidence": 9,
+        "tickers": [
+          "NVDA",
+          "SOXL",
+          "QQQ",
+          "TQQQ",
+          "SPY"
+        ],
+        "preview": "Nvidia, Wall Street Firms Strike AI Financing Deal Targeting $500 Billion: https://www.wsj.com/business/deals/nvidia-wal",
+        "verbatim": "Nvidia, Wall Street Firms Strike AI Financing Deal Targeting $500 Billion",
+        "post_time": "2026-09-01T19:39:33.960Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "large",
+        "confidence": 9,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "TQQQ",
+          "GLD"
+        ],
+        "preview": "RT @realDonaldTrumpThe United States is, as we speak, striking Iranian Targets near the Strait of Hormuz. The strikes ar",
+        "verbatim": "The United States is, as we speak, striking Iranian Targets near the Strait of Hormuz. The strikes are large and powerful",
+        "post_time": "2026-09-01T19:39:58.061Z"
+      },
+      {
         "event_type": "MARKET",
         "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 9,
+        "tickers": [
+          "NVDA",
+          "SOXL",
+          "QQQ",
+          "TQQQ",
+          "SPY"
+        ],
+        "preview": "NVIDIA AI Factory Compute Is Becoming an Investable Asset Class: https://x.com/JensenHuang/article/2086934705207959965",
+        "verbatim": "NVIDIA AI Factory Compute Is Becoming an Investable Asset Class",
+        "post_time": "2026-09-01T19:39:26.926Z"
+      },
+      {
+        "event_type": "MARKET",
+        "direction": "bearish",
         "magnitude": "small",
         "confidence": 7,
         "tickers": [
-          "SPY",
-          "QQQ"
+          "SPY"
         ],
-        "preview": "Great bipartisan response and support in Congress for the Motion Picture, Television, and Entertainment Revitalization A",
-        "verbatim": "Motion Picture, Television, and Entertainment Revitalization Act. We will bring this once great industry BACK TO AMERICA.",
-        "post_time": "2026-09-01T13:01:18.680Z"
+        "preview": "I just had a GREAT and very interesting meeting with my Hollywood Ambassador and Movie Legend, Jon Voight! He is a fanta",
+        "verbatim": "Motion Picture and Television Industry... It has moved to Canada, and other Countries... Hollywood is a Complete and Total Disaster!",
+        "post_time": "2026-08-31T22:10:13.638Z"
       }
     ],
     "summary": {
-      "text": "国会支持娱乐业振兴并推降价议程，情绪偏利多。",
+      "text": "伊朗冲突施压，AI融资利好科技，情绪分化偏谨慎。",
       "state": "cached",
       "post_ids": [
-        "117195910590067180",
-        "117195516438814990",
-        "117194678237730264"
+        "117197478170575070",
+        "117197476591086616",
+        "117197476129988516"
       ]
     }
   },
