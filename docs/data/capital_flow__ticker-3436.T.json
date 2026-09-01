@@ -6,9 +6,9 @@
     "reason": "",
     "score": 0.0,
     "peak_bars": [],
-    "day_ratio": 0.61,
-    "trading_date": "2026-08-31",
-    "date_short": "8/31",
+    "day_ratio": 0.1,
+    "trading_date": "2026-09-01",
+    "date_short": "9/1",
     "net_bias": "neutral",
     "buy_shares": 0,
     "sell_shares": 0,
@@ -16,11 +16,31 @@
     "sell_value_oku": 0,
     "days": [
       {
+        "trading_date": "2026-09-01",
+        "date_short": "9/1",
+        "peak_bars": [],
+        "slices": [],
+        "day_ratio": 0.1,
+        "day_chg_pct": -2.27,
+        "day_open": 3215.0,
+        "day_close": 3142.0,
+        "net_bias": "neutral",
+        "buy_shares": 0,
+        "sell_shares": 0,
+        "buy_value_oku": 0,
+        "sell_value_oku": 0,
+        "full_bias": "sell",
+        "full_up_shares": 0,
+        "full_down_shares": 1073100,
+        "full_up_value_oku": 0.0,
+        "full_down_value_oku": 33.88
+      },
+      {
         "trading_date": "2026-08-31",
         "date_short": "8/31",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.61,
+        "day_ratio": 0.66,
         "day_chg_pct": 4.26,
         "day_open": 3266.0,
         "day_close": 3405.0,
@@ -40,7 +60,7 @@
         "date_short": "8/28",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.71,
+        "day_ratio": 0.77,
         "day_chg_pct": -4.89,
         "day_open": 3596.0,
         "day_close": 3420.0,
@@ -60,7 +80,7 @@
         "date_short": "8/27",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.86,
+        "day_ratio": 0.94,
         "day_chg_pct": -4.78,
         "day_open": 3597.0,
         "day_close": 3425.0,
@@ -80,7 +100,7 @@
         "date_short": "8/26",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.78,
+        "day_ratio": 0.85,
         "day_chg_pct": -1.56,
         "day_open": 3457.0,
         "day_close": 3403.0,
@@ -94,68 +114,20 @@
         "full_down_shares": 4675100,
         "full_up_value_oku": 137.7,
         "full_down_value_oku": 158.68
-      },
-      {
-        "trading_date": "2026-08-25",
-        "date_short": "8/25",
-        "peak_bars": [
-          {
-            "time": "09:05",
-            "vol": 1215600,
-            "ratio": 2.24,
-            "open": 3358.0,
-            "price": 3349.0,
-            "chg_pct": -0.27,
-            "direction": "sell",
-            "value_oku": 40.71,
-            "date": "2026-08-25",
-            "tier": "huge_abs"
-          }
-        ],
-        "slices": [],
-        "day_ratio": 0.89,
-        "day_chg_pct": 5.06,
-        "day_open": 3358.0,
-        "day_close": 3528.0,
-        "net_bias": "sell",
-        "buy_shares": 0,
-        "sell_shares": 1215600,
-        "buy_value_oku": 0,
-        "sell_value_oku": 40.71,
-        "full_bias": "neutral",
-        "full_up_shares": 5103000,
-        "full_down_shares": 5408000,
-        "full_up_value_oku": 176.42,
-        "full_down_value_oku": 184.63
       }
     ],
-    "highlights": [
-      {
-        "time": "09:05",
-        "vol": 1215600,
-        "ratio": 2.24,
-        "open": 3358.0,
-        "price": 3349.0,
-        "chg_pct": -0.27,
-        "direction": "sell",
-        "value_oku": 40.71,
-        "date": "2026-08-25",
-        "tier": "huge_abs",
-        "_score": 91.19,
-        "date_short": "8/25"
-      }
-    ],
+    "highlights": [],
     "thresholds": {
       "ratio_min": 5.0,
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-08-31 15:20 JST",
+  "asof": "2026-09-01 09:10 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-09-01T09:00:07.264277",
-    "age_sec": 176,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-01T09:27:36.257732",
+    "age_sec": 327,
+    "stale": true,
+    "refreshing": true
   }
 }

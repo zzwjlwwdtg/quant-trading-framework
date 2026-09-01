@@ -26,10 +26,9 @@
       "date": "2026-12-09",
       "days_until": 99,
       "probabilities": {
-        "hold": 11.4,
-        "hike_25": 39.3,
-        "hike_50": 39.4,
-        "hike_75": 9.9
+        "hold": 10.8,
+        "hike_25": 38.6,
+        "hike_50": 50.6
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
@@ -38,45 +37,43 @@
       "date": "2027-01-27",
       "days_until": 148,
       "probabilities": {
-        "hold": 8.4,
+        "hold": 8.2,
         "hike_25": 32.0,
-        "hike_50": 39.4,
-        "hike_75": 17.6,
-        "hike_100": 2.6
+        "hike_50": 59.9
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q2/Q3",
-  "data_snapshot_date": "2026-08-31 11:35 EDT",
-  "recent_event_impact": "最近7天内未见NFP/CPI/PPI/FOMC正式发布；BLS日程显示下一次NFP为2026-09-04、PPI为2026-09-10、CPI为2026-09-11。2026-08-28 Fed主席Kevin Warsh在Jackson Hole发表偏鹰讲话后，CME/Investing.com隐含9月加息概率升至约55%-66%，推高后续会议加息路径定价。",
-  "commentary": "数据快照为2026-08-31 11:35 EDT，已晚于2026-08-28 Warsh讲话，因此反映了该偏鹰事件；最近7天没有新的NFP/CPI/PPI数据，市场主要受Warsh强调通胀仍偏高及油价/地缘通胀风险影响，9月及后续会议转向明显加息预期。",
+  "implied_terminal_date": "2027-Q1/Q2",
+  "data_snapshot_date": "2026-08-31 18:45 EDT",
+  "recent_event_impact": "近7天内未见已发布的NFP/CPI/PPI/FOMC决议；最新关键事件为2026-08-28 Fed Chair Kevin Warsh Jackson Hole讲话，强调通胀仍偏高，使9月加息概率从约35%-43%升至约64%-66%。下一批就业/通胀数据为2026-09-04 NFP、2026-09-10 PPI、2026-09-11 CPI，尚未反映。",
+  "commentary": "数据快照为2026-08-31 18:45 EDT，已在2026-08-28 Warsh讲话之后；过去7天没有新的NFP/CPI/PPI发布，因此当前定价主要反映Warsh偏鹰表态和油价/通胀担忧，而非新的就业或通胀实数。最新已知的就业、CPI、PPI数据均早于本快照超过7天，市场正等待9月4日NFP与9月10-11日PPI/CPI来验证加息定价。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_based_probability_snapshot"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=tzA9ae",
+      "type": "fed_funds_futures_probability_snapshot"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/home.htm",
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fed_funds_futures_action_probabilities"
+    },
+    {
+      "url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
       "type": "economic_release_calendar"
-    },
-    {
-      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-and-nasdaq-set-to-fall-as-brent-oil-tops-90-after-u-s-strike-on-iran/card/chances-of-september-fed-rate-hike-near-66-as-iran-tensions-flare-sYUhR5cCfyLMd4F4ZA0v",
-      "type": "event_impact_crosscheck"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-08-31T16:29:31+00:00",
+  "fetched_at": "2026-09-01T00:30:35+00:00",
   "_meta": {
-    "cached_at": "2026-09-01T01:29:31.570337",
-    "age_sec": 27211,
+    "cached_at": "2026-09-01T09:30:35.859751",
+    "age_sec": 147,
     "stale": false,
     "refreshing": false
   }
