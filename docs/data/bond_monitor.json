@@ -1,14 +1,14 @@
 {
-  "asof": "2026-09-01T21:56",
+  "asof": "2026-09-01T22:28",
   "yields": {
     "10y": {
-      "value": 4.784,
-      "chg_1d_bps": 2.6,
-      "chg_5d_bps": 8.0,
-      "chg_20d_bps": 9.8,
-      "z_score_20d": 0.64,
+      "value": 4.782,
+      "chg_1d_bps": 2.4,
+      "chg_5d_bps": 7.8,
+      "chg_20d_bps": 9.6,
+      "z_score_20d": 0.59,
       "history": [
-        4.784,
+        4.782,
         4.758,
         4.672,
         4.664,
@@ -66,13 +66,13 @@
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.269,
-      "chg_1d_bps": 2.0,
-      "chg_5d_bps": 3.8,
-      "chg_20d_bps": 3.8,
-      "z_score_20d": 0.49,
+      "value": 5.268,
+      "chg_1d_bps": 1.9,
+      "chg_5d_bps": 3.7,
+      "chg_20d_bps": 3.7,
+      "z_score_20d": 0.47,
       "history": [
-        5.269,
+        5.268,
         5.249,
         5.191,
         5.186,
@@ -263,12 +263,12 @@
     },
     {
       "level": "bad",
-      "msg": "USDJPY 160.11 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
+      "msg": "USDJPY 160.1 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
       "key": "jpy_intervention_risk"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1373.6 韩元明显走弱",
+      "msg": "KRW/USD 1373.7 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -313,7 +313,7 @@
     }
   ],
   "macro_context": {
-    "term_spread_30_10_bps": 48.5,
+    "term_spread_30_10_bps": 48.6,
     "spx_trailing_pe": 25.83,
     "spx_eps_yield_pct": 3.87,
     "erp_vs_tips_pct": 1.45,
@@ -341,17 +341,17 @@
     "sofr_pct": 3.68,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 3.0,
-    "usdjpy": 160.11,
-    "usdjpy_20d_pct": 1.64,
-    "krw_usd": 1373.6,
+    "usdjpy": 160.1,
+    "usdjpy_20d_pct": 1.63,
+    "krw_usd": 1373.7,
     "krw_20d_pct": -3.84,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
-    "ust_jgb_spread_bps": 211.4,
+    "ust_jgb_spread_bps": 211.2,
     "ust_jgb_spread_6m_delta_bps": -43.0,
     "ktb_10y_pct": 4.18,
     "ktb_asof": "2026-06-01",
-    "ust_ktb_spread_bps": 60.4,
+    "ust_ktb_spread_bps": 60.2,
     "hedged_ust_10y_for_jp": 2.38,
     "hedge_cost_jp": 2.41,
     "real_yield_gap_us_jp": 1.74,
@@ -410,31 +410,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7649.75,
-        "chg_pct": -0.64
+        "price": 7643.5,
+        "chg_pct": -0.72
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29138.75,
-        "chg_pct": -1.27
+        "price": 29086.5,
+        "chg_pct": -1.45
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 87.96,
-        "chg_pct": 2.57
+        "price": 88.23,
+        "chg_pct": 2.88
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4416.0,
-        "chg_pct": -0.34
+        "price": 4376.0,
+        "chg_pct": -1.24
       }
     },
     "oil_uso": 133.7,
     "oil_pct_20d": 9.48,
-    "oil_wti": 87.96,
+    "oil_wti": 88.23,
     "eem_pct_20d": 4.57,
     "eem_vs_spx_20d": 3.33,
     "volume_confirm": {
@@ -519,18 +519,18 @@
     "stablecoin_total_bn": 256.8,
     "usdt_bn": 183.3,
     "usdc_bn": 73.4,
-    "vix": 15.92,
-    "bbi_score": 1.15,
+    "vix": 15.97,
+    "bbi_score": 1.14,
     "bbi_components": {
-      "vix": -0.35,
+      "vix": -0.34,
       "ig": -1.46,
       "hy": -1.27,
       "erp": 1.55
     }
   },
   "_meta": {
-    "cached_at": "2026-09-01T21:57:00.552711",
-    "age_sec": 364,
+    "cached_at": "2026-09-01T22:29:01.172670",
+    "age_sec": 242,
     "stale": false,
     "refreshing": false
   }
