@@ -1,7 +1,33 @@
 {
-  "as_of": "2026-09-01T14:23:34.126096",
-  "count_total_actions": 183,
+  "as_of": "2026-09-02T02:27:28.004334",
+  "count_total_actions": 198,
   "tools": [
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "announced",
+        "date": "2026-09-01",
+        "actor": "Bessent",
+        "amount_desc": "30-Year yield 5.286%",
+        "commentary": "长端回到干预前，说明回购托底效果消退。",
+        "verbatim": "US 30-Year Treasury Yield Rebounds to 5.286%, Returning to Pre-Bessent Intervention Level",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE9mMFI4cFFFTHNlaHZEZzMydk5JRjk2RFpITHF3Z1lKdEE1S1oydkxZLTdTMk15N1FBQzJKUmZXeWlQMU00bkx4dFUteWVHckJhZWI2Vg?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {
+        "t0_bp": 1.1,
+        "yield_at_close": 5.26
+      },
+      "event_count_180d": 73
+    },
     {
       "tool_key": "qra_wording",
       "zh": "季度再融资声明措辞",
@@ -92,7 +118,7 @@
         "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 21
+      "event_count_180d": 22
     },
     {
       "tool_key": "fed_hawkish_signal",
@@ -115,7 +141,30 @@
         "confidence": 9
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 73
+      "event_count_180d": 82
+    },
+    {
+      "tool_key": "fx_intervention",
+      "zh": "汇市干预 (支撑日元)",
+      "owner": "Treasury/G7",
+      "feasibility": "medium",
+      "canonical_desc": "联合日本央行买日元, 减少日本抛售美债换美元",
+      "invalidation": "只缓解流量, 存量抛压 (JGB 收益率高企) 未变",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fx_intervention",
+        "action_type": "signaled",
+        "date": "2026-09-01",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "口头提示日本干预汇率，可能外溢影响美债资金流。",
+        "verbatim": "Bessent says Tokyo may intervene to boost yen",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE5JTlFYRmlZc2hyNVgxVWRaOGVjSW82eHptLWxVb2ducGhydWdBTEJMZ3VybXBTa2hHaGtxeVREWlJHVGt3S2tpdnBSblI1X0RScVhsVC1mRmJnclMwR2JSV1RyMmxqYlg3LUtVYW5OUUJqZEM0czRjajE0OGdhQdIBgwFBVV95cUxNTkV3QlU0NXFMTmZpemdEeHQxWGFpZkx6Q2pYWElUb0h3bHBCRG10Qk5xTW1fbUdVY0lqSzFCVkRweFV4Z2ZRaHduS2JRMElNVUJKLTJxRG95QXJmMGdfZ0pmOV9QX1BDcE4tUmxXVE1VdDVOSEQwQWJFOGZNYV9QbG8xYw?oc=5",
+        "confidence": 7
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 1
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -138,42 +187,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 3
-    },
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "被否",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "opposed",
-        "date": "2026-08-31",
-        "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "Bessent反驳批评，意在维护买回干预的政策可信度。",
-        "verbatim": "Bessent pushes back on Druckenmiller critique of bond intervention",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOQnRZRTRSQ2dRYjU4bVlJdzEydzhrWUhrRzFCbWlJWVBWdXlpam1WTmRmcGg0Mk5FSmN0T3dyQUhFekZud3VXVHBoM1AxQzZPbWxOTXNlUXlLdTF1dzIyVkYtdkJCSHFmaVNVbktlRlpVbVJ4SGlBTlJVNUk3MlZhbDdn0gGHAUFVX3lxTFBja1k1TGQ3TlN6d091NkEyRGVUdEZ4QnRoYWxycUZ5VVdJNDFWcDV3cEZiR2thOWRMUGlObnlTLUgxNGlNczJKRUxlZl9DUTVaRWxxaFdkVnhXM1pNS0d3anRJRzFBZWZJcUFPOWFtTWtnNGFUbXNEZHVOTXppXzhSa0Vldms1cw?oc=5",
-        "confidence": 6
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 71
-    },
-    {
-      "tool_key": "fx_intervention",
-      "zh": "汇市干预 (支撑日元)",
-      "owner": "Treasury/G7",
-      "feasibility": "medium",
-      "canonical_desc": "联合日本央行买日元, 减少日本抛售美债换美元",
-      "invalidation": "只缓解流量, 存量抛压 (JGB 收益率高企) 未变",
-      "status": "观察",
-      "last_action": null,
-      "yield_reaction_30y": {},
-      "event_count_180d": 0
+      "event_count_180d": 5
     },
     {
       "tool_key": "fima_repo",
