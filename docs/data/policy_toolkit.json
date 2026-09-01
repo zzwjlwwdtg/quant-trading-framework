@@ -1,30 +1,7 @@
 {
-  "as_of": "2026-09-01T02:19:31.966008",
-  "count_total_actions": 160,
+  "as_of": "2026-09-01T14:23:34.126096",
+  "count_total_actions": 183,
   "tools": [
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "已用",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "opposed",
-        "date": "2026-08-28",
-        "actor": "ex-official",
-        "amount_desc": "",
-        "commentary": "前官员称干预令人困惑，显示政策目标和机制沟通不足。",
-        "verbatim": "Bessent's bond intervention 'puzzling,' needs explanation: ex-official",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOU0tiQXNSakJFTGhSRlI1SlZfNVAzLWJaRmVzLWhfcVZYcnExYnFXUGRKRDZJcm1NcWdFNGtGVW56Y25BN3VDQlJoYTFHYUFvc1ZKVG9nRmtueXEydXMxb1hxVFNzTTl0WXREQlI5LS1yUC11SUxDY05XWkNjVUZvYUwtSzBiazcyOVBncXU1cHFsWHNyZV9adk5xTjhlaFd4S2xXd3NmUWhvdGtZY3JYOVJFTDZ1dw?oc=5",
-        "confidence": 6
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 63
-    },
     {
       "tool_key": "qra_wording",
       "zh": "季度再融资声明措辞",
@@ -138,7 +115,7 @@
         "confidence": 9
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 58
+      "event_count_180d": 73
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -162,6 +139,29 @@
       },
       "yield_reaction_30y": {},
       "event_count_180d": 3
+    },
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "被否",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "opposed",
+        "date": "2026-08-31",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "Bessent反驳批评，意在维护买回干预的政策可信度。",
+        "verbatim": "Bessent pushes back on Druckenmiller critique of bond intervention",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOQnRZRTRSQ2dRYjU4bVlJdzEydzhrWUhrRzFCbWlJWVBWdXlpam1WTmRmcGg0Mk5FSmN0T3dyQUhFekZud3VXVHBoM1AxQzZPbWxOTXNlUXlLdTF1dzIyVkYtdkJCSHFmaVNVbktlRlpVbVJ4SGlBTlJVNUk3MlZhbDdn0gGHAUFVX3lxTFBja1k1TGQ3TlN6d091NkEyRGVUdEZ4QnRoYWxycUZ5VVdJNDFWcDV3cEZiR2thOWRMUGlObnlTLUgxNGlNczJKRUxlZl9DUTVaRWxxaFdkVnhXM1pNS0d3anRJRzFBZWZJcUFPOWFtTWtnNGFUbXNEZHVOTXppXzhSa0Vldms1cw?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 71
     },
     {
       "tool_key": "fx_intervention",
