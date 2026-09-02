@@ -3,53 +3,53 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 14,
+      "days_until": 13,
       "probabilities": {
-        "hold": 31.9,
-        "hike_25": 68.1
+        "hold": 35.9,
+        "hike_25": 64.1
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 56,
+      "days_until": 55,
       "probabilities": {
-        "hold": 22.3,
-        "hike_25": 57.3,
-        "hike_50": 20.3
+        "hold": 25.1,
+        "hike_25": 55.7,
+        "hike_50": 19.1
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 98,
+      "days_until": 97,
       "probabilities": {
-        "hold": 9.1,
-        "hike_25": 36.5,
-        "hike_50": 54.4
+        "hold": 10.6,
+        "hike_25": 38.1,
+        "hike_50": 51.4
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 147,
+      "days_until": 146,
       "probabilities": {
-        "hold": 6.5,
-        "hike_25": 28.7,
-        "hike_50": 64.9
+        "hold": 7.8,
+        "hike_25": 30.9,
+        "hike_50": 61.3
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2026-12_to_2027-01",
-  "data_snapshot_date": "2026-09-01 23:15 EDT",
-  "recent_event_impact": "2026-08-28 Fed Chair Kevin Warsh Jackson Hole speech was hawkish and raised September hike pricing to roughly 55%-58%; latest CME-derived snapshot on 2026-09-01 shows hike odds higher at 68.1%. No NFP/CPI/PPI release occurred in the last 7 days before 2026-09-02; August NFP is scheduled for 2026-09-04, PPI for 2026-09-10, CPI for 2026-09-11.",
-  "commentary": "Data snapshot is 2026-09-01 23:15 EDT, after the 2026-08-28 Warsh Jackson Hole speech, so the hawkish repricing from that event is reflected. The latest available NFP/CPI/PPI prints were not released within the last 7 days; markets are pricing hikes mainly on persistent inflation concerns and Warsh's hawkish signal rather than a fresh NFP/CPI/PPI surprise.",
+  "implied_terminal_rate": "4.25-4.50",
+  "implied_terminal_date": "2027-Q3",
+  "data_snapshot_date": "2026-09-02 11:55 EDT",
+  "recent_event_impact": "过去7天内未发现已发布的常规NFP/CPI/PPI或FOMC决议；关键已反映事件是2026-08-28 Fed Chair Kevin Warsh Jackson Hole讲话，强调通胀仍高、可能仍需加息，使9月加息概率由约35%-41%升至约55%-66%，随后最新快照升至64.1%。8月NFP报告截至2026-09-03仍为待发布事件，市场预期约+65K，可能继续重定价。",
+  "commentary": "数据快照为2026-09-02 11:55 EDT，距2026-09-03在1个交易日内，且晚于2026-08-28 Warsh讲话，因此未判定为数据滞后。近期没有新的NFP/CPI/PPI实际发布需要纳入；市场主要交易的是Warsh鹰派通胀表述、此前7月通胀仍高约3.4%、以及即将公布的8月NFP可能偏弱之间的拉扯，但当前定价已明显转向加息路径。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -57,23 +57,23 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_derived_fed_rate_monitor"
+      "type": "cme_based_fed_rate_monitor"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/home.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
+      "type": "fomc_statement"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/2026-august.htm",
-      "type": "fed_event_calendar"
+      "url": "https://apnews.com/article/ab896df808df3a5a3fa8b943ac5f3867",
+      "type": "recent_fed_chair_event"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-02T08:37:17+00:00",
+  "fetched_at": "2026-09-02T16:38:35+00:00",
   "_meta": {
-    "cached_at": "2026-09-02T17:37:17.870587",
-    "age_sec": 28545,
+    "cached_at": "2026-09-03T01:38:35.580958",
+    "age_sec": 1467,
     "stale": false,
     "refreshing": false
   }
