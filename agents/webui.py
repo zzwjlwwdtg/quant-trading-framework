@@ -1254,11 +1254,20 @@ def _compute_sectors() -> dict:
         except Exception:
             pass
 
+    # rotation_speed (12-week 窗口内 top-1 sector 换人次数) — dashboard 显示用
+    # 只是 verifier 指标 (backtest 2/4 pass, memory: project_rotation_regime_us_etf.md)
+    try:
+        from sector_regime import compute_rotation_speed
+        rotation_info = compute_rotation_speed(window_weeks=12)
+    except Exception:
+        rotation_info = None
+
     return {
         "sectors": out,
         "ts": datetime.now(timezone.utc).isoformat(),
         "canonical_regime": canonical_regime,
         "n_disagreements_this_call": len(disagreements),
+        "rotation_speed": rotation_info,
     }
 
 

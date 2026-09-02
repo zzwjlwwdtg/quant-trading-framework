@@ -319,7 +319,9 @@ def apply_claude_gate(
         logger.error(f"[claude-gate] import failed for {ticker}: {exc}")
         return _fail_decision(decision, f"import_error: {exc}", str(prompt_path))
 
-    output, status, provider, _ = query_ai_cli(prompt_text, timeout=_timeout_sec())
+    # 每 trade 都调, 打市场决策级 → medium (需 regime+confluence+risk 联动推理)
+    output, status, provider, _ = query_ai_cli(prompt_text, timeout=_timeout_sec(),
+                                                complexity="medium")
 
     if not output:
         logger.warning(f"[claude-gate] {ticker} unavailable: {status}")

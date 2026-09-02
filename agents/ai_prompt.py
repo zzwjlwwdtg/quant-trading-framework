@@ -1219,17 +1219,44 @@ def _codex_safe_env() -> dict[str, str]:
     }
 
 
+# ── AI 模型分级 ────────────────────────────────────────────────────────
+# 按 complexity 选 model, 简单任务 (news 解析 / regime 确认) 用便宜, 深度分析用高端.
+# env var 允许 override, 默认按用户 codex CLI 全局设置 (若 CODEX_MODEL_* 空).
+#   simple  → CODEX_MODEL_SIMPLE  (news_analyzer / fed_watch / policy_toolkit / jp_extractor)
+#   medium  → CODEX_MODEL_MEDIUM  (claude_gate / bond_ai_interpret)
+#   complex → CODEX_MODEL_COMPLEX (ai_prompt.print_analysis 主分析)
+_COMPLEXITY_MODEL_ENV = {
+    "simple":  "CODEX_MODEL_SIMPLE",
+    "medium":  "CODEX_MODEL_MEDIUM",
+    "complex": "CODEX_MODEL_COMPLEX",
+}
+
+
+def _resolve_codex_model(complexity: str) -> str | None:
+    """按 complexity 找 model. 未设则 None (走 codex CLI 全局默认)."""
+    env_key = _COMPLEXITY_MODEL_ENV.get(complexity)
+    if not env_key:
+        return None
+    val = os.environ.get(env_key, "").strip()
+    return val or None
+
+
 def query_codex_cli(prompt: str, timeout: int = 300, *,
-                    web_search: bool = False) -> tuple[str | None, str]:
+                    web_search: bool = False,
+                    complexity: str = "medium") -> tuple[str | None, str]:
     """
     用 Codex CLI 的 ``codex exec`` 非交互模式跑一次查询。
 
     安全边界：在空临时目录、只读 sandbox、ephemeral session 中运行；不继承
     API key/token/secret/password 类环境变量，只复用本机 Codex CLI 已保存登录。
+
+    complexity: simple / medium / complex —— 按此挑 model (需 CODEX_MODEL_* env 配置).
     """
     cli_path = _find_codex_cli()
     if not cli_path:
         return None, "codex_not_installed"
+
+    model = _resolve_codex_model(complexity)
 
     try:
         with tempfile.TemporaryDirectory(prefix="codex_ai_run_") as run_dir:
@@ -1254,8 +1281,10 @@ def query_codex_cli(prompt: str, timeout: int = 300, *,
                     "--sandbox", "read-only",
                     "--cd", run_dir,
                     "--output-last-message", str(out_path),
-                    "-",
                 ])
+            if model:
+                command.extend(["--model", model])
+            command.append("-")
             result = subprocess.run(
                 command,
                 input=codex_prompt,
@@ -1312,11 +1341,11 @@ def get_ai_cli_policy() -> dict[str, str]:
 
 
 def _query_named_cli(provider: str, prompt: str, timeout: int,
-                     web_search: bool = False) -> tuple[str | None, str]:
+                     web_search: bool = False,
+                     complexity: str = "medium") -> tuple[str | None, str]:
     if provider == "codex":
-        if web_search:
-            return query_codex_cli(prompt, timeout=timeout, web_search=True)
-        return query_codex_cli(prompt, timeout=timeout)
+        return query_codex_cli(prompt, timeout=timeout, web_search=web_search,
+                               complexity=complexity)
     return query_claude_cli(prompt, timeout=timeout)
 
 
@@ -1326,6 +1355,7 @@ def query_ai_cli(
     *,
     fallback_on_unavailable: bool = False,
     web_search: bool = False,
+    complexity: str = "medium",
 ) -> tuple[str | None, str, str, str]:
     """Query the configured local CLI, Codex-first by default.
 
@@ -1339,7 +1369,7 @@ def query_ai_cli(
     primary = policy["primary"]
     fallback = policy["fallback"]
 
-    output, status = _query_named_cli(primary, prompt, timeout, web_search)
+    output, status = _query_named_cli(primary, prompt, timeout, web_search, complexity)
     if output:
         return output, status, primary.title(), ""
 
@@ -1353,7 +1383,7 @@ def query_ai_cli(
 
     fallback_reason = f"{primary}: {_redact_cli_text(status)}"
     output, fallback_status = _query_named_cli(
-        fallback, prompt, timeout, web_search
+        fallback, prompt, timeout, web_search, complexity
     )
     if output:
         return output, fallback_status, fallback.title(), fallback_reason
@@ -1371,7 +1401,8 @@ def auto_analyze(mode: str = "review") -> dict:
         return {"status": "no_log"}
 
     prompt = prompt_path.read_text(encoding="utf-8")
-    output, status, provider, fallback_reason = query_ai_cli(prompt)
+    # 主 AI 分析 (morning / review / deep) — 完整今日 log 深度推理, complex 档
+    output, status, provider, fallback_reason = query_ai_cli(prompt, complexity="complex")
 
     today = _market_date()
     analysis_path = Path(SIGNALS_DIR) / f"ai_analysis_{mode}_{today}.md"

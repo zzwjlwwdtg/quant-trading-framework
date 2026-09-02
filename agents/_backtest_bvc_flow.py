@@ -449,15 +449,37 @@ def run():
         print(f"  {mark} {lbl}: {val}")
 
     all_pass = all(ok for _, _, ok in checks)
+    n_pass = sum(1 for _, _, ok in checks if ok)
     print()
     if all_pass:
         print("  → 建议: 用 BVC 替换 capital_flow.py 的 tick rule, 并作为 confluence 一票 (弱权重).")
+        verdict_val, should_int = "pass", True
+    elif n_pass >= len(checks) // 2:
+        print(f"  → 边缘: {n_pass}/{len(checks)} 通过. 仅在通过的 regime 桶用, 不进主 confluence.")
+        verdict_val, should_int = "edge", False
     else:
-        n_pass = sum(1 for _, _, ok in checks if ok)
-        if n_pass >= len(checks) // 2:
-            print(f"  → 边缘: {n_pass}/{len(checks)} 通过. 仅在通过的 regime 桶用, 不进主 confluence.")
-        else:
-            print(f"  → 淘汰: {n_pass}/{len(checks)} 通过. 保持 dashboard-only, 不接入决策链.")
+        print(f"  → 淘汰: {n_pass}/{len(checks)} 通过. 保持 dashboard-only, 不接入决策链.")
+        verdict_val, should_int = "reject", False
+
+    try:
+        from backtest_verdicts import write_verdict
+        write_verdict(
+            "bvc_flow",
+            verdict_val,
+            conclusion=f"{n_pass}/{len(checks)} pass",
+            metrics={"n_events": len(all_events), "checks_pass": n_pass,
+                     "checks_total": len(checks),
+                     "bvc_oos_win": (verdict_data.get("bvc") or {}).get("oos_win") if verdict_data.get("bvc") else None,
+                     "tick_oos_win": (verdict_data.get("tick_rule") or {}).get("oos_win") if verdict_data.get("tick_rule") else None},
+            params={"tickers": TICKERS, "thresholds_pct": THRESHOLDS_PCT,
+                    "horizons": HORIZONS, "sigma_win_days": SIGMA_WIN_DAYS},
+            next_review_days=90,
+            should_integrate=should_int,
+            recommendation="keep dashboard-only, not in confluence" if not should_int else "wire BVC into confluence weak vote",
+        )
+        print("  [verdict] 写入 signals/backtest_verdicts/bvc_flow.json")
+    except Exception as _e:
+        print(f"  [verdict] 写入失败: {_e}")
 
     # 附: moomoo 当前 smart_pct (仅参考, 无历史)
     print("\n" + "-" * 100)
@@ -475,5 +497,19 @@ def run():
         print(f"  moomoo 不可用: {ex}")
 
 
+def _install_watchdog(timeout_sec: int = 900) -> None:
+    """15 min watchdog: 若 run() 卡死 (yfinance hang 等), 硬退出而非留僵尸.
+    之前 2026-08-31 有 4 个进程卡在 yfinance history() 上 4+ 小时占内存."""
+    import os
+    import threading
+    def _killer():
+        print(f"\n[watchdog] {timeout_sec}s 超时, 强制退出防止僵尸进程占用内存")
+        os._exit(2)
+    t = threading.Timer(timeout_sec, _killer)
+    t.daemon = True
+    t.start()
+
+
 if __name__ == "__main__":
+    _install_watchdog(900)   # 15 min hard cap
     run()

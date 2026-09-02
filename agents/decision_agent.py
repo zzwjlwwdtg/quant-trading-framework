@@ -1178,6 +1178,40 @@ def _llm_call(system: str, market: dict, events: dict, macro: dict,
         return None
 
 
+# ── Thesis 硬过滤 (thesis_config 单一源) ──────────────────────────────────────
+def _apply_thesis_filter(result: dict, ticker: str) -> dict:
+    """若 ticker 在 thesis blacklist 且 result.action 是 BUY 类, 降级为 HOLD.
+    memory rule (project_stop_distance_backtest / project_thesis_2026Q3): 系统必须
+    读 thesis_config, 否则 rule engine 会持续给 blacklist ticker 出 BUY 信号 (2026-07 → 09
+    因此造成 -24% drawdown)."""
+    try:
+        from thesis_config import is_ticker_blacklisted
+    except Exception:
+        return result
+    is_blocked, reason = is_ticker_blacklisted(ticker)
+    if not is_blocked:
+        return result
+    action = (result or {}).get("action") or ""
+    # BUY-类动作都拦
+    if action in BUY_ACTIONS:
+        original = action
+        result = dict(result)
+        result["action"] = "HOLD"
+        result["thesis_blocked"] = True
+        result["thesis_reason"] = reason
+        result["demoted_from"] = original
+        # 保留原 reason 供审计
+        prev_reason = result.get("reason") or ""
+        result["reason"] = f"thesis_blocked: {reason[:100]} (orig={original}, prev_reason={prev_reason[:80]})"
+        result["confidence"] = 0
+        try:
+            from notifier import logger as _lg
+            _lg.info(f"[thesis_filter] {ticker} {original} → HOLD (thesis blacklist)")
+        except Exception:
+            pass
+    return result
+
+
 # ── 公开API ───────────────────────────────────────────────────────────────────
 
 def get_decision(market: dict, events: dict, macro: dict | None = None,
@@ -1253,6 +1287,8 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
     result = _apply_options_flow_guard(
         result, market.get("ticker", ""), market, events
     )
+    # thesis 硬过滤: 最后一步防 blacklist ticker 漏 BUY 信号
+    result = _apply_thesis_filter(result, market.get("ticker", ""))
     return result
 
 
@@ -1319,4 +1355,5 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
     result = _apply_options_flow_guard(
         result, market.get("ticker", ""), market, events
     )
+    result = _apply_thesis_filter(result, market.get("ticker", ""))
     return result

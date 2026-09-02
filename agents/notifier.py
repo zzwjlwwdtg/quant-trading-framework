@@ -78,6 +78,11 @@ from i18n import t, pick
 # regime label (zh, ja)
 _REGIME = pick({
     "bull_trending":  ("牛市延续",  "強気継続"),
+    "bull_extended":  ("牛市延伸",  "強気伸長"),
+    "bull_pulling":   ("牛市回调",  "強気押し目"),
+    "bull_chop":      ("偏多震荡",  "強気レンジ"),
+    "neutral_chop":   ("中性震荡",  "中立レンジ"),
+    "risk_off":       ("风险收缩",  "リスクオフ"),
     "overheated":     ("过热警戒",  "過熱警戒"),
     "recession_risk": ("衰退风险",  "景気後退リスク"),
     "crisis":         ("危机防御",  "危機モード"),
@@ -168,9 +173,16 @@ try:
 except ImportError:
     _WINOTIFY_OK = False
 
+# TOAST_ENABLE: 是否弹 Windows 桌面通知. 默认 OFF (0) — 全部走 log,
+# 用户开 watch.bat 一个 cmd 窗口最小化即可看到所有信号, 不被桌面通知打断.
+# 若确实需要弹窗提醒 (如去卫生间时想被打断), export TOAST_ENABLE=1.
+_TOAST_ENABLED = os.environ.get("TOAST_ENABLE", "0") == "1"
+
 
 def _toast(title: str, body: str) -> None:
-    if not _WINOTIFY_OK:
+    """默认静默 (只 log), TOAST_ENABLE=1 时才弹 Windows 通知."""
+    logger.info(f"[TOAST] {title} | {body.replace(chr(10), ' · ')}")
+    if not _TOAST_ENABLED or not _WINOTIFY_OK:
         return
     try:
         Notification(app_id="TradingAgents", title=title, msg=body, duration="short").show()
@@ -280,15 +292,30 @@ def emit(market: dict, events: dict, decision: dict) -> None:
                 f"  スコア: 弱気{sb['bear_raw']} vs 強気{sb['bull_raw']} (方向感なし)",
             ))
 
+    option_flow = decision.get("options_flow")
+    if isinstance(option_flow, dict) and int(option_flow.get("score") or 0) >= 40:
+        flow_dir = {
+            "bullish": "看多", "bearish": "看空", "mixed": "分歧",
+            "neutral": "中性",
+        }.get(option_flow.get("direction"), option_flow.get("direction", "?"))
+        quality = option_flow.get("data_quality", "snapshot")
+        cap = option_flow.get("score_cap", "?")
+        sources = "+".join(option_flow.get("sources") or []) or "proxy"
+        stale = " [STALE]" if option_flow.get("stale") else ""
+        logger.info(
+            f"  期权流: {flow_dir} {option_flow.get('score')}/100 "
+            f"({sources}, {quality}, cap={cap}){stale}"
+        )
+
     # ── 多指标共振 ────────────────────────────────────────────────────────────
     cg = decision.get("claude_gate")
     if isinstance(cg, dict):
-        provider = cg.get("provider", "Claude")
+        provider = cg.get("provider", "Codex")
         verdict = cg.get("verdict", "?")
         status = cg.get("status", "")
         reason = cg.get("reason", "")
         demoted = cg.get("demoted_from")
-        line = f"  Claude Gate: {provider} {verdict}"
+        line = f"  AI Gate: {provider} {verdict}"
         if demoted:
             line += f"  demoted_from={demoted}"
         if status and status != "ok":
@@ -361,8 +388,15 @@ def emit(market: dict, events: dict, decision: dict) -> None:
     except Exception:
         pass
 
-    # ── 桌面通知（仅可操作信号）────────────────────────────────────────────────
-    should_toast = action in ("BUY", "SELL") or action != "HOLD" or confidence >= 7 or breaking
+    # ── 桌面通知（仅"真下单"级信号）────────────────────────────────────────
+    # 之前 bug: `action != "HOLD"` 把 WATCH_BUY/CAUTION/HOLD_CROSS 等一切非-HOLD 都弹
+    # → 20 只票 × 5 时段/天 = 每天几十弹窗. 修: 只弹真下单 + 突发 + 高信心 BUY/SELL.
+    _TRADE_ACTIONS = ("BUY", "SELL", "SELL_ALL", "REDUCE", "REDUCE_RISK")
+    should_toast = (
+        action in _TRADE_ACTIONS
+        or breaking
+        or (action in ("WATCH_BUY", "WATCH_BUY_PROBE") and confidence >= 8)
+    )
     if should_toast:
         entry = decision.get("entry_ref")
         stop  = decision.get("stop_ref")

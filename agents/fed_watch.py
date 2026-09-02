@@ -77,8 +77,9 @@ def _fetch_fed_watch_via_ai() -> Optional[dict]:
 如果找不到最新数据，返 {{"error": "no_recent_data", "confidence": "low"}}
 """
     to = int(os.environ.get("FED_WATCH_TIMEOUT", "180"))
+    # Fed speech / statement 解析成结构化 JSON — 简单信息提取 simple
     out, status, provider, _ = query_ai_cli(
-        prompt, timeout=to, web_search=True
+        prompt, timeout=to, web_search=True, complexity="simple"
     )
     provider = provider.lower()
     if not out:

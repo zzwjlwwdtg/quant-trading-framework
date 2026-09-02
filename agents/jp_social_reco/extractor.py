@@ -236,9 +236,11 @@ def llm_extract(items: list[ContentItem], *, timeout: int = 90) -> tuple[list[Ex
     ]
     prompt = _PROMPT.format(payload=json.dumps(compact, ensure_ascii=False, indent=2))
     try:
+        # JP 社区评论提取 ticker + 情感 — 结构化 JSON, simple 档
         from ai_prompt import query_ai_cli
         out, status, provider, _ = query_ai_cli(
-            prompt, timeout=timeout, fallback_on_unavailable=True
+            prompt, timeout=timeout, fallback_on_unavailable=True,
+            complexity="simple"
         )
     except Exception as exc:
         return [], f"llm_error: {exc}"

@@ -275,9 +275,7 @@ def _run_report(session_type: str) -> None:
         report, fpath = generate_report(label)
         logger.info(report)
         logger.info(t(f"报告已保存: {fpath}", f"レポート保存先: {fpath}"))
-        _toast(t(f"{label}已生成", f"{label}生成完了"),
-               t(f"查看终端或 {fpath.split(chr(92))[-1]}",
-                 f"ターミナルまたは {fpath.split(chr(92))[-1]} を確認"))
+        # 之前每 cycle (5/天) 都弹"报告已生成", 干扰工作. 现改为静默 log.
     except Exception as exc:
         logger.error(t(f"报告生成失败: {exc}", f"レポート生成失敗: {exc}"))
 

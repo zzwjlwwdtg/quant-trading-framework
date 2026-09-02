@@ -228,7 +228,9 @@ def _parse_via_cli(items: list[dict], timeout: int = 120,
             today=date.today().isoformat(),
             rss_items_json=json.dumps(compact, ensure_ascii=False, indent=2),
         )
-        out, status, provider, _ = query_ai_cli(prompt, timeout=timeout)
+        # 政策工具箱 RSS 分类 — 简单 keyword+context 提取, simple 档
+        out, status, provider, _ = query_ai_cli(prompt, timeout=timeout,
+                                                 complexity="simple")
         if not out:
             return [{} for _ in batch]  # 该批全占位
         parsed = _extract_json_from_cli_output(out)

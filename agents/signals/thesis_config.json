@@ -1,0 +1,50 @@
+{
+  "version": "2026-Q3",
+  "created_at": "2026-08-24",
+  "last_reviewed_at": "2026-09-02",
+  "review_interval_days": 30,
+  "thesis_summary": "Bond + Cloud long, avoid semi. 二阶导拐点交易: AI capex 放缓 / Fed 降息节奏加快 → 前端债券 + 云计算平台 outperform semi.",
+  "blacklist_tickers": [
+    "US.DRAM",
+    "US.KLAC",
+    "US.AMAT",
+    "US.MULL",
+    "US.SOXL",
+    "US.SOXS",
+    "US.NVDA",
+    "US.MU",
+    "US.LITE",
+    "US.CBRS"
+  ],
+  "blacklist_reason": "semi + AI 芯片链 (违反 thesis avoid semi). 2026-07 → 09 paper trader 数据: 该 pool BUY 信号触发后 hit stop 83%, 直接造成 -24% drawdown.",
+  "whitelist_tickers": [
+    "US.SHY",
+    "US.IEI",
+    "US.MSFT",
+    "US.GOOGL",
+    "US.NBIS",
+    "US.GLD",
+    "US.XLV"
+  ],
+  "whitelist_reason": "bond + cloud + defensive hedge. 与 thesis 直接对齐.",
+  "invalidation_conditions": [
+    {
+      "id": "cpi_hot_reprice",
+      "metric": "cpi_mom_pct",
+      "operator": ">",
+      "threshold": 0.25,
+      "source": "FRED CPIAUCSL",
+      "description": "月度 CPI MoM > 0.25% → 通胀二阶导没如期回落, Fed 降息路径 reprice, bond thesis 被打脸."
+    },
+    {
+      "id": "capex_upgrade",
+      "metric": "googl_amzn_capex_ttm_upgraded",
+      "operator": "==",
+      "threshold": true,
+      "source": "manual: 财报后 GOOGL/AMZN capex TTM 上调",
+      "description": "云厂商 capex TTM 再上调 → AI 拐点被推迟, avoid semi 逻辑失效, 需重估 blacklist."
+    }
+  ],
+  "auto_clear_blacklist_on_invalidation": false,
+  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn."
+}

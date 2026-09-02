@@ -2,7 +2,7 @@
 news_analyzer.py — RSS / 新闻 → 结构化信号
 
 任何 events_watch / decision_agent / breaking_news 消费 RSS 之前必须先经此模块过滤。
-调用本地 Claude CLI（fallback Codex CLI）把自由文本拆成固定 JSON schema：
+调用统一 AI CLI（默认 Codex）把自由文本拆成固定 JSON schema：
 
   {
     "items": [
@@ -213,7 +213,7 @@ def analyze_rss_items(rss_items: list, *, source: str = "RSS",
                       events_calendar: list | None = None,
                       cli_timeout: int = 60) -> dict:
     """
-    把 RSS items 列表喂给 Claude CLI 解析为结构化信号。
+    把 RSS items 列表喂给统一 AI CLI 解析为结构化信号。
 
     rss_items: [{"title": str, "desc": str, ...}, ...]
     source:    标识来源（"Yahoo SPY"、"BLS umbrella" 等）
@@ -252,9 +252,11 @@ def analyze_rss_items(rss_items: list, *, source: str = "RSS",
     prompt = _PROMPT.format(today=today, events=events_str,
                             tickers=tickers_str, rss_items_json=rss_json)
 
-    # 调用本地 Claude CLI；额度满时切 Codex CLI
+    # 调用统一 AI CLI；默认 Codex，不自动回退 Claude
+    # RSS 解析成 JSON schema — 简单结构化提取, 用 simple 档
     from ai_prompt import query_ai_cli
-    out, status, provider, _ = query_ai_cli(prompt, timeout=cli_timeout)
+    out, status, provider, _ = query_ai_cli(prompt, timeout=cli_timeout,
+                                             complexity="simple")
 
     if not out:
         return {"items": [], "fallback": True, "source": source,
@@ -370,7 +372,7 @@ def _cli_main():
             source="BLS")
     else:
         rss = fetch_yahoo_rss(arg)
-    print(f"抓到 {len(rss)} 条原始 RSS items。调用 Claude CLI 解析中...")
+    print(f"抓到 {len(rss)} 条原始 RSS items。调用 AI CLI 解析中...")
     result = analyze_rss_items(rss, source=arg)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

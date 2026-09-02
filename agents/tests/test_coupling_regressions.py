@@ -9,7 +9,7 @@ import types
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -28,9 +28,42 @@ import daily_review
 import decision_agent
 import orchestrator
 import paper_trader
+import moomoo_pool
+import snapshot_generator
 import trading_contracts
 import universe_picker
 import _watchdog as watchdog
+
+
+class SnapshotProcessCleanupTests(unittest.TestCase):
+    def test_quote_context_close_is_idempotent(self):
+        fake_ctx = Mock()
+        with patch.object(moomoo_pool, "_ctx", fake_ctx):
+            moomoo_pool.close_quote_ctx()
+            moomoo_pool.close_quote_ctx()
+            self.assertIsNone(moomoo_pool._ctx)
+        fake_ctx.close.assert_called_once_with()
+
+    def test_snapshot_closes_quote_context_when_schedule_skips(self):
+        with patch.object(sys, "argv", ["snapshot_generator.py"]), \
+             patch.object(snapshot_generator, "_should_run_now",
+                          return_value=(False, "test skip")), \
+             patch("builtins.print"), \
+             patch.object(moomoo_pool, "close_quote_ctx") as close_ctx:
+            snapshot_generator.main()
+        close_ctx.assert_called_once_with()
+
+    def test_snapshot_closes_quote_context_after_failure(self):
+        with patch.object(sys, "argv", ["snapshot_generator.py"]), \
+             patch.object(snapshot_generator, "_should_run_now",
+                          return_value=(True, "test run")), \
+             patch.object(snapshot_generator, "snapshot_all",
+                          side_effect=RuntimeError("boom")), \
+             patch("builtins.print"), \
+             patch.object(moomoo_pool, "close_quote_ctx") as close_ctx:
+            with self.assertRaisesRegex(RuntimeError, "boom"):
+                snapshot_generator.main()
+        close_ctx.assert_called_once_with()
 
 
 class ActionContractTests(unittest.TestCase):
@@ -176,7 +209,7 @@ class ClaudeGateTests(unittest.TestCase):
     @staticmethod
     def _fake_ai_prompt() -> types.ModuleType:
         module = types.ModuleType("ai_prompt")
-        module.query_ai_cli = lambda prompt, timeout: (
+        module.query_ai_cli = lambda prompt, timeout, **kwargs: (
             json.dumps(
                 {
                     "verdict": "APPROVE",
@@ -206,7 +239,7 @@ class ClaudeGateTests(unittest.TestCase):
 
     def test_quota_fallback_provider_is_recorded_in_gate_audit(self):
         module = types.ModuleType("ai_prompt")
-        module.query_ai_cli = lambda prompt, timeout: (
+        module.query_ai_cli = lambda prompt, timeout, **kwargs: (
             json.dumps(
                 {
                     "verdict": "APPROVE",
@@ -285,27 +318,48 @@ class ClaudeGateTests(unittest.TestCase):
 
 
 class CliFallbackTests(unittest.TestCase):
-    def test_quota_error_routes_to_codex(self):
-        with patch.object(
-            ai_prompt,
-            "query_claude_cli",
-            return_value=(None, "error: You've hit your limit; resets 12am"),
+    def test_default_policy_routes_to_codex_without_calling_claude(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+            ai_prompt, "query_codex_cli", return_value=("codex answer", "ok")
+        ) as codex, patch.object(ai_prompt, "query_claude_cli") as claude:
+            output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
+        self.assertEqual((output, status, provider, reason),
+                         ("codex answer", "ok", "Codex", ""))
+        codex.assert_called_once_with("prompt", timeout=7, web_search=False, complexity="medium")
+        claude.assert_not_called()
+
+    def test_default_codex_failure_does_not_spend_claude_quota(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+            ai_prompt, "query_codex_cli", return_value=(None, "codex_timeout")
+        ), patch.object(ai_prompt, "query_claude_cli") as claude:
+            output, status, provider, reason = ai_prompt.query_ai_cli("prompt")
+        self.assertIsNone(output)
+        self.assertEqual((status, provider, reason), ("codex_timeout", "Codex", ""))
+        claude.assert_not_called()
+
+    def test_explicit_claude_fallback_is_supported(self):
+        env = {"AI_CLI_PRIMARY": "codex", "AI_CLI_FALLBACK": "claude"}
+        with patch.dict(os.environ, env, clear=True), patch.object(
+            ai_prompt, "query_codex_cli", return_value=(None, "codex_timeout")
+        ), patch.object(
+            ai_prompt, "query_claude_cli", return_value=("fallback answer", "ok")
+        ) as claude:
+            output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
+        self.assertEqual((output, status, provider), ("fallback answer", "ok", "Claude"))
+        self.assertIn("codex_timeout", reason)
+        claude.assert_called_once_with("prompt", timeout=7)
+
+    def test_legacy_claude_primary_can_fallback_to_codex(self):
+        env = {"AI_CLI_PRIMARY": "claude", "AI_CLI_FALLBACK": "codex"}
+        with patch.dict(os.environ, env, clear=True), patch.object(
+            ai_prompt, "query_claude_cli", return_value=(None, "quota exceeded")
         ), patch.object(
             ai_prompt, "query_codex_cli", return_value=("fallback answer", "ok")
         ) as codex:
             output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
         self.assertEqual((output, status, provider), ("fallback answer", "ok", "Codex"))
-        self.assertIn("hit your limit", reason)
-        codex.assert_called_once_with("prompt", timeout=7)
-
-    def test_non_quota_error_does_not_route_to_codex(self):
-        with patch.object(
-            ai_prompt, "query_claude_cli", return_value=(None, "timeout")
-        ), patch.object(ai_prompt, "query_codex_cli") as codex:
-            output, status, provider, reason = ai_prompt.query_ai_cli("prompt")
-        self.assertIsNone(output)
-        self.assertEqual((status, provider, reason), ("timeout", "Claude", ""))
-        codex.assert_not_called()
+        self.assertIn("quota exceeded", reason)
+        codex.assert_called_once_with("prompt", timeout=7, web_search=False, complexity="medium")
 
     def test_codex_environment_removes_credentials(self):
         env = {
@@ -340,9 +394,31 @@ class CliFallbackTests(unittest.TestCase):
         self.assertIn("--ignore-user-config", args)
         self.assertIn("--ignore-rules", args)
         self.assertEqual(args[args.index("--sandbox") + 1], "read-only")
+        self.assertNotIn("--search", args)
         self.assertNotEqual(Path(kwargs["cwd"]).resolve(), Path(ai_prompt.BASE_DIR).resolve())
         self.assertFalse(any("KEY" in name.upper() for name in kwargs["env"]))
         self.assertFalse(any("TOKEN" in name.upper() for name in kwargs["env"]))
+        if os.name == "nt":
+            self.assertTrue(kwargs["creationflags"] & ai_prompt.subprocess.CREATE_NO_WINDOW)
+            self.assertEqual(kwargs["startupinfo"].wShowWindow,
+                             ai_prompt.subprocess.SW_HIDE)
+
+    def test_codex_live_search_flag_precedes_exec(self):
+        completed = types.SimpleNamespace(returncode=0, stdout="answer", stderr="")
+        with patch.object(ai_prompt, "_find_codex_cli", return_value="codex.exe"), \
+             patch.object(ai_prompt, "_is_ja_mode", return_value=False), \
+             patch.object(ai_prompt.subprocess, "run", return_value=completed) as run:
+            output, status = ai_prompt.query_codex_cli(
+                "prompt", timeout=9, web_search=True
+            )
+        self.assertEqual((output, status), ("answer", "ok"))
+        args = run.call_args.args[0]
+        self.assertLess(args.index("--search"), args.index("exec"))
+
+    def test_public_half_hour_snapshot_disables_claude_fallback(self):
+        script = (AGENTS_DIR / "snap_public.bat").read_text(encoding="utf-8")
+        self.assertIn('set "AI_CLI_PRIMARY=codex"', script)
+        self.assertIn('set "AI_CLI_FALLBACK=none"', script)
 
     def test_all_production_callers_use_the_central_router(self):
         direct_call = re.compile(r"\bquery_(?:claude|codex)_cli\s*\(")
@@ -486,20 +562,92 @@ class SimActiveProfileTests(unittest.TestCase):
              patch.object(decision_agent, "_is_technical_only", return_value=True), \
              patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "0"}):
             conservative = decision_agent._etf_rules(
-                market, {}, {}, regime="neutral", confluence=confluence, quant={}
+                market, {}, {}, regime="neutral", confluence=confluence
             )
         with patch.object(decision_agent, "_get_hmm_meta_state", return_value="bear_or_correction"), \
              patch.object(decision_agent, "_get_sector_regime", return_value="sector_weak"), \
              patch.object(decision_agent, "_is_technical_only", return_value=True), \
              patch.dict(os.environ, {"TRADER_SIM_ACTIVE": "1"}):
             active = decision_agent._etf_rules(
-                market, {}, {}, regime="neutral", confluence=confluence, quant={}
+                market, {}, {}, regime="neutral", confluence=confluence
             )
         self.assertEqual(conservative["action"], "HOLD")
         self.assertEqual(active["action"], "WATCH_BUY")
 
 
 class PaperTraderControlFlowTests(unittest.TestCase):
+    def test_far_ai_entry_is_rejected_as_stale(self):
+        target = {"entry_ref": 152.24, "action": "watch_buy", "use_limit": True}
+        self.assertFalse(
+            paper_trader._ai_target_matches_market("US.SOXL", target, 126.0)
+        )
+        self.assertTrue(
+            paper_trader._ai_target_matches_market("US.SOXL", target, 150.0)
+        )
+
+    def test_latest_hold_cancels_system_pending_buy(self):
+        ctx = Mock()
+        ctx.order_list_query.return_value = (
+            paper_trader.RET_OK,
+            pd.DataFrame([{
+                "order_id": "order-1", "order_status": "SUBMITTED",
+                "qty": 10, "price": 99.0, "dealt_qty": 0,
+            }]),
+        )
+        ctx.modify_order.return_value = (paper_trader.RET_OK, pd.DataFrame())
+        state = {
+            "last_order_id": "order-1", "last_side": "BUY",
+            "managed_entry_order_id": "order-1",
+            "managed_entry_kind": "ai_limit",
+            "first_entry_utc": "2026-08-18T14:00:00+00:00",
+            "protective_stop_price": 90.0,
+        }
+        with patch.object(paper_trader, "_ctx_get", return_value=ctx):
+            result = paper_trader._sync_pending_entry_for_decision(
+                "US.SOXL", state, "HOLD", 130.0,
+            )
+        self.assertEqual(result, "cancelled")
+        self.assertIsNone(state["last_order_id"])
+        self.assertNotIn("managed_entry_order_id", state)
+        self.assertNotIn("first_entry_utc", state)
+        self.assertNotIn("protective_stop_price", state)
+        self.assertEqual(
+            ctx.modify_order.call_args.kwargs["modify_order_op"],
+            paper_trader.ModifyOrderOp.CANCEL,
+        )
+
+    def test_new_ai_level_modifies_existing_system_limit(self):
+        ctx = Mock()
+        ctx.order_list_query.return_value = (
+            paper_trader.RET_OK,
+            pd.DataFrame([{
+                "order_id": "order-2", "order_status": "SUBMITTED",
+                "qty": 20, "price": 151.0, "dealt_qty": 0,
+            }]),
+        )
+        ctx.modify_order.return_value = (paper_trader.RET_OK, pd.DataFrame())
+        state = {
+            "last_order_id": "order-2", "last_side": "BUY",
+            "managed_entry_order_id": "order-2",
+            "managed_entry_kind": "ai_limit",
+        }
+        target = {
+            "action": "watch_buy", "entry_ref": 148.0, "stop_ref": 145.0,
+            "use_limit": True, "_source_ts": "2026-08-18T10:10:00-04:00",
+        }
+        with patch.object(paper_trader, "_ctx_get", return_value=ctx), \
+             patch.object(paper_trader, "_load_ai_target_safe", return_value=target):
+            result = paper_trader._sync_pending_entry_for_decision(
+                "US.SOXL", state, "WATCH_BUY", 150.0,
+            )
+        self.assertEqual(result, "updated")
+        self.assertEqual(ctx.modify_order.call_args.kwargs["price"], 148.15)
+        self.assertEqual(state["managed_entry_ref"], 148.0)
+        self.assertEqual(
+            ctx.modify_order.call_args.kwargs["modify_order_op"],
+            paper_trader.ModifyOrderOp.NORMAL,
+        )
+
     def test_execution_guard_blocks_extended_buy_even_without_ai_veto(self):
         state = {}
         market = {
@@ -527,6 +675,7 @@ class PaperTraderControlFlowTests(unittest.TestCase):
     def test_premarket_buy_skips_positive_gap_instead_of_chasing(self):
         with patch.object(paper_trader, "DRY_RUN", True), \
              patch.object(paper_trader, "_get_realtime_price", return_value=103.0), \
+             patch.object(paper_trader, "append_execution_event"), \
              patch.object(paper_trader, "_log_trade") as trade_log:
             order_id = paper_trader._place(
                 "US.LITE",
@@ -542,6 +691,7 @@ class PaperTraderControlFlowTests(unittest.TestCase):
     def test_premarket_small_gap_uses_realtime_with_half_percent_ceiling(self):
         with patch.object(paper_trader, "DRY_RUN", True), \
              patch.object(paper_trader, "_get_realtime_price", return_value=101.0), \
+             patch.object(paper_trader, "append_execution_event"), \
              patch.object(paper_trader, "_log_trade") as trade_log:
             order_id = paper_trader._place(
                 "US.LITE",
@@ -554,6 +704,21 @@ class PaperTraderControlFlowTests(unittest.TestCase):
         self.assertEqual(order_id, "DRY")
         self.assertEqual(paper_trader.WINDOW_CFG["pre-market"]["buffer"], 0.005)
         self.assertEqual(trade_log.call_args.args[3], 101.5)
+
+    def test_sim_active_portfolio_risk_is_warning_only(self):
+        warning = {"allow_order": False, "breaches": ["effective_gross_pct"]}
+        with patch.object(paper_trader, "DRY_RUN", True), \
+             patch.object(paper_trader, "is_sim_active_trading", return_value=True), \
+             patch.object(paper_trader, "_portfolio_what_if", return_value=warning), \
+             patch.object(paper_trader, "append_execution_event"), \
+             patch.object(paper_trader, "_log_trade") as trade_log:
+            order_id = paper_trader._place(
+                "US.TQQQ", paper_trader.TrdSide.BUY, 1, 100.0
+            )
+        self.assertEqual(order_id, "DRY")
+        recorded = trade_log.call_args.kwargs["extra"]["portfolio_what_if"]
+        self.assertTrue(recorded["allow_order"])
+        self.assertTrue(recorded["sim_active_override"])
 
     def test_first_entry_uses_broker_cost_and_records_software_stop(self):
         state = {}

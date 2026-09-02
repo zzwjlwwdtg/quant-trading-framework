@@ -64,11 +64,12 @@ def _launch_webui() -> int | None:
     try:
         DETACHED = 0x00000008
         NEW_GROUP = 0x00000200
+        NO_WINDOW = 0x08000000       # CREATE_NO_WINDOW — 关键: 让 cmd/webui 完全不弹窗
         proc = subprocess.Popen(
             ["cmd.exe", "/c", str(WEBUI_BAT)],
             cwd=str(SCRIPT_DIR),
             env=env,
-            creationflags=DETACHED | NEW_GROUP,
+            creationflags=DETACHED | NEW_GROUP | NO_WINDOW,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             close_fds=True,

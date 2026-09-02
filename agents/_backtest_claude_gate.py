@@ -390,12 +390,39 @@ def run() -> dict:
     hold_median = sorted(hold_5d)[len(hold_5d)//2] if hold_5d else 0
     print(f"  APPROVE 率: {approve_rate:.1f}%  (阈值: ≥ 5%)")
     print(f"  HOLD 桶 5d median: {hold_median:+.2f}%  (阈值: ≤ 0%)")
-    if approve_rate < 5:
+    approve_ok = approve_rate >= 5
+    hold_ok = hold_median <= 0
+    if not approve_ok:
         print(f"  [ALERT] gate 过度否决 (APPROVE {approve_rate:.1f}% < 5%)")
-    if hold_median > 0:
+    if not hold_ok:
         print(f"  [ALERT] gate 挡下了赚钱信号 (HOLD median {hold_median:+.2f}% > 0)")
-    if approve_rate >= 5 and hold_median <= 0:
+    if approve_ok and hold_ok:
         print(f"  ✓ gate 行为在健康范围")
+
+    # 写 verdict 供 weekly review 消费
+    try:
+        from backtest_verdicts import write_verdict
+        if approve_ok and hold_ok:
+            verdict_val, should_int = "pass", False   # 保持现制度
+            rec = "keep current gate config"
+        else:
+            verdict_val, should_int = "edge", False   # alert 触发 = 需人工看
+            rec = "manual review gate config (alert triggered)"
+        write_verdict(
+            "claude_gate_health",
+            verdict_val,
+            conclusion=f"APPROVE_rate={approve_rate:.1f}% HOLD_median={hold_median:+.2f}% n={total}",
+            metrics={"approve_rate_pct": round(approve_rate, 2),
+                     "hold_5d_median_pct": round(hold_median, 2),
+                     "n_events": total, "n_approve": approve},
+            params={"approve_threshold": 5, "hold_median_threshold": 0},
+            next_review_days=14,   # gate 是 hot path, 双周 review
+            should_integrate=should_int,
+            recommendation=rec,
+        )
+        print("  [verdict] 写入 signals/backtest_verdicts/claude_gate_health.json")
+    except Exception as _e:
+        print(f"  [verdict] 写入失败: {_e}")
 
     return {"events": len(events), "start": str(min(ts_list)),
             "end": str(max(ts_list)),

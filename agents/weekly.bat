@@ -50,6 +50,18 @@ REM Output: signals/economic_calendar.json — events_watch.py 优先读它
 REM 若 FRED 不可用 events_watch 会 fallback 到 hardcoded (可能过时)
 "%PY%" -X utf8 -u _refresh_calendar.py
 
+REM Weekly: cache prune (删 >30d 缓存, 归档 >20MB 大文件, 防无限增长)
+REM Output: 释放的 MB 数
+"%PY%" -X utf8 -u _cache_prune.py
+
+REM Daily/Weekly: thesis invalidation check (CPI MoM + macro conditions)
+REM Output: signals/thesis_invalidation_log.jsonl + notification on trigger
+"%PY%" -X utf8 -u _check_thesis_invalidation.py
+
+REM Weekly: auto-rerun expired backtest verdicts + diff alert
+REM Output: signals/verdict_change_log.jsonl + notification on verdict change
+"%PY%" -X utf8 -u _weekly_backtest_review.py
+
 echo.
 REM 只有交互式（有 stdin）才 pause，避免 Task Scheduler 卡住
 if defined SESSIONNAME if "%SESSIONNAME%"=="Console" pause

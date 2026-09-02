@@ -136,3 +136,88 @@ def classify_ticker_sector(ticker: str, ticker_to_sector: dict) -> Optional[str]
         return None
     info = classify_sector(sector)
     return info["regime"] if info else None
+
+
+# ── rotation_speed helper (2026-09-01 backtest 派生的 dashboard 显示指标) ──
+# 定义: rolling N-week 窗口内 top-1 sector (by 20d cum return) 换人次数
+# 结果: 0 → 完全稳定 (一个 sector 一直领涨), 越高越轮动
+# 回测数据 (_backtest_rotation_regime.py 2/4 pass, verifier-only):
+#   低 rotation → 5d fwd 强 (+5.94% avg, 68% win)
+#   高 rotation → 5d fwd 弱 (+0.41% avg, 50% win)
+# **不入 confluence 打分**, 只做 dashboard 显示 + 人工仓位缩放参考.
+_ROTATION_SECTORS = ["SPY", "QQQ", "SMH", "GLD", "TLT", "XLE", "XLF", "XLV", "IWM", "EFA"]
+_ROTATION_CACHE: dict = {"ts": 0, "data": None}
+_ROTATION_TTL_SEC = 3600   # 1 hour cache (指标日频变化, 无需高频更新)
+
+
+def compute_rotation_speed(window_weeks: int = 12,
+                            momentum_lookback: int = 20) -> Optional[dict]:
+    """算当前 rotation_speed_index. 15min 缓存, 拉 10 sector 3mo daily.
+
+    返回:
+      {"rotation_speed": 5, "window_weeks": 12, "n_weeks_evaluated": 12,
+       "current_top1": "SMH", "recent_top1_history": ["SMH","QQQ","SMH",...],
+       "asof": "2026-09-01"}
+      或 None (数据拉取失败).
+    """
+    import time
+    now = time.time()
+    cached = _ROTATION_CACHE.get("data")
+    if cached and (now - _ROTATION_CACHE["ts"] < _ROTATION_TTL_SEC):
+        # 缓存 hit 但 window_weeks 可能不同 → 只有 window 匹配才复用
+        if cached.get("window_weeks") == window_weeks:
+            return cached
+
+    try:
+        import pandas as pd
+        import yfinance as yf
+    except ImportError:
+        return None
+
+    # 拉 6 个月 daily (够 20d lookback + 12 周 rotation window)
+    closes = {}
+    for etf in _ROTATION_SECTORS:
+        try:
+            df = yf.Ticker(etf).history(period="6mo", interval="1d", auto_adjust=True)
+            if df is not None and not df.empty:
+                closes[etf] = df["Close"]
+        except Exception:
+            continue
+
+    if len(closes) < 5:
+        return None
+
+    sector_close = pd.DataFrame(closes).dropna(how="any")
+    if len(sector_close) < momentum_lookback + window_weeks * 5:
+        return None
+
+    # 20d cum return
+    sector_ret = sector_close.pct_change(momentum_lookback)
+    # 每交易日 top-1 sector
+    top1_daily = sector_ret.idxmax(axis=1)
+    # 每周五取样
+    top1_daily.index = pd.to_datetime(top1_daily.index)
+    top1_weekly = top1_daily.resample("W-FRI").last().dropna()
+    if len(top1_weekly) < window_weeks + 1:
+        return None
+
+    # rolling window 内换人次数
+    top1_change = (top1_weekly != top1_weekly.shift(1)).astype(int)
+    rotation = top1_change.rolling(window_weeks).sum().dropna()
+    if rotation.empty:
+        return None
+
+    current_speed = int(rotation.iloc[-1])
+    recent_history = list(top1_weekly.tail(window_weeks).values)
+
+    result = {
+        "rotation_speed":       current_speed,
+        "window_weeks":         window_weeks,
+        "n_weeks_evaluated":    len(recent_history),
+        "current_top1":         recent_history[-1] if recent_history else None,
+        "recent_top1_history":  recent_history,
+        "asof":                 str(sector_close.index[-1]),
+    }
+    _ROTATION_CACHE["ts"] = now
+    _ROTATION_CACHE["data"] = result
+    return result
