@@ -1,0 +1,133 @@
+{
+  "ticker": "TSLA",
+  "sector": "新能源车/储能/自动驾驶",
+  "business": "特斯拉设计、制造并直销电动车，同时经营电池储能、充电网络、车载软件、FSD/Robotaxi及相关能源服务。",
+  "upstream": [
+    {
+      "name": "Panasonic Holdings",
+      "ticker": "6752.T",
+      "note": "供应圆柱电池电芯，是美国及早期车型电池体系的核心伙伴",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "LG Energy Solution",
+      "ticker": null,
+      "note": "供应动力电池电芯，覆盖部分全球车型和区域产能",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "Contemporary Amperex Technology Co. Limited",
+      "ticker": null,
+      "note": "供应LFP电池电芯，尤其与中国及标准续航车型、储能产品相关",
+      "weight": 78,
+      "confidence": "medium"
+    },
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "提供AI训练/推理GPU及数据中心算力生态，用于自动驾驶和机器人AI研发",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "STMicroelectronics",
+      "ticker": "STM",
+      "note": "供应功率半导体/SiC等车用电子器件，影响电驱逆变器效率和成本",
+      "weight": 42,
+      "confidence": "medium"
+    },
+    {
+      "name": "Albemarle",
+      "ticker": "ALB",
+      "note": "上游锂资源及锂化学品供应链相关企业，影响电池材料成本",
+      "weight": 35,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "个人及企业零售车主",
+      "ticker": null,
+      "note": "购买Model 3/Y/S/X、Cybertruck及FSD、保险、充电等服务，是汽车收入主体",
+      "weight": 100,
+      "confidence": "high"
+    },
+    {
+      "name": "PG&E Corporation",
+      "ticker": "PCG",
+      "note": "采购/使用Megapack等大型储能系统用于电网调峰和可再生能源并网",
+      "weight": 45,
+      "confidence": "medium"
+    },
+    {
+      "name": "Intersect Power",
+      "ticker": null,
+      "note": "采购Megapack用于大型太阳能和储能项目",
+      "weight": 42,
+      "confidence": "medium"
+    },
+    {
+      "name": "bp p.l.c.",
+      "ticker": "BP",
+      "note": "采购Tesla超充硬件，用于bp pulse公共充电网络建设",
+      "weight": 30,
+      "confidence": "medium"
+    },
+    {
+      "name": "Hertz Global Holdings",
+      "ticker": "HTZ",
+      "note": "车队采购Tesla车辆用于租赁业务，当前战略重要度较历史订单下降",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "Ford Motor Company",
+      "ticker": "F",
+      "note": "接入Tesla Supercharger/NACS生态，为其电动车客户提供充电网络兼容性",
+      "weight": 20,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "BYD Company Limited",
+      "ticker": "1211.HK",
+      "note": "在中国及全球市场与Tesla竞争新能源乘用车、电池垂直整合和价格带",
+      "confidence": "high"
+    },
+    {
+      "name": "General Motors",
+      "ticker": "GM",
+      "note": "在北美电动车、软件定义汽车和未来自动驾驶出行方向竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Ford Motor Company",
+      "ticker": "F",
+      "note": "在电动皮卡、SUV和北美主流电动车市场竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Rivian Automotive",
+      "ticker": "RIVN",
+      "note": "在高端电动SUV、皮卡和商用电动车领域竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Lucid Group",
+      "ticker": "LCID",
+      "note": "在高端长续航电动车市场与Model S/X等产品竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-08-28T08:33:46.373959+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-08-28T17:33:46.386981",
+    "age_sec": 460761,
+    "stale": false,
+    "refreshing": false
+  }
+}

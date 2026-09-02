@@ -1,0 +1,235 @@
+{
+  "cache_schema": 1,
+  "source_stock": "TSLA",
+  "state": "ready",
+  "analyst_consensus": {
+    "n_analysts": 39,
+    "recommendation": "buy",
+    "current_price": 356.09,
+    "forward_eps": 2.16,
+    "trailing_eps": 1.07,
+    "eps_growth_pct": 101.7,
+    "forward_pe": 164.96,
+    "trailing_pe": 332.79,
+    "target_mean": 390.09,
+    "target_high": 600.0,
+    "target_low": 125.0,
+    "target_upside_pct": 9.5,
+    "revenue_growth_pct": 25.5,
+    "earnings_growth_pct": -3.0,
+    "next_earnings": "2026-10-22",
+    "implied_pe_hold": 718.36,
+    "implied_pe_hold_upside": 101.7,
+    "peg_fair_price": 219.53,
+    "peg_ratio": 1.62,
+    "hist_pe_median": 61.25,
+    "hist_pe_p25": 48.88,
+    "hist_pe_p75": 113.03,
+    "hist_pe_n_days": 674,
+    "implied_hist_median": 132.21,
+    "implied_hist_p25": 105.51,
+    "implied_hist_p75": 243.98,
+    "implied_hist_upside": -62.9,
+    "peer_pe_median": 7.23,
+    "peer_pe_n_peers": 3,
+    "peer_pe_details": [
+      {
+        "ticker": "1211.HK",
+        "pe": 13.01
+      },
+      {
+        "ticker": "GM",
+        "pe": 5.77
+      },
+      {
+        "ticker": "F",
+        "pe": 7.23
+      }
+    ],
+    "implied_peer_median": 15.61,
+    "implied_peer_upside": -95.6,
+    "source": "yfinance analyst aggregation",
+    "forward_estimates": {
+      "earnings": {
+        "0q": {
+          "avg": 0.4515,
+          "low": 0.27,
+          "high": 0.6,
+          "yearAgoEps": 0.5,
+          "numberOfAnalysts": 26.0,
+          "growth": -0.0969
+        },
+        "+1q": {
+          "avg": 0.4882,
+          "low": 0.24,
+          "high": 0.82,
+          "yearAgoEps": 0.5,
+          "numberOfAnalysts": 26.0,
+          "growth": -0.0235
+        },
+        "0y": {
+          "avg": 1.7727,
+          "low": 1.25,
+          "high": 2.39,
+          "yearAgoEps": 1.66,
+          "numberOfAnalysts": 34.0,
+          "growth": 0.0679
+        },
+        "+1y": {
+          "avg": 2.1586,
+          "low": 0.8,
+          "high": 3.65,
+          "yearAgoEps": 1.7727,
+          "numberOfAnalysts": 32.0,
+          "growth": 0.2177
+        }
+      },
+      "revenue": {
+        "0q": {
+          "avg": 27521552050.0,
+          "low": 24286500000.0,
+          "high": 30566000000.0,
+          "yearAgoRevenue": 28095000000.0,
+          "numberOfAnalysts": 28.0,
+          "growth": -0.0204
+        },
+        "+1q": {
+          "avg": 28465705970.0,
+          "low": 25887238000.0,
+          "high": 32372000000.0,
+          "yearAgoRevenue": 24901000000.0,
+          "numberOfAnalysts": 28.0,
+          "growth": 0.1432
+        },
+        "0y": {
+          "avg": 106034593520.0,
+          "low": 96453000000.0,
+          "high": 114131060000.0,
+          "yearAgoRevenue": 94827000000.0,
+          "numberOfAnalysts": 45.0,
+          "growth": 0.1182
+        },
+        "+1y": {
+          "avg": 120769280090.0,
+          "low": 99741000000.0,
+          "high": 151793000000.0,
+          "yearAgoRevenue": 106034593520.0,
+          "numberOfAnalysts": 46.0,
+          "growth": 0.139
+        }
+      },
+      "eps_trend": {
+        "0q": {
+          "current": 0.4515,
+          "7daysAgo": 0.4515,
+          "30daysAgo": 0.4558,
+          "60daysAgo": 0.5403,
+          "90daysAgo": 0.5409
+        },
+        "+1q": {
+          "current": 0.4882,
+          "7daysAgo": 0.4882,
+          "30daysAgo": 0.4951,
+          "60daysAgo": 0.6293,
+          "90daysAgo": 0.6309
+        },
+        "0y": {
+          "current": 1.7727,
+          "7daysAgo": 1.7809,
+          "30daysAgo": 2.1347,
+          "60daysAgo": 2.0485,
+          "90daysAgo": 2.036
+        },
+        "+1y": {
+          "current": 2.1586,
+          "7daysAgo": 2.1633,
+          "30daysAgo": 2.5496,
+          "60daysAgo": 2.5161,
+          "90daysAgo": 2.5255
+        }
+      },
+      "eps_revisions": {
+        "0q": {
+          "upLast7days": 2.0,
+          "upLast30days": 4.0,
+          "downLast30days": 15.0
+        },
+        "+1q": {
+          "upLast7days": 2.0,
+          "upLast30days": 3.0,
+          "downLast30days": 16.0
+        },
+        "0y": {
+          "upLast7days": 1.0,
+          "upLast30days": 7.0,
+          "downLast30days": 18.0
+        },
+        "+1y": {
+          "upLast7days": 2.0,
+          "upLast30days": 4.0,
+          "downLast30days": 19.0
+        }
+      },
+      "revision_summary": {
+        "period": "+1y",
+        "signal": "downward",
+        "trend_signal": "downward",
+        "breadth_signal": "downward",
+        "eps_current": 2.1586,
+        "eps_30d_ago": 2.5496,
+        "eps_trend_pct_30d": -15.34,
+        "up_30d": 4,
+        "down_30d": 19,
+        "net_30d": -15
+      }
+    }
+  },
+  "pricing": {
+    "classification": "overpriced",
+    "label": "预期透支",
+    "tone": "bad",
+    "confidence": "high",
+    "anchor_count": 3,
+    "anchors": [
+      {
+        "key": "analyst_target",
+        "label": "分析师目标均值",
+        "implied_price": 390.09,
+        "gap_pct": 9.5
+      },
+      {
+        "key": "pe_hold",
+        "label": "前瞻 EPS × 当前估值",
+        "implied_price": 718.36,
+        "gap_pct": 101.7
+      },
+      {
+        "key": "historical_pe",
+        "label": "前瞻 EPS × 五年 PE 中位",
+        "implied_price": 132.21,
+        "gap_pct": -62.9
+      }
+    ],
+    "median_gap_pct": 9.5,
+    "revision_signal": "downward",
+    "required_eps_growth_pct": 443.3,
+    "consensus_eps_growth_pct": 101.7,
+    "growth_cushion_pct": -341.6,
+    "rationale": [
+      "多口径隐含价中位数高于现价 9.5%",
+      "近 30 天 EPS 共识下修",
+      "历史 PE 口径要求 EPS 增长 +443.3%，共识为 +101.7%"
+    ]
+  },
+  "official_guidance_status": "not_connected",
+  "fetched_at": "2026-09-02T11:13:28.848157+00:00",
+  "source": "yfinance analyst aggregation",
+  "_meta": {
+    "cached_at": "2026-09-02T20:13:28.849160",
+    "age_sec": 19179,
+    "stale": false,
+    "refreshing": false
+  },
+  "ticker": "TSLA",
+  "is_proxy": false
+}
