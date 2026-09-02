@@ -5,23 +5,23 @@
   "analyst_consensus": {
     "n_analysts": 39,
     "recommendation": "buy",
-    "current_price": 325.97,
+    "current_price": 324.96,
     "forward_eps": 9.54,
     "trailing_eps": 8.71,
     "eps_growth_pct": 9.5,
-    "forward_pe": 34.17,
-    "trailing_pe": 37.42,
+    "forward_pe": 34.06,
+    "trailing_pe": 37.31,
     "target_mean": 324.53,
     "target_high": 400.0,
     "target_low": 215.0,
-    "target_upside_pct": -0.4,
+    "target_upside_pct": -0.1,
     "revenue_growth_pct": 16.4,
     "earnings_growth_pct": 28.7,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 357.04,
+    "implied_pe_hold": 355.93,
     "implied_pe_hold_upside": 9.5,
     "peg_fair_price": 90.63,
-    "peg_ratio": 3.6,
+    "peg_ratio": 3.59,
     "hist_pe_median": 33.78,
     "hist_pe_p25": 29.02,
     "hist_pe_p75": 37.11,
@@ -29,7 +29,7 @@
     "implied_hist_median": 322.27,
     "implied_hist_p25": 276.85,
     "implied_hist_p75": 354.03,
-    "implied_hist_upside": -1.1,
+    "implied_hist_upside": -0.8,
     "peer_pe_median": null,
     "peer_pe_n_peers": null,
     "peer_pe_details": null,
@@ -182,38 +182,38 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 324.53,
-        "gap_pct": -0.4
+        "gap_pct": -0.1
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 357.04,
+        "implied_price": 355.93,
         "gap_pct": 9.5
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 322.27,
-        "gap_pct": -1.1
+        "gap_pct": -0.8
       }
     ],
-    "median_gap_pct": -0.4,
+    "median_gap_pct": -0.1,
     "revision_signal": "downward",
-    "required_eps_growth_pct": 10.8,
+    "required_eps_growth_pct": 10.4,
     "consensus_eps_growth_pct": 9.5,
-    "growth_cushion_pct": -1.3,
+    "growth_cushion_pct": -0.9,
     "rationale": [
-      "多口径隐含价中位数低于现价 0.4%",
+      "多口径隐含价中位数低于现价 0.1%",
       "近 30 天 EPS 共识下修",
-      "历史 PE 口径要求 EPS 增长 +10.8%，共识为 +9.5%"
+      "历史 PE 口径要求 EPS 增长 +10.4%，共识为 +9.5%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-02T16:07:25.093787+00:00",
+  "fetched_at": "2026-09-02T22:07:55.316827+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-03T01:07:25.094788",
-    "age_sec": 21338,
+    "cached_at": "2026-09-03T07:07:55.317828",
+    "age_sec": 1509,
     "stale": false,
     "refreshing": false
   },
