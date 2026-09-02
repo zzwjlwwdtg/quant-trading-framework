@@ -6,10 +6,10 @@
     "n_analysts": 24,
     "recommendation": "buy",
     "current_price": 868.95,
-    "forward_eps": 33.01,
-    "trailing_eps": -92.94,
+    "forward_eps": 33.3,
+    "trailing_eps": -88.29,
     "eps_growth_pct": null,
-    "forward_pe": 26.32,
+    "forward_pe": 26.09,
     "trailing_pe": null,
     "target_mean": 1148.3,
     "target_high": 1400.0,
@@ -26,10 +26,10 @@
     "hist_pe_p25": 19.4,
     "hist_pe_p75": 27.58,
     "hist_pe_n_days": 251,
-    "implied_hist_median": 701.53,
-    "implied_hist_p25": 640.46,
-    "implied_hist_p75": 910.5,
-    "implied_hist_upside": -19.3,
+    "implied_hist_median": 707.65,
+    "implied_hist_p25": 646.04,
+    "implied_hist_p75": 918.45,
+    "implied_hist_upside": -18.6,
     "peer_pe_median": 18.97,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
@@ -47,11 +47,11 @@
       },
       {
         "ticker": "300502.SZ",
-        "pe": 10.73
+        "pe": 10.84
       }
     ],
-    "implied_peer_median": 626.26,
-    "implied_peer_upside": -27.9,
+    "implied_peer_median": 631.72,
+    "implied_peer_upside": -27.3,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -204,32 +204,32 @@
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
-        "implied_price": 701.53,
-        "gap_pct": -19.3
+        "implied_price": 707.65,
+        "gap_pct": -18.6
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 626.26,
-        "gap_pct": -27.9
+        "implied_price": 631.72,
+        "gap_pct": -27.3
       }
     ],
-    "median_gap_pct": -19.3,
+    "median_gap_pct": -18.6,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数低于现价 19.3%",
+      "多口径隐含价中位数低于现价 18.6%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-02T04:06:33.976616+00:00",
+  "fetched_at": "2026-09-02T10:06:51.893225+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-02T13:06:33.978101",
-    "age_sec": 21388,
+    "cached_at": "2026-09-02T19:06:51.895251",
+    "age_sec": 1571,
     "stale": false,
     "refreshing": false
   },
