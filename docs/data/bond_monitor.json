@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-02T13:20",
+  "asof": "2026-09-02T13:51",
   "yields": {
     "10y": {
       "value": 4.796,
@@ -263,12 +263,12 @@
     },
     {
       "level": "bad",
-      "msg": "USDJPY 160.21 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
+      "msg": "USDJPY 160.1 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)",
       "key": "jpy_intervention_risk"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1370.4 韩元明显走弱",
+      "msg": "KRW/USD 1369.7 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -288,7 +288,7 @@
     },
     {
       "level": "warn",
-      "msg": "KOSPI (韩) -3.7% (5d -2.3%) 明显走弱",
+      "msg": "KOSPI (韩) -3.7% (5d -2.4%) 明显走弱",
       "key": "asia_kospi_weak"
     },
     {
@@ -313,7 +313,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $256.9B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.0B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -346,10 +346,10 @@
     "sofr_pct": 3.68,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 3.0,
-    "usdjpy": 160.21,
-    "usdjpy_20d_pct": 1.6,
-    "krw_usd": 1370.4,
-    "krw_20d_pct": -4.06,
+    "usdjpy": 160.1,
+    "usdjpy_20d_pct": 1.53,
+    "krw_usd": 1369.7,
+    "krw_20d_pct": -4.11,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 212.6,
@@ -373,9 +373,9 @@
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 64288.33,
-        "chg_1d": -2.91,
-        "chg_5d_pct": -2.38,
+        "close": 64274.52,
+        "chg_1d": -2.93,
+        "chg_5d_pct": -2.4,
         "asof": "2026-09-02"
       },
       "HSI": {
@@ -405,9 +405,9 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6585.27,
-        "chg_1d": -3.66,
-        "chg_5d_pct": -2.34,
+        "close": 6580.27,
+        "chg_1d": -3.74,
+        "chg_5d_pct": -2.41,
         "asof": "2026-09-02"
       }
     },
@@ -415,31 +415,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7633.5,
-        "chg_pct": -0.12
+        "price": 7634.25,
+        "chg_pct": -0.11
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29044.25,
-        "chg_pct": -0.28
+        "price": 29049.0,
+        "chg_pct": -0.26
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 90.79,
-        "chg_pct": 0.63
+        "price": 90.61,
+        "chg_pct": 0.43
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4352.6,
-        "chg_pct": 0.11
+        "price": 4350.6,
+        "chg_pct": 0.06
       }
     },
     "oil_uso": 141.0,
     "oil_pct_20d": 21.78,
-    "oil_wti": 90.79,
+    "oil_wti": 90.61,
     "eem_pct_20d": 3.81,
     "eem_vs_spx_20d": 5.05,
     "volume_confirm": {
@@ -521,7 +521,7 @@
     "core_cpi_yoy_pct": 2.79,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-07-01",
-    "stablecoin_total_bn": 256.9,
+    "stablecoin_total_bn": 257.0,
     "usdt_bn": 183.3,
     "usdc_bn": 73.6,
     "vix": 16.34,
@@ -534,8 +534,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-02T13:20:45.103773",
-    "age_sec": 738,
+    "cached_at": "2026-09-02T13:51:43.217244",
+    "age_sec": 679,
     "stale": false,
     "refreshing": false
   }
