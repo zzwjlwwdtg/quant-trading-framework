@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-02T14:31:30.097317",
-  "count_total_actions": 213,
+  "as_of": "2026-09-03T02:35:59.953955",
+  "count_total_actions": 233,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -24,9 +24,10 @@
       },
       "yield_reaction_30y": {
         "t0_bp": 1.9,
-        "yield_at_close": 5.268
+        "yield_at_close": 5.268,
+        "t1d_bp": -0.1
       },
-      "event_count_180d": 77
+      "event_count_180d": 83
     },
     {
       "tool_key": "qra_wording",
@@ -118,30 +119,7 @@
         "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 24
-    },
-    {
-      "tool_key": "fed_hawkish_signal",
-      "zh": "Fed 官员鹰派信号",
-      "owner": "Fed (口头)",
-      "feasibility": "high",
-      "canonical_desc": "官员讲话暗示维持高利率或加息",
-      "invalidation": "会推高长端收益率 → 反救市信号",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "fed_hawkish_signal",
-        "action_type": "signaled",
-        "date": "2026-08-31",
-        "actor": "Warsh",
-        "amount_desc": "",
-        "commentary": "鹰派讲话推高加息概率，抵消财政部压长端努力。",
-        "verbatim": "Warsh's speech sends hike chances higher, may put Fed 'at odds' with Treasury",
-        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
-        "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOenZTV1NsMHJpeG9oSThNclEwSlR1SFpHZlNaN0xCMy1jRzNjcC1scTB4V1NpRDNzZnR2VDluZVoyWDRoRU5UYVZna1RvNFRKa0p4YVBCMS1lSGs4TDItQWp1T2pUcTY5NG9pNDJjYkJQMDhHT0I5LTF1UzZ4NXFOQ1Bkb0Y3YnhNclF6UzEyWTk5eHdBZ09UNXl6ZmUtRnp10gGmAUFVX3lxTFB3Nml5V1E2Q3RnT1lZbUpwN21uXzk0T0VoSjIzaVlMSkFCNmhGYXRISm5wYTh5dUlTTjZ5VWltNlhMTExMc1ExTGJ0QTh2c3JIVzhreDZOMGdSQy1MYzhiYnFMcENZRU4xOEhGSFRhQy1mVjZRVFA3X1Fia3FjNkRwbElDY1VfZ191dW80MUlSNi13MUZTQm1uRkgwQ19BaVMyRklaUGc?oc=5",
-        "confidence": 9
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 91
+      "event_count_180d": 27
     },
     {
       "tool_key": "fx_intervention",
@@ -165,6 +143,29 @@
       },
       "yield_reaction_30y": {},
       "event_count_180d": 1
+    },
+    {
+      "tool_key": "fed_hawkish_signal",
+      "zh": "Fed 官员鹰派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示维持高利率或加息",
+      "invalidation": "会推高长端收益率 → 反救市信号",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fed_hawkish_signal",
+        "action_type": "signaled",
+        "date": "2026-09-02",
+        "actor": "Fed",
+        "amount_desc": "",
+        "commentary": "加息预期上升会推高短端并压制债市，属于救债市的反向信号。",
+        "verbatim": "Will the US Fed Hike Interest Rates in September?",
+        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
+        "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxPRTNZMUd5VmhBMXRRT1lKeUVVNGc3NUZROFVNclJTM2RhR1p5MnBDdUFheXBnME56S3EyYkk0T0VOSnIzVjZXUTVGQ2VyWlFJQkdGd3VfNklOWHhDWWFveEJlSUs1Rk41aTJ3VW9qM0xINGtQLW1TR1dncmJtU0dUT2lIdXhrd1dOMVVrZFlaUQ?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 102
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -225,7 +226,5 @@
       "yield_reaction_30y": {},
       "event_count_180d": 0
     }
-  ],
-  "stale": true,
-  "age_hours": 12.0
+  ]
 }
