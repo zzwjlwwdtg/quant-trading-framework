@@ -111,7 +111,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-09-02T19:33:03", "endpoints_ok": 130, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-09-02T20:03:03", "endpoints_ok": 130, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -201,6 +201,14 @@
 </dl>
 </div>
 </details>
+
+<!-- Row 0-priority: 今日值得关注 (覆盖所有 tracked ticker, thesis+regime+confluence 综合排名) -->
+<div class="grid">
+  <div class="card" style="border-left:4px solid var(--ok)">
+    <h2 title="覆盖所有 tracked ticker (不只 AI targets 里那 5 个). thesis 过滤 semi + regime alignment + confluence 综合评分.">🎯 今日值得关注 <small id="top-picks-meta">Top Picks · 覆盖所有 tracked ticker</small></h2>
+    <div id="top-picks"><small style="color:var(--muted)">加载中...</small></div>
+  </div>
+</div>
 
 <!-- Row 0a: 自动执行状态（broker 未结订单为事实源，AI 价位仅作参考） -->
 <div class="grid">
@@ -3812,8 +3820,8 @@ async function loadOptionWalls() {
 
 async function loadAll() {
   const promises = [
-    loadHealth(), loadSectors(), loadBanners(),
-    loadSignals(), loadAI(), loadAITargets(),  // loadAITargets 内并行拉 top_picks 合并
+    loadHealth(), loadTopPicks(), loadSectors(), loadBanners(),
+    loadSignals(), loadAI(), loadAITargets(),
     loadEvents(), loadJPWatch(),
     loadHmm(),          // 市场大周期是公开信号（非 owner-only）
     loadBondMonitor(),  // 美债 + Fed 政策路径（公开衍生信号）
