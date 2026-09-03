@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-03T02:35:59.953955",
-  "count_total_actions": 233,
+  "as_of": "2026-09-03T14:40:27.868314",
+  "count_total_actions": 257,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -13,21 +13,20 @@
       "last_action": {
         "tool_key": "long_end_buyback",
         "action_type": "announced",
-        "date": "2026-09-01",
+        "date": "2026-09-02",
         "actor": "Bessent",
-        "amount_desc": "30-Year yield 5.286%",
-        "commentary": "长端回到干预前，说明回购托底效果消退。",
-        "verbatim": "US 30-Year Treasury Yield Rebounds to 5.286%, Returning to Pre-Bessent Intervention Level",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE9mMFI4cFFFTHNlaHZEZzMydk5JRjk2RFpITHF3Z1lKdEE1S1oydkxZLTdTMk15N1FBQzJKUmZXeWlQMU00bkx4dFUteWVHckJhZWI2Vg?oc=5",
-        "confidence": 6
+        "amount_desc": "",
+        "commentary": "长端收益率回吐买盘利好，说明回购对30年端压制不足。",
+        "verbatim": "Bessent's Bond Gains Wiped Out as 30-Year Yields Jump Once Again",
+        "source": "GoogleNews: Bessent Treasury buyback",
+        "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPbmRlM05tSkhaSHhhQ3BXUnc4VlRhc2FkQTZIcW85cUMxS0padWt6VnJPT3E2ekF6VjdEaVRWWUFNQXhCMzJqOXh6X0p1X1ZxTFl1cFUydGRKR2Y2aXFaREY4Qk9GWGk2ckFQd2U5ejdGSGhjXzRfdGpaOWpTNVFMQ1lXR2NjY0V1SzVfVUdGRWFkcWwzZlhCdTJvTFg?oc=5",
+        "confidence": 5
       },
       "yield_reaction_30y": {
-        "t0_bp": 1.9,
-        "yield_at_close": 5.268,
-        "t1d_bp": -0.1
+        "t0_bp": -0.1,
+        "yield_at_close": 5.267
       },
-      "event_count_180d": 83
+      "event_count_180d": 93
     },
     {
       "tool_key": "qra_wording",
@@ -119,7 +118,7 @@
         "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 27
+      "event_count_180d": 28
     },
     {
       "tool_key": "fx_intervention",
@@ -165,7 +164,7 @@
         "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 102
+      "event_count_180d": 113
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -188,7 +187,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 5
+      "event_count_180d": 7
     },
     {
       "tool_key": "fima_repo",
