@@ -1,80 +1,44 @@
 {
-  "current_target_range": "3.50-3.75",
-  "meetings": [
-    {
-      "date": "2026-09-16",
-      "days_until": 13,
-      "probabilities": {
-        "hold": 44,
-        "hike_25": 56
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-10-28",
-      "days_until": 55,
-      "probabilities": {
-        "hold": 12,
-        "hike_25": 88
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2026-12-09",
-      "days_until": 97,
-      "probabilities": {
-        "hike_25": 16,
-        "hike_50": 84
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 146,
-      "probabilities": {
-        "hike_25": 28,
-        "hike_50": 72
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    }
-  ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-03",
-  "data_snapshot_date": "2026-09-03 05:52 UTC",
-  "recent_event_impact": "2026-08-28 Fed Chair Kevin Warsh Jackson Hole 讲话偏鹰，强调若通胀未回到 2% 将维持或加强限制性政策；2026-09-04 NFP、2026-09-10 PPI、2026-09-11 CPI 尚未发布，因此未进入该快照。",
-  "commentary": "数据快照为 2026-09-03，已在 2026-08-28 Warsh Jackson Hole 讲话之后，市场已明显转向加息定价；最近 7 天内没有已发布的新 NFP/CPI/PPI，下一份 NFP/CPI/PPI 分别在 2026-09-04、2026-09-11、2026-09-10 发布，仍是后续重新定价风险。",
+  "error": "no_recent_data",
+  "confidence": "low",
+  "data_snapshot_date": null,
+  "recent_event_impact": "2026-09-03 Fed Governor Waller讲话后，MarketWatch/Barron's援引CME FedWatch称9月加息概率降至约48.4%，维持概率约51.6%；2026-09-04 08:30 ET的8月NFP在可抓取来源中仍显示未发布，8月PPI/CPI分别预定2026-09-10和2026-09-11发布。",
+  "commentary": "无法取得今天或最近1个交易日内、覆盖未来3-4次FOMC会议的完整CME FedWatch概率表；可取得的完整曲线快照为2026-09-01/2026-09-02，已滞后且未反映2026-09-03 Waller讲话后的重新定价。最新就业/通胀事件方面，7月NFP为-23K且前两月合计下修103K，支持对加息保持谨慎；8月NFP、PPI、CPI仍是9月FOMC前的关键未发布数据。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.retiredasap.com/tools/fed-odds-watch",
-      "type": "fed_funds_futures_derived_backup"
+      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-oil-prices-bond-yields-ease-ism-services-pmi/card/traders-price-in-lower-chance-of-fed-rate-hike-in-september-e1ek7knlxuQIjeeOLl8N",
+      "type": "latest_report_partial"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/",
-      "type": "economic_release_calendar"
+      "url": "https://www.bargo.ai/fed",
+      "type": "alternative_stale_curve"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
-      "type": "fed_chair_speech"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp_calendar_latest_release"
     },
     {
-      "url": "https://www.barrons.com/articles/september-fed-rate-hike-odds-august-jobs-report-931e32ad",
-      "type": "market_report"
+      "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+      "type": "ppi_calendar"
+    },
+    {
+      "url": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026",
+      "type": "cpi_calendar"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/speech/waller20260903a.htm",
+      "type": "fed_speech"
     }
   ],
-  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-03T08:42:02+00:00",
+  "fetched_at": "2026-09-03T16:43:27+00:00",
   "_meta": {
-    "cached_at": "2026-09-03T17:42:02.570764",
-    "age_sec": 28261,
+    "cached_at": "2026-09-04T01:43:27.556289",
+    "age_sec": 1175,
     "stale": false,
     "refreshing": false
   }
