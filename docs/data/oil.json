@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-03T19:57:40.350336+00:00",
+  "ts": "2026-09-03T20:30:10.728882+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 2,
-      "value": "$91.5 (20d +18.4%)",
+      "value": "$91.76 (20d +18.7%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$4.09 (Brent $95.59 - WTI $91.5)",
+      "value": "$4.04 (Brent $95.8 - WTI $91.76)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -46,7 +46,7 @@
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "46.78 · 极高（>45），市场恐慌",
+      "value": "46.41 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -63,14 +63,14 @@
   "notes": [
     "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股"
   ],
-  "price": 91.5,
-  "pct_5d": 9.54,
-  "pct_20d": 18.39,
+  "price": 91.76,
+  "pct_5d": 9.85,
+  "pct_20d": 18.72,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-04T04:57:41.885137",
-    "age_sec": 321,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-04T05:30:13.716089",
+    "age_sec": 169,
+    "stale": false,
+    "refreshing": false
   }
 }
