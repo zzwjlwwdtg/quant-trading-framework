@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-04T05:54",
+  "asof": "2026-09-04T06:25",
   "yields": {
     "10y": {
       "value": 4.762,
@@ -196,10 +196,10 @@
   },
   "spreads": {
     "2s10s": {
-      "value": 0.4,
-      "chg_20d_bps": -4.0,
+      "value": 0.43,
+      "chg_20d_bps": -3.0,
       "regime": "正常",
-      "asof": "2026-09-02"
+      "asof": "2026-09-03"
     }
   },
   "gld_correlation": {
@@ -247,7 +247,7 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 155.78 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 155.81 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
@@ -325,8 +325,8 @@
     "sofr_pct": 3.65,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 0.0,
-    "usdjpy": 155.78,
-    "usdjpy_20d_pct": -1.15,
+    "usdjpy": 155.81,
+    "usdjpy_20d_pct": -1.14,
     "krw_usd": 1355.9,
     "krw_20d_pct": -4.59,
     "jgb_10y_pct": 2.67,
@@ -394,38 +394,38 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7750.75,
-        "chg_pct": 0.97
+        "price": 7749.25,
+        "chg_pct": 0.95
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29512.25,
-        "chg_pct": 1.12
+        "price": 29502.25,
+        "chg_pct": 1.08
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 91.64,
-        "chg_pct": 0.69
+        "price": 91.67,
+        "chg_pct": 0.73
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4520.1,
-        "chg_pct": 3.52
+        "price": 4520.3,
+        "chg_pct": 3.53
       }
     },
     "oil_uso": 142.09,
     "oil_pct_20d": 19.53,
-    "oil_wti": 91.64,
+    "oil_wti": 91.67,
     "eem_pct_20d": 3.77,
     "eem_vs_spx_20d": 3.17,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
         "label": "20+Y 美债",
-        "vol_z_20d": -0.9,
+        "vol_z_20d": -0.88,
         "notable": false
       },
       "real_rates": {
@@ -443,37 +443,37 @@
       "credit_ig": {
         "proxy": "LQD",
         "label": "投资级信用 ETF",
-        "vol_z_20d": -2.8,
+        "vol_z_20d": -2.51,
         "notable": true
       },
       "credit_hy": {
         "proxy": "HYG",
         "label": "高收益信用 ETF",
-        "vol_z_20d": -1.12,
+        "vol_z_20d": -1.08,
         "notable": true
       },
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": 0.88,
-        "notable": false
+        "vol_z_20d": 1.88,
+        "notable": true
       },
       "em": {
         "proxy": "EEM",
         "label": "新兴市场 ETF",
-        "vol_z_20d": -1.04,
+        "vol_z_20d": -1.03,
         "notable": true
       },
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": 0.8,
+        "vol_z_20d": 0.96,
         "notable": false
       },
       "us_qqq": {
         "proxy": "QQQ",
         "label": "Nasdaq 100 ETF",
-        "vol_z_20d": -0.32,
+        "vol_z_20d": -0.28,
         "notable": false
       },
       "jp_equity": {
@@ -513,8 +513,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-04T05:54:23.806754",
-    "age_sec": 519,
+    "cached_at": "2026-09-04T06:25:23.594279",
+    "age_sec": 459,
     "stale": false,
     "refreshing": false
   }
