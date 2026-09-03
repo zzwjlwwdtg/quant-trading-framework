@@ -5,8 +5,8 @@
       "date": "2026-09-16",
       "days_until": 13,
       "probabilities": {
-        "hold": 35.9,
-        "hike_25": 64.1
+        "hold": 39.9,
+        "hike_25": 60.1
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -15,9 +15,9 @@
       "date": "2026-10-28",
       "days_until": 55,
       "probabilities": {
-        "hold": 25.1,
-        "hike_25": 55.7,
-        "hike_50": 19.1
+        "hold": 28.0,
+        "hike_25": 54.1,
+        "hike_50": 18.0
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -26,9 +26,9 @@
       "date": "2026-12-09",
       "days_until": 97,
       "probabilities": {
-        "hold": 10.6,
-        "hike_25": 38.1,
-        "hike_50": 51.4
+        "hold": 11.1,
+        "hike_25": 38.4,
+        "hike_50": 50.5
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
@@ -37,43 +37,51 @@
       "date": "2027-01-27",
       "days_until": 146,
       "probabilities": {
-        "hold": 7.8,
-        "hike_25": 30.9,
-        "hike_50": 61.3
+        "hold": 8.5,
+        "hike_25": 31.9,
+        "hike_50": 59.7
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.25-4.50",
-  "implied_terminal_date": "2027-Q3",
-  "data_snapshot_date": "2026-09-02 11:55 EDT",
-  "recent_event_impact": "过去7天内未发现已发布的常规NFP/CPI/PPI或FOMC决议；关键已反映事件是2026-08-28 Fed Chair Kevin Warsh Jackson Hole讲话，强调通胀仍高、可能仍需加息，使9月加息概率由约35%-41%升至约55%-66%，随后最新快照升至64.1%。8月NFP报告截至2026-09-03仍为待发布事件，市场预期约+65K，可能继续重定价。",
-  "commentary": "数据快照为2026-09-02 11:55 EDT，距2026-09-03在1个交易日内，且晚于2026-08-28 Warsh讲话，因此未判定为数据滞后。近期没有新的NFP/CPI/PPI实际发布需要纳入；市场主要交易的是Warsh鹰派通胀表述、此前7月通胀仍高约3.4%、以及即将公布的8月NFP可能偏弱之间的拉扯，但当前定价已明显转向加息路径。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-02 20:05 EDT",
+  "recent_event_impact": "2026-08-28 Fed Chair Warsh Jackson Hole讲话偏鹰，叠加2026-09-02 ADP就业仅+38K但油价/通胀压力占主导；9月加息概率升至约60%。最近官方NFP为2026-08-07发布的7月非农-23K、失业率4.1%；7月CPI同比3.4%、核心CPI同比2.5%；7月PPI终端需求同比4.7%。8月NFP/CPI/PPI分别将在2026-09-04、2026-09-11、2026-09-10发布，尚未反映。",
+  "commentary": "数据snapshot为2026-09-02 20:05 EDT，晚于2026-08-28 Warsh讲话和2026-09-02 ADP就业数据，因此未滞后于最近7天的关键已发布事件。市场把7月NFP转负与8月ADP偏弱视为加息阻力，但7月CPI仍3.4%、PPI同比4.7%及Warsh偏鹰讲话使未来3-4次会议整体定价转向加息路径；其中hike_50为相对当前区间累计加息50bp或以上的合并简化标签。",
   "sources": [
+    {
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "fedwatch_fallback"
+    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
-    },
-    {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_based_fed_rate_monitor"
     },
     {
       "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
       "type": "fomc_statement"
     },
     {
-      "url": "https://apnews.com/article/ab896df808df3a5a3fa8b943ac5f3867",
-      "type": "recent_fed_chair_event"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/cpi.htm",
+      "type": "cpi"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/ppi.htm",
+      "type": "ppi"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-02T16:38:35+00:00",
+  "fetched_at": "2026-09-03T00:40:30+00:00",
   "_meta": {
-    "cached_at": "2026-09-03T01:38:35.580958",
-    "age_sec": 28466,
+    "cached_at": "2026-09-03T09:40:30.222554",
+    "age_sec": 1351,
     "stale": false,
     "refreshing": false
   }
