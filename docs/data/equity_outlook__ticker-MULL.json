@@ -5,32 +5,32 @@
   "analyst_consensus": {
     "n_analysts": 45,
     "recommendation": "strong_buy",
-    "current_price": 1000.76,
+    "current_price": 1016.59,
     "forward_eps": 155.03,
     "trailing_eps": 44.27,
     "eps_growth_pct": 250.2,
-    "forward_pe": 6.46,
-    "trailing_pe": 22.61,
+    "forward_pe": 6.56,
+    "trailing_pe": 22.96,
     "target_mean": 1513.11,
     "target_high": 2200.0,
     "target_low": 361.0,
-    "target_upside_pct": 51.2,
+    "target_upside_pct": 48.8,
     "revenue_growth_pct": 345.7,
     "earnings_growth_pct": 1368.5,
     "next_earnings": "2026-10-01",
-    "implied_pe_hold": 3504.47,
+    "implied_pe_hold": 3559.91,
     "implied_pe_hold_upside": 250.2,
     "peg_fair_price": 38787.32,
     "peg_ratio": 0.03,
     "hist_pe_median": 54.05,
     "hist_pe_p25": 8.25,
-    "hist_pe_p75": 133.67,
+    "hist_pe_p75": 133.71,
     "hist_pe_n_days": 755,
     "implied_hist_median": 8379.11,
     "implied_hist_p25": 1278.96,
-    "implied_hist_p75": 20722.22,
-    "implied_hist_upside": 737.3,
-    "peer_pe_median": 9.1,
+    "implied_hist_p75": 20728.42,
+    "implied_hist_upside": 724.2,
+    "peer_pe_median": 9.2,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
@@ -47,11 +47,11 @@
       },
       {
         "ticker": "WDC",
-        "pe": 14.51
+        "pe": 14.72
       }
     ],
-    "implied_peer_median": 1410.73,
-    "implied_peer_upside": 41.0,
+    "implied_peer_median": 1426.23,
+    "implied_peer_upside": 40.3,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -154,37 +154,37 @@
       },
       "eps_revisions": {
         "0q": {
-          "upLast7days": 1.0,
+          "upLast7days": 0.0,
           "upLast30days": 26.0,
           "downLast30days": 0.0
         },
         "+1q": {
           "upLast7days": 1.0,
-          "upLast30days": 23.0,
-          "downLast30days": 0.0
+          "upLast30days": 1.0,
+          "downLast30days": 1.0
         },
         "0y": {
-          "upLast7days": 0.0,
-          "upLast30days": 29.0,
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
           "downLast30days": 1.0
         },
         "+1y": {
-          "upLast7days": 0.0,
-          "upLast30days": 5.0,
-          "downLast30days": 1.0
+          "upLast7days": 1.0,
+          "upLast30days": 2.0,
+          "downLast30days": 2.0
         }
       },
       "revision_summary": {
         "period": "+1y",
         "signal": "upward",
         "trend_signal": "upward",
-        "breadth_signal": "upward",
+        "breadth_signal": "flat",
         "eps_current": 155.0252,
         "eps_30d_ago": 153.3171,
         "eps_trend_pct_30d": 1.11,
-        "up_30d": 5,
-        "down_30d": 1,
-        "net_30d": 4
+        "up_30d": 2,
+        "down_30d": 2,
+        "net_30d": 0
       }
     }
   },
@@ -199,38 +199,38 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 1513.11,
-        "gap_pct": 51.2
+        "gap_pct": 48.8
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 3504.47,
+        "implied_price": 3559.91,
         "gap_pct": 250.2
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 1410.73,
-        "gap_pct": 41.0
+        "implied_price": 1426.23,
+        "gap_pct": 40.3
       }
     ],
-    "median_gap_pct": 51.2,
+    "median_gap_pct": 48.8,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -58.2,
+    "required_eps_growth_pct": -57.5,
     "consensus_eps_growth_pct": 250.2,
-    "growth_cushion_pct": 308.4,
+    "growth_cushion_pct": 307.7,
     "rationale": [
-      "多口径隐含价中位数高于现价 51.2%",
+      "多口径隐含价中位数高于现价 48.8%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -58.2%，共识为 +250.2%"
+      "历史 PE 口径要求 EPS 增长 -57.5%，共识为 +250.2%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-04T16:10:59.574987+00:00",
+  "fetched_at": "2026-09-04T22:11:29.228109+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-05T01:10:59.576977",
-    "age_sec": 21124,
+    "cached_at": "2026-09-05T07:11:29.229111",
+    "age_sec": 1295,
     "stale": false,
     "refreshing": false
   },
