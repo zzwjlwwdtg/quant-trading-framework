@@ -5,8 +5,8 @@
       "date": "2026-09-16",
       "days_until": 12,
       "probabilities": {
-        "hold": 51.9,
-        "hike_25": 48.1
+        "hold": 51.6,
+        "hike_25": 48.4
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -15,9 +15,9 @@
       "date": "2026-10-28",
       "days_until": 54,
       "probabilities": {
-        "hold": 36.4,
+        "hold": 37.3,
         "hike_25": 49.3,
-        "hike_50": 14.4
+        "hike_50": 13.3
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
@@ -26,9 +26,10 @@
       "date": "2026-12-09",
       "days_until": 96,
       "probabilities": {
-        "hold": 17.4,
-        "hike_25": 42.5,
-        "hike_50": 40.1
+        "hold": 17.9,
+        "hike_25": 43.1,
+        "hike_50": 32.1,
+        "hike_75": 7.0
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
@@ -37,51 +38,57 @@
       "date": "2027-01-27",
       "days_until": 145,
       "probabilities": {
-        "hold": 13.3,
-        "hike_25": 36.5,
-        "hike_50": 50.2
+        "hold": 13.6,
+        "hike_25": 37.1,
+        "hike_50": 34.7,
+        "hike_75": 13.0,
+        "hike_100": 1.7
       },
-      "most_likely": "hike_50",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-03 20:15 EDT",
-  "recent_event_impact": "2026-09-03 Waller讲话称若8月通胀继续改善将支持按兵不动，若通胀偏热则考虑加息；CME/Investing数据显示9月加息概率从前一日60.1%降至48.1%。2026-09-04 8:30 ET的8月NFP为当日计划发布事件，未找到发布后FedWatch快照；8月CPI/PPI分别计划于2026-09-11和2026-09-10发布。",
-  "commentary": "数据快照为2026-09-03 20:15 EDT，已反映2026-09-03 Waller偏鸽表态但未反映2026-09-04计划发布的8月NFP。7月CPI同比3.4%、7月PPI偏强，而7月非农-23K且5-6月合计下修103K，使市场在通胀韧性与就业走弱之间摇摆；Waller讲话后9月加息概率回落至48.1%，但远端仍定价到2027-Q1附近的4.00-4.25区间。",
+  "implied_terminal_rate": null,
+  "implied_terminal_date": null,
+  "data_snapshot_date": "2026-09-04 02:15 EDT",
+  "recent_event_impact": "过去7天内有 2026-08-28 Fed Chair Kevin Warsh Jackson Hole 偏鹰讲话，以及 2026-09-03 Waller 偏鸽讲话；Waller称若未来两周通胀继续改善将支持按兵不动，使9月加息概率从约65%降至约48%-50%。8月NFP定于2026-09-04 08:30 ET发布，CPI定于2026-09-11发布，PPI定于2026-09-10发布；本snapshot早于NFP发布时间，因此未反映8月就业报告。",
+  "commentary": "CME/Investing.com snapshot 为 2026-09-04 02:15 EDT，已反映9月3日Waller讲话后加息预期降温，但未反映当天08:30 ET将发布的8月NFP。最近已公布的7月CPI同比3.4%、7月PPI偏强，而即将公布的NFP/CPI/PPI仍是9月FOMC前关键变量；当前市场从9月接近五五开，向年末逐步定价加息路径。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_fedwatch_proxy"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=0b9LLo",
+      "type": "cme_derived_fed_rate_monitor"
     },
     {
       "url": "https://www.federalreserve.gov/newsevents/speech/waller20260903a.htm",
       "type": "fed_speech"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
+      "type": "fed_speech"
     },
     {
-      "url": "https://www.bls.gov/news.release/cpi.htm",
-      "type": "cpi"
+      "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+      "type": "economic_release_calendar"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "economic_release_calendar"
     },
     {
       "url": "https://www.bls.gov/news.release/ppi.htm",
-      "type": "ppi"
+      "type": "economic_release_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-04T00:44:39+00:00",
+  "fetched_at": "2026-09-04T08:46:15+00:00",
   "_meta": {
-    "cached_at": "2026-09-04T09:44:39.648256",
-    "age_sec": 28103,
+    "cached_at": "2026-09-04T17:46:15.972950",
+    "age_sec": 1007,
     "stale": false,
     "refreshing": false
   }
