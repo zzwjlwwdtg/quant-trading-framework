@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-04T11:22",
+  "asof": "2026-09-04T11:53",
   "yields": {
     "10y": {
       "value": 4.762,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.244,
-    "vs_tips_10y": -0.137,
+    "vs_10y": -0.288,
+    "vs_tips_10y": -0.119,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.137，对冲关系变弱"
+    "reason": "相关性 -0.119，对冲关系变弱"
   },
   "anomalies": [],
   "warnings": [
@@ -227,7 +227,7 @@
     },
     {
       "level": "warn",
-      "msg": "GLD/TIPS 对冲失效 (相关性 -0.14) — 通胀/流动性 regime 改变",
+      "msg": "GLD/TIPS 对冲失效 (相关性 -0.12) — 通胀/流动性 regime 改变",
       "key": "hedge_broken"
     },
     {
@@ -247,18 +247,28 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 155.99 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 158.92 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1357.5 韩元明显走弱",
+      "msg": "KRW/USD 1358.4 韩元明显走弱",
       "key": "krw_weak"
     },
     {
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.39%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
+    },
+    {
+      "level": "bad",
+      "msg": "SPY-IEF 60d 相关 +0.402 → 股债双杀严重区 (1970s 滞胀级, 传统对冲完全失效)",
+      "key": "stock_bond_corr_extreme"
+    },
+    {
+      "level": "warn",
+      "msg": "油价 20d +19.5% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
+      "key": "oil_rising"
     },
     {
       "level": "warn",
@@ -277,7 +287,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.8B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.7B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -310,10 +320,10 @@
     "sofr_pct": 3.65,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 0.0,
-    "usdjpy": 155.99,
-    "usdjpy_20d_pct": -1.53,
-    "krw_usd": 1357.5,
-    "krw_20d_pct": -4.56,
+    "usdjpy": 158.92,
+    "usdjpy_20d_pct": 0.84,
+    "krw_usd": 1358.4,
+    "krw_20d_pct": -4.42,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 209.2,
@@ -325,52 +335,53 @@
     "hedge_cost_jp": 2.38,
     "real_yield_gap_us_jp": 1.72,
     "cpi_jp_yoy_pct": 3.17,
-    "kbe_spy_ratio": null,
-    "kbe_spy_20d_delta_pct": null,
+    "spy_ief_60d_corr": 0.402,
+    "kbe_spy_ratio": 0.08939,
+    "kbe_spy_20d_delta_pct": -2.07,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 266.0,
-    "dxy": 98.97,
-    "dxy_pct_20d": -1.0,
-    "dxy_z_60d": -1.33,
+    "dxy": 98.98,
+    "dxy_pct_20d": -0.99,
+    "dxy_z_60d": -1.32,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 64629.92,
-        "chg_1d": 0.47,
-        "chg_5d_pct": -2.27,
+        "close": 64769.74,
+        "chg_1d": 0.86,
+        "chg_5d_pct": -2.46,
         "asof": "2026-09-04"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 25785.25,
-        "chg_1d": 1.87,
-        "chg_5d_pct": 0.86,
+        "close": 25753.02,
+        "chg_1d": 2.14,
+        "chg_5d_pct": 0.66,
         "asof": "2026-09-04"
       },
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": 3976.3,
-        "chg_1d": 0.89,
-        "chg_5d_pct": 0.5,
+        "close": 3964.96,
+        "chg_1d": 0.58,
+        "chg_5d_pct": 0.32,
         "asof": "2026-09-04"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": 13751.02,
-        "chg_1d": 1.02,
-        "chg_5d_pct": -2.12,
+        "close": 13685.25,
+        "chg_1d": 0.44,
+        "chg_5d_pct": -1.92,
         "asof": "2026-09-04"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6651.25,
-        "chg_1d": 1.35,
-        "chg_5d_pct": -3.78,
+        "close": 6661.07,
+        "chg_1d": 1.24,
+        "chg_5d_pct": -1.88,
         "asof": "2026-09-04"
       }
     },
@@ -378,33 +389,33 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7757.0,
+        "price": 7757.25,
         "chg_pct": 1.05
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29551.25,
-        "chg_pct": 1.25
+        "price": 29553.25,
+        "chg_pct": 1.26
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 91.85,
-        "chg_pct": 0.92
+        "price": 91.94,
+        "chg_pct": 1.02
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4526.2,
-        "chg_pct": 3.66
+        "price": 4518.6,
+        "chg_pct": 3.49
       }
     },
-    "oil_uso": null,
-    "oil_pct_20d": null,
-    "oil_wti": 91.85,
-    "eem_pct_20d": null,
-    "eem_vs_spx_20d": null,
+    "oil_uso": 142.09,
+    "oil_pct_20d": 19.53,
+    "oil_wti": 91.94,
+    "eem_pct_20d": 3.77,
+    "eem_vs_spx_20d": 3.17,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -439,7 +450,7 @@
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": 1.88,
+        "vol_z_20d": 1.9,
         "notable": true
       },
       "em": {
@@ -451,7 +462,7 @@
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": 1.19,
+        "vol_z_20d": 1.35,
         "notable": true
       },
       "us_qqq": {
@@ -484,9 +495,9 @@
     "core_cpi_yoy_pct": 2.79,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-07-01",
-    "stablecoin_total_bn": 257.8,
+    "stablecoin_total_bn": 257.7,
     "usdt_bn": 183.4,
-    "usdc_bn": 74.4,
+    "usdc_bn": 74.3,
     "vix": 14.32,
     "bbi_score": 1.21,
     "bbi_components": {
@@ -497,8 +508,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-04T11:22:55.029823",
-    "age_sec": 607,
+    "cached_at": "2026-09-04T11:53:55.440544",
+    "age_sec": 547,
     "stale": false,
     "refreshing": false
   }
