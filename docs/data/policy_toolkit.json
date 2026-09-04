@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-04T02:41:58.395615",
-  "count_total_actions": 257,
+  "as_of": "2026-09-04T14:46:16.140873",
+  "count_total_actions": 276,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -12,22 +12,18 @@
       "status": "已用",
       "last_action": {
         "tool_key": "long_end_buyback",
-        "action_type": "announced",
-        "date": "2026-09-02",
-        "actor": "Bessent",
+        "action_type": "opposed",
+        "date": "2026-09-03",
+        "actor": "Druckenmiller",
         "amount_desc": "",
-        "commentary": "长端收益率回吐买盘利好，说明回购对30年端压制不足。",
-        "verbatim": "Bessent's Bond Gains Wiped Out as 30-Year Yields Jump Once Again",
-        "source": "GoogleNews: Bessent Treasury buyback",
-        "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPbmRlM05tSkhaSHhhQ3BXUnc4VlRhc2FkQTZIcW85cUMxS0padWt6VnJPT3E2ekF6VjdEaVRWWUFNQXhCMzJqOXh6X0p1X1ZxTFl1cFUydGRKR2Y2aXFaREY4Qk9GWGk2ckFQd2U5ejdGSGhjXzRfdGpaOWpTNVFMQ1lXR2NjY0V1SzVfVUdGRWFkcWwzZlhCdTJvTFg?oc=5",
-        "confidence": 5
+        "commentary": "Druckenmiller批评Bessent买债干预，反映部分投资人担心财政部越界托市。",
+        "verbatim": "Druckenmiller’s Surprising Critique of Bessent Was Delivered With the Help of AI",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOa0NFTHBxeFZocUhTd2FFUFhsU2pUdDM2d253SHVEVDVobUkyUDdsMjlxRjhoelpieU9pWlk3ZTdfWTVHZTVHa2dCU3hDdGJta3ZtbnJoMnZ0dng4UG5oUVZGeW1DSkhiQ0pCcXdPX1JwSkQ2VHZDSW4taVZyUkp0Z25EWWw4dV9vNmJwc1RFTlZtS0xUTUJQYzRDUzZQNXZ3a240eC0yam9OUy1SbFdZdVJIZ0dKWmM?oc=5",
+        "confidence": 6
       },
-      "yield_reaction_30y": {
-        "t0_bp": -0.1,
-        "yield_at_close": 5.267,
-        "t1d_bp": -3.0
-      },
-      "event_count_180d": 93
+      "yield_reaction_30y": {},
+      "event_count_180d": 97
     },
     {
       "tool_key": "qra_wording",
@@ -99,29 +95,6 @@
       "event_count_180d": 8
     },
     {
-      "tool_key": "tga_deployment",
-      "zh": "TGA 财政存款回购",
-      "owner": "Treasury",
-      "feasibility": "medium",
-      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
-      "invalidation": "一次性弹药, 用完就没了",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "tga_deployment",
-        "action_type": "signaled",
-        "date": "2026-08-28",
-        "actor": "Treasury",
-        "amount_desc": "$967B backup plan",
-        "commentary": "动用TGA支持回购会向市场注入流动性，缓和供需压力。",
-        "verbatim": "Treasury's $967 Billion Backup Plan for the Bond Market",
-        "source": "GoogleNews: TGA Treasury General Account debt buyback",
-        "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOemJnQlhKclFPbFJrUGVkNlN5Qk0yU3pIaDdjOGdvWkpZeDlDRi1lUlB5VzEyanB2YklqaHg3VmhTMUttSnV4UFZmSWZhelVwbll0Sk0xVFNmbkhqZmFqMUJWUTQzRThGaUxFR0FMRVRyRGU1QjJ2aVJ6X29zb2UyYWZDV1h1dHF0bnlwSFlweVQyRnUxSHJZ?oc=5",
-        "confidence": 8
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 28
-    },
-    {
       "tool_key": "fx_intervention",
       "zh": "汇市干预 (支撑日元)",
       "owner": "Treasury/G7",
@@ -165,7 +138,30 @@
         "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 113
+      "event_count_180d": 122
+    },
+    {
+      "tool_key": "tga_deployment",
+      "zh": "TGA 财政存款回购",
+      "owner": "Treasury",
+      "feasibility": "medium",
+      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
+      "invalidation": "一次性弹药, 用完就没了",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "tga_deployment",
+        "action_type": "signaled",
+        "date": "2026-09-03",
+        "actor": "Bessent",
+        "amount_desc": "nearly $1 trillion from TGA",
+        "commentary": "再次放风用 TGA 支持回购，重点是以现金缓冲长债供需冲击。",
+        "verbatim": "may use nearly $1 trillion from TGA for bond buybacks",
+        "source": "GoogleNews: TGA Treasury General Account debt buyback",
+        "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQLW1seGlnT3lCZUJZbjdpa0NOZ29XVGQtTmNTai1WSERLWHdMMUJRSFVwSGNNSUZSMUFMVWprN0ZGSWZFUkdCQW9rczFudjBrYnphNUFBU2FoYzN6SjFQUVVDRkZVd2dGZlpyYzNtNHgwWWY2SFdZMjgzc1NibUxHYVNZTUd1U3E1cjJObWVOTDBZcE5CMzJBUGYydWs5dUVZTWl1cnB4Y3hoenY5QkRBbDdR?oc=5",
+        "confidence": 7
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 32
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -188,7 +184,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 7
+      "event_count_180d": 9
     },
     {
       "tool_key": "fima_repo",
