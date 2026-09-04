@@ -111,7 +111,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-09-04T18:03:04", "endpoints_ok": 130, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-09-04T18:33:04", "endpoints_ok": 130, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -3658,10 +3658,27 @@ async function loadTopPicks() {
       const priceStr = p.price ? `$${p.price.toFixed(2)}` : '';
       const ageStr = p.signal_age_hours != null ? ` <small style="color:var(--muted)">age ${p.signal_age_hours}h</small>` : '';
       const whyHtml = (p.why || []).slice(0, 3).map(w => `<div style="font-size:10px; color:var(--muted)">· ${w}</div>`).join('');
+      // Overnight badge (Phase A: display only, 不影响 score)
+      const ON_META = {
+        buy_dip:        {zh:'🟢 逢低',    css:'ok',   hint:'开盘时可分批 BUY'},
+        momentum:       {zh:'🟢 顺势',    css:'ok',   hint:'开盘 BUY 可以追'},
+        chase_risk:     {zh:'🔴 追高警示', css:'warn', hint:'不建议 open BUY, 等 fade'},
+        panic_gap_down: {zh:'🟡 恐慌 gap', css:'warn', hint:'等开盘 15min 企稳'},
+        reversal_setup: {zh:'🟡 反转',    css:'info', hint:'mean-revert 提示, 谨慎'},
+        neutral:        null,   // 中性不展示 badge, 减少视觉噪声
+      };
+      let overnightBadge = '';
+      if (p.overnight && p.overnight.classification && p.overnight.has_data) {
+        const om = ON_META[p.overnight.classification];
+        if (om) {
+          const tip = ((p.overnight.why || []).slice(0,2).join(' · ')) + ' | ' + om.hint;
+          overnightBadge = ` <span class="badge ${om.css}" style="font-size:9px" title="${tip}">夜盘 ${om.zh}</span>`;
+        }
+      }
       return `
       <div class="signal-card" style="border-left:3px solid var(--${scoreCls})">
         <div class="top-row">
-          <span class="ticker-name">#${i+1} ${p.ticker}${whitelistBadge}</span>
+          <span class="ticker-name">#${i+1} ${p.ticker}${whitelistBadge}${overnightBadge}</span>
           <span class="badge ${scoreCls}">score ${p.score >= 0 ? '+' : ''}${p.score.toFixed(1)}</span>
         </div>
         <div style="font-size:11px; margin-top:3px">
