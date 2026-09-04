@@ -3,92 +3,85 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 12,
+      "days_until": 11,
       "probabilities": {
-        "hold": 51.6,
-        "hike_25": 48.4
+        "hold": 41.9,
+        "hike_25": 58.1
       },
-      "most_likely": "hold",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 54,
+      "days_until": 53,
       "probabilities": {
-        "hold": 37.3,
-        "hike_25": 49.3,
-        "hike_50": 13.3
+        "hold": 29.4,
+        "hike_25": 53.3,
+        "hike_50": 17.4
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 96,
+      "days_until": 95,
       "probabilities": {
-        "hold": 17.9,
-        "hike_25": 43.1,
-        "hike_50": 32.1,
-        "hike_75": 7.0
+        "hold": 14.2,
+        "hike_25": 40.9,
+        "hike_50": 45
       },
-      "most_likely": "hike_25",
+      "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 145,
+      "days_until": 144,
       "probabilities": {
-        "hold": 13.6,
-        "hike_25": 37.1,
-        "hike_50": 34.7,
-        "hike_75": 13.0,
-        "hike_100": 1.7
+        "hold": 10.4,
+        "hike_25": 33.9,
+        "hike_50": 55.8
       },
-      "most_likely": "hike_25",
+      "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": null,
-  "implied_terminal_date": null,
-  "data_snapshot_date": "2026-09-04 02:15 EDT",
-  "recent_event_impact": "过去7天内有 2026-08-28 Fed Chair Kevin Warsh Jackson Hole 偏鹰讲话，以及 2026-09-03 Waller 偏鸽讲话；Waller称若未来两周通胀继续改善将支持按兵不动，使9月加息概率从约65%降至约48%-50%。8月NFP定于2026-09-04 08:30 ET发布，CPI定于2026-09-11发布，PPI定于2026-09-10发布；本snapshot早于NFP发布时间，因此未反映8月就业报告。",
-  "commentary": "CME/Investing.com snapshot 为 2026-09-04 02:15 EDT，已反映9月3日Waller讲话后加息预期降温，但未反映当天08:30 ET将发布的8月NFP。最近已公布的7月CPI同比3.4%、7月PPI偏强，而即将公布的NFP/CPI/PPI仍是9月FOMC前关键变量；当前市场从9月接近五五开，向年末逐步定价加息路径。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-04 09:55 EDT",
+  "recent_event_impact": "2026-09-04 August NFP +162K, unemployment 4.1%, far above roughly 53K-65K consensus; after the release, September hike odds rose to about 58%-60% and October hike odds to about 71%. No CPI/PPI release occurred in the prior 7 days; August PPI and CPI are scheduled for 2026-09-10 and 2026-09-11.",
+  "commentary": "Data snapshot is 2026-09-04 09:55 EDT, after the 2026-09-04 NFP release, so the main recent employment shock is reflected. Strong payrolls shifted pricing hawkishly: the market moved from near-even September odds after Waller's dovish remarks to a modest majority for a 25bp hike, while still awaiting next week's CPI/PPI inflation tests.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?sid=0b9LLo",
-      "type": "cme_derived_fed_rate_monitor"
+      "url": "https://ca.investing.com/central-banks/fed-rate-monitor",
+      "type": "fedwatch_derived_snapshot"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/waller20260903a.htm",
-      "type": "fed_speech"
+      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-investors-await-august-jobs-data/card/chances-of-a-rate-hike-rise-after-jobs-data-but-remain-below-the-week-s-highs-A1hLtnbq4jDCpflAQnvB",
+      "type": "fedwatch_event_update"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
-      "type": "fed_speech"
+      "url": "https://www.bls.gov/news.release/archives/empsit_09042026.htm",
+      "type": "nfp_release"
     },
     {
-      "url": "https://www.bls.gov/schedule/news_release/cpi.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.bls.gov/ppi/",
+      "type": "ppi_release_calendar"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "economic_release_calendar"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/ppi.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.bls.gov/news.release/cpi.nr0.htm",
+      "type": "cpi_release_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-04T08:46:15+00:00",
+  "fetched_at": "2026-09-04T16:47:32+00:00",
   "_meta": {
-    "cached_at": "2026-09-04T17:46:15.972950",
-    "age_sec": 28008,
+    "cached_at": "2026-09-05T01:47:32.550161",
+    "age_sec": 930,
     "stale": false,
     "refreshing": false
   }
