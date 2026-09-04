@@ -8,12 +8,44 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "MEDIA_ATTACK": 1,
+      "MEDIA_ATTACK": 2,
       "GEOPOLITICAL": 4,
-      "DOMESTIC_POLICY": 4,
-      "NOISE": 2
+      "DOMESTIC_POLICY": 5,
+      "NOISE": 1,
+      "FED": 1,
+      "MARKET": 1
     },
     "breaking": [
+      {
+        "event_type": "FED",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 9,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "TQQQ",
+          "SOXL",
+          "NVDA"
+        ],
+        "preview": "Great jobs number just announced, breaking all estimates (except mine!) by double and triple - And you haven't seen anyt",
+        "verbatim": "Lower the interest rates because the U.S.A. is a much stronger credit",
+        "post_time": "2026-09-04T13:41:46.774Z"
+      },
+      {
+        "event_type": "MARKET",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "QQQ",
+          "SOXL",
+          "NVDA"
+        ],
+        "preview": "Britt: Congress should turn Trump's data center pledge into law: https://www.semafor.com/article/09/04/2026/britt-congre",
+        "verbatim": "Congress should turn Trump's data center pledge into law",
+        "post_time": "2026-09-04T13:46:59.311Z"
+      },
       {
         "event_type": "GEOPOLITICAL",
         "direction": "bearish",
@@ -21,21 +53,33 @@
         "confidence": 7,
         "tickers": [
           "SPY",
-          "QQQ",
           "GLD"
         ],
         "preview": "For the treasonous SCUM that refuses to accurately report on our Military Operation in Iran, we have virtually unlimited",
-        "verbatim": "Military Operation in Iran... stockpiling and preparing for any contingency... sales to Allies will soon again, begin.",
+        "verbatim": "our Military Operation in Iran... stockpiling and preparing for any contingency that could happen.",
         "post_time": "2026-09-03T14:56:21.515Z"
+      },
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bullish",
+        "magnitude": "small",
+        "confidence": 7,
+        "tickers": [
+          "SPY",
+          "GLD"
+        ],
+        "preview": "How Trump turned a frozen conflict into a model for peace: https://www.washingtonexaminer.com/op-eds/4681517/armenia-aze",
+        "verbatim": "turned a frozen conflict into a model for peace",
+        "post_time": "2026-09-04T01:02:19.512Z"
       }
     ],
     "summary": {
-      "text": "涉乌军援、媒体抱怨与选区争议交织，情绪偏谨慎。",
+      "text": "催促立法并称就业强劲，市场情绪偏乐观。",
       "state": "cached",
       "post_ids": [
-        "117212924349074596",
-        "117210339497817224",
-        "117210071109792571"
+        "117213082608751521",
+        "117213077131160867",
+        "117213056648777213"
       ]
     }
   },
