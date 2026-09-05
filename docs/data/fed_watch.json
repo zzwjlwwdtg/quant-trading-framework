@@ -5,8 +5,8 @@
       "date": "2026-09-16",
       "days_until": 11,
       "probabilities": {
-        "hold": 41.9,
-        "hike_25": 58.1
+        "hold": 41.6,
+        "hike_25": 58.4
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -15,9 +15,9 @@
       "date": "2026-10-28",
       "days_until": 53,
       "probabilities": {
-        "hold": 29.4,
-        "hike_25": 53.3,
-        "hike_50": 17.4
+        "hold": 30.1,
+        "hike_25": 53.8,
+        "hike_50": 16.1
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -26,57 +26,54 @@
       "date": "2026-12-09",
       "days_until": 95,
       "probabilities": {
-        "hold": 13.7,
-        "hike_25": 40.5,
-        "hike_50": 36.5,
-        "hike_75": 9.3
+        "hold": 14.4,
+        "hike_25": 41.4,
+        "hike_50": 44.2
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2027-01-27",
       "days_until": 144,
       "probabilities": {
-        "hold": 9.8,
-        "hike_25": 32.8,
-        "hike_50": 37.7,
-        "hike_75": 17.1,
-        "hike_100": 2.7
+        "hold": 11.0,
+        "hike_25": 35.0,
+        "hike_50": 54.0
       },
       "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-H1",
-  "data_snapshot_date": "2026-09-04 08:55 EDT",
-  "recent_event_impact": "2026-09-04 August NFP +162K, unemployment 4.1%, materially stronger than consensus; CME-referenced reports show September hike odds rising to about 58-60% and October hike odds to about 71%. August CPI/PPI were not yet released; PPI due 2026-09-10 and CPI due 2026-09-11.",
-  "commentary": "Data snapshot is 2026-09-04 08:55 EDT, after the 2026-09-04 NFP release, so the strong payroll surprise is reflected. The +162K NFP print shifted pricing hawkish, while the next major risk is August PPI/CPI due 2026-09-10/11, which officials and markets identify as decisive for whether the Fed validates the hike pricing.",
+  "implied_terminal_date": "2027-Q1/Q2",
+  "data_snapshot_date": "2026-09-05 00:35 EDT",
+  "recent_event_impact": "2026-09-04 August NFP +162K, unemployment 4.1%, far above Reuters consensus +56K; September hike probability rose to 58.4% from 50.4% previous day. August PPI/CPI were not yet released; BLS schedule shows PPI due 2026-09-10 and CPI due 2026-09-11.",
+  "commentary": "数据 snapshot 为 2026-09-05 00:35 EDT，已在 2026-09-04 NFP 发布之后，因此强劲就业数据已反映在价格中；CPI/PPI 尚未发布，市场目前偏向 9月加息并继续定价到 2027-Q1/Q2 的 4.00-4.25 区间。注意：12月和1月的 hike_50 桶包含高于 50bp 的累计目标区间概率，因为请求的 action 标签没有 hike_75/hike_100。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
-      "type": "fed_rate_monitor_cme_based"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_derived_probabilities"
     },
     {
-      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-investors-await-august-jobs-data/card/chances-of-a-rate-hike-rise-after-jobs-data-but-remain-below-the-week-s-highs-A1hLtnbq4jDCpflAQnvB",
-      "type": "market_report_cme_reference"
-    },
-    {
-      "url": "https://apnews.com/article/1af16359af43eb8abc66445465f633c8",
+      "url": "https://www.investing.com/news/economy-news/us-nonfarm-payrolls-surge-in-august-unemployment-rate-steady-at-41-4889606",
       "type": "recent_event_nfp"
+    },
+    {
+      "url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
+      "type": "economic_release_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-05T00:48:51+00:00",
+  "fetched_at": "2026-09-05T08:50:11+00:00",
   "_meta": {
-    "cached_at": "2026-09-05T09:48:51.405202",
-    "age_sec": 24251,
+    "cached_at": "2026-09-05T17:50:11.874047",
+    "age_sec": 2569,
     "stale": false,
     "refreshing": false
   }
