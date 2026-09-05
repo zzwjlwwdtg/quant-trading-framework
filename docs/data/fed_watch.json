@@ -3,7 +3,7 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 11,
+      "days_until": 10,
       "probabilities": {
         "hold": 41.6,
         "hike_25": 58.4
@@ -13,7 +13,7 @@
     },
     {
       "date": "2026-10-28",
-      "days_until": 53,
+      "days_until": 52,
       "probabilities": {
         "hold": 30.1,
         "hike_25": 53.8,
@@ -24,7 +24,7 @@
     },
     {
       "date": "2026-12-09",
-      "days_until": 95,
+      "days_until": 94,
       "probabilities": {
         "hold": 14.4,
         "hike_25": 41.4,
@@ -35,7 +35,7 @@
     },
     {
       "date": "2027-01-27",
-      "days_until": 144,
+      "days_until": 143,
       "probabilities": {
         "hold": 11.0,
         "hike_25": 35.0,
@@ -46,10 +46,10 @@
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q1/Q2",
+  "implied_terminal_date": "2027-H2",
   "data_snapshot_date": "2026-09-05 00:35 EDT",
-  "recent_event_impact": "2026-09-04 August NFP +162K, unemployment 4.1%, far above Reuters consensus +56K; September hike probability rose to 58.4% from 50.4% previous day. August PPI/CPI were not yet released; BLS schedule shows PPI due 2026-09-10 and CPI due 2026-09-11.",
-  "commentary": "数据 snapshot 为 2026-09-05 00:35 EDT，已在 2026-09-04 NFP 发布之后，因此强劲就业数据已反映在价格中；CPI/PPI 尚未发布，市场目前偏向 9月加息并继续定价到 2027-Q1/Q2 的 4.00-4.25 区间。注意：12月和1月的 hike_50 桶包含高于 50bp 的累计目标区间概率，因为请求的 action 标签没有 hike_75/hike_100。",
+  "recent_event_impact": "2026-09-04 August NFP +162K, well above roughly 53K-65K consensus; September hike probability rose to 58.4% from 50.4% previous day. CPI/PPI were scheduled for 2026-09-10/11 and were not yet reflected.",
+  "commentary": "Data snapshot is 2026-09-05 00:35 EDT, after the 2026-09-04 NFP release, so the key recent employment surprise is reflected. Strong NFP shifted pricing hawkishly; CPI/PPI were still upcoming, so inflation risk remained the next catalyst. For Dec 2026 and Jan 2027, hike_50 includes cumulative target outcomes of +50bp or more because the requested action schema has no label above hike_50.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -57,23 +57,23 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_derived_probabilities"
-    },
-    {
-      "url": "https://www.investing.com/news/economy-news/us-nonfarm-payrolls-surge-in-august-unemployment-rate-steady-at-41-4889606",
-      "type": "recent_event_nfp"
+      "type": "cme_fedwatch_backup"
     },
     {
       "url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
       "type": "economic_release_calendar"
+    },
+    {
+      "url": "https://apnews.com/article/870187fe5c6f0c43a5b53eaffb86b7b0",
+      "type": "nfp_report"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-05T08:50:11+00:00",
+  "fetched_at": "2026-09-05T16:51:38+00:00",
   "_meta": {
-    "cached_at": "2026-09-05T17:50:11.874047",
-    "age_sec": 24170,
+    "cached_at": "2026-09-06T01:51:38.478067",
+    "age_sec": 2483,
     "stale": false,
     "refreshing": false
   }
