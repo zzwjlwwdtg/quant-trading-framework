@@ -671,6 +671,23 @@ def _etf_cycle(events_signal: dict, macro: dict, window: str | None = None,
 
             emit(mkt, events_signal, decision)
 
+            # Phase A shadow log: 每 cycle 每 ticker 记 overnight_signal 分类
+            # (无 score/decision 影响, 供未来 backtest 消费. 静默失败 = 不阻塞主流程)
+            try:
+                from overnight_signal import classify as _classify_on, log_shadow as _log_on
+                _on_info = _classify_on(
+                    pre_pct=mkt.get("pre_pct"),
+                    overnight_pct=mkt.get("overnight_pct"),
+                    after_pct=mkt.get("after_pct"),
+                    action=decision.get("action"),
+                    rsi=mkt.get("rsi_14"),
+                    pre_vol=mkt.get("pre_volume"),
+                    pre_vol_avg=mkt.get("avg_volume_20"),
+                )
+                _log_on(ticker, _on_info, market_snapshot=mkt)
+            except Exception:
+                pass
+
             # 主动推送 crisis regime（dedup 5 min，避免同一 crisis 每 cycle 都推）
             if decision.get("regime") == "crisis":
                 try:
@@ -726,6 +743,22 @@ def _gold_cycle(macro: dict, window: str | None = None) -> None:
         decision = apply_claude_gate(GOLD_TICKER, mkt, events, decision, macro, window)
 
         emit(mkt, events, decision)
+
+        # Phase A shadow log for GOLD (跟 ETF cycle 同套路)
+        try:
+            from overnight_signal import classify as _classify_on, log_shadow as _log_on
+            _on_info = _classify_on(
+                pre_pct=mkt.get("pre_pct"),
+                overnight_pct=mkt.get("overnight_pct"),
+                after_pct=mkt.get("after_pct"),
+                action=decision.get("action"),
+                rsi=mkt.get("rsi_14"),
+                pre_vol=mkt.get("pre_volume"),
+                pre_vol_avg=mkt.get("avg_volume_20"),
+            )
+            _log_on(GOLD_TICKER, _on_info, market_snapshot=mkt)
+        except Exception:
+            pass
 
         try:
             trade_execute(GOLD_TICKER, decision, mkt, window)

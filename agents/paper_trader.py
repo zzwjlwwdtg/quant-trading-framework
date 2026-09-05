@@ -1456,7 +1456,40 @@ _PROTECTIVE_STOP_KEYS = (
 )
 
 
+def _cancel_broker_stop(order_id: str) -> bool:
+    """P0 fix (2026-09-05): 尝试 cancel broker 里的 SELL STOP order.
+    静默失败允许 (order 可能已被自动清理), 但成功/失败都 log.
+    返 True 成功, False 失败或 dry-run 或 order_id 无效."""
+    if DRY_RUN:
+        logger.info(f"[trader-DRY ] CANCEL STOP order={order_id}")
+        return False
+    if not order_id or order_id in ("DRY", None, ""):
+        return False
+    try:
+        ctx = _ctx_get()
+        ret, info = ctx.modify_order(
+            modify_order_op=ModifyOrderOp.CANCEL,
+            order_id=str(order_id), qty=0, price=0,
+            trd_env=TRD_ENV, acc_id=ACC_ID,
+        )
+        if ret == RET_OK:
+            logger.info(f"[trader-LIVE] CANCEL STOP order={order_id}")
+            return True
+        # broker 常见: order 已 filled/cancelled → 返 error 但实际上是 no-op
+        logger.info(f"[trader] CANCEL STOP order={order_id} skipped: {info}")
+        return False
+    except Exception as e:
+        logger.warning(f"[trader] CANCEL STOP EXC order={order_id}: {e}")
+        return False
+
+
 def _clear_protective_stop(tstate: dict) -> None:
+    """P0 fix (2026-09-05): 先 CANCEL broker 里 phantom STOP order,
+    再清 local state. 防止平仓后 broker STOP 触发 → 反手做空.
+    See P0-2 audit finding."""
+    stop_oid = tstate.get("protective_stop_order_id")
+    if stop_oid:
+        _cancel_broker_stop(stop_oid)
     for key in _PROTECTIVE_STOP_KEYS:
         tstate.pop(key, None)
 
@@ -1819,6 +1852,22 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
                                  buffer=win_cfg.get("buffer", 0.005),
                                  fill_outside_rth=win_cfg.get("fill_outside_rth", False))
                     if oid:
+                        # P0 fix (2026-09-05): pyramid 加仓后必须重建 broker STOP
+                        # 覆盖 (旧 qty + add_qty). 否则 layer 2/3 在 broker 侧裸奔.
+                        # See P0-3 audit finding.
+                        old_stop_price = tstate.get("protective_stop_price")
+                        old_stop_oid = tstate.get("protective_stop_order_id")
+                        if old_stop_price and old_stop_oid:
+                            new_total_qty = int(pos_qty) + int(add_qty)
+                            _cancel_broker_stop(old_stop_oid)
+                            new_stop_oid = _place_stop_loss(ticker, new_total_qty, float(old_stop_price))
+                            tstate["protective_stop_order_id"] = new_stop_oid
+                            tstate["protective_stop_updated_utc"] = datetime.now(timezone.utc).isoformat()
+                            logger.info(
+                                f"[trader] PYRAMID stop rebuilt: {ticker} "
+                                f"qty {int(pos_qty)}→{new_total_qty} @ ${old_stop_price:.2f} "
+                                f"old_order={old_stop_oid} new_order={new_stop_oid}"
+                            )
                         tstate["pyramid_layer"] = layer + 1
                         tstate["entry_conf"]    = conf   # 新 layer 用新 conf
                         tstate["entry_conf_scale"] = scale

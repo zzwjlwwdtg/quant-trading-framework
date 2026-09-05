@@ -193,6 +193,9 @@ def compute_rotation_speed(window_weeks: int = 12,
 
     # 20d cum return
     sector_ret = sector_close.pct_change(momentum_lookback)
+    # 剔除全 NaN 行 (前 momentum_lookback 天), 避 pandas FutureWarning
+    # (all-NA idxmax 在未来版本会 raise)
+    sector_ret = sector_ret.dropna(how="all")
     # 每交易日 top-1 sector
     top1_daily = sector_ret.idxmax(axis=1)
     # 每周五取样

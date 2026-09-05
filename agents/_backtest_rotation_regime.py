@@ -143,6 +143,8 @@ def run():
     sector_close = sector_close.dropna(how="any")
     # 20d cumulative return
     sector_ret_20d = sector_close.pct_change(MOMENTUM_LOOKBACK)
+    # 剔除全 NaN 行 (前 MOMENTUM_LOOKBACK 天), 避 pandas FutureWarning
+    sector_ret_20d = sector_ret_20d.dropna(how="all")
     # 每交易日 top-1 sector
     top1 = sector_ret_20d.idxmax(axis=1)
     # 每周五取样 (weekly resample)

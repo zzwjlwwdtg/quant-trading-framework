@@ -194,6 +194,14 @@
 </div>
 </details>
 
+<!-- Row 0-priority: 今日值得关注 (覆盖所有 tracked ticker, thesis+regime+confluence 综合排名) -->
+<div class="grid">
+  <div class="card" style="border-left:4px solid var(--ok)">
+    <h2 title="覆盖所有 tracked ticker (不只 AI targets 里那 5 个). thesis 过滤 semi + regime alignment + confluence 综合评分.">🎯 今日值得关注 <small id="top-picks-meta">Top Picks · 覆盖所有 tracked ticker</small></h2>
+    <div id="top-picks"><small style="color:var(--muted)">加载中...</small></div>
+  </div>
+</div>
+
 <!-- Row 0a: 自动执行状态（broker 未结订单为事实源，AI 价位仅作参考） -->
 <div class="grid">
   <div class="card" style="border-left:3px solid #f85149; background:linear-gradient(180deg, rgba(248,81,73,0.03) 0%, transparent 60%)">
@@ -3371,16 +3379,29 @@ async function loadLog() {
 }
 
 // 自动执行展示：broker 未结订单是事实；AI JSON 只是价位计划。
+// 附加 top_picks score 排序: 高分 opportunity 优先展示
 async function loadAITargets() {
   const el = document.getElementById('ai-targets');
   const mtimeEl = document.getElementById('ai-targets-mtime');
   if (!el) return;
-  const t = await fetchJson('/api/ai_targets');
+  // 并行拉 ai_targets + top_picks
+  const [t, tp] = await Promise.all([
+    fetchJson('/api/ai_targets'),
+    fetchJson('/api/top_picks?n=50'),
+  ]);
   if (!t || !t.exists) {
     el.innerHTML = '<small style="color:var(--muted)">当前没有系统未结订单，也没有可用的 AI 价位计划。</small>';
     return;
   }
   if (mtimeEl) mtimeEl.textContent = '· 价位计划 ' + (t.ts || '').slice(5, 16);
+
+  // ticker → score 映射 (含 blacklisted 的负分, 展示时也标)
+  const scoreMap = {};
+  if (tp && tp.ok) {
+    for (const p of (tp.picks || [])) {
+      scoreMap[p.ticker.replace(/^(US|JP|HK|SH|SZ)\./,'')] = { score: p.score, why: (p.why||[]).slice(0,2).join(' · '), whitelist: p.whitelist };
+    }
+  }
 
   const ACT_META = {
     WATCH_BUY:       { zh: '关注买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
@@ -3401,7 +3422,17 @@ async function loadAITargets() {
   };
   const cleanTk = (raw) => (raw || '').replace(/^(US|JP|HK|SH|SZ)\./,'');
 
-  const rows = (t.targets || []).map(tg => {
+  // 先按 top_picks score 排序 (高 → 低), score 缺失的排最后 (按原顺序)
+  const targetsSorted = [...(t.targets || [])].sort((a, b) => {
+    const sa = (scoreMap[cleanTk(a.ticker)] || {}).score;
+    const sb = (scoreMap[cleanTk(b.ticker)] || {}).score;
+    if (sa == null && sb == null) return 0;
+    if (sa == null) return 1;
+    if (sb == null) return -1;
+    return sb - sa;
+  });
+
+  const rows = targetsSorted.map(tg => {
     const act = ACT_META[tg.system_action] || ACT_META.UNKNOWN;
     const status = STATUS_META[tg.execution_status] || STATUS_META.inactive;
     const order = (tg.pending_orders || [])[0];
@@ -3423,8 +3454,21 @@ async function loadAITargets() {
     const sourceLabel = tg.effective_price_source === 'ai_target'
       ? 'AI价位' : '当前系统价';
 
-    return `<div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
+    // Score column (从 top_picks 拉)
+    const scoreInfo = scoreMap[cleanTk(tg.ticker)];
+    const scoreCell = scoreInfo != null
+      ? (() => {
+          const s = scoreInfo.score;
+          const cls = s >= 5 ? 'ok' : (s >= 2 ? 'info' : (s > 0 ? 'warn' : 'bad'));
+          const star = scoreInfo.whitelist ? ' ⭐' : '';
+          const tip = scoreInfo.why || '';
+          return `<span class="badge ${cls}" style="font-size:10px" title="${tip}">${s >= 0 ? '+' : ''}${s.toFixed(1)}${star}</span>`;
+        })()
+      : '<span class="muted" style="font-size:9px">—</span>';
+
+    return `<div style="display:grid; grid-template-columns:auto 60px 92px 105px 150px 85px 85px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${act.bg}; border-radius:3px; margin-bottom:3px; font-size:11px">
       <span style="min-width:70px"><b style="color:#79c0ff; font-size:12.5px">${cleanTk(tg.ticker)}</b></span>
+      <span title="综合评分 (thesis 过滤 + regime alignment + confluence). ⭐=thesis whitelist">${scoreCell}</span>
       <span><span class="badge" style="font-size:9px; background:${act.color}; color:#0d1117">${act.icon} ${act.zh}</span></span>
       <span title="当前系统入场参考；只有 broker 状态显示已挂单才代表真实订单">
         ${hasPlan
@@ -3455,8 +3499,9 @@ async function loadAITargets() {
     <div style="font-size:10.5px; color:var(--muted); margin-bottom:6px">
       真实系统未结单 <b class="ok">${activeCount}</b> · ${brokerNote} · 价位计划: <code style="font-size:9.5px">${t.path || '无'}</code>
     </div>
-    <div style="display:grid; grid-template-columns:auto 92px 105px 150px 85px 85px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
+    <div style="display:grid; grid-template-columns:auto 60px 92px 105px 150px 85px 85px 1fr; gap:8px; padding:3px 8px; font-size:9.5px; color:var(--muted); border-bottom:1px solid var(--border); margin-bottom:4px">
       <span style="min-width:70px">Ticker</span>
+      <span title="thesis + regime + confluence 综合评分, 越高越值得关注">Score ↓</span>
       <span>最新系统决策</span>
       <span>当前入场参考</span>
       <span>broker 实际状态</span>
@@ -3579,6 +3624,62 @@ async function loadAI() {
     </div>
   `;
   restoreDetailsState();
+}
+
+async function loadTopPicks() {
+  const container = $('top-picks');
+  const meta = $('top-picks-meta');
+  const r = await fetchJson('/api/top_picks?n=10');
+  if (!r || !r.ok) {
+    if (container) container.innerHTML = '<small style="color:var(--warn)">无数据</small>';
+    return;
+  }
+  if (meta) meta.innerHTML = `Top Picks · ${r.n_universe} tickers · ` +
+    `<span style="color:var(--muted)">thesis 排除 ${r.n_excluded_by_thesis}</span> ` +
+    `<span style="color:var(--muted)">${r.generated_at.substring(11)}</span>`;
+  const picks = r.picks || [];
+  if (!picks.length) {
+    container.innerHTML = '<small>今日无 score > 0 候选. 全市场偏弱 / 防御 regime.</small>';
+    return;
+  }
+  container.innerHTML = `
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:8px">
+    ${picks.map((p, i) => {
+      const scoreCls = p.score >= 5 ? 'ok' : (p.score >= 3 ? 'info' : 'warn');
+      const whitelistBadge = p.whitelist ? ' <span class="badge ok" style="font-size:9px">⭐ thesis</span>' : '';
+      const priceStr = p.price ? `$${p.price.toFixed(2)}` : '';
+      const ageStr = p.signal_age_hours != null ? ` <small style="color:var(--muted)">age ${p.signal_age_hours}h</small>` : '';
+      const whyHtml = (p.why || []).slice(0, 3).map(w => `<div style="font-size:10px; color:var(--muted)">· ${w}</div>`).join('');
+      // Overnight badge (Phase A: display only, 不影响 score)
+      const ON_META = {
+        buy_dip:        {zh:'🟢 逢低',    css:'ok',   hint:'开盘时可分批 BUY'},
+        momentum:       {zh:'🟢 顺势',    css:'ok',   hint:'开盘 BUY 可以追'},
+        chase_risk:     {zh:'🔴 追高警示', css:'warn', hint:'不建议 open BUY, 等 fade'},
+        panic_gap_down: {zh:'🟡 恐慌 gap', css:'warn', hint:'等开盘 15min 企稳'},
+        reversal_setup: {zh:'🟡 反转',    css:'info', hint:'mean-revert 提示, 谨慎'},
+        neutral:        null,   // 中性不展示 badge, 减少视觉噪声
+      };
+      let overnightBadge = '';
+      if (p.overnight && p.overnight.classification && p.overnight.has_data) {
+        const om = ON_META[p.overnight.classification];
+        if (om) {
+          const tip = ((p.overnight.why || []).slice(0,2).join(' · ')) + ' | ' + om.hint;
+          overnightBadge = ` <span class="badge ${om.css}" style="font-size:9px" title="${tip}">夜盘 ${om.zh}</span>`;
+        }
+      }
+      return `
+      <div class="signal-card" style="border-left:3px solid var(--${scoreCls})">
+        <div class="top-row">
+          <span class="ticker-name">#${i+1} ${p.ticker}${whitelistBadge}${overnightBadge}</span>
+          <span class="badge ${scoreCls}">score ${p.score >= 0 ? '+' : ''}${p.score.toFixed(1)}</span>
+        </div>
+        <div style="font-size:11px; margin-top:3px">
+          <b>${p.action}</b> · ${p.regime} · ${priceStr}${ageStr}
+        </div>
+        ${whyHtml}
+      </div>`;
+    }).join('')}
+    </div>`;
 }
 
 const SECTOR_REGIME_CLS = {
@@ -3728,8 +3829,8 @@ async function loadOptionWalls() {
 
 async function loadAll() {
   const promises = [
-    loadHealth(), loadSectors(), loadBanners(),
-    loadSignals(), loadAI(), loadAITargets(),  // AI targets 与 analysis 同源
+    loadHealth(), loadTopPicks(), loadSectors(), loadBanners(),
+    loadSignals(), loadAI(), loadAITargets(),
     loadEvents(), loadJPWatch(),
     loadHmm(),          // 市场大周期是公开信号（非 owner-only）
     loadBondMonitor(),  // 美债 + Fed 政策路径（公开衍生信号）

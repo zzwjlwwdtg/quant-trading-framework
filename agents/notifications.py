@@ -149,6 +149,32 @@ def send_alert(msg: str, level: str = "info", dedup: bool = True) -> dict:
     if dedup and result["sent"]:
         _dedup_record(hashlib.md5(msg.encode("utf-8")).hexdigest()[:12])
 
+    # P0-S3 fix (2026-09-05): 若 sent=[] (无 channel 配置或全 fail), 强制 fail-loud:
+    # 1) 写 signals/critical_alerts.jsonl 作永久 audit trail
+    # 2) 高 level (crisis/warning/error) 用 stderr 显式 print, 让 stdout 消费者也看得到
+    # 避免 verdict change / thesis invalidation 静默漏发.
+    if not result["sent"] and level in ("crisis", "warning", "error", "trade"):
+        try:
+            crit_path = Path(SIGNALS_DIR) / "critical_alerts.jsonl"
+            crit_path.parent.mkdir(parents=True, exist_ok=True)
+            entry = {
+                "ts":       datetime.now(timezone.utc).isoformat(),
+                "level":    level,
+                "msg":      msg,
+                "skipped":  result["skipped"],
+            }
+            with open(crit_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            result["fallback"] = "critical_alerts.jsonl"
+        except Exception:
+            pass
+        # stderr echo — 让 orchestrator log / systemd journal 能捕获
+        try:
+            import sys
+            print(f"[ALERT-FALLBACK {level.upper()}] {msg[:200]}", file=sys.stderr, flush=True)
+        except Exception:
+            pass
+
     return result
 
 

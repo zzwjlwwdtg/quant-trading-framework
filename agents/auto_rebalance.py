@@ -429,6 +429,11 @@ def _load_current_positions() -> tuple[dict, float, float]:
 
 _SIGNAL_MAX_AGE_HOURS = 48   # 周末 fresh window; > 48h 视为 stale 跳过
 
+# P0 safeguard (2026-09-05): 至少 N 个 fresh signal 才能 rebalance.
+# 少于此数 → 假设数据管道有问题, 跳过 rebalance 保护现有仓位.
+# 3 = 至少 3 个 target ticker 有新数据 (通常 bond + cloud + hedge 至少 1 只覆盖).
+_MIN_SIGNALS_FOR_REBALANCE = 3
+
 
 def _load_signals() -> tuple[dict, dict]:
     """每 ticker 最新信号. 返回 (signals dict, prices dict).
@@ -743,6 +748,24 @@ def check_and_execute_rebalance(window: str | None = None,
         return {"status": "no_nav_data"}
 
     signals, prices = _load_signals()
+
+    # P0 safeguard (2026-09-05): 若 fresh signals 数不足, **绝不 rebalance**.
+    # 否则 target_pct 全 0 → 现有仓位 diff_pct=-current_pct → 生 SELL orders
+    # 全量清仓 (48h+ 数据管道 outage 场景). See audit report P0-1.
+    if len(signals) < _MIN_SIGNALS_FOR_REBALANCE:
+        n_stale_positions = sum(1 for tk in positions if positions[tk].get("qty", 0) > 0)
+        logger.warning(
+            f"[auto_rebalance] SKIP: only {len(signals)} fresh signals "
+            f"(< {_MIN_SIGNALS_FOR_REBALANCE} required). "
+            f"{n_stale_positions} positions held. "
+            f"Prevents phantom liquidation from data outage."
+        )
+        return {"status": "skipped_insufficient_signals",
+                "n_signals": len(signals),
+                "min_required": _MIN_SIGNALS_FOR_REBALANCE,
+                "n_positions": n_stale_positions,
+                "window": window,
+                "dry_run": dry_run}
 
     # regime & drawdown
     regime = "neutral"

@@ -77,19 +77,68 @@ def main():
     print(f"blacklist: {ts['blacklist_count']} tickers · whitelist: {ts['whitelist_count']} · invalidation rules: {ts['invalidation_count']}")
 
     # 拉 macro
+    # P0-S2 fix (2026-09-05): 之前 FRED fail → macro={} → check_invalidation 全 skip
+    # → 输出"✓ 无触发" 让用户以为验证完了, 实际数据都没拉. 现在必须区分
+    # "数据齐全 + 无触发" vs "数据不全 → UNKNOWN 状态".
     macro = {}
+    data_status: dict = {}   # metric_name → "ok" / "unavailable" / "skipped"
+
     cpi_mom = _fetch_cpi_mom()
     if cpi_mom is not None:
         macro["cpi_mom_pct"] = cpi_mom
+        data_status["cpi_mom_pct"] = "ok"
+    else:
+        data_status["cpi_mom_pct"] = "unavailable"
+
     capex_up = _fetch_googl_amzn_capex_upgraded()
     if capex_up is not None:
         macro["googl_amzn_capex_ttm_upgraded"] = capex_up
+        data_status["googl_amzn_capex_ttm_upgraded"] = "ok"
+    else:
+        data_status["googl_amzn_capex_ttm_upgraded"] = "unavailable"
 
-    # 检查
+    # 若关键数据全 unavailable → 显式 UNKNOWN, 不能说"无触发"
+    unavailable_count = sum(1 for v in data_status.values() if v == "unavailable")
+    all_unavailable = unavailable_count == len(data_status)
+    any_unavailable = unavailable_count > 0
+
     print("\n检查 invalidation conditions...")
+    print(f"数据可用性: {data_status}")
+
+    if all_unavailable:
+        print(f"\n⚠ **DATA UNAVAILABLE** — 所有 {len(data_status)} 个 metric 拉取失败.")
+        print(f"   thesis invalidation **未能验证** (不代表 '无触发'). 请检查 FRED_API_KEY 或网络.")
+        # notify: warn 级别不 crisis (避免与真正 invalidation 混淆)
+        try:
+            from notifications import send_alert
+            r = send_alert(
+                f"⚠ Thesis invalidation check: DATA UNAVAILABLE ({ts['version']}). "
+                f"All {len(data_status)} metrics failed to fetch. Manual review required.",
+                level="warning", dedup=True,
+            )
+            print(f"[notify] sent: {r.get('sent', [])}")
+        except Exception as ex:
+            print(f"[notify] 失败: {ex}")
+        # 也写 log 供审计
+        try:
+            append_jsonl(_LOG_PATH, {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "thesis_version": ts["version"],
+                "status": "data_unavailable",
+                "data_status": data_status,
+            })
+        except Exception:
+            pass
+        return
+
+    # 检查 (若部分 unavailable, 仍检查已拉到的 metric, 结尾 warn)
     triggered = check_invalidation(macro)
     if not triggered:
-        print("  ✓ 无触发. thesis 保持有效.")
+        if any_unavailable:
+            print(f"\n⚠ 已检查 metric 无触发, 但 {unavailable_count}/{len(data_status)} 个数据不全, "
+                  f"thesis 部分验证. 不能确认 '完全无触发'.")
+        else:
+            print("  ✓ 无触发. thesis 保持有效 (数据齐全).")
         return
 
     print(f"\n⚠ 触发 {len(triggered)} 个 invalidation condition:")
