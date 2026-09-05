@@ -26,62 +26,57 @@
       "date": "2026-12-09",
       "days_until": 95,
       "probabilities": {
-        "hold": 14.2,
-        "hike_25": 40.9,
-        "hike_50": 45
+        "hold": 13.7,
+        "hike_25": 40.5,
+        "hike_50": 36.5,
+        "hike_75": 9.3
       },
-      "most_likely": "hike_50",
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
       "days_until": 144,
       "probabilities": {
-        "hold": 10.4,
-        "hike_25": 33.9,
-        "hike_50": 55.8
+        "hold": 9.8,
+        "hike_25": 32.8,
+        "hike_50": 37.7,
+        "hike_75": 17.1,
+        "hike_100": 2.7
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-04 09:55 EDT",
-  "recent_event_impact": "2026-09-04 August NFP +162K, unemployment 4.1%, far above roughly 53K-65K consensus; after the release, September hike odds rose to about 58%-60% and October hike odds to about 71%. No CPI/PPI release occurred in the prior 7 days; August PPI and CPI are scheduled for 2026-09-10 and 2026-09-11.",
-  "commentary": "Data snapshot is 2026-09-04 09:55 EDT, after the 2026-09-04 NFP release, so the main recent employment shock is reflected. Strong payrolls shifted pricing hawkishly: the market moved from near-even September odds after Waller's dovish remarks to a modest majority for a 25bp hike, while still awaiting next week's CPI/PPI inflation tests.",
+  "implied_terminal_date": "2027-H1",
+  "data_snapshot_date": "2026-09-04 08:55 EDT",
+  "recent_event_impact": "2026-09-04 August NFP +162K, unemployment 4.1%, materially stronger than consensus; CME-referenced reports show September hike odds rising to about 58-60% and October hike odds to about 71%. August CPI/PPI were not yet released; PPI due 2026-09-10 and CPI due 2026-09-11.",
+  "commentary": "Data snapshot is 2026-09-04 08:55 EDT, after the 2026-09-04 NFP release, so the strong payroll surprise is reflected. The +162K NFP print shifted pricing hawkish, while the next major risk is August PPI/CPI due 2026-09-10/11, which officials and markets identify as decisive for whether the Fed validates the hike pricing.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://ca.investing.com/central-banks/fed-rate-monitor",
-      "type": "fedwatch_derived_snapshot"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=header_strip",
+      "type": "fed_rate_monitor_cme_based"
     },
     {
       "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-investors-await-august-jobs-data/card/chances-of-a-rate-hike-rise-after-jobs-data-but-remain-below-the-week-s-highs-A1hLtnbq4jDCpflAQnvB",
-      "type": "fedwatch_event_update"
+      "type": "market_report_cme_reference"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/empsit_09042026.htm",
-      "type": "nfp_release"
-    },
-    {
-      "url": "https://www.bls.gov/ppi/",
-      "type": "ppi_release_calendar"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/cpi.nr0.htm",
-      "type": "cpi_release_calendar"
+      "url": "https://apnews.com/article/1af16359af43eb8abc66445465f633c8",
+      "type": "recent_event_nfp"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-04T16:47:32+00:00",
+  "fetched_at": "2026-09-05T00:48:51+00:00",
   "_meta": {
-    "cached_at": "2026-09-05T01:47:32.550161",
-    "age_sec": 24330,
+    "cached_at": "2026-09-05T09:48:51.405202",
+    "age_sec": 2651,
     "stale": false,
     "refreshing": false
   }

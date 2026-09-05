@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-05T08:23",
+  "asof": "2026-09-05T10:27",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.333,
-    "vs_tips_10y": -0.067,
+    "vs_10y": -0.324,
+    "vs_tips_10y": -0.096,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.067，对冲关系变弱"
+    "reason": "相关性 -0.096，对冲关系变弱"
   },
   "anomalies": [],
   "warnings": [
@@ -227,7 +227,7 @@
     },
     {
       "level": "warn",
-      "msg": "GLD/TIPS 对冲失效 (相关性 -0.07) — 通胀/流动性 regime 改变",
+      "msg": "GLD/TIPS 对冲失效 (相关性 -0.10) — 通胀/流动性 regime 改变",
       "key": "hedge_broken"
     },
     {
@@ -261,16 +261,6 @@
       "key": "cip_repatriation_signal"
     },
     {
-      "level": "bad",
-      "msg": "SPY-IEF 60d 相关 +0.406 → 股债双杀严重区 (1970s 滞胀级, 传统对冲完全失效)",
-      "key": "stock_bond_corr_extreme"
-    },
-    {
-      "level": "warn",
-      "msg": "油价 20d +20.3% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
-      "key": "oil_rising"
-    },
-    {
       "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $0.7B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
@@ -287,7 +277,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.7B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $258.1B (USDT $183B + USDC $75B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -323,7 +313,7 @@
     "usdjpy": 156.22,
     "usdjpy_20d_pct": -1.38,
     "krw_usd": 1346.0,
-    "krw_20d_pct": -5.36,
+    "krw_20d_pct": -4.34,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -335,9 +325,8 @@
     "hedge_cost_jp": 2.39,
     "real_yield_gap_us_jp": 1.74,
     "cpi_jp_yoy_pct": 3.17,
-    "spy_ief_60d_corr": 0.406,
-    "kbe_spy_ratio": 0.09003,
-    "kbe_spy_20d_delta_pct": -0.51,
+    "kbe_spy_ratio": null,
+    "kbe_spy_20d_delta_pct": null,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 265.0,
     "dxy": 99.16,
@@ -389,14 +378,14 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7715.0,
-        "chg_pct": -0.51
+        "price": 7722.0,
+        "chg_pct": -0.42
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29523.0,
-        "chg_pct": -0.01
+        "price": 29565.25,
+        "chg_pct": 0.14
       },
       "cl_f": {
         "symbol": "CL=F",
@@ -411,11 +400,11 @@
         "chg_pct": -0.32
       }
     },
-    "oil_uso": 141.96,
-    "oil_pct_20d": 20.33,
+    "oil_uso": null,
+    "oil_pct_20d": null,
     "oil_wti": 91.22,
-    "eem_pct_20d": 4.66,
-    "eem_vs_spx_20d": 5.06,
+    "eem_pct_20d": null,
+    "eem_vs_spx_20d": null,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -495,9 +484,9 @@
     "core_cpi_yoy_pct": 2.79,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 257.7,
+    "stablecoin_total_bn": 258.1,
     "usdt_bn": 183.4,
-    "usdc_bn": 74.3,
+    "usdc_bn": 74.6,
     "vix": 14.53,
     "bbi_score": 1.23,
     "bbi_components": {
@@ -508,8 +497,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-05T08:24:11.446205",
-    "age_sec": 531,
+    "cached_at": "2026-09-05T10:28:12.466103",
+    "age_sec": 290,
     "stale": false,
     "refreshing": false
   }
