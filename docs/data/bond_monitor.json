@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-05T12:32",
+  "asof": "2026-09-05T14:20",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -256,6 +256,11 @@
       "key": "jpy_verbal_zone"
     },
     {
+      "level": "warn",
+      "msg": "KRW/USD 1351.1 韩元明显走弱",
+      "key": "krw_weak"
+    },
+    {
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.4%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
@@ -322,8 +327,8 @@
     "sofr_iorb_spread_bps": 1.0,
     "usdjpy": 156.22,
     "usdjpy_20d_pct": -1.38,
-    "krw_usd": 1346.0,
-    "krw_20d_pct": -4.34,
+    "krw_usd": 1351.1,
+    "krw_20d_pct": -3.97,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -401,19 +406,19 @@
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 91.22,
-        "chg_pct": -0.09
+        "price": 91.48,
+        "chg_pct": 0.2
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4477.2,
-        "chg_pct": -0.32
+        "price": 4429.8,
+        "chg_pct": -1.38
       }
     },
     "oil_uso": 141.96,
     "oil_pct_20d": 20.33,
-    "oil_wti": 91.22,
+    "oil_wti": 91.48,
     "eem_pct_20d": 4.66,
     "eem_vs_spx_20d": 5.06,
     "volume_confirm": {
@@ -508,8 +513,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-05T12:32:42.521437",
-    "age_sec": 19,
+    "cached_at": "2026-09-05T14:21:11.864638",
+    "age_sec": 709,
     "stale": false,
     "refreshing": false
   }
