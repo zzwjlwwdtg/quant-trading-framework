@@ -15,68 +15,55 @@
       "date": "2026-10-28",
       "days_until": 52,
       "probabilities": {
-        "hold": 30.1,
-        "hike_25": 53.8,
-        "hike_50": 16.1
+        "cut_25": 30.1,
+        "hold": 53.8,
+        "hike_25": 16.1
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hold",
+      "consensus_direction": "dovish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 94,
       "probabilities": {
-        "hold": 14.4,
-        "hike_25": 41.4,
-        "hike_50": 35.8,
-        "hike_75": 8.4
+        "cut_25": 14.4,
+        "hold": 41.4,
+        "hike_25": 35.8,
+        "hike_50": 8.4
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 143,
-      "probabilities": {
-        "hold": 11.0,
-        "hike_25": 35.0,
-        "hike_50": 37.1,
-        "hike_75": 14.9,
-        "hike_100": 2.0
-      },
-      "most_likely": "hike_50",
+      "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
   "implied_terminal_date": "2027-Q1",
   "data_snapshot_date": "2026-09-05 00:35 EDT",
-  "recent_event_impact": "2026-09-04 August NFP +162K, above roughly +53K consensus, pushed September hike odds to about 58-60% after Waller's 2026-09-03 dovish hold-conditional remarks had lowered hike odds toward 50%; August PPI and CPI are scheduled for 2026-09-10 and 2026-09-11, so they are not yet reflected.",
-  "commentary": "Snapshot is post-NFP and therefore reflects the 2026-09-04 upside employment surprise; the stronger labor print shifted pricing hawkish, with markets favoring a 25bp hike at the September meeting and cumulative 25-50bp tightening by year-end. CPI/PPI for August had not been released as of the snapshot, so inflation data due 2026-09-10/11 remains the next major risk to these probabilities.",
+  "recent_event_impact": "2026-09-04 NFP: August payrolls +162K, above 55K forecast, unemployment 4.1%; CME-derived September hike probability rose to about 58-60%. 2026-09-03 Fed Governor Waller speech had earlier reduced hike odds below 50% by emphasizing dependence on the upcoming CPI report. No CPI/PPI/FOMC decision was released in the last 7 days; August CPI/PPI were scheduled for the following week.",
+  "commentary": "Data snapshot is 2026-09-05 00:35 EDT, after the 2026-09-04 NFP release and the 2026-09-03 Waller speech, so the key recent events are reflected. Strong NFP shifted pricing hawkish again, with the market favoring a 25bp September hike, while next-week CPI/PPI remained the main unresolved risk.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor?entry=content-analysis",
-      "type": "backup_cme_based_fed_rate_monitor"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_based_backup"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.bls.gov/news.release/empsit.nr0.htm",
+      "type": "nfp_official"
     },
     {
-      "url": "https://www.federalreserve.gov/newsevents/speech/waller20260903a.htm",
-      "type": "fed_speech"
+      "url": "https://www.federalreserve.gov/newsevents/2026-speeches.htm",
+      "type": "fed_speeches"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-06T00:52:54+00:00",
+  "fetched_at": "2026-09-06T08:53:40+00:00",
   "_meta": {
-    "cached_at": "2026-09-06T09:52:54.995866",
-    "age_sec": 24007,
+    "cached_at": "2026-09-06T17:53:40.821968",
+    "age_sec": 2361,
     "stale": false,
     "refreshing": false
   }
