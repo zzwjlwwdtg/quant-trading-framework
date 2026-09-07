@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-07T09:52",
+  "asof": "2026-09-07T10:23",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -256,6 +256,11 @@
       "key": "jpy_verbal_zone"
     },
     {
+      "level": "warn",
+      "msg": "KRW/USD 1355.4 韩元明显走弱",
+      "key": "krw_weak"
+    },
+    {
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.4%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
@@ -322,8 +327,8 @@
     "sofr_iorb_spread_bps": 1.0,
     "usdjpy": 155.66,
     "usdjpy_20d_pct": -1.74,
-    "krw_usd": 1338.0,
-    "krw_20d_pct": -4.9,
+    "krw_usd": 1355.4,
+    "krw_20d_pct": -4.7,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -340,16 +345,16 @@
     "kbe_spy_20d_delta_pct": -0.51,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 265.0,
-    "dxy": 99.08,
-    "dxy_pct_20d": -0.73,
-    "dxy_z_60d": -1.2,
+    "dxy": 99.12,
+    "dxy_pct_20d": -0.69,
+    "dxy_z_60d": -1.15,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 66235.94,
-        "chg_1d": 1.87,
-        "chg_5d_pct": -0.11,
+        "close": 66326.38,
+        "chg_1d": 2.01,
+        "chg_5d_pct": 0.02,
         "asof": "2026-09-07"
       },
       "HSI": {
@@ -379,9 +384,9 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6902.92,
-        "chg_1d": 3.23,
-        "chg_5d_pct": 1.22,
+        "close": 6874.06,
+        "chg_1d": 2.79,
+        "chg_5d_pct": 0.79,
         "asof": "2026-09-07"
       }
     },
@@ -508,8 +513,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-07T09:53:12.707925",
-    "age_sec": 589,
+    "cached_at": "2026-09-07T10:24:12.180584",
+    "age_sec": 530,
     "stale": false,
     "refreshing": false
   }
