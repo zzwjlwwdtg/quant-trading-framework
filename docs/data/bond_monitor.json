@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-07T08:50",
+  "asof": "2026-09-07T09:21",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -252,8 +252,13 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 156.23 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 155.66 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
+    },
+    {
+      "level": "warn",
+      "msg": "KRW/USD 1355.4 韩元明显走弱",
+      "key": "krw_weak"
     },
     {
       "level": "bad",
@@ -320,10 +325,10 @@
     "sofr_pct": 3.66,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 1.0,
-    "usdjpy": 156.23,
-    "usdjpy_20d_pct": -1.05,
-    "krw_usd": 1346.1,
-    "krw_20d_pct": -4.33,
+    "usdjpy": 155.66,
+    "usdjpy_20d_pct": -1.74,
+    "krw_usd": 1355.4,
+    "krw_20d_pct": -4.7,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -340,17 +345,17 @@
     "kbe_spy_20d_delta_pct": -0.51,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 265.0,
-    "dxy": 99.13,
-    "dxy_pct_20d": -0.68,
-    "dxy_z_60d": -1.14,
+    "dxy": 99.14,
+    "dxy_pct_20d": -0.67,
+    "dxy_z_60d": -1.13,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 65020.94,
-        "chg_1d": 1.26,
-        "chg_5d_pct": -2.09,
-        "asof": "2026-09-04"
+        "close": 66104.59,
+        "chg_1d": 1.67,
+        "chg_5d_pct": -0.31,
+        "asof": "2026-09-07"
       },
       "HSI": {
         "symbol": "^HSI",
@@ -379,10 +384,10 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6687.21,
-        "chg_1d": 1.64,
-        "chg_5d_pct": -1.5,
-        "asof": "2026-09-04"
+        "close": 6894.72,
+        "chg_1d": 3.1,
+        "chg_5d_pct": 1.1,
+        "asof": "2026-09-07"
       }
     },
     "us_futures": {
@@ -508,8 +513,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-07T08:51:11.181878",
-    "age_sec": 711,
+    "cached_at": "2026-09-07T09:22:12.435604",
+    "age_sec": 650,
     "stale": false,
     "refreshing": false
   }
