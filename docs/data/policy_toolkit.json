@@ -1,30 +1,7 @@
 {
-  "as_of": "2026-09-07T15:10:15.804454",
-  "count_total_actions": 314,
+  "as_of": "2026-09-08T03:14:00.489698",
+  "count_total_actions": 317,
   "tools": [
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "已用",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "opposed",
-        "date": "2026-09-03",
-        "actor": "Druckenmiller",
-        "amount_desc": "",
-        "commentary": "Druckenmiller批评Bessent买债干预，反映部分投资人担心财政部越界托市。",
-        "verbatim": "Druckenmiller’s Surprising Critique of Bessent Was Delivered With the Help of AI",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOa0NFTHBxeFZocUhTd2FFUFhsU2pUdDM2d253SHVEVDVobUkyUDdsMjlxRjhoelpieU9pWlk3ZTdfWTVHZTVHa2dCU3hDdGJta3ZtbnJoMnZ0dng4UG5oUVZGeW1DSkhiQ0pCcXdPX1JwSkQ2VHZDSW4taVZyUkp0Z25EWWw4dV9vNmJwc1RFTlZtS0xUTUJQYzRDUzZQNXZ3a240eC0yam9OUy1SbFdZdVJIZ0dKWmM?oc=5",
-        "confidence": 6
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 102
-    },
     {
       "tool_key": "qra_wording",
       "zh": "季度再融资声明措辞",
@@ -161,7 +138,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 151
+      "event_count_180d": 152
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -185,6 +162,29 @@
       },
       "yield_reaction_30y": {},
       "event_count_180d": 10
+    },
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "被否",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "opposed",
+        "date": "2026-09-07",
+        "actor": "Jeff Currie",
+        "amount_desc": "",
+        "commentary": "将回购称为金融压抑，暗示压低长端利率会推升黄金避险需求。",
+        "verbatim": "Treasury Buybacks 'Financial Repression'",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMi_AFBVV95cUxPTElURFlFNzA4S3Atc2hUd3RwcktGY0xjeTdrYkZZOWh6V3pPYm9XbmFDaHpnWjIwVkMtVWlzX2NaeVJtWUl1RDB4aXNBX0tPZi1XSXdabnlOSWZyMnFKVWJRcENMVG54Zjh1YjlZVEhOUmJNRVZ5UjF0NnlqMzdOdFZzOHZ0cTlqNVlGYi1ILVZkcnJzdjVOZzY2dlRvVXIxQmlQRHdqT2NKUDU3RTlNSWwyRlJGZ1BDWk1RZXV4NUpBWDBnbzZIc0NxZkVTb1llMTVwZXBBNEl4QjUtemJ5T2xQVXp6OGF2ZUk4VTV3QXNTd25kdEZ4dXBVc0U?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 104
     },
     {
       "tool_key": "fima_repo",
