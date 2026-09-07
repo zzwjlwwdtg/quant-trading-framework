@@ -5,8 +5,8 @@
       "date": "2026-09-16",
       "days_until": 9,
       "probabilities": {
-        "hold": 42,
-        "hike_25": 58
+        "hold": 41.7,
+        "hike_25": 58.3
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -15,56 +15,69 @@
       "date": "2026-10-28",
       "days_until": 51,
       "probabilities": {
-        "hold": 70,
-        "hike_25": 30
+        "hold": 30.1,
+        "hike_25": 53.7,
+        "hike_50": 16.1
       },
-      "most_likely": "hold",
-      "consensus_direction": "mild_hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 93,
       "probabilities": {
-        "hold": 42,
-        "hike_25": 58
+        "hold": 15,
+        "hike_25": 42,
+        "hike_50": 43
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 142,
+      "probabilities": {
+        "hold": 11,
+        "hike_25": 36,
+        "hike_50": 53
+      },
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2026-Q4",
-  "data_snapshot_date": "2026-09-06",
-  "recent_event_impact": "2026-09-04 August NFP +162K, above consensus around +53K/+55K; unemployment unchanged at 4.1%. CME-referenced reports said Sep hike odds rose to about 58%-60.3% from roughly 49%-52.4%, and Oct hike odds rose to about 71.3% from 65.1%. August CPI/PPI were not yet released as of 2026-09-07; PPI was scheduled for 2026-09-10 and CPI for 2026-09-11.",
-  "commentary": "Data snapshot is 2026-09-06, after the 2026-09-04 NFP release, so the strong payroll surprise appears reflected in the futures-implied probabilities. 市场从 Waller 偏鸽言论后的摇摆重新转向加息定价，9月与12月会议均显示约58%的25bp加息概率；但本周即将公布的PPI/CPI仍是下一次再定价的关键风险。",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-06/2026-09-07",
+  "recent_event_impact": "2026-09-04 August NFP +162K, above roughly +53K to +65K consensus, unemployment 4.1%; post-release CME/FedWatch-style pricing moved September hike odds to about 58%-59%. August CPI and PPI had not yet been released as of 2026-09-07; they were scheduled for 2026-09-11 and 2026-09-10 respectively.",
+  "commentary": "Data snapshot is from 2026-09-06 reports referencing 2026-09-07 CME FedWatch data, cross-checked against last-trading-day 2026-09-04 FedWatch-derived tables. The strong 2026-09-04 NFP print pushed expectations hawkish, with markets pricing a September 25bp hike as the modal outcome while upcoming CPI/PPI remain the next major risk to the path.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fedwatch_replica_zq_futures"
+      "url": "https://www.aicoin.com/en/news-flash/3067619",
+      "type": "secondary_cme_report"
     },
     {
-      "url": "https://stock.li-family.us/fedwatch",
-      "type": "fedwatch_replica_snapshot"
+      "url": "https://25bp.eu/en/fed/",
+      "type": "fedwatch_derived_rate_path"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp_official"
+      "url": "https://www.newyorkfed.org/research/calendars/i-sep26.html",
+      "type": "economic_calendar"
     },
     {
       "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
-      "type": "ppi_release_schedule"
+      "type": "economic_calendar"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-06T16:55:06+00:00",
+  "fetched_at": "2026-09-07T00:56:25+00:00",
   "_meta": {
-    "cached_at": "2026-09-07T01:55:06.261478",
-    "age_sec": 27476,
+    "cached_at": "2026-09-07T09:56:25.496603",
+    "age_sec": 397,
     "stale": false,
     "refreshing": false
   }
