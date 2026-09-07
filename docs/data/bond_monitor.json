@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-07T11:25",
+  "asof": "2026-09-07T11:56",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -252,8 +252,13 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 156.15 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 155.66 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
+    },
+    {
+      "level": "warn",
+      "msg": "KRW/USD 1355.4 韩元明显走弱",
+      "key": "krw_weak"
     },
     {
       "level": "bad",
@@ -320,10 +325,10 @@
     "sofr_pct": 3.66,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 1.0,
-    "usdjpy": 156.15,
-    "usdjpy_20d_pct": -1.1,
-    "krw_usd": 1344.1,
-    "krw_20d_pct": -4.47,
+    "usdjpy": 155.66,
+    "usdjpy_20d_pct": -1.74,
+    "krw_usd": 1355.4,
+    "krw_20d_pct": -4.7,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -347,41 +352,41 @@
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 66610.26,
-        "chg_1d": 2.44,
-        "chg_5d_pct": 0.45,
+        "close": 66460.11,
+        "chg_1d": 2.21,
+        "chg_5d_pct": 0.22,
         "asof": "2026-09-07"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 25450.64,
-        "chg_1d": -0.78,
-        "chg_5d_pct": -0.46,
+        "close": 25421.38,
+        "chg_1d": -0.89,
+        "chg_5d_pct": -0.57,
         "asof": "2026-09-07"
       },
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": 3927.9,
-        "chg_1d": -0.06,
-        "chg_5d_pct": -1.46,
+        "close": 3929.59,
+        "chg_1d": -0.01,
+        "chg_5d_pct": -1.42,
         "asof": "2026-09-07"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": 13672.15,
-        "chg_1d": 1.15,
-        "chg_5d_pct": -2.45,
+        "close": 13721.33,
+        "chg_1d": 1.51,
+        "chg_5d_pct": -2.1,
         "asof": "2026-09-07"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6883.59,
-        "chg_1d": 2.94,
-        "chg_5d_pct": 0.93,
+        "close": 6894.69,
+        "chg_1d": 3.1,
+        "chg_5d_pct": 1.09,
         "asof": "2026-09-07"
       }
     },
@@ -508,8 +513,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-07T11:26:13.666536",
-    "age_sec": 409,
+    "cached_at": "2026-09-07T11:57:11.881102",
+    "age_sec": 350,
     "stale": false,
     "refreshing": false
   }
