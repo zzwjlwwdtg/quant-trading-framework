@@ -7,12 +7,38 @@
     "direction": "neutral",
     "magnitude": "small",
     "score": 0,
-    "event_counts": {},
-    "breaking": [],
+    "event_counts": {
+      "MEDIA_ATTACK": 6,
+      "DOMESTIC_POLICY": 8,
+      "MARKET": 1,
+      "NOISE": 6,
+      "FED": 1,
+      "GEOPOLITICAL": 1
+    },
+    "breaking": [
+      {
+        "event_type": "FED",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 9,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "TQQQ"
+        ],
+        "preview": "Trump cheers strong jobs report, calls for lower interest rates: https://justthenews.com/politics-policy/trump-cheers-st",
+        "verbatim": "Trump cheers strong jobs report, calls for lower interest rates",
+        "post_time": "2026-09-07T00:48:41.414Z"
+      }
+    ],
     "summary": {
-      "text": null,
-      "state": "empty",
-      "post_ids": []
+      "text": "特朗普聚焦选举身份审查与媒体攻击，情绪偏政治噪音、市场中性偏谨慎。",
+      "state": "cached",
+      "post_ids": [
+        "117230085361299862",
+        "117230078200345879",
+        "117227424953623109"
+      ]
     }
   },
   "gold_macro": {
