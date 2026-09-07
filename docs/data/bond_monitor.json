@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-07T12:27",
+  "asof": "2026-09-07T12:58",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -256,6 +256,11 @@
       "key": "jpy_verbal_zone"
     },
     {
+      "level": "warn",
+      "msg": "KRW/USD 1355.4 韩元明显走弱",
+      "key": "krw_weak"
+    },
+    {
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.4%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
@@ -322,8 +327,8 @@
     "sofr_iorb_spread_bps": 1.0,
     "usdjpy": 155.66,
     "usdjpy_20d_pct": -1.74,
-    "krw_usd": 1346.3,
-    "krw_20d_pct": -4.31,
+    "krw_usd": 1355.4,
+    "krw_20d_pct": -4.7,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -347,41 +352,41 @@
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 66460.11,
-        "chg_1d": 2.21,
-        "chg_5d_pct": 0.22,
+        "close": 66089.99,
+        "chg_1d": 1.64,
+        "chg_5d_pct": -0.33,
         "asof": "2026-09-07"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 25391.49,
-        "chg_1d": -1.01,
-        "chg_5d_pct": -0.69,
+        "close": 25372.82,
+        "chg_1d": -1.08,
+        "chg_5d_pct": -0.76,
         "asof": "2026-09-07"
       },
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": 3922.29,
-        "chg_1d": -0.2,
-        "chg_5d_pct": -1.61,
+        "close": 3920.7,
+        "chg_1d": -0.24,
+        "chg_5d_pct": -1.65,
         "asof": "2026-09-07"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": 13690.47,
-        "chg_1d": 1.28,
-        "chg_5d_pct": -2.32,
+        "close": 13703.21,
+        "chg_1d": 1.38,
+        "chg_5d_pct": -2.22,
         "asof": "2026-09-07"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6898.08,
-        "chg_1d": 3.15,
-        "chg_5d_pct": 1.14,
+        "close": 6908.04,
+        "chg_1d": 3.3,
+        "chg_5d_pct": 1.29,
         "asof": "2026-09-07"
       }
     },
@@ -508,8 +513,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-07T12:28:11.376980",
-    "age_sec": 291,
+    "cached_at": "2026-09-07T12:59:14.581368",
+    "age_sec": 228,
     "stale": false,
     "refreshing": false
   }

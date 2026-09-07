@@ -3,9 +3,21 @@
   "flow": null,
   "anomaly": {
     "detected": true,
-    "reason": "9/7 09:10 1.16× 均值 · 主动买 ¥58.64億 (@¥7459.0)",
-    "score": 0.8,
+    "reason": "9/7 12:30 1.3× 均值 · 主动买 ¥66.03億 (@¥7577.0)",
+    "score": 1.0,
     "peak_bars": [
+      {
+        "time": "12:30",
+        "vol": 871400,
+        "ratio": 1.3,
+        "open": 7477.0,
+        "price": 7577.0,
+        "chg_pct": 1.34,
+        "direction": "buy",
+        "value_oku": 66.03,
+        "date": "2026-09-07",
+        "tier": "huge_abs"
+      },
       {
         "time": "09:10",
         "vol": 786100,
@@ -27,6 +39,18 @@
         "chg_pct": 1.1,
         "direction": "buy",
         "value_oku": 39.24,
+        "date": "2026-09-07",
+        "tier": "huge_abs"
+      },
+      {
+        "time": "12:35",
+        "vol": 458000,
+        "ratio": 1.34,
+        "open": 7580.0,
+        "price": 7557.0,
+        "chg_pct": -0.3,
+        "direction": "sell",
+        "value_oku": 34.61,
         "date": "2026-09-07",
         "tier": "huge_abs"
       },
@@ -55,19 +79,31 @@
         "tier": "huge_abs"
       }
     ],
-    "day_ratio": 0.44,
+    "day_ratio": 0.51,
     "trading_date": "2026-09-07",
     "date_short": "9/7",
     "net_bias": "buy",
-    "buy_shares": 1313900,
-    "sell_shares": 412800,
-    "buy_value_oku": 97.88,
-    "sell_value_oku": 30.58,
+    "buy_shares": 2185300,
+    "sell_shares": 870800,
+    "buy_value_oku": 163.91,
+    "sell_value_oku": 65.19,
     "days": [
       {
         "trading_date": "2026-09-07",
         "date_short": "9/7",
         "peak_bars": [
+          {
+            "time": "12:30",
+            "vol": 871400,
+            "ratio": 1.3,
+            "open": 7477.0,
+            "price": 7577.0,
+            "chg_pct": 1.34,
+            "direction": "buy",
+            "value_oku": 66.03,
+            "date": "2026-09-07",
+            "tier": "huge_abs"
+          },
           {
             "time": "09:10",
             "vol": 786100,
@@ -89,6 +125,18 @@
             "chg_pct": 1.1,
             "direction": "buy",
             "value_oku": 39.24,
+            "date": "2026-09-07",
+            "tier": "huge_abs"
+          },
+          {
+            "time": "12:35",
+            "vol": 458000,
+            "ratio": 1.34,
+            "open": 7580.0,
+            "price": 7557.0,
+            "chg_pct": -0.3,
+            "direction": "sell",
+            "value_oku": 34.61,
             "date": "2026-09-07",
             "tier": "huge_abs"
           },
@@ -118,20 +166,20 @@
           }
         ],
         "slices": [],
-        "day_ratio": 0.44,
-        "day_chg_pct": 0.89,
+        "day_ratio": 0.51,
+        "day_chg_pct": 1.64,
         "day_open": 7431.0,
-        "day_close": 7497.0,
+        "day_close": 7553.0,
         "net_bias": "buy",
-        "buy_shares": 1313900,
-        "sell_shares": 412800,
-        "buy_value_oku": 97.88,
-        "sell_value_oku": 30.58,
+        "buy_shares": 2185300,
+        "sell_shares": 870800,
+        "buy_value_oku": 163.91,
+        "sell_value_oku": 65.19,
         "full_bias": "buy",
-        "full_up_shares": 4900000,
-        "full_down_shares": 3040100,
-        "full_up_value_oku": 365.11,
-        "full_down_value_oku": 225.73
+        "full_up_shares": 5771400,
+        "full_down_shares": 3636300,
+        "full_up_value_oku": 431.13,
+        "full_down_value_oku": 270.78
       },
       {
         "trading_date": "2026-09-04",
@@ -421,7 +469,7 @@
           }
         ],
         "slices": [],
-        "day_ratio": 0.95,
+        "day_ratio": 0.94,
         "day_chg_pct": -1.06,
         "day_open": 6975.0,
         "day_close": 6901.0,
@@ -591,12 +639,12 @@
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-09-07 11:30 JST",
+  "asof": "2026-09-07 12:40 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-09-07T12:30:27.902469",
-    "age_sec": 155,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-07T12:57:58.612631",
+    "age_sec": 305,
+    "stale": true,
+    "refreshing": true
   }
 }
