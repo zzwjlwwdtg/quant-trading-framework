@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-08T08:56",
+  "asof": "2026-09-08T09:27",
   "yields": {
     "10y": {
       "value": 4.784,
@@ -251,6 +251,11 @@
       "key": "sofr_iorb_warn"
     },
     {
+      "level": "warn",
+      "msg": "USDJPY 156.2 进入 155-160 口头干预区间 (JP MoF)",
+      "key": "jpy_verbal_zone"
+    },
+    {
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.4%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
@@ -315,10 +320,10 @@
     "sofr_pct": 3.66,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": 1.0,
-    "usdjpy": 153.92,
-    "usdjpy_20d_pct": -3.29,
-    "krw_usd": 1344.4,
-    "krw_20d_pct": -5.14,
+    "usdjpy": 156.2,
+    "usdjpy_20d_pct": -1.07,
+    "krw_usd": 1341.4,
+    "krw_20d_pct": -5.36,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 211.4,
@@ -342,10 +347,10 @@
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 65020.94,
-        "chg_1d": 1.26,
-        "chg_5d_pct": -2.09,
-        "asof": "2026-09-04"
+        "close": 65967.93,
+        "chg_1d": 1.46,
+        "chg_5d_pct": -0.52,
+        "asof": "2026-09-08"
       },
       "HSI": {
         "symbol": "^HSI",
@@ -374,24 +379,24 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6687.21,
-        "chg_1d": 1.64,
-        "chg_5d_pct": -1.5,
-        "asof": "2026-09-04"
+        "close": 7041.63,
+        "chg_1d": 5.3,
+        "chg_5d_pct": 3.25,
+        "asof": "2026-09-08"
       }
     },
     "us_futures": {
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7709.5,
-        "chg_pct": -0.16
+        "price": 7707.75,
+        "chg_pct": -0.18
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29582.25,
-        "chg_pct": 0.06
+        "price": 29593.75,
+        "chg_pct": 0.1
       },
       "cl_f": {
         "symbol": "CL=F",
@@ -402,8 +407,8 @@
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4470.7,
-        "chg_pct": 0.92
+        "price": 4469.5,
+        "chg_pct": 0.9
       }
     },
     "oil_uso": 141.96,
@@ -503,8 +508,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-08T08:56:46.857951",
-    "age_sec": 375,
+    "cached_at": "2026-09-08T09:27:43.886045",
+    "age_sec": 318,
     "stale": false,
     "refreshing": false
   }
