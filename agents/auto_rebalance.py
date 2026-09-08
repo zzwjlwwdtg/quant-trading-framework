@@ -289,6 +289,10 @@ def _load_stock_bond_corr() -> tuple[float | None, str]:
 def _load_asia_repatriation_signal() -> tuple[bool, str]:
     """机构级 JP repatriation 信号 (BIS CIP + JP MoF 干预阈值).
     True = 应减 US long duration 敞口 (IEI/TLT).
+
+    2026-09-08 (Phase A shadow): 新增 _check_jpy_relief() log 到
+    signals/jpy_relief_shadow_log.jsonl. **不改主 signal 触发行为**,
+    仅记录 relief 判断供未来 backtest 消费 (memory: 改动前需回测).
     """
     from datetime import datetime
     cache_dir = Path(SIGNALS_DIR).parent / ".webui_cache"
@@ -306,6 +310,10 @@ def _load_asia_repatriation_signal() -> tuple[bool, str]:
             hedged = mc.get("hedged_ust_10y_for_jp")
             jgb = mc.get("jgb_10y_pct")
             usdjpy = mc.get("usdjpy") or 0
+
+            # Shadow log: 每次 signal check 记 relief 判断 (log-only, 不改决策)
+            _log_jpy_relief_shadow(mc)
+
             # BIS CIP 信号: hedged UST < JGB → JP 抛售 UST
             if hedged is not None and jgb is not None and hedged < jgb:
                 return True, f"BIS CIP: hedged UST {hedged}% < JGB {jgb}%"
@@ -315,6 +323,70 @@ def _load_asia_repatriation_signal() -> tuple[bool, str]:
         except Exception:
             continue
     return False, ""
+
+
+def _check_jpy_relief(mc: dict) -> dict:
+    """判断当前是否处于 "JPY 升值 relief" 状态 (US bond 结构性压力缓解).
+
+    3 tier relief classification (硬编码, 未回测):
+      strong  : USDJPY 从 60d 高点回落 ≥ 5% AND 当前 < 155  → US bond 有明显 relief
+      partial : USDJPY 从 60d 高点回落 ≥ 3% AND 当前 < 158  → 部分 relief
+      none    : 其它 → 无 relief 或 continues to weaken
+
+    **Caveat**: 这些阈值是先验判断, Phase A shadow log 只记录, 不影响
+    _load_asia_repatriation_signal 主触发. Phase B backtest 后才可能上升为
+    决策级 signal (memory: feedback_backtest_gate).
+    """
+    usdjpy = mc.get("usdjpy")
+    peak = mc.get("usdjpy_60d_high")
+    pullback = mc.get("usdjpy_pullback_from_60d_high_pct")
+
+    if usdjpy is None or peak is None or pullback is None:
+        return {"tier": "none", "why": "no_data", "usdjpy": usdjpy,
+                "peak_60d": peak, "pullback_pct": pullback}
+
+    tier = "none"
+    reasons = []
+
+    if pullback <= -5 and usdjpy < 155:
+        tier = "strong"
+        reasons.append(f"USDJPY {usdjpy} 从 60d 峰值 {peak} 回落 {pullback:.2f}% (≥5%)")
+        reasons.append(f"当前 <155 = 完全离开 MoF 干预区")
+    elif pullback <= -3 and usdjpy < 158:
+        tier = "partial"
+        reasons.append(f"USDJPY {usdjpy} 从 60d 峰值 {peak} 回落 {pullback:.2f}% (≥3%)")
+        reasons.append(f"当前 <158 = 远离 MoF 干预 155-160 区")
+    else:
+        reasons.append(f"USDJPY {usdjpy} pullback {pullback:.2f}% 未达 relief 阈值")
+
+    return {"tier": tier, "why": reasons, "usdjpy": usdjpy,
+            "peak_60d": peak, "pullback_pct": pullback}
+
+
+_JPY_RELIEF_LOG = Path(SIGNALS_DIR) / "jpy_relief_shadow_log.jsonl"
+
+
+def _log_jpy_relief_shadow(mc: dict) -> None:
+    """Phase A shadow log — 每次 asia_repat 检查时记 relief tier 供 backtest.
+    静默失败允许 (不阻塞主流程)."""
+    from datetime import datetime, timezone
+    try:
+        info = _check_jpy_relief(mc)
+        entry = {
+            "ts":              datetime.now(timezone.utc).isoformat(),
+            "relief_tier":     info["tier"],
+            "usdjpy":          info["usdjpy"],
+            "peak_60d":        info["peak_60d"],
+            "pullback_pct":    info["pullback_pct"],
+            "why":             info["why"],
+            # 快照当前 asia_repat 主信号触发因子 (为 backtest 追溯)
+            "hedged_ust_10y":  mc.get("hedged_ust_10y_for_jp"),
+            "jgb_10y_pct":     mc.get("jgb_10y_pct"),
+        }
+        from atomic_io import append_jsonl
+        append_jsonl(_JPY_RELIEF_LOG, entry)
+    except Exception:
+        pass
 
 
 def _load_liquidity_state() -> tuple[int, list[str]]:

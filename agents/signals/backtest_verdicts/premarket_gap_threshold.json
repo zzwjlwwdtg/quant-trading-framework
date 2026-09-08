@@ -1,0 +1,29 @@
+{
+  "name": "premarket_gap_threshold",
+  "verdict": "keep_baseline",
+  "run_at": "2026-09-07T01:53:41.460041+00:00",
+  "conclusion": "baseline 2.0% total 5d=+3.67%, best_alt=2.0% total 5d=+3.67%",
+  "metrics": {
+    "baseline_total_5d": 3.667,
+    "best_threshold_pct": 2.0,
+    "best_total_5d": 3.667,
+    "delta_pp": 0.0,
+    "n_trades": 6
+  },
+  "params": {
+    "universe": "premarket_buys",
+    "thresholds_tested": [
+      0.75,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0
+    ],
+    "hold_days": 15,
+    "pass_pp_min": 1.0
+  },
+  "next_review_days": 90,
+  "should_integrate": false,
+  "recommendation": "keep PREMARKET_BUY_MAX_POSITIVE_GAP_PCT = 0.02"
+}

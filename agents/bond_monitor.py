@@ -561,7 +561,15 @@ def get_bond_monitor() -> dict:
             macro_context["usdjpy"] = usdjpy_val
             if len(usdjpy_hist) >= 21:
                 usdjpy_20d = float(usdjpy_hist["Close"].iloc[-21])
-                macro_context["usdjpy_20d_pct"] = round((usdjpy_val / usdjpy_20d - 1) * 100, 2)
+                delta_pct = round((usdjpy_val / usdjpy_20d - 1) * 100, 2)
+                macro_context["usdjpy_20d_pct"] = delta_pct
+                macro_context["usdjpy_20d_delta_pct"] = delta_pct  # 别名: 语义更明确
+                # 新增: 60d 峰值回撤 % (JPY 升值 relief 信号需要)
+                usdjpy_60d_high = float(usdjpy_hist["Close"].max())
+                macro_context["usdjpy_60d_high"] = round(usdjpy_60d_high, 2)
+                macro_context["usdjpy_pullback_from_60d_high_pct"] = round(
+                    (usdjpy_val / usdjpy_60d_high - 1) * 100, 2
+                )
             # JP MoF intervention thresholds (2022-2024 历史):
             if usdjpy_val >= 160:
                 _warn("bad",  f"USDJPY {usdjpy_val} 已破 160 = JP MoF 真实干预阈值 (2024-05 干预 ¥9.8T)", "jpy_intervention_risk")

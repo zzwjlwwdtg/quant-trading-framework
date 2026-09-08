@@ -1,0 +1,23 @@
+{
+  "name": "take_profit_distance",
+  "verdict": "keep_baseline",
+  "run_at": "2026-09-04T01:20:56.416073+00:00",
+  "conclusion": "current baseline=-1.77% best_alt=tight_10_20_35 gap=+0.02pp",
+  "metrics": {
+    "baseline_avg": -1.7682,
+    "best_alt": "tight_10_20_35",
+    "best_alt_avg": -1.7466,
+    "delta_pp": 0.0216,
+    "n_trades": 26,
+    "hold_days": 60
+  },
+  "params": {
+    "universe": "trade_log_signal_buys",
+    "trailing_stop_base": 0.08,
+    "pass_pp_min": 2.0,
+    "n_policies_tested": 7
+  },
+  "next_review_days": 60,
+  "should_integrate": false,
+  "recommendation": "keep TP_BASE_LEVELS unchanged"
+}
