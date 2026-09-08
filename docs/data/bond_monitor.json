@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-09T06:59",
+  "asof": "2026-09-09T07:17",
   "yields": {
     "10y": {
       "value": 4.806,
@@ -241,6 +241,16 @@
       "key": "rrp_drained"
     },
     {
+      "level": "info",
+      "msg": "银行准备金 11.3% (< 12% 中性偏紧)",
+      "key": "reserves_neutral"
+    },
+    {
+      "level": "bad",
+      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.43%) < JGB (2.67%) = JP 投资者会抛售 UST",
+      "key": "cip_repatriation_signal"
+    },
+    {
       "level": "bad",
       "msg": "SPY-IEF 60d 相关 +0.358 → 股债对冲破裂 (2022 股债双杀水平)",
       "key": "stock_bond_corr_broken"
@@ -249,6 +259,21 @@
       "level": "warn",
       "msg": "油价 20d +16.0% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
       "key": "oil_rising"
+    },
+    {
+      "level": "warn",
+      "msg": "Fed 逆回购 (RRP) 仅剩 $0.6B (2023 峰值 $2500B, 流动性明显抽干)",
+      "key": "rrp_drained"
+    },
+    {
+      "level": "info",
+      "msg": "Treasury 一般账户 (TGA) $967.9B (>900B, 债券发行/税收流入抽干流动性)",
+      "key": "tga_high"
+    },
+    {
+      "level": "info",
+      "msg": "CPI YoY +3.54% 通胀高于 Fed 目标 2%",
+      "key": "cpi_above_target"
     },
     {
       "level": "info",
@@ -269,22 +294,41 @@
     "nfci_12w_delta": -0.05,
     "rrp_bn": 0.6,
     "rrp_asof": "2026-09-08",
+    "tga_bn": 967.9,
+    "tga_asof": "2026-09-02",
+    "tga_4w_delta_bn": 3.9,
     "walcl_tn": 6.737,
     "walcl_asof": "2026-09-02",
     "walcl_12w_delta_bn": 1.0,
     "move_index": 76.1,
     "move_20d_delta": 0.6,
-    "usdjpy": 153.85,
-    "usdjpy_20d_pct": -3.33,
-    "krw_usd": 1339.9,
-    "krw_20d_pct": -5.46,
+    "effr_pct": 3.63,
+    "sofr_effr_spread_bps": 2.0,
+    "bank_reserves_bn": 2895.0,
+    "bank_total_assets_bn": 25629.0,
+    "bank_reserves_pct_of_assets": 11.3,
+    "sofr_pct": 3.65,
+    "iorb_pct": 3.65,
+    "sofr_iorb_spread_bps": 0.0,
+    "usdjpy": 153.71,
+    "usdjpy_20d_pct": -3.42,
+    "krw_usd": 1340.1,
+    "krw_20d_pct": -5.45,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 213.6,
     "ust_jgb_spread_6m_delta_bps": -43.0,
+    "ktb_10y_pct": 4.18,
+    "ktb_asof": "2026-06-01",
+    "ust_ktb_spread_bps": 62.6,
+    "hedged_ust_10y_for_jp": 2.43,
+    "hedge_cost_jp": 2.38,
+    "real_yield_gap_us_jp": 1.77,
+    "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.358,
     "kbe_spy_ratio": 0.0893,
     "kbe_spy_20d_delta_pct": -1.3,
+    "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 268.0,
     "dxy": 98.84,
     "dxy_pct_20d": -0.97,
@@ -335,31 +379,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7678.25,
-        "chg_pct": -0.57
+        "price": 7679.5,
+        "chg_pct": -0.55
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29525.75,
-        "chg_pct": -0.13
+        "price": 29529.0,
+        "chg_pct": -0.12
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 94.25,
-        "chg_pct": 3.03
+        "price": 94.32,
+        "chg_pct": 3.1
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4400.0,
-        "chg_pct": -0.67
+        "price": 4398.5,
+        "chg_pct": -0.71
       }
     },
     "oil_uso": 146.03,
     "oil_pct_20d": 15.97,
-    "oil_wti": 94.25,
+    "oil_wti": 94.32,
     "eem_pct_20d": 5.62,
     "eem_vs_spx_20d": 6.53,
     "volume_confirm": {
@@ -436,6 +480,8 @@
         "notable": true
       }
     },
+    "cpi_yoy_pct": 3.54,
+    "cpi_asof": "2026-07-01",
     "core_cpi_yoy_pct": 2.79,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
@@ -443,16 +489,17 @@
     "usdt_bn": 183.4,
     "usdc_bn": 74.5,
     "vix": 15.72,
-    "bbi_score": 0.04,
+    "bbi_score": 1.08,
     "bbi_components": {
       "vix": -0.38,
+      "ig": -1.4,
       "hy": -1.21,
       "erp": 1.55
     }
   },
   "_meta": {
-    "cached_at": "2026-09-09T07:02:52.169153",
-    "age_sec": 10,
+    "cached_at": "2026-09-09T07:18:11.886241",
+    "age_sec": 890,
     "stale": false,
     "refreshing": false
   }
