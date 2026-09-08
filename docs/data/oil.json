@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-08T21:30:28.487195+00:00",
+  "ts": "2026-09-08T21:57:57.815497+00:00",
   "factors": [
     {
       "arrow": "▲",
@@ -30,8 +30,16 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "98.86 (5d -0.6%)",
+      "value": "98.85 (5d -0.6%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
+    },
+    {
+      "arrow": "·",
+      "name": "美国汽油零售价",
+      "direction": "neutral",
+      "weight": 1,
+      "value": "$4.07/gal (4周 -0.2%)",
+      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
       "arrow": "▼",
@@ -60,9 +68,9 @@
   "pct_20d": 14.76,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-09T06:30:30.318617",
-    "age_sec": 152,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-09T06:57:59.288734",
+    "age_sec": 303,
+    "stale": true,
+    "refreshing": true
   }
 }
