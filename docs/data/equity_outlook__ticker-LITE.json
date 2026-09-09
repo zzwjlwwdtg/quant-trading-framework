@@ -30,28 +30,11 @@
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 20.37,
-    "peer_pe_n_peers": 4,
-    "peer_pe_details": [
-      {
-        "ticker": "COHR",
-        "pe": 21.63
-      },
-      {
-        "ticker": "FN",
-        "pe": 19.11
-      },
-      {
-        "ticker": "MRVL",
-        "pe": 33.54
-      },
-      {
-        "ticker": "300502.SZ",
-        "pe": 11.67
-      }
-    ],
-    "implied_peer_median": 678.35,
-    "implied_peer_upside": -30.7,
+    "peer_pe_median": null,
+    "peer_pe_n_peers": null,
+    "peer_pe_details": null,
+    "implied_peer_median": null,
+    "implied_peer_upside": null,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -189,41 +172,35 @@
     }
   },
   "pricing": {
-    "classification": "fully_priced",
-    "label": "利好已充分计价",
-    "tone": "warn",
+    "classification": "underpriced",
+    "label": "市场预期偏低",
+    "tone": "ok",
     "confidence": "medium",
-    "anchor_count": 2,
+    "anchor_count": 1,
     "anchors": [
       {
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 1148.43,
         "gap_pct": 17.4
-      },
-      {
-        "key": "peer_pe",
-        "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 678.35,
-        "gap_pct": -30.7
       }
     ],
-    "median_gap_pct": -6.7,
+    "median_gap_pct": 17.4,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数低于现价 6.7%",
+      "多口径隐含价中位数高于现价 17.4%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-08T23:36:04.938397+00:00",
+  "fetched_at": "2026-09-09T05:36:32.044566+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-09T08:36:04.942924",
-    "age_sec": 21420,
+    "cached_at": "2026-09-09T14:36:32.045566",
+    "age_sec": 6991,
     "stale": false,
     "refreshing": false
   },
