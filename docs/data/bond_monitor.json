@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-09T19:29",
+  "asof": "2026-09-09T20:00",
   "yields": {
     "10y": {
       "value": 4.806,
@@ -160,53 +160,13 @@
       "asof": "2026-09-04",
       "name": "2Y 国债",
       "source": "FRED DGS2"
-    },
-    "tips_10y": {
-      "value": 2.43,
-      "chg_1d_bps": 1.0,
-      "chg_5d_bps": 1.0,
-      "chg_20d_bps": 3.0,
-      "z_score_20d": 0.29,
-      "history": [
-        2.43,
-        2.42,
-        2.45,
-        2.44,
-        2.44,
-        2.42,
-        2.34,
-        2.34,
-        2.32,
-        2.38,
-        2.4,
-        2.35,
-        2.35,
-        2.41,
-        2.44,
-        2.41,
-        2.39,
-        2.42,
-        2.43,
-        2.43
-      ],
-      "asof": "2026-09-04",
-      "name": "10Y TIPS 实际利率",
-      "source": "FRED DFII10"
     }
   },
-  "spreads": {
-    "2s10s": {
-      "value": 0.41,
-      "chg_20d_bps": -7.0,
-      "regime": "正常",
-      "asof": "2026-09-08"
-    }
-  },
+  "spreads": {},
   "gld_correlation": {
     "vs_10y": -0.358,
-    "vs_tips_10y": -0.07,
-    "regime": "weak_hedge",
-    "reason": "相关性 -0.07，对冲关系变弱"
+    "regime": "unknown",
+    "reason": "数据不足无法计算"
   },
   "anomalies": [],
   "warnings": [
@@ -217,23 +177,8 @@
     },
     {
       "level": "warn",
-      "msg": "实际利率 2.43% 股市历史承压区 (>2%)",
-      "key": "tips_high"
-    },
-    {
-      "level": "warn",
       "msg": "30Y 5.26% 长端偏高 (>5%, 长久期折现率压力)",
       "key": "30y_high"
-    },
-    {
-      "level": "warn",
-      "msg": "GLD/TIPS 对冲失效 (相关性 -0.07) — 通胀/流动性 regime 改变",
-      "key": "hedge_broken"
-    },
-    {
-      "level": "warn",
-      "msg": "ERP 1.45% 股权风险溢价压缩到危险区 (SPX 尾随 EPS yield 3.88% − TIPS 2.43%，1985+ 仅 1987/2000/2007 出现过)",
-      "key": "erp_low"
     },
     {
       "level": "warn",
@@ -283,27 +228,10 @@
   ],
   "macro_context": {
     "term_spread_30_10_bps": 45.8,
-    "spx_trailing_pe": 25.8,
-    "spx_eps_yield_pct": 3.88,
-    "erp_vs_tips_pct": 1.45,
-    "erp_basis": "trailing",
-    "nfci": {
-      "value": -0.558,
-      "asof": "2026-08-28"
-    },
-    "nfci_12w_delta": -0.05,
     "rrp_bn": 0.6,
     "rrp_asof": "2026-09-08",
-    "tga_bn": 967.9,
-    "tga_asof": "2026-09-02",
-    "tga_4w_delta_bn": 3.9,
-    "walcl_tn": 6.737,
-    "walcl_asof": "2026-09-02",
-    "walcl_12w_delta_bn": 1.0,
     "move_index": 76.1,
     "move_20d_delta": 0.6,
-    "effr_pct": 3.63,
-    "sofr_effr_spread_bps": 2.0,
     "bank_reserves_bn": 2895.0,
     "bank_total_assets_bn": 25629.0,
     "bank_reserves_pct_of_assets": 11.3,
@@ -312,8 +240,8 @@
     "sofr_iorb_spread_bps": 0.0,
     "usdjpy": 153.85,
     "usdjpy_20d_pct": -3.33,
-    "krw_usd": 1338.4,
-    "krw_20d_pct": -5.22,
+    "krw_usd": 1337.5,
+    "krw_20d_pct": -5.29,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 213.6,
@@ -330,9 +258,9 @@
     "kbe_spy_20d_delta_pct": -1.3,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 268.0,
-    "dxy": 98.84,
-    "dxy_pct_20d": -0.98,
-    "dxy_z_60d": -1.46,
+    "dxy": 98.78,
+    "dxy_pct_20d": -1.04,
+    "dxy_z_60d": -1.53,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -379,33 +307,34 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7662.0,
-        "chg_pct": -0.24
+        "price": 7651.0,
+        "chg_pct": -0.38
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29410.25,
-        "chg_pct": -0.44
+        "price": 29383.0,
+        "chg_pct": -0.53
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 95.1,
-        "chg_pct": 2.23
+        "price": 95.05,
+        "chg_pct": 2.17
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4437.8,
-        "chg_pct": 1.0
+        "price": 4442.2,
+        "chg_pct": 1.1
       }
     },
     "oil_uso": 146.03,
     "oil_pct_20d": 15.97,
-    "oil_wti": 95.1,
+    "oil_wti": 95.05,
     "eem_pct_20d": 5.62,
     "eem_vs_spx_20d": 6.53,
+    "tga_bn": 967.9,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -488,18 +417,17 @@
     "stablecoin_total_bn": 257.8,
     "usdt_bn": 183.4,
     "usdc_bn": 74.4,
-    "vix": 16.17,
-    "bbi_score": 1.02,
+    "vix": 16.32,
+    "bbi_score": 2.89,
     "bbi_components": {
-      "vix": -0.3,
+      "vix": -0.28,
       "ig": -1.4,
-      "hy": -1.21,
-      "erp": 1.55
+      "hy": -1.21
     }
   },
   "_meta": {
-    "cached_at": "2026-09-09T19:29:40.810839",
-    "age_sec": 202,
+    "cached_at": "2026-09-09T20:02:35.875635",
+    "age_sec": 27,
     "stale": false,
     "refreshing": false
   }
