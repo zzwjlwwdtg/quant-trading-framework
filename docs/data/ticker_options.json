@@ -1005,10 +1005,10 @@
       "wall_imbalance": null,
       "flow": {
         "ticker": "TQQQ",
-        "direction": "neutral",
-        "score": 0,
-        "bullish_score": 0,
-        "bearish_score": 0,
+        "direction": "mixed",
+        "score": 54,
+        "bullish_score": 52,
+        "bearish_score": 54,
         "action": "watch",
         "sources": [
           "QQQ"
@@ -1016,7 +1016,161 @@
         "confirming_sources": [],
         "data_quality": "snapshot",
         "score_cap": 69,
-        "top_events": [],
+        "top_events": [
+          {
+            "id": "QQQ|2026-12-18|put|655.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "QQQ",
+            "expiry": "2026-12-18",
+            "dte": 100,
+            "dte_bucket": "46-120d_institutional",
+            "option_type": "put",
+            "strike": 655.0,
+            "spot": 719.45,
+            "moneyness": 0.9104,
+            "contracts": 14016,
+            "session_volume": 14016,
+            "open_interest": 11905,
+            "volume_oi_ratio": 1.177,
+            "volume_zscore": 885.92,
+            "estimated_premium": 15978240.0,
+            "delta_notional": 186023964.47,
+            "abs_delta": 0.1845,
+            "delta_source": "black_scholes_approx",
+            "price_used": 11.4,
+            "spread_pct": 1.06,
+            "iv": 0.239601,
+            "iv_change_pct": 2.8,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.29,
+            "direction": "bearish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": false,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 48,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 20,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 0,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "QQQ|2026-09-09|call|717.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "QQQ",
+            "expiry": "2026-09-09",
+            "dte": 0,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "call",
+            "strike": 717.0,
+            "spot": 719.45,
+            "moneyness": 0.9966,
+            "contracts": 50711,
+            "session_volume": 50711,
+            "open_interest": 2007,
+            "volume_oi_ratio": 25.267,
+            "volume_zscore": 23.66,
+            "estimated_premium": 9229402.0,
+            "delta_notional": 3648402956.9,
+            "abs_delta": 1.0,
+            "delta_source": "black_scholes_approx",
+            "price_used": 1.82,
+            "spread_pct": 1.09,
+            "iv": 1e-05,
+            "iv_change_pct": 0.0,
+            "aggressor": "sell",
+            "aggressor_confidence": 0.35,
+            "direction": "bearish",
+            "direction_evidence": "snapshot_last_near_bid",
+            "price_confirmed": false,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 48,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 20,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 0,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "QQQ|2026-09-09|put|717.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "QQQ",
+            "expiry": "2026-09-09",
+            "dte": 0,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "put",
+            "strike": 717.0,
+            "spot": 719.45,
+            "moneyness": 0.9966,
+            "contracts": 42204,
+            "session_volume": 42204,
+            "open_interest": 4510,
+            "volume_oi_ratio": 9.358,
+            "volume_zscore": 12.23,
+            "estimated_premium": 6077376.0,
+            "delta_notional": 1035010702.89,
+            "abs_delta": 0.3409,
+            "delta_source": "black_scholes_approx",
+            "price_used": 1.44,
+            "spread_pct": 0.69,
+            "iv": 0.16578,
+            "iv_change_pct": 2019.29,
+            "aggressor": "sell",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_bid",
+            "price_confirmed": false,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 46,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 18,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 0,
+              "penalty": 0
+            },
+            "penalties": []
+          }
+        ],
         "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
       }
     },
@@ -2094,9 +2248,9 @@
       "flow": {
         "ticker": "SOXL",
         "direction": "neutral",
-        "score": 0,
+        "score": 37,
         "bullish_score": 0,
-        "bearish_score": 0,
+        "bearish_score": 37,
         "action": "watch",
         "sources": [
           "SMH",
@@ -2105,7 +2259,59 @@
         "confirming_sources": [],
         "data_quality": "snapshot",
         "score_cap": 69,
-        "top_events": [],
+        "top_events": [
+          {
+            "id": "SOXX|2026-10-16|put|485.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "SOXX",
+            "expiry": "2026-10-16",
+            "dte": 37,
+            "dte_bucket": "15-45d_swing",
+            "option_type": "put",
+            "strike": 485.0,
+            "spot": 535.36,
+            "moneyness": 0.9059,
+            "contracts": 1302,
+            "session_volume": 1302,
+            "open_interest": 49,
+            "volume_oi_ratio": 26.571,
+            "volume_zscore": 1282.63,
+            "estimated_premium": 1404858.0,
+            "delta_notional": 14918669.98,
+            "abs_delta": 0.214,
+            "delta_source": "black_scholes_approx",
+            "price_used": 10.79,
+            "spread_pct": 0.93,
+            "iv": 0.447881,
+            "iv_change_pct": 5.49,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.31,
+            "direction": "bearish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": false,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 44,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 13,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 3,
+              "penalty": 0
+            },
+            "penalties": []
+          }
+        ],
         "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
       }
     },
@@ -2588,19 +2794,226 @@
       "expiry_covers_earnings": false,
       "flow": {
         "ticker": "DRAM",
-        "direction": "neutral",
-        "score": 0,
-        "bullish_score": 0,
-        "bearish_score": 0,
+        "direction": "bullish",
+        "score": 56,
+        "bullish_score": 56,
+        "bearish_score": 43,
         "action": "watch",
         "sources": [
           "MU",
           "SMH"
         ],
-        "confirming_sources": [],
+        "confirming_sources": [
+          "MU"
+        ],
         "data_quality": "snapshot",
         "score_cap": 69,
-        "top_events": [],
+        "top_events": [
+          {
+            "id": "MU|2026-09-11|call|995.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-09-11",
+            "dte": 2,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "call",
+            "strike": 995.0,
+            "spot": 1037.46,
+            "moneyness": 0.9591,
+            "contracts": 1310,
+            "session_volume": 1310,
+            "open_interest": 290,
+            "volume_oi_ratio": 4.517,
+            "volume_zscore": 10.19,
+            "estimated_premium": 4913810.0,
+            "delta_notional": 135907254.88,
+            "abs_delta": 1.0,
+            "delta_source": "black_scholes_approx",
+            "price_used": 37.51,
+            "spread_pct": 2.03,
+            "iv": 1e-05,
+            "iv_change_pct": -100.0,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 50,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 17,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "MU|2026-09-18|call|1005.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-09-18",
+            "dte": 9,
+            "dte_bucket": "3-14d_event",
+            "option_type": "call",
+            "strike": 1005.0,
+            "spot": 1037.46,
+            "moneyness": 0.9687,
+            "contracts": 547,
+            "session_volume": 547,
+            "open_interest": 480,
+            "volume_oi_ratio": 1.14,
+            "volume_zscore": 13.1,
+            "estimated_premium": 2644745.0,
+            "delta_notional": 39830008.77,
+            "abs_delta": 0.7019,
+            "delta_source": "black_scholes_approx",
+            "price_used": 48.35,
+            "spread_pct": 0.63,
+            "iv": 0.420141,
+            "iv_change_pct": -32.62,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 48,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 15,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "MU|2026-09-18|put|1005.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-09-18",
+            "dte": 9,
+            "dte_bucket": "3-14d_event",
+            "option_type": "put",
+            "strike": 1005.0,
+            "spot": 1037.46,
+            "moneyness": 0.9687,
+            "contracts": 561,
+            "session_volume": 561,
+            "open_interest": 117,
+            "volume_oi_ratio": 4.795,
+            "volume_zscore": 19.86,
+            "estimated_premium": 1800810.0,
+            "delta_notional": 21022622.21,
+            "abs_delta": 0.3612,
+            "delta_source": "black_scholes_approx",
+            "price_used": 32.1,
+            "spread_pct": 0.62,
+            "iv": 0.693973,
+            "iv_change_pct": 31.23,
+            "aggressor": "sell",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_bid",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 47,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 14,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "MU|2026-12-18|call|810.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-12-18",
+            "dte": 100,
+            "dte_bucket": "46-120d_institutional",
+            "option_type": "call",
+            "strike": 810.0,
+            "spot": 1037.46,
+            "moneyness": 0.7808,
+            "contracts": 162,
+            "session_volume": 162,
+            "open_interest": 357,
+            "volume_oi_ratio": 0.454,
+            "volume_zscore": 16.42,
+            "estimated_premium": 4057938.0,
+            "delta_notional": 14088774.97,
+            "abs_delta": 0.8383,
+            "delta_source": "black_scholes_approx",
+            "price_used": 250.49,
+            "spread_pct": 4.27,
+            "iv": 0.593418,
+            "iv_change_pct": -18.3,
+            "aggressor": "sell",
+            "aggressor_confidence": 0.35,
+            "direction": "bearish",
+            "direction_evidence": "snapshot_last_near_bid",
+            "price_confirmed": false,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 40,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 17,
+              "novelty": 15,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 0,
+              "penalty": 0
+            },
+            "penalties": []
+          }
+        ],
         "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
       }
     },
@@ -3199,18 +3612,225 @@
       "expiry_covers_earnings": false,
       "flow": {
         "ticker": "MULL",
-        "direction": "neutral",
-        "score": 0,
-        "bullish_score": 0,
-        "bearish_score": 0,
+        "direction": "bullish",
+        "score": 56,
+        "bullish_score": 56,
+        "bearish_score": 43,
         "action": "watch",
         "sources": [
           "MU"
         ],
-        "confirming_sources": [],
+        "confirming_sources": [
+          "MU"
+        ],
         "data_quality": "snapshot",
         "score_cap": 69,
-        "top_events": [],
+        "top_events": [
+          {
+            "id": "MU|2026-09-11|call|995.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-09-11",
+            "dte": 2,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "call",
+            "strike": 995.0,
+            "spot": 1037.46,
+            "moneyness": 0.9591,
+            "contracts": 1310,
+            "session_volume": 1310,
+            "open_interest": 290,
+            "volume_oi_ratio": 4.517,
+            "volume_zscore": 10.19,
+            "estimated_premium": 4913810.0,
+            "delta_notional": 135907254.88,
+            "abs_delta": 1.0,
+            "delta_source": "black_scholes_approx",
+            "price_used": 37.51,
+            "spread_pct": 2.03,
+            "iv": 1e-05,
+            "iv_change_pct": -100.0,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 50,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 17,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "MU|2026-09-18|call|1005.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-09-18",
+            "dte": 9,
+            "dte_bucket": "3-14d_event",
+            "option_type": "call",
+            "strike": 1005.0,
+            "spot": 1037.46,
+            "moneyness": 0.9687,
+            "contracts": 547,
+            "session_volume": 547,
+            "open_interest": 480,
+            "volume_oi_ratio": 1.14,
+            "volume_zscore": 13.1,
+            "estimated_premium": 2644745.0,
+            "delta_notional": 39830008.77,
+            "abs_delta": 0.7019,
+            "delta_source": "black_scholes_approx",
+            "price_used": 48.35,
+            "spread_pct": 0.63,
+            "iv": 0.420141,
+            "iv_change_pct": -32.62,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 48,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 15,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "MU|2026-09-18|put|1005.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-09-18",
+            "dte": 9,
+            "dte_bucket": "3-14d_event",
+            "option_type": "put",
+            "strike": 1005.0,
+            "spot": 1037.46,
+            "moneyness": 0.9687,
+            "contracts": 561,
+            "session_volume": 561,
+            "open_interest": 117,
+            "volume_oi_ratio": 4.795,
+            "volume_zscore": 19.86,
+            "estimated_premium": 1800810.0,
+            "delta_notional": 21022622.21,
+            "abs_delta": 0.3612,
+            "delta_source": "black_scholes_approx",
+            "price_used": 32.1,
+            "spread_pct": 0.62,
+            "iv": 0.693973,
+            "iv_change_pct": 31.23,
+            "aggressor": "sell",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_bid",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 47,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 14,
+              "novelty": 20,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": 0
+            },
+            "penalties": []
+          },
+          {
+            "id": "MU|2026-12-18|call|810.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "MU",
+            "expiry": "2026-12-18",
+            "dte": 100,
+            "dte_bucket": "46-120d_institutional",
+            "option_type": "call",
+            "strike": 810.0,
+            "spot": 1037.46,
+            "moneyness": 0.7808,
+            "contracts": 162,
+            "session_volume": 162,
+            "open_interest": 357,
+            "volume_oi_ratio": 0.454,
+            "volume_zscore": 16.42,
+            "estimated_premium": 4057938.0,
+            "delta_notional": 14088774.97,
+            "abs_delta": 0.8383,
+            "delta_source": "black_scholes_approx",
+            "price_used": 250.49,
+            "spread_pct": 4.27,
+            "iv": 0.593418,
+            "iv_change_pct": -18.3,
+            "aggressor": "sell",
+            "aggressor_confidence": 0.35,
+            "direction": "bearish",
+            "direction_evidence": "snapshot_last_near_bid",
+            "price_confirmed": false,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 40,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 17,
+              "novelty": 15,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 0,
+              "penalty": 0
+            },
+            "penalties": []
+          }
+        ],
         "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
       }
     },
@@ -3731,7 +4351,191 @@
         "explain": "Call 成交是 Put 的 2.0 倍。**多头拥挤**：\n  · 大家在追多 / 抢反弹 / 押突破\n  · 历史规律：C/P > 1.8 时短期回调概率偏高（反向指标）\n  · 尤其若配合价格已涨很多 → 警惕获利了结压力"
       },
       "wall_imbalance": "**Call 墙 OI 是 Put 墙的 3.2 倍**：上方阻力/追多力量集中，下方对冲少。\n  · 通常出现在强势股 / 短期热门标的 → 上方是 pin / 磁吸位\n  · 下方无护盘 → 一旦下跌可能无缓冲、直接找下一档 support",
-      "flow": null
+      "flow": {
+        "ticker": "TSLA",
+        "direction": "mixed",
+        "score": 47,
+        "bullish_score": 47,
+        "bearish_score": 42,
+        "action": "watch",
+        "sources": [
+          "TSLA"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [
+          {
+            "id": "TSLA|2026-09-11|call|375.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "TSLA",
+            "expiry": "2026-09-11",
+            "dte": 2,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "call",
+            "strike": 375.0,
+            "spot": 372.355,
+            "moneyness": 1.0071,
+            "contracts": 11674,
+            "session_volume": 11674,
+            "open_interest": 5823,
+            "volume_oi_ratio": 2.005,
+            "volume_zscore": null,
+            "estimated_premium": 6420700.0,
+            "delta_notional": 188429426.57,
+            "abs_delta": 0.4335,
+            "delta_source": "black_scholes_approx",
+            "price_used": 5.5,
+            "spread_pct": 1.83,
+            "iv": 0.498296,
+            "iv_change_pct": null,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 43,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 18,
+              "novelty": 15,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": -3
+            },
+            "penalties": [
+              {
+                "reason": "first_snapshot_accumulated_volume",
+                "points": 3
+              }
+            ]
+          },
+          {
+            "id": "TSLA|2026-09-11|call|380.0000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "TSLA",
+            "expiry": "2026-09-11",
+            "dte": 2,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "call",
+            "strike": 380.0,
+            "spot": 372.355,
+            "moneyness": 1.0205,
+            "contracts": 12755,
+            "session_volume": 12755,
+            "open_interest": 9863,
+            "volume_oi_ratio": 1.293,
+            "volume_zscore": null,
+            "estimated_premium": 4591800.0,
+            "delta_notional": 141568866.29,
+            "abs_delta": 0.2981,
+            "delta_source": "black_scholes_approx",
+            "price_used": 3.6,
+            "spread_pct": 1.4,
+            "iv": 0.495366,
+            "iv_change_pct": null,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 42,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 17,
+              "novelty": 15,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": -3
+            },
+            "penalties": [
+              {
+                "reason": "first_snapshot_accumulated_volume",
+                "points": 3
+              }
+            ]
+          },
+          {
+            "id": "TSLA|2026-09-09|call|377.5000",
+            "observed_at": "2026-09-09T14:06:20.070783+00:00",
+            "event_date": "2026-09-09",
+            "status": "oi_confirmation_pending",
+            "source": "TSLA",
+            "expiry": "2026-09-09",
+            "dte": 0,
+            "dte_bucket": "0-2d_gamma",
+            "option_type": "call",
+            "strike": 377.5,
+            "spot": 372.355,
+            "moneyness": 1.0138,
+            "contracts": 32985,
+            "session_volume": 32985,
+            "open_interest": 2647,
+            "volume_oi_ratio": 12.461,
+            "volume_zscore": null,
+            "estimated_premium": 4518945.0,
+            "delta_notional": 336240508.37,
+            "abs_delta": 0.2738,
+            "delta_source": "black_scholes_approx",
+            "price_used": 1.37,
+            "spread_pct": 0.73,
+            "iv": 0.424566,
+            "iv_change_pct": null,
+            "aggressor": "buy",
+            "aggressor_confidence": 0.35,
+            "direction": "bullish",
+            "direction_evidence": "snapshot_last_near_ask",
+            "price_confirmed": true,
+            "repeat_count": 1,
+            "complex_suspected": false,
+            "oi_confirmation": {
+              "state": "pending",
+              "note": "open interest is confirmed after clearing on the next session"
+            },
+            "score": 42,
+            "score_cap": 69,
+            "data_quality": "snapshot",
+            "components": {
+              "size": 17,
+              "novelty": 15,
+              "direction": 8,
+              "persistence": 0,
+              "oi_confirmation": 0,
+              "iv_price_confirmation": 5,
+              "penalty": -3
+            },
+            "penalties": [
+              {
+                "reason": "first_snapshot_accumulated_volume",
+                "points": 3
+              }
+            ]
+          }
+        ],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "KLAC": {
       "underlying": "KLAC",
@@ -4418,7 +5222,22 @@
         "explain": "Call 成交是 Put 的 18.4 倍。**多头拥挤**：\n  · 大家在追多 / 抢反弹 / 押突破\n  · 历史规律：C/P > 1.8 时短期回调概率偏高（反向指标）\n  · 尤其若配合价格已涨很多 → 警惕获利了结压力"
       },
       "wall_imbalance": null,
-      "flow": null
+      "flow": {
+        "ticker": "KLAC",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "KLAC"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "AMAT": {
       "underlying": "AMAT",
@@ -5146,7 +5965,22 @@
         "explain": "Call 成交是 Put 的 3.8 倍。**多头拥挤**：\n  · 大家在追多 / 抢反弹 / 押突破\n  · 历史规律：C/P > 1.8 时短期回调概率偏高（反向指标）\n  · 尤其若配合价格已涨很多 → 警惕获利了结压力"
       },
       "wall_imbalance": null,
-      "flow": null
+      "flow": {
+        "ticker": "AMAT",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "AMAT"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "GOOGL": {
       "underlying": "GOOGL",
@@ -5618,7 +6452,22 @@
         "explain": "Call 成交是 Put 的 3.4 倍。**多头拥挤**：\n  · 大家在追多 / 抢反弹 / 押突破\n  · 历史规律：C/P > 1.8 时短期回调概率偏高（反向指标）\n  · 尤其若配合价格已涨很多 → 警惕获利了结压力"
       },
       "wall_imbalance": null,
-      "flow": null
+      "flow": {
+        "ticker": "GOOGL",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "GOOGL"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "NVDA": {
       "underlying": "NVDA",
@@ -6014,7 +6863,22 @@
         "explain": "Call 成交是 Put 的 2.3 倍。**多头拥挤**：\n  · 大家在追多 / 抢反弹 / 押突破\n  · 历史规律：C/P > 1.8 时短期回调概率偏高（反向指标）\n  · 尤其若配合价格已涨很多 → 警惕获利了结压力"
       },
       "wall_imbalance": "**Call 墙 OI 是 Put 墙的 5.6 倍**：上方阻力/追多力量集中，下方对冲少。\n  · 通常出现在强势股 / 短期热门标的 → 上方是 pin / 磁吸位\n  · 下方无护盘 → 一旦下跌可能无缓冲、直接找下一档 support",
-      "flow": null
+      "flow": {
+        "ticker": "NVDA",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "NVDA"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "MSFT": {
       "underlying": "MSFT",
@@ -6590,7 +7454,22 @@
         "explain": "Call/Put 成交比例接近 1:1，市场无明显方向性偏见。"
       },
       "wall_imbalance": null,
-      "flow": null
+      "flow": {
+        "ticker": "MSFT",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "MSFT"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "AAPL": {
       "underlying": "AAPL",
@@ -7059,7 +7938,22 @@
         "explain": "Call 成交是 Put 的 4.4 倍。**多头拥挤**：\n  · 大家在追多 / 抢反弹 / 押突破\n  · 历史规律：C/P > 1.8 时短期回调概率偏高（反向指标）\n  · 尤其若配合价格已涨很多 → 警惕获利了结压力"
       },
       "wall_imbalance": "**Call 墙 OI 是 Put 墙的 8.4 倍**：上方阻力/追多力量集中，下方对冲少。\n  · 通常出现在强势股 / 短期热门标的 → 上方是 pin / 磁吸位\n  · 下方无护盘 → 一旦下跌可能无缓冲、直接找下一档 support",
-      "flow": null
+      "flow": {
+        "ticker": "AAPL",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "AAPL"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "NBIS": {
       "underlying": "NBIS",
@@ -7637,7 +8531,23 @@
         "explain": "Call/Put 成交比例接近 1:1，市场无明显方向性偏见。"
       },
       "wall_imbalance": null,
-      "flow": null
+      "flow": {
+        "ticker": "NBIS",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "NBIS",
+          "SMH"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "LITE": {
       "underlying": "LITE",
@@ -8249,7 +9159,22 @@
         "explain": "Call/Put 成交比例接近 1:1，市场无明显方向性偏见。"
       },
       "wall_imbalance": "**Call 墙 OI 是 Put 墙的 3.5 倍**：上方阻力/追多力量集中，下方对冲少。\n  · 通常出现在强势股 / 短期热门标的 → 上方是 pin / 磁吸位\n  · 下方无护盘 → 一旦下跌可能无缓冲、直接找下一档 support",
-      "flow": null
+      "flow": {
+        "ticker": "LITE",
+        "direction": "neutral",
+        "score": 0,
+        "bullish_score": 0,
+        "bearish_score": 0,
+        "action": "watch",
+        "sources": [
+          "LITE"
+        ],
+        "confirming_sources": [],
+        "data_quality": "snapshot",
+        "score_cap": 69,
+        "top_events": [],
+        "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+      }
     },
     "CBRS": {
       "underlying": "CBRS",
@@ -10083,14 +11008,14 @@
   "cache_contract": "b1eb33e955c6",
   "_meta": {
     "cached_at": "2026-09-09T14:57:35.078146",
-    "age_sec": 29129,
+    "age_sec": 30928,
     "stale": false,
     "refreshing": false
   },
   "flow_meta": {
-    "generated_at": "2026-09-09T13:06:20.288630+00:00",
+    "generated_at": "2026-09-09T14:06:20.070783+00:00",
     "status": "ready",
-    "age_sec": 3388.2,
+    "age_sec": 1563.2,
     "stale": false
   }
 }
