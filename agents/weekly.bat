@@ -62,6 +62,11 @@ REM Weekly: auto-rerun expired backtest verdicts + diff alert
 REM Output: signals/verdict_change_log.jsonl + notification on verdict change
 "%PY%" -X utf8 -u _weekly_backtest_review.py
 
+REM Weekly: independent AI audit of backtest scripts (leakage / look-ahead /
+REM multiple testing / walk-forward strictness). 只审最近 30d 改过的脚本,
+REM 避免每周重跑全部. Output: signals/backtest_audit/*.md
+"%PY%" -X utf8 -u _backtest_reviewer.py --changed 30
+
 echo.
 REM 只有交互式（有 stdin）才 pause，避免 Task Scheduler 卡住
 if defined SESSIONNAME if "%SESSIONNAME%"=="Console" pause
