@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-10T02:51",
+  "asof": "2026-09-10T03:22",
   "yields": {
     "10y": {
       "value": 4.833,
@@ -34,13 +34,13 @@
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.607,
-      "chg_1d_bps": 3.4,
-      "chg_5d_bps": 5.0,
-      "chg_20d_bps": 22.2,
-      "z_score_20d": 0.88,
+      "value": 4.604,
+      "chg_1d_bps": 3.1,
+      "chg_5d_bps": 4.7,
+      "chg_20d_bps": 21.9,
+      "z_score_20d": 0.81,
       "history": [
-        4.607,
+        4.604,
         4.573,
         4.55,
         4.509,
@@ -98,13 +98,13 @@
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.81,
-      "chg_1d_bps": 3.5,
-      "chg_5d_bps": 3.8,
-      "chg_20d_bps": 8.0,
-      "z_score_20d": 1.75,
+      "value": 3.805,
+      "chg_1d_bps": 3.0,
+      "chg_5d_bps": 3.3,
+      "chg_20d_bps": 7.5,
+      "z_score_20d": 1.53,
       "history": [
-        3.81,
+        3.805,
         3.775,
         3.757,
         3.74,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.326,
-    "vs_tips_10y": -0.232,
+    "vs_10y": -0.323,
+    "vs_tips_10y": -0.231,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.232，对冲关系变弱"
+    "reason": "相关性 -0.231，对冲关系变弱"
   },
   "anomalies": [],
   "warnings": [
@@ -237,7 +237,7 @@
     },
     {
       "level": "warn",
-      "msg": "RRP 0.6Bn 见底 (无短端流动性缓冲)",
+      "msg": "RRP 0.4Bn 见底 (无短端流动性缓冲)",
       "key": "rrp_drained"
     },
     {
@@ -252,22 +252,22 @@
     },
     {
       "level": "bad",
-      "msg": "SPY-IEF 60d 相关 +0.37 → 股债对冲破裂 (2022 股债双杀水平)",
+      "msg": "SPY-IEF 60d 相关 +0.371 → 股债对冲破裂 (2022 股债双杀水平)",
       "key": "stock_bond_corr_broken"
     },
     {
       "level": "warn",
-      "msg": "KBE/SPY 20d -3.27% 银行相对走弱 (需持续观察)",
+      "msg": "KBE/SPY 20d -3.11% 银行相对走弱 (需持续观察)",
       "key": "bank_stress_warn"
     },
     {
       "level": "warn",
-      "msg": "油价 20d +16.5% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
+      "msg": "油价 20d +16.9% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
       "key": "oil_rising"
     },
     {
       "level": "warn",
-      "msg": "Fed 逆回购 (RRP) 仅剩 $0.6B (2023 峰值 $2500B, 流动性明显抽干)",
+      "msg": "Fed 逆回购 (RRP) 仅剩 $0.4B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
     },
     {
@@ -282,13 +282,13 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.7B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.8B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
   "macro_context": {
     "term_spread_30_10_bps": 45.3,
-    "spx_trailing_pe": 25.71,
+    "spx_trailing_pe": 25.7,
     "spx_eps_yield_pct": 3.89,
     "erp_vs_tips_pct": 1.46,
     "erp_basis": "trailing",
@@ -297,8 +297,8 @@
       "asof": "2026-08-28"
     },
     "nfci_12w_delta": -0.05,
-    "rrp_bn": 0.6,
-    "rrp_asof": "2026-09-08",
+    "rrp_bn": 0.4,
+    "rrp_asof": "2026-09-09",
     "tga_bn": 967.9,
     "tga_asof": "2026-09-02",
     "tga_4w_delta_bn": 3.9,
@@ -315,10 +315,10 @@
     "sofr_pct": 3.64,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -1.0,
-    "usdjpy": 153.48,
-    "usdjpy_20d_pct": -3.63,
-    "krw_usd": 1339.5,
-    "krw_20d_pct": -5.15,
+    "usdjpy": 153.46,
+    "usdjpy_20d_pct": -3.64,
+    "krw_usd": 1338.8,
+    "krw_20d_pct": -5.2,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 216.3,
@@ -330,14 +330,14 @@
     "hedge_cost_jp": 2.37,
     "real_yield_gap_us_jp": 1.79,
     "cpi_jp_yoy_pct": 3.17,
-    "spy_ief_60d_corr": 0.37,
-    "kbe_spy_ratio": 0.08851,
-    "kbe_spy_20d_delta_pct": -3.27,
+    "spy_ief_60d_corr": 0.371,
+    "kbe_spy_ratio": 0.08866,
+    "kbe_spy_20d_delta_pct": -3.11,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 267.0,
-    "dxy": 98.75,
-    "dxy_pct_20d": -1.07,
-    "dxy_z_60d": -1.56,
+    "dxy": 98.74,
+    "dxy_pct_20d": -1.08,
+    "dxy_z_60d": -1.57,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -384,104 +384,104 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7646.5,
-        "chg_pct": -0.44
+        "price": 7646.25,
+        "chg_pct": -0.45
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29440.75,
-        "chg_pct": -0.33
+        "price": 29451.5,
+        "chg_pct": -0.3
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 95.72,
-        "chg_pct": 2.89
+        "price": 96.21,
+        "chg_pct": 3.42
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4460.9,
-        "chg_pct": 1.52
+        "price": 4464.6,
+        "chg_pct": 1.61
       }
     },
-    "oil_uso": 148.63,
-    "oil_pct_20d": 16.47,
-    "oil_wti": 95.72,
-    "eem_pct_20d": 4.86,
-    "eem_vs_spx_20d": 5.85,
+    "oil_uso": 149.14,
+    "oil_pct_20d": 16.87,
+    "oil_wti": 96.21,
+    "eem_pct_20d": 4.9,
+    "eem_vs_spx_20d": 5.91,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
         "label": "20+Y 美债",
-        "vol_z_20d": 0.02,
+        "vol_z_20d": 0.14,
         "notable": false
       },
       "real_rates": {
         "proxy": "TIP",
         "label": "TIPS ETF",
-        "vol_z_20d": -1.22,
+        "vol_z_20d": -1.04,
         "notable": true
       },
       "dxy": {
         "proxy": "UUP",
         "label": "美元 ETF",
-        "vol_z_20d": -1.48,
+        "vol_z_20d": -1.3,
         "notable": true
       },
       "credit_ig": {
         "proxy": "LQD",
         "label": "投资级信用 ETF",
-        "vol_z_20d": -1.64,
+        "vol_z_20d": -1.26,
         "notable": true
       },
       "credit_hy": {
         "proxy": "HYG",
         "label": "高收益信用 ETF",
-        "vol_z_20d": -1.57,
+        "vol_z_20d": -1.34,
         "notable": true
       },
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": 0.12,
+        "vol_z_20d": 0.25,
         "notable": false
       },
       "em": {
         "proxy": "EEM",
         "label": "新兴市场 ETF",
-        "vol_z_20d": -1.66,
+        "vol_z_20d": -1.58,
         "notable": true
       },
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": -3.81,
+        "vol_z_20d": -3.52,
         "notable": true
       },
       "us_qqq": {
         "proxy": "QQQ",
         "label": "Nasdaq 100 ETF",
-        "vol_z_20d": -2.13,
+        "vol_z_20d": -1.99,
         "notable": true
       },
       "jp_equity": {
         "proxy": "EWJ",
         "label": "iShares JP ETF (代 N225)",
-        "vol_z_20d": -0.34,
+        "vol_z_20d": -0.29,
         "notable": false
       },
       "kr_equity": {
         "proxy": "EWY",
         "label": "iShares KR ETF (代 KOSPI)",
-        "vol_z_20d": -1.26,
+        "vol_z_20d": -1.23,
         "notable": true
       },
       "oil": {
         "proxy": "USO",
         "label": "WTI 原油 ETF",
-        "vol_z_20d": -0.44,
+        "vol_z_20d": -0.34,
         "notable": false
       }
     },
@@ -490,10 +490,10 @@
     "core_cpi_yoy_pct": 2.79,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 257.7,
+    "stablecoin_total_bn": 257.8,
     "usdt_bn": 183.4,
-    "usdc_bn": 74.3,
-    "vix": 16.29,
+    "usdc_bn": 74.4,
+    "vix": 16.23,
     "bbi_score": 1.03,
     "bbi_components": {
       "vix": -0.29,
@@ -503,9 +503,9 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-10T02:51:42.560802",
-    "age_sec": 680,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-10T03:22:40.703131",
+    "age_sec": 25825,
+    "stale": true,
+    "refreshing": true
   }
 }

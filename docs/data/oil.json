@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-09T18:00:28.477594+00:00",
+  "ts": "2026-09-09T18:27:58.334987+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 2,
-      "value": "$95.71 (20d +15.0%)",
+      "value": "$96.09 (20d +15.5%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$5.14 (Brent $100.85 - WTI $95.71)",
+      "value": "$5.22 (Brent $101.31 - WTI $96.09)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "bullish",
       "weight": 1,
-      "value": "XLE +7.3% vs SPY -1.0% (差 +8.3pp)",
+      "value": "XLE +7.3% vs SPY -1.0% (差 +8.2pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,15 +30,23 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "98.75 (5d -0.9%)",
+      "value": "98.76 (5d -0.9%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
+    },
+    {
+      "arrow": "▲",
+      "name": "美国汽油零售价",
+      "direction": "bullish",
+      "weight": 1,
+      "value": "$4.16/gal (4周 +3.8%)",
+      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
       "arrow": "▼",
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "50.44 · 极高（>45），市场恐慌",
+      "value": "50.67 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -51,18 +59,18 @@
     }
   ],
   "direction": "bullish",
-  "score": 2,
+  "score": 3,
   "notes": [
     "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股"
   ],
-  "price": 95.71,
-  "pct_5d": 6.09,
-  "pct_20d": 15.04,
+  "price": 96.09,
+  "pct_5d": 6.51,
+  "pct_20d": 15.49,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-10T03:00:37.843420",
-    "age_sec": 145,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-10T03:28:01.539494",
+    "age_sec": 25502,
+    "stale": true,
+    "refreshing": true
   }
 }
