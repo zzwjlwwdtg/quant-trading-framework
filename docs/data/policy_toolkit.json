@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-10T15:30:32.458297",
-  "count_total_actions": 343,
+  "as_of": "2026-09-11T03:34:38.686958",
+  "count_total_actions": 360,
   "tools": [
     {
       "tool_key": "long_end_buyback",
@@ -22,8 +22,34 @@
         "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQTWVOSDRGNURNdmNpcElBemIwcXVJZFFKTFlJRU1GVGRWTzNtWGJ2MGU3Qy1PeVd6ZUhLdVB4NEtpZHBYRmJfUWtIVzU2aHRiN1hwSlY5WTNRTTBoT3FVeTFBS3g3TWszcFJJVzV2VV9ITHBPTEc1Z2toWVhGQ0ZJeFpNTzduR1g2dzh5UHhuek11UmY2dGdhYWdUMllkRVJza21rSEtqT2FjTDQwbTQ4VkRLSEI?oc=5",
         "confidence": 6
       },
+      "yield_reaction_30y": {
+        "t0_bp": 7.5,
+        "yield_at_close": 5.361
+      },
+      "event_count_180d": 130
+    },
+    {
+      "tool_key": "fed_hawkish_signal",
+      "zh": "Fed 官员鹰派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示维持高利率或加息",
+      "invalidation": "会推高长端收益率 → 反救市信号",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "fed_hawkish_signal",
+        "action_type": "signaled",
+        "date": "2026-09-10",
+        "actor": "Warsh",
+        "amount_desc": "",
+        "commentary": "背景分析指向政策偏鹰，对债市救助不利。",
+        "verbatim": "Warsh’s Hawkish Background And The Federal Reserve’s Policy Orientation",
+        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
+        "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOcGhoUm1NU1ppd0tJaV9GbzhoRFdLVDQ0bXdGd2tRMXZDMFBKSEZHZmZyQ29lT1lLd0Zqb2dKY3JsZmt5cUpzQ2k4NDVqM290M1d3WVhYOHdiZXpld2dYUnJfd2pPVnRIMjJkT00wd2VFckdkdzZKR0RuaWxpRUdBZ042MU9GNlBGejZPOEpCMlBCekJOWWxKZFV6cGtpRlFLVzMwS1V3dnR2RWpmckVlZ3FZci1JY2dVc1E?oc=5",
+        "confidence": 6
+      },
       "yield_reaction_30y": {},
-      "event_count_180d": 121
+      "event_count_180d": 163
     },
     {
       "tool_key": "qra_wording",
@@ -95,29 +121,6 @@
       "event_count_180d": 9
     },
     {
-      "tool_key": "fx_intervention",
-      "zh": "汇市干预 (支撑日元)",
-      "owner": "Treasury/G7",
-      "feasibility": "medium",
-      "canonical_desc": "联合日本央行买日元, 减少日本抛售美债换美元",
-      "invalidation": "只缓解流量, 存量抛压 (JGB 收益率高企) 未变",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "fx_intervention",
-        "action_type": "signaled",
-        "date": "2026-09-01",
-        "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "口头提示日本干预汇率，可能外溢影响美债资金流。",
-        "verbatim": "Bessent says Tokyo may intervene to boost yen",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE5JTlFYRmlZc2hyNVgxVWRaOGVjSW82eHptLWxVb2ducGhydWdBTEJMZ3VybXBTa2hHaGtxeVREWlJHVGt3S2tpdnBSblI1X0RScVhsVC1mRmJnclMwR2JSV1RyMmxqYlg3LUtVYW5OUUJqZEM0czRjajE0OGdhQdIBgwFBVV95cUxNTkV3QlU0NXFMTmZpemdEeHQxWGFpZkx6Q2pYWElUb0h3bHBCRG10Qk5xTW1fbUdVY0lqSzFCVkRweFV4Z2ZRaHduS2JRMElNVUJKLTJxRG95QXJmMGdfZ0pmOV9QX1BDcE4tUmxXVE1VdDVOSEQwQWJFOGZNYV9QbG8xYw?oc=5",
-        "confidence": 7
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 1
-    },
-    {
       "tool_key": "tga_deployment",
       "zh": "TGA 财政存款回购",
       "owner": "Treasury",
@@ -141,27 +144,27 @@
       "event_count_180d": 34
     },
     {
-      "tool_key": "fed_hawkish_signal",
-      "zh": "Fed 官员鹰派信号",
-      "owner": "Fed (口头)",
-      "feasibility": "high",
-      "canonical_desc": "官员讲话暗示维持高利率或加息",
-      "invalidation": "会推高长端收益率 → 反救市信号",
+      "tool_key": "fx_intervention",
+      "zh": "汇市干预 (支撑日元)",
+      "owner": "Treasury/G7",
+      "feasibility": "medium",
+      "canonical_desc": "联合日本央行买日元, 减少日本抛售美债换美元",
+      "invalidation": "只缓解流量, 存量抛压 (JGB 收益率高企) 未变",
       "status": "口头/待发",
       "last_action": {
-        "tool_key": "fed_hawkish_signal",
+        "tool_key": "fx_intervention",
         "action_type": "signaled",
-        "date": "2026-09-10",
-        "actor": "Warsh",
+        "date": "2026-09-09",
+        "actor": "Bessent",
         "amount_desc": "",
-        "commentary": "背景分析指向政策偏鹰，对债市救助不利。",
-        "verbatim": "Warsh’s Hawkish Background And The Federal Reserve’s Policy Orientation",
-        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
-        "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOcGhoUm1NU1ppd0tJaV9GbzhoRFdLVDQ0bXdGd2tRMXZDMFBKSEZHZmZyQ29lT1lLd0Zqb2dKY3JsZmt5cUpzQ2k4NDVqM290M1d3WVhYOHdiZXpld2dYUnJfd2pPVnRIMjJkT00wd2VFckdkdzZKR0RuaWxpRUdBZ042MU9GNlBGejZPOEpCMlBCekJOWWxKZFV6cGtpRlFLVzMwS1V3dnR2RWpmckVlZ3FZci1JY2dVc1E?oc=5",
-        "confidence": 6
+        "commentary": "Bessent对汇市放狠话偏口头干预；若美元承压，可能间接影响外资美债需求。",
+        "verbatim": "Bessent dares currency traders as Treasury bond buyback size looms",
+        "source": "GoogleNews: Bessent Treasury buyback",
+        "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxNUzEwOVVNRGRFeG5hN0s0NjZ2VmpNU3pDU2dWcm1TNTdxd0k5VU1nLV8xWlRqUnB4UjloRVpJcGVuYWhHbUltUl9pM2YySnk4UmJqT0ZwS2lBeEtGWE9fSktKVVowWmVsU0lyYjRleEEtZmNhNGJWTDdDZDk2Q2NKcE14M1plV3YtR2tEMVBWYzNjdjliTk1jN2JwdmFucGZkZFhkY3Y1azZOVm0t?oc=5",
+        "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 158
+      "event_count_180d": 3
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -184,7 +187,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 12
+      "event_count_180d": 13
     },
     {
       "tool_key": "fima_repo",
@@ -222,7 +225,5 @@
       "yield_reaction_30y": {},
       "event_count_180d": 0
     }
-  ],
-  "stale": true,
-  "age_hours": 12.0
+  ]
 }
