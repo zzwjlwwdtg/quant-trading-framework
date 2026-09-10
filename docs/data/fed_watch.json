@@ -3,81 +3,64 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 9,
+      "days_until": 6,
       "probabilities": {
-        "hold": 41.7,
-        "hike_25": 58.3
+        "hold": 40,
+        "hike_25": 60
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
-      "days_until": 51,
+      "days_until": 48,
       "probabilities": {
-        "hold": 30.1,
-        "hike_25": 53.7,
-        "hike_50": 16.1
+        "hold": 72,
+        "hike_25": 28
       },
-      "most_likely": "hike_25",
+      "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 93,
+      "days_until": 90,
       "probabilities": {
-        "hold": 15,
-        "hike_25": 42,
-        "hike_50": 43
+        "hold": 42,
+        "hike_25": 58
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 142,
-      "probabilities": {
-        "hold": 11,
-        "hike_25": 36,
-        "hike_50": 53
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-06/2026-09-07",
-  "recent_event_impact": "2026-09-04 August NFP +162K, above roughly +53K to +65K consensus, unemployment 4.1%; post-release CME/FedWatch-style pricing moved September hike odds to about 58%-59%. August CPI and PPI had not yet been released as of 2026-09-07; they were scheduled for 2026-09-11 and 2026-09-10 respectively.",
-  "commentary": "Data snapshot is from 2026-09-06 reports referencing 2026-09-07 CME FedWatch data, cross-checked against last-trading-day 2026-09-04 FedWatch-derived tables. The strong 2026-09-04 NFP print pushed expectations hawkish, with markets pricing a September 25bp hike as the modal outcome while upcoming CPI/PPI remain the next major risk to the path.",
+  "implied_terminal_rate": null,
+  "implied_terminal_date": null,
+  "data_snapshot_date": "2026-09-10",
+  "recent_event_impact": "2026-09-04 August NFP +162K, above roughly +55K consensus, pushed Treasury yields higher and raised Fed hike odds; 2026-09-10 PPI and 2026-09-11 CPI were identified as key pending inflation catalysts.",
+  "commentary": "Data snapshot is 2026-09-10. The latest available Fed-funds-futures read shows markets pricing a hawkish tilt after the strong 2026-09-04 NFP report, while August PPI on 2026-09-10 and CPI on 2026-09-11 were still key event risks that could further shift expectations.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.aicoin.com/en/news-flash/3067619",
-      "type": "secondary_cme_report"
-    },
-    {
-      "url": "https://25bp.eu/en/fed/",
-      "type": "fedwatch_derived_rate_path"
-    },
-    {
-      "url": "https://www.newyorkfed.org/research/calendars/i-sep26.html",
-      "type": "economic_calendar"
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fed_funds_futures_snapshot"
     },
     {
       "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
-      "type": "economic_calendar"
+      "type": "event_calendar"
+    },
+    {
+      "url": "https://www.businessinsider.com/jobs-report-today-august-data-live-updates-2026-9",
+      "type": "nfp_report"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-07T00:56:25+00:00",
+  "fetched_at": "2026-09-10T09:34:43+00:00",
   "_meta": {
-    "cached_at": "2026-09-07T09:56:25.496603",
-    "age_sec": 23797,
+    "cached_at": "2026-09-10T18:34:43.436985",
+    "age_sec": 1700,
     "stale": false,
     "refreshing": false
   }
