@@ -3,64 +3,77 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 6,
+      "days_until": 5,
       "probabilities": {
-        "hold": 40,
-        "hike_25": 60
+        "hold": 32.4,
+        "hike_25": 67.6
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-10-28",
-      "days_until": 48,
+      "days_until": 47,
       "probabilities": {
-        "hold": 72,
-        "hike_25": 28
+        "hold": 21.3,
+        "hike_25": 55.5,
+        "hike_50": 23.3
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-12-09",
-      "days_until": 90,
+      "days_until": 89,
       "probabilities": {
-        "hold": 42,
-        "hike_25": 58
+        "hold": 8.0,
+        "hike_25": 34.2,
+        "hike_50": 57.8
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 138,
+      "probabilities": {
+        "hold": 5.2,
+        "hike_25": 24.8,
+        "hike_50": 70.0
+      },
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": null,
-  "implied_terminal_date": null,
-  "data_snapshot_date": "2026-09-10",
-  "recent_event_impact": "2026-09-04 August NFP +162K, above roughly +55K consensus, pushed Treasury yields higher and raised Fed hike odds; 2026-09-10 PPI and 2026-09-11 CPI were identified as key pending inflation catalysts.",
-  "commentary": "Data snapshot is 2026-09-10. The latest available Fed-funds-futures read shows markets pricing a hawkish tilt after the strong 2026-09-04 NFP report, while August PPI on 2026-09-10 and CPI on 2026-09-11 were still key event risks that could further shift expectations.",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-10 10:45 EDT",
+  "recent_event_impact": "2026-09-04 August NFP +162K vs consensus约+65K，将9月加息概率推至约60%；2026-09-10 August PPI +0.4% m/m、+5.4% y/y 后，9月25bp加息概率升至约67.6%-74%。2026-09-11 CPI为下一关键事件，但本snapshot尚未反映该CPI。",
+  "commentary": "市场定价明显转鹰：强于预期的8月NFP和9月10日PPI强化了Warsh任内的加息风险，9月会议已从接近均衡转为约三分之二概率加25bp。数据snapshot在PPI之后、CPI之前；若9月11日CPI已发布，则当前概率未反映该事件。",
   "sources": [
+    {
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_based_fed_rate_monitor"
+    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_snapshot"
+      "url": "https://www.barrons.com/livecoverage/stock-market-news-today-091026/card/rate-hike-odds-spike-after-ppi-report-BvzWpk5GNhS5QLsEVKYc",
+      "type": "event_impact_ppi"
     },
     {
-      "url": "https://www.bls.gov/schedule/news_release/ppi.htm",
-      "type": "event_calendar"
-    },
-    {
-      "url": "https://www.businessinsider.com/jobs-report-today-august-data-live-updates-2026-9",
-      "type": "nfp_report"
+      "url": "https://apnews.com/article/1af16359af43eb8abc66445465f633c8",
+      "type": "event_impact_nfp"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-10T09:34:43+00:00",
+  "fetched_at": "2026-09-10T17:36:03+00:00",
   "_meta": {
-    "cached_at": "2026-09-10T18:34:43.436985",
-    "age_sec": 28700,
+    "cached_at": "2026-09-11T02:36:03.963370",
+    "age_sec": 1619,
     "stale": false,
     "refreshing": false
   }
