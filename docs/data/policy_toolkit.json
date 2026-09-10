@@ -1,7 +1,30 @@
 {
-  "as_of": "2026-09-10T03:26:37.689014",
-  "count_total_actions": 319,
+  "as_of": "2026-09-10T15:30:32.458297",
+  "count_total_actions": 343,
   "tools": [
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "announced",
+        "date": "2026-09-10",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "提到Bessent努力但收益率仍升，延续买回效果不足的叙事。对债市是托底失败信号。",
+        "verbatim": "Oil, bond yields and iPhone prices keep rising, despite Scott Bessent’s efforts.",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQTWVOSDRGNURNdmNpcElBemIwcXVJZFFKTFlJRU1GVGRWTzNtWGJ2MGU3Qy1PeVd6ZUhLdVB4NEtpZHBYRmJfUWtIVzU2aHRiN1hwSlY5WTNRTTBoT3FVeTFBS3g3TWszcFJJVzV2VV9ITHBPTEc1Z2toWVhGQ0ZJeFpNTzduR1g2dzh5UHhuek11UmY2dGdhYWdUMllkRVJza21rSEtqT2FjTDQwbTQ4VkRLSEI?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 121
+    },
     {
       "tool_key": "qra_wording",
       "zh": "季度再融资声明措辞",
@@ -128,17 +151,17 @@
       "last_action": {
         "tool_key": "fed_hawkish_signal",
         "action_type": "signaled",
-        "date": "2026-09-05",
-        "actor": "Trump | Warsh",
+        "date": "2026-09-10",
+        "actor": "Warsh",
         "amount_desc": "",
-        "commentary": "政治施压叠加加息背景，偏鹰派预期；对长债估值和久期需求不利。",
-        "verbatim": "Trump turns up the heat on Warsh as Fed rate hike looms",
+        "commentary": "背景分析指向政策偏鹰，对债市救助不利。",
+        "verbatim": "Warsh’s Hawkish Background And The Federal Reserve’s Policy Orientation",
         "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
-        "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTE5DYTJSa3ZaZFdjOVppNUhHcUgwZUkzNzNkQ2dQbkxfZTV2czZOREZKemRxUDhtSlgyLVQ1eEQyRlVxRWFZNXVQSVdFUTVfc0FqMzFBSXE4Qkl1VWtzdmdQWllkSkl5QjJqZXpSOEVYWUpEU3d1TFNQeVNqX07SAYIBQVVfeXFMTi1HQkxWWlgzN1hYVGt2elQwUUVzcWJIai1VclJVUkNwVDI0ME9ZRjBlSzBtT0xoMTFVMWJfUkdWT0VPZmdrc0RRLXVDd0hkeFBpMEhMNzZhSTZ2SUx1QkQ2RW5UTVk2a3VPVjgwWWdoX1Q3b0I5THlCMHdJWHJGMWFidw?oc=5",
-        "confidence": 5
+        "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOcGhoUm1NU1ppd0tJaV9GbzhoRFdLVDQ0bXdGd2tRMXZDMFBKSEZHZmZyQ29lT1lLd0Zqb2dKY3JsZmt5cUpzQ2k4NDVqM290M1d3WVhYOHdiZXpld2dYUnJfd2pPVnRIMjJkT00wd2VFckdkdzZKR0RuaWxpRUdBZ042MU9GNlBGejZPOEpCMlBCekJOWWxKZFV6cGtpRlFLVzMwS1V3dnR2RWpmckVlZ3FZci1JY2dVc1E?oc=5",
+        "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 152
+      "event_count_180d": 158
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -161,30 +184,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 10
-    },
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "被否",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "signaled",
-        "date": "2026-09-08",
-        "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "暗示财政部用回购稳定长端；若落地可改善流动性、压低期限溢价。",
-        "verbatim": "Bessent Loads Bazooka As Oil Prices Rise, Treasury Yields Waver",
-        "source": "GoogleNews: Bessent Treasury buyback",
-        "url": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNRGk2eTZQQ1VwS19zeGk3Z0o2ZGtpcy1nYlBDdTZaVWpLMnVxbzBESlFBaUViQkNkX3pUSG1QeEU5TXBzckdsVFZfckRONFZqSndQam0xWDFUVmw4UFpaWlhYR2dkTjIwU1BHbE56dkZ4SkZ6X3R4djVYVDNrT29Vem8yVldPaGMt?oc=5",
-        "confidence": 6
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 105
+      "event_count_180d": 12
     },
     {
       "tool_key": "fima_repo",
@@ -222,6 +222,5 @@
       "yield_reaction_30y": {},
       "event_count_180d": 0
     }
-  ],
-  "warning": "cli_all_batches_empty"
+  ]
 }
