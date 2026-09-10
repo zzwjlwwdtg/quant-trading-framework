@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-11T05:25",
+  "asof": "2026-09-11T05:56",
   "yields": {
     "10y": {
       "value": 4.944,
@@ -253,7 +253,7 @@
     },
     {
       "level": "info",
-      "msg": "银行准备金 11.3% (< 12% 中性偏紧)",
+      "msg": "银行准备金 11.7% (< 12% 中性偏紧)",
       "key": "reserves_neutral"
     },
     {
@@ -275,11 +275,6 @@
       "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $4.7B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
-    },
-    {
-      "level": "info",
-      "msg": "Treasury 一般账户 (TGA) $967.9B (>900B, 债券发行/税收流入抽干流动性)",
-      "key": "tga_high"
     },
     {
       "level": "info",
@@ -305,29 +300,29 @@
     "nfci_12w_delta": -0.054,
     "rrp_bn": 4.7,
     "rrp_asof": "2026-09-10",
-    "tga_bn": 967.9,
-    "tga_asof": "2026-09-02",
-    "tga_4w_delta_bn": 3.9,
-    "walcl_tn": 6.737,
-    "walcl_asof": "2026-09-02",
-    "walcl_12w_delta_bn": 1.0,
-    "move_index": 76.7,
-    "move_20d_delta": 4.6,
+    "tga_bn": 883.3,
+    "tga_asof": "2026-09-09",
+    "tga_4w_delta_bn": -70.3,
+    "walcl_tn": 6.741,
+    "walcl_asof": "2026-09-09",
+    "walcl_12w_delta_bn": 5.0,
+    "move_index": 82.1,
+    "move_20d_delta": 10.0,
     "effr_pct": 3.63,
     "sofr_effr_spread_bps": 1.0,
-    "bank_reserves_bn": 2895.0,
+    "bank_reserves_bn": 2991.0,
     "bank_total_assets_bn": 25629.0,
-    "bank_reserves_pct_of_assets": 11.3,
+    "bank_reserves_pct_of_assets": 11.7,
     "sofr_pct": 3.64,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -1.0,
-    "usdjpy": 154.42,
-    "usdjpy_20d_pct": -3.08,
-    "usdjpy_20d_delta_pct": -3.08,
+    "usdjpy": 153.57,
+    "usdjpy_20d_pct": -3.61,
+    "usdjpy_20d_delta_pct": -3.61,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -5.76,
-    "krw_usd": 1349.1,
-    "krw_20d_pct": -4.76,
+    "usdjpy_pullback_from_60d_high_pct": -6.28,
+    "krw_usd": 1349.2,
+    "krw_20d_pct": -4.75,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 227.4,
@@ -340,8 +335,8 @@
     "real_yield_gap_us_jp": 1.9,
     "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.384,
-    "kbe_spy_ratio": 0.08967,
-    "kbe_spy_20d_delta_pct": -2.47,
+    "kbe_spy_ratio": 0.08968,
+    "kbe_spy_20d_delta_pct": -2.46,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 271.0,
     "dxy": 99.09,
@@ -393,33 +388,33 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7605.0,
-        "chg_pct": -0.51
+        "price": 7604.0,
+        "chg_pct": -0.52
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29152.75,
-        "chg_pct": -1.01
+        "price": 29149.0,
+        "chg_pct": -1.02
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 102.87,
-        "chg_pct": 7.1
+        "price": 103.87,
+        "chg_pct": 8.14
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4363.8,
-        "chg_pct": -1.18
+        "price": 4359.7,
+        "chg_pct": -1.27
       }
     },
     "oil_uso": 158.38,
     "oil_pct_20d": 24.41,
-    "oil_wti": 102.87,
+    "oil_wti": 103.87,
     "eem_pct_20d": 0.81,
-    "eem_vs_spx_20d": 2.7,
+    "eem_vs_spx_20d": 2.71,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -502,18 +497,18 @@
     "stablecoin_total_bn": 257.5,
     "usdt_bn": 183.4,
     "usdc_bn": 74.1,
-    "vix": 17.95,
-    "bbi_score": 0.79,
+    "vix": 17.84,
+    "bbi_score": 0.8,
     "bbi_components": {
-      "vix": -0.01,
+      "vix": -0.03,
       "ig": -1.4,
       "hy": -1.18,
       "erp": 1.54
     }
   },
   "_meta": {
-    "cached_at": "2026-09-11T05:26:14.382917",
-    "age_sec": 409,
+    "cached_at": "2026-09-11T05:57:13.356627",
+    "age_sec": 349,
     "stale": false,
     "refreshing": false
   }
