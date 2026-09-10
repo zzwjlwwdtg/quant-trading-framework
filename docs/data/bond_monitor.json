@@ -1,13 +1,14 @@
 {
-  "asof": "2026-09-10T21:20",
+  "asof": "2026-09-10T21:51",
   "yields": {
     "10y": {
-      "value": 4.837,
-      "chg_1d_bps": 3.1,
-      "chg_5d_bps": 4.1,
-      "chg_20d_bps": 15.3,
-      "z_score_20d": 0.83,
+      "value": 4.897,
+      "chg_1d_bps": 6.0,
+      "chg_5d_bps": 10.1,
+      "chg_20d_bps": 21.5,
+      "z_score_20d": 1.61,
       "history": [
+        4.897,
         4.837,
         4.806,
         4.784,
@@ -26,20 +27,20 @@
         4.706,
         4.724,
         4.696,
-        4.641,
-        4.682
+        4.641
       ],
-      "asof": "2026-09-09",
+      "asof": "2026-09-10",
       "name": "10Y 国债名义",
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.614,
-      "chg_1d_bps": 4.1,
-      "chg_5d_bps": 5.7,
-      "chg_20d_bps": 22.9,
-      "z_score_20d": 1.06,
+      "value": 4.679,
+      "chg_1d_bps": 6.5,
+      "chg_5d_bps": 12.7,
+      "chg_20d_bps": 30.4,
+      "z_score_20d": 1.8,
       "history": [
+        4.679,
         4.614,
         4.573,
         4.55,
@@ -58,20 +59,20 @@
         4.367,
         4.376,
         4.362,
-        4.313,
-        4.375
+        4.313
       ],
-      "asof": "2026-09-09",
+      "asof": "2026-09-10",
       "name": "5Y 国债",
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.286,
-      "chg_1d_bps": 2.2,
-      "chg_5d_bps": 1.8,
-      "chg_20d_bps": 5.0,
-      "z_score_20d": 0.57,
+      "value": 5.337,
+      "chg_1d_bps": 5.1,
+      "chg_5d_bps": 7.0,
+      "chg_20d_bps": 9.0,
+      "z_score_20d": 1.29,
       "history": [
+        5.337,
         5.286,
         5.264,
         5.246,
@@ -90,20 +91,20 @@
         5.285,
         5.309,
         5.265,
-        5.213,
-        5.247
+        5.213
       ],
-      "asof": "2026-09-09",
+      "asof": "2026-09-10",
       "name": "30Y 国债",
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.805,
-      "chg_1d_bps": 3.0,
-      "chg_5d_bps": 3.3,
-      "chg_20d_bps": 7.5,
-      "z_score_20d": 1.53,
+      "value": 3.807,
+      "chg_1d_bps": 0.2,
+      "chg_5d_bps": 3.5,
+      "chg_20d_bps": 10.0,
+      "z_score_20d": 0.1,
       "history": [
+        3.807,
         3.805,
         3.775,
         3.757,
@@ -122,10 +123,9 @@
         3.705,
         3.703,
         3.697,
-        3.705,
-        3.707
+        3.705
       ],
-      "asof": "2026-09-09",
+      "asof": "2026-09-10",
       "name": "3M 短端",
       "source": "yfinance ^IRX"
     },
@@ -203,7 +203,7 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.329,
+    "vs_10y": -0.061,
     "vs_tips_10y": -0.07,
     "regime": "weak_hedge",
     "reason": "相关性 -0.07，对冲关系变弱"
@@ -212,7 +212,7 @@
   "warnings": [
     {
       "level": "warn",
-      "msg": "10Y 4.84% 限制性利率 (>4.5%)",
+      "msg": "10Y 4.90% 限制性利率 (>4.5%)",
       "key": "10y_restrictive"
     },
     {
@@ -222,7 +222,7 @@
     },
     {
       "level": "warn",
-      "msg": "30Y 5.29% 长端偏高 (>5%, 长久期折现率压力)",
+      "msg": "30Y 5.34% 长端偏高 (>5%, 长久期折现率压力)",
       "key": "30y_high"
     },
     {
@@ -247,7 +247,7 @@
     },
     {
       "level": "bad",
-      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.47%) < JGB (2.67%) = JP 投资者会抛售 UST",
+      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.53%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
     },
     {
@@ -287,7 +287,7 @@
     }
   ],
   "macro_context": {
-    "term_spread_30_10_bps": 44.9,
+    "term_spread_30_10_bps": 44.0,
     "spx_trailing_pe": 25.68,
     "spx_eps_yield_pct": 3.89,
     "erp_vs_tips_pct": 1.46,
@@ -315,32 +315,32 @@
     "sofr_pct": 3.64,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -1.0,
-    "usdjpy": 154.34,
-    "usdjpy_20d_pct": -3.13,
-    "usdjpy_20d_delta_pct": -3.13,
+    "usdjpy": 153.48,
+    "usdjpy_20d_pct": -3.63,
+    "usdjpy_20d_delta_pct": -3.63,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -5.81,
-    "krw_usd": 1344.7,
-    "krw_20d_pct": -5.07,
+    "usdjpy_pullback_from_60d_high_pct": -6.34,
+    "krw_usd": 1344.0,
+    "krw_20d_pct": -5.12,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
-    "ust_jgb_spread_bps": 216.7,
+    "ust_jgb_spread_bps": 222.7,
     "ust_jgb_spread_6m_delta_bps": -43.0,
     "ktb_10y_pct": 4.18,
     "ktb_asof": "2026-06-01",
-    "ust_ktb_spread_bps": 65.7,
-    "hedged_ust_10y_for_jp": 2.47,
+    "ust_ktb_spread_bps": 71.7,
+    "hedged_ust_10y_for_jp": 2.53,
     "hedge_cost_jp": 2.37,
-    "real_yield_gap_us_jp": 1.8,
+    "real_yield_gap_us_jp": 1.86,
     "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.372,
     "kbe_spy_ratio": 0.08876,
     "kbe_spy_20d_delta_pct": -3.0,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 267.0,
-    "dxy": 98.98,
-    "dxy_pct_20d": -1.03,
-    "dxy_z_60d": -1.27,
+    "dxy": 99.18,
+    "dxy_pct_20d": -0.83,
+    "dxy_z_60d": -1.05,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -387,31 +387,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7629.25,
-        "chg_pct": -0.19
+        "price": 7602.25,
+        "chg_pct": -0.54
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29235.0,
-        "chg_pct": -0.73
+        "price": 29088.75,
+        "chg_pct": -1.22
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 99.06,
-        "chg_pct": 3.13
+        "price": 100.84,
+        "chg_pct": 4.99
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4417.0,
-        "chg_pct": 0.02
+        "price": 4367.2,
+        "chg_pct": -1.11
       }
     },
     "oil_uso": 149.97,
     "oil_pct_20d": 17.52,
-    "oil_wti": 99.06,
+    "oil_wti": 100.85,
     "eem_pct_20d": 4.66,
     "eem_vs_spx_20d": 5.72,
     "volume_confirm": {
@@ -496,18 +496,18 @@
     "stablecoin_total_bn": 257.7,
     "usdt_bn": 183.4,
     "usdc_bn": 74.3,
-    "vix": 17.03,
-    "bbi_score": 0.93,
+    "vix": 17.42,
+    "bbi_score": 0.89,
     "bbi_components": {
-      "vix": -0.16,
+      "vix": -0.1,
       "ig": -1.4,
       "hy": -1.22,
       "erp": 1.54
     }
   },
   "_meta": {
-    "cached_at": "2026-09-10T21:21:18.698786",
-    "age_sec": 703,
+    "cached_at": "2026-09-10T21:52:15.354638",
+    "age_sec": 647,
     "stale": false,
     "refreshing": false
   }
