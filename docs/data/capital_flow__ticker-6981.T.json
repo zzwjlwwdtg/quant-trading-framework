@@ -2,38 +2,64 @@
   "ticker": "6981.T",
   "flow": null,
   "anomaly": {
-    "detected": false,
-    "reason": "",
-    "score": 0.0,
-    "peak_bars": [],
-    "day_ratio": 0.48,
+    "detected": true,
+    "reason": "9/10 13:50 2.36× 均值 · 主动买 ¥33.74億 (@¥7268.0)",
+    "score": 0.2,
+    "peak_bars": [
+      {
+        "time": "13:50",
+        "vol": 464200,
+        "ratio": 2.36,
+        "open": 7254.0,
+        "price": 7268.0,
+        "chg_pct": 0.19,
+        "direction": "buy",
+        "value_oku": 33.74,
+        "date": "2026-09-10",
+        "tier": "huge_abs"
+      }
+    ],
+    "day_ratio": 0.56,
     "trading_date": "2026-09-10",
     "date_short": "9/10",
-    "net_bias": "neutral",
-    "buy_shares": 0,
+    "net_bias": "buy",
+    "buy_shares": 464200,
     "sell_shares": 0,
-    "buy_value_oku": 0,
+    "buy_value_oku": 33.74,
     "sell_value_oku": 0,
     "days": [
       {
         "trading_date": "2026-09-10",
         "date_short": "9/10",
-        "peak_bars": [],
+        "peak_bars": [
+          {
+            "time": "13:50",
+            "vol": 464200,
+            "ratio": 2.36,
+            "open": 7254.0,
+            "price": 7268.0,
+            "chg_pct": 0.19,
+            "direction": "buy",
+            "value_oku": 33.74,
+            "date": "2026-09-10",
+            "tier": "huge_abs"
+          }
+        ],
         "slices": [],
-        "day_ratio": 0.48,
-        "day_chg_pct": 0.01,
+        "day_ratio": 0.56,
+        "day_chg_pct": 0.5,
         "day_open": 7257.0,
-        "day_close": 7258.0,
-        "net_bias": "neutral",
-        "buy_shares": 0,
+        "day_close": 7293.0,
+        "net_bias": "buy",
+        "buy_shares": 464200,
         "sell_shares": 0,
-        "buy_value_oku": 0,
+        "buy_value_oku": 33.74,
         "sell_value_oku": 0,
         "full_bias": "neutral",
-        "full_up_shares": 4464400,
-        "full_down_shares": 4231900,
-        "full_up_value_oku": 319.45,
-        "full_down_value_oku": 301.95
+        "full_up_shares": 5792200,
+        "full_down_shares": 4472000,
+        "full_up_value_oku": 415.98,
+        "full_down_value_oku": 319.37
       },
       {
         "trading_date": "2026-09-09",
@@ -541,11 +567,11 @@
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-09-10 13:45 JST",
+  "asof": "2026-09-10 14:15 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-09-10T14:03:01.186718",
-    "age_sec": 1,
+    "cached_at": "2026-09-10T14:31:00.241771",
+    "age_sec": 122,
     "stale": false,
     "refreshing": false
   }
