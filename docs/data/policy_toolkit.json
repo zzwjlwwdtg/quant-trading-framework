@@ -1,33 +1,7 @@
 {
-  "as_of": "2026-09-11T03:34:38.686958",
-  "count_total_actions": 360,
+  "as_of": "2026-09-11T15:38:54.480524",
+  "count_total_actions": 375,
   "tools": [
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "已用",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "announced",
-        "date": "2026-09-10",
-        "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "提到Bessent努力但收益率仍升，延续买回效果不足的叙事。对债市是托底失败信号。",
-        "verbatim": "Oil, bond yields and iPhone prices keep rising, despite Scott Bessent’s efforts.",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQTWVOSDRGNURNdmNpcElBemIwcXVJZFFKTFlJRU1GVGRWTzNtWGJ2MGU3Qy1PeVd6ZUhLdVB4NEtpZHBYRmJfUWtIVzU2aHRiN1hwSlY5WTNRTTBoT3FVeTFBS3g3TWszcFJJVzV2VV9ITHBPTEc1Z2toWVhGQ0ZJeFpNTzduR1g2dzh5UHhuek11UmY2dGdhYWdUMllkRVJza21rSEtqT2FjTDQwbTQ4VkRLSEI?oc=5",
-        "confidence": 6
-      },
-      "yield_reaction_30y": {
-        "t0_bp": 7.5,
-        "yield_at_close": 5.361
-      },
-      "event_count_180d": 130
-    },
     {
       "tool_key": "fed_hawkish_signal",
       "zh": "Fed 官员鹰派信号",
@@ -49,7 +23,30 @@
         "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 163
+      "event_count_180d": 166
+    },
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "announced",
+        "date": "2026-09-11",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "债市未被买回措施说服，长端收益率压力仍在。",
+        "verbatim": "Scott Bessent fails to break ‘fever’ in US bond market",
+        "source": "GoogleNews: Bessent Treasury buyback",
+        "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxPNmlhQzlDUE1IOGNVekVMWDZIQTJTY0V4M2ViSjNMZnp0LXRRS2JSeDZpX3c0dU9JNE1ROWJ2WHZsRHN0Vk9QMlVrN1lvR2UyaGY0eWZGcmpRdlFtZS1QZWdjbk5pX3M1S0s0S1NuQWkyWDhibWhQZmlaZWZ2SGdrUXg0N18?oc=5",
+        "confidence": 8
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 141
     },
     {
       "tool_key": "qra_wording",
@@ -154,17 +151,17 @@
       "last_action": {
         "tool_key": "fx_intervention",
         "action_type": "signaled",
-        "date": "2026-09-09",
+        "date": "2026-09-10",
         "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "Bessent对汇市放狠话偏口头干预；若美元承压，可能间接影响外资美债需求。",
-        "verbatim": "Bessent dares currency traders as Treasury bond buyback size looms",
-        "source": "GoogleNews: Bessent Treasury buyback",
-        "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxNUzEwOVVNRGRFeG5hN0s0NjZ2VmpNU3pDU2dWcm1TNTdxd0k5VU1nLV8xWlRqUnB4UjloRVpJcGVuYWhHbUltUl9pM2YySnk4UmJqT0ZwS2lBeEtGWE9fSktKVVowWmVsU0lyYjRleEEtZmNhNGJWTDdDZDk2Q2NKcE14M1plV3YtR2tEMVBWYzNjdjliTk1jN2JwdmFucGZkZFhkY3Y1azZOVm0t?oc=5",
-        "confidence": 5
+        "amount_desc": "$32 trillion bond market",
+        "commentary": "“I am the house”偏向汇市威慑，但债市未买账。",
+        "verbatim": "I am the house now statement. It didn’t listen",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMigAJBVV95cUxOdElnSHFZWWs4bUdrYXowMnI2LVd2dUJpQzdQeWJ1aEN5SG9PakF0SUpsYVdWYk9SQlQ5LWd6TC15SHNfN3Zqb1E0bDBRczdYZkhoY0N3NlVlRWlNZTJvZDF3MkdqTzhKRFVmb3JyRTJycmNCdnM1Y0dSX19DZmQyTXo1ejBVanFBZV96QUtuU01rX1lSenhWclpxbmJWSE5pZy1NMy10TENoRUhwallRSndGRkVzUms5RGl6S1psRDhwYlZmSGhaTzZyWjFfWjVPd3JtLUFpZVVVRlRFeWJ0MUJZZnQ0TjR4b3VsUGJ2bkxnMTBzSElLYnpzOFR6a2I1?oc=5",
+        "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 3
+      "event_count_180d": 4
     },
     {
       "tool_key": "fed_dovish_signal",
