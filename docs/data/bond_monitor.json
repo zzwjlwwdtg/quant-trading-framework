@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-11T10:22",
+  "asof": "2026-09-11T10:53",
   "yields": {
     "10y": {
       "value": 4.944,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.422,
-    "vs_tips_10y": -0.086,
+    "vs_10y": -0.471,
+    "vs_tips_10y": -0.126,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.086，对冲关系变弱"
+    "reason": "相关性 -0.126，对冲关系变弱"
   },
   "anomalies": [
     {
@@ -238,7 +238,7 @@
     },
     {
       "level": "warn",
-      "msg": "GLD/TIPS 对冲失效 (相关性 -0.09) — 通胀/流动性 regime 改变",
+      "msg": "GLD/TIPS 对冲失效 (相关性 -0.13) — 通胀/流动性 regime 改变",
       "key": "hedge_broken"
     },
     {
@@ -260,6 +260,16 @@
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.58%) < JGB (2.67%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
+    },
+    {
+      "level": "bad",
+      "msg": "SPY-IEF 60d 相关 +0.384 → 股债对冲破裂 (2022 股债双杀水平)",
+      "key": "stock_bond_corr_broken"
+    },
+    {
+      "level": "warn",
+      "msg": "油价 20d +24.4% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
+      "key": "oil_rising"
     },
     {
       "level": "warn",
@@ -311,8 +321,8 @@
     "usdjpy_20d_delta_pct": -3.61,
     "usdjpy_60d_high": 163.86,
     "usdjpy_pullback_from_60d_high_pct": -6.28,
-    "krw_usd": 1346.6,
-    "krw_20d_pct": -4.96,
+    "krw_usd": 1347.1,
+    "krw_20d_pct": -4.92,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 227.4,
@@ -324,52 +334,53 @@
     "hedge_cost_jp": 2.37,
     "real_yield_gap_us_jp": 1.9,
     "cpi_jp_yoy_pct": 3.17,
-    "kbe_spy_ratio": null,
-    "kbe_spy_20d_delta_pct": null,
+    "spy_ief_60d_corr": 0.384,
+    "kbe_spy_ratio": 0.08968,
+    "kbe_spy_20d_delta_pct": -2.46,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 271.0,
-    "dxy": 99.03,
-    "dxy_pct_20d": -0.98,
-    "dxy_z_60d": -1.22,
+    "dxy": 99.04,
+    "dxy_pct_20d": -0.97,
+    "dxy_z_60d": -1.21,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 63513.84,
-        "chg_1d": -2.5,
-        "chg_5d_pct": -1.09,
+        "close": 63365.72,
+        "chg_1d": -2.92,
+        "chg_5d_pct": -2.55,
         "asof": "2026-09-11"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 25274.96,
-        "chg_1d": -0.17,
-        "chg_5d_pct": -0.14,
-        "asof": "2026-09-09"
+        "close": 24584.13,
+        "chg_1d": -1.48,
+        "chg_5d_pct": -4.16,
+        "asof": "2026-09-11"
       },
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": null,
-        "chg_1d": null,
-        "chg_5d_pct": null,
-        "asof": "2026-09-10"
+        "close": 3878.19,
+        "chg_1d": -1.43,
+        "chg_5d_pct": -1.32,
+        "asof": "2026-09-11"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": null,
-        "chg_1d": null,
-        "chg_5d_pct": null,
-        "asof": "2026-09-10"
+        "close": 13451.1,
+        "chg_1d": -1.22,
+        "chg_5d_pct": -0.49,
+        "asof": "2026-09-11"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6857.77,
-        "chg_1d": -2.75,
-        "chg_5d_pct": 4.23,
+        "close": 6851.75,
+        "chg_1d": -2.59,
+        "chg_5d_pct": 2.46,
         "asof": "2026-09-11"
       }
     },
@@ -377,44 +388,44 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7614.0,
-        "chg_pct": -0.39
+        "price": 7608.0,
+        "chg_pct": -0.47
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29156.5,
-        "chg_pct": -0.99
+        "price": 29113.25,
+        "chg_pct": -1.14
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 102.39,
-        "chg_pct": 6.6
+        "price": 102.4,
+        "chg_pct": 6.61
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4377.2,
-        "chg_pct": -0.88
+        "price": 4365.0,
+        "chg_pct": -1.15
       }
     },
-    "oil_uso": null,
-    "oil_pct_20d": null,
-    "oil_wti": 102.39,
-    "eem_pct_20d": null,
-    "eem_vs_spx_20d": null,
+    "oil_uso": 158.38,
+    "oil_pct_20d": 24.41,
+    "oil_wti": 102.4,
+    "eem_pct_20d": 0.81,
+    "eem_vs_spx_20d": 2.71,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
         "label": "20+Y 美债",
-        "vol_z_20d": 3.34,
+        "vol_z_20d": 3.39,
         "notable": true
       },
       "real_rates": {
         "proxy": "TIP",
         "label": "TIPS ETF",
-        "vol_z_20d": 0.53,
+        "vol_z_20d": 0.55,
         "notable": false
       },
       "dxy": {
@@ -432,31 +443,31 @@
       "credit_hy": {
         "proxy": "HYG",
         "label": "高收益信用 ETF",
-        "vol_z_20d": 3.28,
+        "vol_z_20d": 3.31,
         "notable": true
       },
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": 3.56,
+        "vol_z_20d": 3.63,
         "notable": true
       },
       "em": {
         "proxy": "EEM",
         "label": "新兴市场 ETF",
-        "vol_z_20d": 1.53,
+        "vol_z_20d": 1.68,
         "notable": true
       },
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": 0.99,
-        "notable": false
+        "vol_z_20d": 1.14,
+        "notable": true
       },
       "us_qqq": {
         "proxy": "QQQ",
         "label": "Nasdaq 100 ETF",
-        "vol_z_20d": 0.01,
+        "vol_z_20d": 0.08,
         "notable": false
       },
       "jp_equity": {
@@ -474,7 +485,7 @@
       "oil": {
         "proxy": "USO",
         "label": "WTI 原油 ETF",
-        "vol_z_20d": 4.04,
+        "vol_z_20d": 4.22,
         "notable": true
       }
     },
@@ -496,8 +507,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-11T10:22:43.940413",
-    "age_sec": 617,
+    "cached_at": "2026-09-11T10:53:44.280874",
+    "age_sec": 558,
     "stale": false,
     "refreshing": false
   }
