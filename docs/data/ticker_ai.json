@@ -1,22 +1,22 @@
 {
   "exists": true,
   "tickers": {
-    "AAPL": "- 综合: 观望偏多但conf=2不足，Call OI显著占优且gamma_up[high]与330突破上行共振；CROIC高位波动回落，Piotroski强，借款规模偏高；预期与股价基本匹配。\n- 攻防: 防守325距spot 0.48%，进攻330距spot 1.05%，330一旦放量突破更可操作。\n- 警示: EPS修正downward而估值Forward PE 34.81x偏高，存在估值与盈利修正背离风险。",
-    "AMAT": "- 综合: 无明确信号，Put OI远大于Call且430属OTM保护，更像机构廉价保险；CROIC下行，Piotroski中性，借款不低；市场预期偏低。\n- 攻防: 防守430距spot 5.29%，进攻490距spot 7.93%，区间较宽，跌破430才转弱。\n- 警示: EPS修正upward与低预期同向，估值未明显背离；put_band_break[medium]提示破430有加速风险。",
-    "CBRS": "- 综合: 低置信观望，Call OI占优使210成为上方pin磁吸位但无明确突破；CROIC修复，Piotroski弱，无借款压力；利好已充分计价。\n- 攻防: 防守180距spot 5.93%，进攻210距spot 9.75%，当前离两端都远，追价可操作性低。\n- 警示: EPS修正upward但Forward PE 149.72x极高，且目标价差与多锚中位分歧，估值背离明显。",
-    "DRAM": "- 综合: 观望但期权偏防守，Put wall 58贴近ATM且Put OI远大于Call，偏真恐慌/下跌对冲；CROIC低位修复，Piotroski中性，借款高；市场预期偏低。\n- 攻防: 防守58距spot 0.96%，进攻60距spot 2.46%，跌破58触发put_break[high]更危险。\n- 警示: 信号偏多但ATM Put堆积严重，divergence；EPS修正flat，低估值改善仍缺修正确认。",
-    "GOOGL": "- 综合: 无明确信号，Call OI占优且340为上方pin磁吸位，下方护盘相对弱；CROIC下行，Piotroski中性，借款偏高；市场预期偏低。\n- 攻防: 防守325距spot 2.29%，进攻340距spot 2.22%，区间清晰但挤压低，适合等突破/回踩确认。\n- 警示: EPS修正upward但Forward EPS增长为-26.1%，估值不贵但增长口径背离需核实。",
-    "KLAC": "- 综合: 无明确信号，Put OI大于Call且170偏OTM，更像下方保险而非ATM恐慌；CROIC回升但低于早期高点，Piotroski强，借款不低。\n- 攻防: 防守170距spot 4.05%，进攻190距spot 7.24%，现价中段，需等待靠近边界。\n- 警示: 暂无。",
-    "LITE": "- 综合: 观望偏多但conf=0，期权两端强墙无挤压，方向未共振；CROIC由负转正，Piotroski中性，借款可控；市场预期偏低。\n- 攻防: 防守850距spot 9.16%，进攻1000距spot 6.87%，上方空间更近但仍需放量确认。\n- 警示: EPS修正upward与估值Forward PE 28.3x基本不背离，但无增长率数据降低确定性。",
-    "MSFT": "- 综合: 关注买入但conf=3未达明确机会，500 Call墙与490 Put墙夹击偏震荡上沿吸引；CROIC持续下行，Piotroski中性，借款高；市场预期偏低。\n- 攻防: 防守490距spot 0.5%，进攻500距spot 1.54%，490附近防守可操作，站上500再转强。\n- 警示: EPS修正upward与估值Forward PE 21.07x不背离，主要风险是看多成交偏热。",
-    "MULL": "- 综合: 观望但Put OI为Call的4.9倍，900为OTM远端更像廉价保险/对冲；CROIC低位修复，Piotroski中性，借款高；市场预期偏低。\n- 攻防: 防守900距spot 7.92%，进攻1050距spot 7.43%，两端距离接近，当前缺少挂单优势。\n- 警示: 信号偏多但Put OI大幅堆积，divergence；EPS修正flat，估值低但盈利上修未共振。",
-    "NBIS": "- 综合: 主动试探仓conf=4，但Put OI略高于Call且210为OTM保险，期权未完全共振；CROIC急剧转负，Piotroski中性，借款激增警示；市场预期偏低。\n- 攻防: 防守210距spot 7.94%，进攻250距spot 9.6%，试探仓可行但止损需盯210。\n- 警示: EPS修正upward但Forward EPS仍为负、Forward PE为负，估值锚不稳定。",
-    "NVDA": "- 综合: 观望但Call OI显著占优，235是上方pin磁吸位，下方215护盘弱；CROIC高位回落，Piotroski弱，借款偏高；市场预期偏低。\n- 攻防: 防守215距spot 1.54%，进攻235距spot 7.62%，短线先看215能否守住。\n- 警示: EPS修正upward与估值Forward PE 14.08x不背离，但Put/Call严重失衡意味着上方拥挤交易风险。",
-    "SOXL": "- 综合: 观望，SOXX期权显示上方Call墙对应SOXL即时约144.33、下方Put墙约90.64，gamma_band_up[medium]但conf=1不足；底层NVDA CROIC高位回落，Piotroski弱，借款偏高；市场预期偏低。\n- 攻防: SOXL防守90.64距spot约21.70%，进攻144.33距spot约24.68%，挂单优先用即时换算，触发时重算。\n- 警示: EPS修正upward与估值不背离；到期路径估仅情景参考，杠杆ETF有每日重置/路径依赖。",
-    "TQQQ": "- 综合: 观望偏多但QQQ期权给出put_break[high]，下破Put墙对应TQQQ即时约66.66会加速转弱；底层NVDA CROIC高位回落，Piotroski弱，借款偏高；市场预期偏低。\n- 攻防: TQQQ防守66.66距spot约3.68%，进攻73.99距spot约6.91%，66.66是更关键操作位。\n- 警示: EPS修正upward与估值不背离；到期路径估仅情景参考，杠杆ETF有每日重置/路径依赖。",
-    "TSLA": "- 综合: 无明确信号，370/360近ATM双墙夹击但put_break[high]使下破360风险更高；CROIC低位回升，Piotroski中性，借款偏高；预期透支。\n- 攻防: 防守360距spot 0.98%，进攻370距spot 1.77%，360失守需优先防守。\n- 警示: EPS修正downward但Forward PE 164.03x极高，盈利修正与估值严重背离。",
-    "USO": "- 综合: 关注买入conf=4且Call墙已在价内，期权共振偏强但RSI 75.6过热。\n- 攻防: 148 Call墙已低于spot约6.55%，144 Put墙距spot 9.08%，回踩148上方更有可操作性。\n- 警示: 高RSI叠加价内Call墙，追高性价比下降。",
-    "XLV": "- 综合: 关注买入conf=5，但Call OI远大于Put且170为上方pin磁吸位，下方165护盘薄；信号强但put_break[high]构成冲突。\n- 攻防: 防守165距spot 0.4%，进攻170距spot 2.62%，165是短线必须守住的位置。\n- 警示: 明确信号与期权下破挤压不完全共振，若跌破165可能加速下行。"
+    "AAPL": "- 综合: 偏多期权共振；预期与股价基本匹配，CROIC高位但回落，Piotroski强，借款高警示\n- 攻防: 守$325可操作，距spot -0.48%；攻$330，距spot +1.05%，突破有high gamma_up加速\n- 警示: Call OI远大于Put OI，上方$330有pin磁吸但下方护盘薄；EPS下修与34.81x估值略背离",
+    "AMAT": "- 综合: 中性偏多但期权防守优先；市场预期偏低，CROIC下行，Piotroski中性偏强，借款可控\n- 攻防: 守$430，距spot -5.29%，Put OI大多在OTM更像保险；攻$490，距spot +7.93%\n- 警示: EPS上修与估值不背离，机会在低预期；跌破$430有medium put_band_break风险",
+    "CBRS": "- 综合: 偏多情绪但期权仅弱共振；利好已充分计价，CROIC修复，Piotroski弱，无借款压力\n- 攻防: 守$180，距spot -5.93%；攻$210，距spot +9.75%，更偏上方pin磁吸\n- 警示: EPS上修但Forward PE 149.72x且多锚中位为负，估值与修正背离",
+    "DRAM": "- 综合: 多头情绪与下方Put墙冲突；市场预期偏低，CROIC低位修复，Piotroski中性偏强，借款高警示\n- 攻防: 守$58，距spot -0.96%，ATM附近Put OI大是真恐慌；攻$60，距spot +2.46%\n- 警示: 看多成交但put OI堆积且high put_break，跌破$58易加速；EPS持平与低估值不背离",
+    "GOOGL": "- 综合: 偏多期权共振但挤压弱；市场预期偏低，CROIC下行，Piotroski中性偏强，借款高警示\n- 攻防: 守$325，距spot -2.29%；攻$340，距spot +2.22%，Call墙是近端pin位\n- 警示: EPS上修但Forward EPS增长为负，估值改善逻辑需验证",
+    "KLAC": "- 综合: 偏多情绪但Put墙更厚，期权不完全共振；CROIC高位修复，Piotroski强，借款高警示\n- 攻防: 守$170，距spot -4.05%；攻$190，距spot +7.24%，区间操作优先\n- 警示: Put OI高于Call但在OTM，偏机构保险而非立即空头押跌",
+    "LITE": "- 综合: 中性偏多；市场预期偏低，CROIC由负转正上行，Piotroski弱，借款需留意\n- 攻防: 守$850，距spot -9.16%；攻$1000，距spot +6.87%，上下墙均强\n- 警示: EPS上修与21.9%隐含上行一致，暂无明显背离",
+    "MSFT": "- 综合: 偏多期权轻度共振；市场预期偏低，CROIC持续下行，Piotroski中性偏强，借款高警示\n- 攻防: 守$490，距spot -0.50%；攻$500，距spot +1.54%，近端pin区间明确\n- 警示: EPS上修与估值不背离，但CROIC下滑削弱质量溢价",
+    "MULL": "- 综合: 基本面预期偏多但期权防守偏空；市场预期偏低，CROIC低位修复，Piotroski中性偏强，借款高警示\n- 攻防: 守MU $900，距spot -7.92%；攻MU $1050，距spot +7.43%，Put墙显著更强\n- 警示: Put OI/Call OI 4.9倍但远OTM，更像廉价保险；EPS持平与低估值不背离",
+    "NBIS": "- 综合: 情绪偏多但基本面质量弱；市场预期偏低，CROIC大幅转负，Piotroski中性偏强，借款高警示\n- 攻防: 守$210，距spot -7.94%；攻$250，距spot +9.60%，上下墙都强\n- 警示: EPS上修但Forward EPS仍为负，目标上行与盈利质量背离",
+    "NVDA": "- 综合: 偏多期权共振；市场预期偏低，CROIC高位回落，Piotroski弱，借款高警示\n- 攻防: 守$215，距spot -1.54%；攻$235，距spot +7.62%，上方Call墙磁吸但短期较远\n- 警示: Call OI远大于Put OI，下方护盘薄；EPS上修与低Forward PE不背离",
+    "SOXL": "- 综合: 偏多期权中度共振；底层NVDA市场预期偏低，CROIC高位回落，Piotroski弱，借款高警示\n- 攻防: 守SOXL即时≈$90.64，距spot -21.70%；攻SOXL即时≈$144.33，距spot +24.68%，以触发时重新换算为准\n- 警示: EPS上修与底层估值不背离，但NVDA目标价只代表底层信号；杠杆ETF有每日重置/路径依赖",
+    "TQQQ": "- 综合: 基本面代理偏多但期权短线偏防守；底层NVDA市场预期偏低，CROIC高位回落，Piotroski弱，借款高警示\n- 攻防: 守TQQQ即时≈$66.66，距spot -3.68%；攻TQQQ即时≈$73.99，距spot +6.91%，跌破守位有high put_break\n- 警示: EPS上修与底层估值不背离，但NVDA目标价只代表底层信号；杠杆ETF有每日重置/路径依赖",
+    "TSLA": "- 综合: 中性偏空，期权有下破风险；预期透支，CROIC低位修复，Piotroski弱，借款高警示\n- 攻防: 守$360，距spot -0.98%；攻$370，距spot +1.77%，跌破$360有high put_break\n- 警示: EPS下修与164.03x估值明显背离，追多风险高",
+    "USO": "- 综合: 中性，期权无挤压共振；Call墙已在spot下方，偏存量pin而非新进攻\n- 攻防: 守$144，距spot -9.08%；$148已低于spot 6.55%，回落失守才转弱\n- 警示: 暂无",
+    "XLV": "- 综合: 偏多情绪但期权防守薄，put_break与多头不共振\n- 攻防: 守$165，距spot -0.40%；攻$170，距spot +2.62%，跌破$165有high put_break\n- 警示: Call OI远大于Put OI，上方$170有pin磁吸但下方无护盘"
   },
   "sources": {
     "AAPL": "live",
@@ -37,7 +37,7 @@
     "XLV": "live"
   },
   "live_state": "cached",
-  "live_generated": "2026-09-11T14:07:21.920481+00:00",
+  "live_generated": "2026-09-11T15:24:16.216171+00:00",
   "snapshot_path": "ai_analysis_snapshot_20260911_222652.md",
   "snapshot_mtime": "2026-09-11T22:26:52.772187"
 }
