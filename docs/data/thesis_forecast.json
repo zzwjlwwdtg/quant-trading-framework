@@ -1,261 +1,11 @@
 {
-  "as_of": "2026-09-11",
+  "as_of": "2026-09-12",
   "days_ahead": 45,
-  "count": 8,
+  "count": 7,
   "events": [
     {
-      "date": "2026-09-11",
-      "days_until": 0,
-      "event": "CPI Release",
-      "impact": "high",
-      "event_type": "CPI",
-      "scenarios": {
-        "dovish": {
-          "desc": "CPI MoM < -0.15% (通胀明显冷却)",
-          "delta_pp": 8,
-          "prob_note": "让 Fed 有明确借口降息",
-          "probability": 0.0
-        },
-        "mild_dovish": {
-          "desc": "CPI MoM -0.15% ~ -0.05% (略冷)",
-          "delta_pp": 3,
-          "prob_note": "略微支持降息",
-          "probability": 0.0
-        },
-        "base": {
-          "desc": "CPI MoM -0.05% ~ +0.05% (符合共识)",
-          "delta_pp": 0,
-          "prob_note": "无明显方向",
-          "probability": 0.001
-        },
-        "mild_hawkish": {
-          "desc": "CPI MoM +0.05% ~ +0.15% (略强)",
-          "delta_pp": -3,
-          "prob_note": "略微推迟降息",
-          "probability": 0.015
-        },
-        "hawkish": {
-          "desc": "CPI MoM > +0.15% (通胀反弹)",
-          "delta_pp": -8,
-          "prob_note": "Fed 会推迟降息",
-          "probability": 0.984
-        }
-      },
-      "delta_range_pp": [
-        -8,
-        8
-      ],
-      "range_desc": "(-8pp ~ +8pp)",
-      "expected_delta_pp": -7.92,
-      "probability_source": "cleveland_fed_nowcast",
-      "market_impact": {
-        "bond": "强利空",
-        "equity": "强利空",
-        "equity_channel": "利率驱动",
-        "direction": "hawkish",
-        "long_favored": [
-          "USD (UUP)",
-          "能源/大宗 (通胀受益)",
-          "银行股 (利差扩)",
-          "黄金 (通胀对冲)"
-        ],
-        "long_hurt": [
-          "科技股/纳指 (长久期最伤)",
-          "长债 (TLT 收益率飙)",
-          "REITs",
-          "growth 股"
-        ],
-        "bond_yield_bps": 23.8,
-        "spx_pct_est": -1.19
-      },
-      "impact_matrix": {
-        "event_type": "CPI",
-        "mkt_implied_prob": 0.98,
-        "surprise_factor": 0.02,
-        "scenarios": {
-          "hawkish_shock": {
-            "horizons": {
-              "T+0": {
-                "ust_10y_bps": 0.3,
-                "spx_pct": -0.02,
-                "hy_oas_bps": 0.1,
-                "gld_pct": -0.03,
-                "note": "即时定价冲击"
-              },
-              "T+1D": {
-                "ust_10y_bps": 0.4,
-                "spx_pct": -0.03,
-                "hy_oas_bps": 0.2,
-                "gld_pct": -0.06,
-                "note": "曲线短端 up, 长端跟随"
-              },
-              "T+1W": {
-                "ust_10y_bps": 0.6,
-                "spx_pct": -0.04,
-                "hy_oas_bps": 0.4,
-                "gld_pct": -0.07,
-                "note": "PEAK 短期反应"
-              },
-              "T+1M": {
-                "ust_10y_bps": 0.4,
-                "spx_pct": -0.02,
-                "hy_oas_bps": 0.6,
-                "gld_pct": -0.04,
-                "note": "股票部分回补, 信用继续扩"
-              },
-              "T+3M": {
-                "ust_10y_bps": 0.2,
-                "spx_pct": -0.06,
-                "hy_oas_bps": 0.9,
-                "gld_pct": -0.02,
-                "note": "CYCLICAL: 盈利下修 + 信用累积"
-              }
-            },
-            "scenario_scaler": 0.02,
-            "action_triggers": {
-              "T+0": "MOVE index >140 → 减 IEI 20-30% (立刻)",
-              "T+1W": "长端 10Y +30bps 以上 → 加 GLD 3-5%, TLT 不加不减",
-              "T+3M": "HY OAS +80bps 累积 → risk_off 模式, 减 cloud 50%"
-            }
-          },
-          "base_neutral": {
-            "horizons": {
-              "T+0": {
-                "ust_10y_bps": 0.0,
-                "spx_pct": 0.0,
-                "hy_oas_bps": 0.0,
-                "gld_pct": 0.0,
-                "note": "符合预期, 无反应"
-              },
-              "T+1D": {
-                "ust_10y_bps": 0.0,
-                "spx_pct": 0.0,
-                "hy_oas_bps": 0.0,
-                "gld_pct": 0.0,
-                "note": "轻微 relief"
-              },
-              "T+1W": {
-                "ust_10y_bps": -0.1,
-                "spx_pct": 0.0,
-                "hy_oas_bps": -0.0,
-                "gld_pct": 0.0,
-                "note": "不确定性消除"
-              },
-              "T+1M": {
-                "ust_10y_bps": -0.1,
-                "spx_pct": 0.01,
-                "hy_oas_bps": -0.1,
-                "gld_pct": 0.01,
-                "note": "carry 环境"
-              },
-              "T+3M": {
-                "ust_10y_bps": -0.2,
-                "spx_pct": 0.02,
-                "hy_oas_bps": -0.1,
-                "gld_pct": 0.02,
-                "note": "低波动率 grind up"
-              }
-            },
-            "scenario_scaler": 0.02,
-            "action_triggers": {}
-          },
-          "dovish_surprise": {
-            "horizons": {
-              "T+0": {
-                "ust_10y_bps": -0.2,
-                "spx_pct": 0.02,
-                "hy_oas_bps": -0.1,
-                "gld_pct": 0.03,
-                "note": "降息意外 → 全线 rally"
-              },
-              "T+1D": {
-                "ust_10y_bps": -0.3,
-                "spx_pct": 0.03,
-                "hy_oas_bps": -0.2,
-                "gld_pct": 0.04,
-                "note": "risk-on 扩散"
-              },
-              "T+1W": {
-                "ust_10y_bps": -0.4,
-                "spx_pct": 0.04,
-                "hy_oas_bps": -0.3,
-                "gld_pct": 0.06,
-                "note": "PEAK 反弹"
-              },
-              "T+1M": {
-                "ust_10y_bps": -0.4,
-                "spx_pct": 0.03,
-                "hy_oas_bps": -0.3,
-                "gld_pct": 0.04,
-                "note": "利多消化中"
-              },
-              "T+3M": {
-                "ust_10y_bps": -0.6,
-                "spx_pct": 0.06,
-                "hy_oas_bps": -0.4,
-                "gld_pct": 0.07,
-                "note": "CYCLICAL: 宽松环境显现"
-              }
-            },
-            "scenario_scaler": 0.02,
-            "action_triggers": {
-              "T+0": "long duration rally → 加 IEI/TLT 至 max_pct",
-              "T+1W": "曲线 steepener → SHY 保, TLT 加",
-              "T+3M": "宽松环境 → cloud/growth 加仓, GLD 保 3-5%"
-            }
-          },
-          "panic_flight_to_quality": {
-            "horizons": {
-              "T+1D": {
-                "ust_10y_bps": -35.0,
-                "spx_pct": -3.5,
-                "hy_oas_bps": 70.0,
-                "gld_pct": 3.5,
-                "note": "flight to quality: 债 rally, 股崩, 信用扩, 金涨"
-              },
-              "T+3D": {
-                "ust_10y_bps": -56.0,
-                "spx_pct": -5.6,
-                "hy_oas_bps": 105.0,
-                "gld_pct": 5.6,
-                "note": "恐慌高峰"
-              },
-              "T+1W": {
-                "ust_10y_bps": -70.0,
-                "spx_pct": -2.1,
-                "hy_oas_bps": 140.0,
-                "gld_pct": 7.0,
-                "note": "Fed 若介入 → 股反弹, 金/债继续涨"
-              },
-              "T+1M": {
-                "ust_10y_bps": -56.0,
-                "spx_pct": -3.5,
-                "hy_oas_bps": 105.0,
-                "gld_pct": 5.6,
-                "note": "信心受损, 慢修复"
-              },
-              "T+3M": {
-                "ust_10y_bps": -42.0,
-                "spx_pct": -1.4,
-                "hy_oas_bps": 70.0,
-                "gld_pct": 3.5,
-                "note": "CYCLICAL: 信心逐步恢复"
-              }
-            },
-            "scenario_scaler": 1.0,
-            "action_triggers": {
-              "T+1D": "KBE/SPY 20d < -10% → panic 模式: 减 ALL equity 到 20%",
-              "T+3D": "触发时: 加 TLT 10% + GLD 8%, 保 30% 现金",
-              "T+1W": "Fed 若干预 → 逐步 re-risk (加 SPX 5%/周)"
-            }
-          }
-        },
-        "framework_note": "量级参考: hawkish shock 单次 T+1W peak; T+3M 是 cyclical 累积效应. Surprise=100% 时使用原参数, 已被 pricing 时衰减"
-      }
-    },
-    {
       "date": "2026-09-16",
-      "days_until": 5,
+      "days_until": 4,
       "event": "Retail Sales",
       "impact": "high",
       "event_type": "Retail Sales",
@@ -483,7 +233,7 @@
     },
     {
       "date": "2026-09-16",
-      "days_until": 5,
+      "days_until": 4,
       "event": "FOMC Decision",
       "impact": "high",
       "event_type": "FOMC",
@@ -730,7 +480,7 @@
     },
     {
       "date": "2026-09-30",
-      "days_until": 19,
+      "days_until": 18,
       "event": "PCE Release",
       "impact": "critical",
       "event_type": "PCE",
@@ -974,7 +724,7 @@
     },
     {
       "date": "2026-10-02",
-      "days_until": 21,
+      "days_until": 20,
       "event": "NFP Release",
       "impact": "high",
       "event_type": "NFP",
@@ -1223,7 +973,7 @@
     },
     {
       "date": "2026-10-13",
-      "days_until": 32,
+      "days_until": 31,
       "event": "CPI Release",
       "impact": "high",
       "event_type": "CPI",
@@ -1473,7 +1223,7 @@
     },
     {
       "date": "2026-10-14",
-      "days_until": 33,
+      "days_until": 32,
       "event": "PPI Release",
       "impact": "high",
       "event_type": "PPI",
@@ -1707,7 +1457,7 @@
     },
     {
       "date": "2026-10-15",
-      "days_until": 34,
+      "days_until": 33,
       "event": "Retail Sales",
       "impact": "high",
       "event_type": "Retail Sales",
@@ -1934,11 +1684,11 @@
       }
     }
   ],
-  "generated_at": "2026-09-11T22:35:31",
+  "generated_at": "2026-09-12T04:35:59",
   "note": "Scenarios 是规则版预测. 实际数据发布时,系统会自动对照到最近的 scenario 追加 thesis_history 验证.",
   "_meta": {
-    "cached_at": "2026-09-11T22:35:31.898068",
-    "age_sec": 21450,
+    "cached_at": "2026-09-12T04:35:59.600836",
+    "age_sec": 1622,
     "stale": false,
     "refreshing": false
   }
