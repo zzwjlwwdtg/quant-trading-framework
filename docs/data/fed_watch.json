@@ -1,70 +1,32 @@
 {
-  "current_target_range": "3.50-3.75",
-  "meetings": [
-    {
-      "date": "2026-09-16",
-      "days_until": 5,
-      "probabilities": {
-        "hold": 29,
-        "hike_25": 71
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-10-28",
-      "days_until": 47,
-      "probabilities": {
-        "hold": 59,
-        "hike_25": 41
-      },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-12-09",
-      "days_until": 89,
-      "probabilities": {
-        "hold": 28,
-        "hike_25": 72
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    }
-  ],
-  "implied_terminal_rate": null,
-  "implied_terminal_date": null,
+  "error": "no_recent_data",
+  "confidence": "low",
   "data_snapshot_date": "2026-09-11",
-  "recent_event_impact": "2026-09-04 August NFP +162K、失业率4.1%，强化经济韧性；2026-09-10 August PPI +0.4% MoM、+5.4% YoY，推动9月加息概率升至约70%-74%。截至检索时未找到2026-09-11 August CPI正式发布结果，仅确认其计划在当日8:30 ET发布。",
-  "commentary": "数据快照为2026-09-11，已反映2026-09-10 PPI和2026-09-04 NFP后的重新定价：强就业和偏热批发通胀把曲线从降息/观望转向加息倾斜。由于CPI在2026-09-11计划发布但检索时未见正式结果，若CPI已发布，则本快照可能尚未完全反映该事件。",
+  "commentary": "可验证到的最新 FedWatch-linked snapshot 为 2026-09-11 close，但公开可抓取页面只显示 2026-09-15/16 会议 odds：hold 28%、hike_25 72%，未提供未来 3-4 次会议的完整概率矩阵。最近 7 天内已有 2026-09-04 NFP 强于预期、2026-09-10 PPI 升至 5.4% y/y、2026-09-11 CPI 为关键事件；这些数据把市场预期明显推向加息，但当前可访问数据不足以合规填充完整会议序列。",
+  "recent_event_impact": "2026-09-04 NFP +162K（高于 +56K 预期）叠加 2026-09-10 PPI +0.4% m/m、+5.4% y/y，推动 9月 FOMC hike_25 概率升至约72%；2026-09-11 CPI 当日发布/为最终关键输入，要求 snapshot 必须在其后，当前仅能验证 2026-09-11 close 的单次会议数据。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_proxy"
+      "url": "https://sessionopen.com/fed-watch",
+      "type": "fedwatch_linked_snapshot"
     },
     {
-      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-sp500-nasdaq-up-oil-calmer-treasury-steady-producer-inflation-oracle-earnings/card/fed-funds-futures-point-to-increased-chance-of-fed-rate-hike-next-week-xs9IeNdIJO2XkdkFTryP",
-      "type": "fedwatch_crosscheck"
+      "url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
+      "type": "economic_release_calendar"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/empsit_09042026.htm",
-      "type": "nfp_event"
-    },
-    {
-      "url": "https://www.bls.gov/cpi/",
-      "type": "cpi_release_check"
+      "url": "https://www.barrons.com/articles/august-ppi-inflation-report-producer-prices-5b642d4b",
+      "type": "ppi_report"
     }
   ],
-  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-11T01:37:33+00:00",
+  "fetched_at": "2026-09-11T09:39:06+00:00",
   "_meta": {
-    "cached_at": "2026-09-11T10:37:33.222436",
-    "age_sec": 28529,
+    "cached_at": "2026-09-11T18:39:06.856848",
+    "age_sec": 1435,
     "stale": false,
     "refreshing": false
   }
