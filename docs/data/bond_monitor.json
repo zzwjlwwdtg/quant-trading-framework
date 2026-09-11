@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-11T08:49",
+  "asof": "2026-09-11T09:20",
   "yields": {
     "10y": {
       "value": 4.944,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.471,
-    "vs_tips_10y": -0.126,
+    "vs_10y": -0.422,
+    "vs_tips_10y": -0.086,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.126，对冲关系变弱"
+    "reason": "相关性 -0.086，对冲关系变弱"
   },
   "anomalies": [
     {
@@ -238,7 +238,7 @@
     },
     {
       "level": "warn",
-      "msg": "GLD/TIPS 对冲失效 (相关性 -0.13) — 通胀/流动性 regime 改变",
+      "msg": "GLD/TIPS 对冲失效 (相关性 -0.09) — 通胀/流动性 regime 改变",
       "key": "hedge_broken"
     },
     {
@@ -262,14 +262,9 @@
       "key": "cip_repatriation_signal"
     },
     {
-      "level": "bad",
-      "msg": "SPY-IEF 60d 相关 +0.384 → 股债对冲破裂 (2022 股债双杀水平)",
-      "key": "stock_bond_corr_broken"
-    },
-    {
       "level": "warn",
-      "msg": "油价 20d +24.4% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
-      "key": "oil_rising"
+      "msg": "KOSPI (韩) -3.5% (5d +3.4%) 明显走弱",
+      "key": "asia_kospi_weak"
     },
     {
       "level": "warn",
@@ -316,13 +311,13 @@
     "sofr_pct": 3.64,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -1.0,
-    "usdjpy": 154.48,
-    "usdjpy_20d_pct": -3.1,
-    "usdjpy_20d_delta_pct": -3.1,
+    "usdjpy": 153.57,
+    "usdjpy_20d_pct": -3.61,
+    "usdjpy_20d_delta_pct": -3.61,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -5.73,
-    "krw_usd": 1349.2,
-    "krw_20d_pct": -4.77,
+    "usdjpy_pullback_from_60d_high_pct": -6.28,
+    "krw_usd": 1346.8,
+    "krw_20d_pct": -4.94,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 227.4,
@@ -334,22 +329,21 @@
     "hedge_cost_jp": 2.37,
     "real_yield_gap_us_jp": 1.9,
     "cpi_jp_yoy_pct": 3.17,
-    "spy_ief_60d_corr": 0.384,
-    "kbe_spy_ratio": 0.08968,
-    "kbe_spy_20d_delta_pct": -2.46,
+    "kbe_spy_ratio": null,
+    "kbe_spy_20d_delta_pct": null,
     "cdx_ig_bps": 81.0,
     "cdx_hy_bps": 271.0,
-    "dxy": 99.09,
-    "dxy_pct_20d": -0.92,
-    "dxy_z_60d": -1.15,
+    "dxy": 99.06,
+    "dxy_pct_20d": -0.95,
+    "dxy_z_60d": -1.19,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 65142.78,
-        "chg_1d": -0.19,
-        "chg_5d_pct": 1.27,
-        "asof": "2026-09-09"
+        "close": 63725.62,
+        "chg_1d": -2.18,
+        "chg_5d_pct": -0.76,
+        "asof": "2026-09-11"
       },
       "HSI": {
         "symbol": "^HSI",
@@ -378,43 +372,43 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 7051.64,
-        "chg_1d": 1.4,
-        "chg_5d_pct": 7.45,
-        "asof": "2026-09-09"
+        "close": 6802.5,
+        "chg_1d": -3.53,
+        "chg_5d_pct": 3.39,
+        "asof": "2026-09-11"
       }
     },
     "us_futures": {
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7601.0,
-        "chg_pct": -0.56
+        "price": 7603.75,
+        "chg_pct": -0.52
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29106.0,
-        "chg_pct": -1.16
+        "price": 29110.25,
+        "chg_pct": -1.15
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 103.95,
-        "chg_pct": 8.22
+        "price": 103.17,
+        "chg_pct": 7.41
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4356.1,
-        "chg_pct": -1.36
+        "price": 4357.6,
+        "chg_pct": -1.32
       }
     },
-    "oil_uso": 158.38,
-    "oil_pct_20d": 24.41,
-    "oil_wti": 103.95,
-    "eem_pct_20d": 0.81,
-    "eem_vs_spx_20d": 2.71,
+    "oil_uso": null,
+    "oil_pct_20d": null,
+    "oil_wti": 103.17,
+    "eem_pct_20d": null,
+    "eem_vs_spx_20d": null,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -507,8 +501,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-11T08:49:44.056197",
-    "age_sec": 797,
+    "cached_at": "2026-09-11T09:20:45.621600",
+    "age_sec": 736,
     "stale": false,
     "refreshing": false
   }
