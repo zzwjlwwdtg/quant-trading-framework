@@ -256,67 +256,48 @@
     {
       "date": "2026-09-16",
       "days_until": 5,
-      "event": "FOMC Decision",
-      "impact": "critical",
-      "event_type": "FOMC",
+      "event": "Retail Sales",
+      "impact": "high",
+      "event_type": "Retail Sales",
       "scenarios": {
-        "surprise_cut": {
-          "desc": "降息 25bp (远超预期)",
-          "delta_pp": 30,
-          "prob_note": "已发生就是 confirm, 后续概率 100%",
-          "probability": 0.05
-        },
-        "dovish_hold": {
-          "desc": "维持 + dot plot 转鸽 / 释放降息信号",
-          "delta_pp": 8,
-          "prob_note": "Fed Chair 发言暗示降息临近",
-          "probability": 0.25
+        "dovish": {
+          "desc": "零售 MoM < 0% (消费明显走弱)",
+          "delta_pp": 3,
+          "prob_note": "支持降息保消费",
+          "probability": 0.2
         },
         "base": {
-          "desc": "维持 + 中性发言",
+          "desc": "零售 MoM 0-0.5% (中性)",
           "delta_pp": 0,
-          "prob_note": "无明显方向",
+          "prob_note": "无方向",
           "probability": 0.55
         },
-        "hawkish_hold": {
-          "desc": "维持 + 强调通胀风险 / 推迟降息",
-          "delta_pp": -8,
-          "prob_note": "Fed Chair 明确 pushback",
-          "probability": 0.12
-        },
-        "surprise_hike": {
-          "desc": "加息 (极端反常)",
-          "delta_pp": -25,
-          "prob_note": "降息 thesis 彻底破产",
-          "probability": 0.03
+        "hawkish": {
+          "desc": "零售 MoM > 0.5% (消费强)",
+          "delta_pp": -2,
+          "prob_note": "略微推迟降息",
+          "probability": 0.25
         }
       },
       "delta_range_pp": [
-        -25,
-        30
+        -2,
+        3
       ],
-      "range_desc": "(-25pp ~ +30pp)",
-      "expected_delta_pp": 1.79,
+      "range_desc": "(-2pp ~ +3pp)",
+      "expected_delta_pp": 0.1,
       "probability_source": "prior",
       "market_impact": {
-        "bond": "利多",
-        "equity": "利多",
-        "equity_channel": "利率驱动",
-        "direction": "dovish",
-        "long_favored": [
-          "全部风险资产 (股/加密/HY 债)",
-          "长债",
-          "黄金",
-          "REITs"
-        ],
-        "long_hurt": [
-          "USD (美元指数)"
-        ],
-        "bond_yield_bps": -5.4,
-        "spx_pct_est": 0.27
+        "bond": "无明显方向",
+        "equity": "无明显方向",
+        "equity_channel": "增长/利率对冲",
+        "direction": "neutral",
+        "long_favored": [],
+        "long_hurt": [],
+        "bond_yield_bps": -0.3,
+        "spx_pct_est": 0.01
       },
       "impact_matrix": {
-        "event_type": "FOMC",
+        "event_type": "Retail Sales",
         "mkt_implied_prob": 0.55,
         "surprise_factor": 0.45,
         "scenarios": {
@@ -503,48 +484,67 @@
     {
       "date": "2026-09-16",
       "days_until": 5,
-      "event": "Retail Sales",
+      "event": "FOMC Decision",
       "impact": "high",
-      "event_type": "Retail Sales",
+      "event_type": "FOMC",
       "scenarios": {
-        "dovish": {
-          "desc": "零售 MoM < 0% (消费明显走弱)",
-          "delta_pp": 3,
-          "prob_note": "支持降息保消费",
-          "probability": 0.2
+        "surprise_cut": {
+          "desc": "降息 25bp (远超预期)",
+          "delta_pp": 30,
+          "prob_note": "已发生就是 confirm, 后续概率 100%",
+          "probability": 0.05
+        },
+        "dovish_hold": {
+          "desc": "维持 + dot plot 转鸽 / 释放降息信号",
+          "delta_pp": 8,
+          "prob_note": "Fed Chair 发言暗示降息临近",
+          "probability": 0.25
         },
         "base": {
-          "desc": "零售 MoM 0-0.5% (中性)",
+          "desc": "维持 + 中性发言",
           "delta_pp": 0,
-          "prob_note": "无方向",
+          "prob_note": "无明显方向",
           "probability": 0.55
         },
-        "hawkish": {
-          "desc": "零售 MoM > 0.5% (消费强)",
-          "delta_pp": -2,
-          "prob_note": "略微推迟降息",
-          "probability": 0.25
+        "hawkish_hold": {
+          "desc": "维持 + 强调通胀风险 / 推迟降息",
+          "delta_pp": -8,
+          "prob_note": "Fed Chair 明确 pushback",
+          "probability": 0.12
+        },
+        "surprise_hike": {
+          "desc": "加息 (极端反常)",
+          "delta_pp": -25,
+          "prob_note": "降息 thesis 彻底破产",
+          "probability": 0.03
         }
       },
       "delta_range_pp": [
-        -2,
-        3
+        -25,
+        30
       ],
-      "range_desc": "(-2pp ~ +3pp)",
-      "expected_delta_pp": 0.1,
+      "range_desc": "(-25pp ~ +30pp)",
+      "expected_delta_pp": 1.79,
       "probability_source": "prior",
       "market_impact": {
-        "bond": "无明显方向",
-        "equity": "无明显方向",
-        "equity_channel": "增长/利率对冲",
-        "direction": "neutral",
-        "long_favored": [],
-        "long_hurt": [],
-        "bond_yield_bps": -0.3,
-        "spx_pct_est": 0.01
+        "bond": "利多",
+        "equity": "利多",
+        "equity_channel": "利率驱动",
+        "direction": "dovish",
+        "long_favored": [
+          "全部风险资产 (股/加密/HY 债)",
+          "长债",
+          "黄金",
+          "REITs"
+        ],
+        "long_hurt": [
+          "USD (美元指数)"
+        ],
+        "bond_yield_bps": -5.4,
+        "spx_pct_est": 0.27
       },
       "impact_matrix": {
-        "event_type": "Retail Sales",
+        "event_type": "FOMC",
         "mkt_implied_prob": 0.55,
         "surprise_factor": 0.45,
         "scenarios": {
@@ -976,7 +976,7 @@
       "date": "2026-10-02",
       "days_until": 21,
       "event": "NFP Release",
-      "impact": "critical",
+      "impact": "high",
       "event_type": "NFP",
       "scenarios": {
         "dovish": {
@@ -1222,8 +1222,8 @@
       }
     },
     {
-      "date": "2026-10-14",
-      "days_until": 33,
+      "date": "2026-10-13",
+      "days_until": 32,
       "event": "CPI Release",
       "impact": "high",
       "event_type": "CPI",
@@ -1472,8 +1472,8 @@
       }
     },
     {
-      "date": "2026-10-15",
-      "days_until": 34,
+      "date": "2026-10-14",
+      "days_until": 33,
       "event": "PPI Release",
       "impact": "high",
       "event_type": "PPI",
@@ -1934,11 +1934,11 @@
       }
     }
   ],
-  "generated_at": "2026-09-11T10:35:00",
+  "generated_at": "2026-09-11T16:35:28",
   "note": "Scenarios 是规则版预测. 实际数据发布时,系统会自动对照到最近的 scenario 追加 thesis_history 验证.",
   "_meta": {
-    "cached_at": "2026-09-11T10:35:00.729912",
-    "age_sec": 21481,
+    "cached_at": "2026-09-11T16:35:28.301692",
+    "age_sec": 1654,
     "stale": false,
     "refreshing": false
   }

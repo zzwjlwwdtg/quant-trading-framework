@@ -22,14 +22,14 @@
     "implied_pe_hold_upside": 31.2,
     "peg_fair_price": 735.48,
     "peg_ratio": 0.67,
-    "hist_pe_median": 35.74,
+    "hist_pe_median": 35.73,
     "hist_pe_p25": 33.1,
     "hist_pe_p75": 38.3,
-    "hist_pe_n_days": 801,
-    "implied_hist_median": 842.5,
+    "hist_pe_n_days": 802,
+    "implied_hist_median": 842.26,
     "implied_hist_p25": 780.27,
     "implied_hist_p75": 902.85,
-    "implied_hist_upside": 71.1,
+    "implied_hist_upside": 71.0,
     "peer_pe_median": 22.36,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
@@ -43,11 +43,11 @@
       },
       {
         "ticker": "AAPL",
-        "pe": 34.1
+        "pe": 34.11
       },
       {
         "ticker": "ORCL",
-        "pe": 13.95
+        "pe": 13.88
       },
       {
         "ticker": "CRM",
@@ -68,12 +68,12 @@
           "growth": 0.144
         },
         "+1q": {
-          "avg": 4.8288,
+          "avg": 4.8272,
           "low": 4.72,
           "high": 5.02,
           "yearAgoEps": 4.14,
           "numberOfAnalysts": 25.0,
-          "growth": 0.1664
+          "growth": 0.166
         },
         "0y": {
           "avg": 19.7531,
@@ -84,7 +84,7 @@
           "growth": 0.1431
         },
         "+1y": {
-          "avg": 23.5733,
+          "avg": 23.573,
           "low": 20.93,
           "high": 26.0,
           "yearAgoEps": 19.7531,
@@ -94,7 +94,7 @@
       },
       "revenue": {
         "0q": {
-          "avg": 90668185670.0,
+          "avg": 90670106720.0,
           "low": 89640000000.0,
           "high": 92655000000.0,
           "yearAgoRevenue": 77673000000.0,
@@ -102,15 +102,15 @@
           "growth": 0.1673
         },
         "+1q": {
-          "avg": 95533756610.0,
+          "avg": 95509864710.0,
           "low": 93527000000.0,
           "high": 98410000000.0,
           "yearAgoRevenue": 81273000000.0,
           "numberOfAnalysts": 37.0,
-          "growth": 0.1755
+          "growth": 0.1752
         },
         "0y": {
-          "avg": 391082621760.0,
+          "avg": 391082295220.0,
           "low": 380000000000.0,
           "high": 402719127430.0,
           "yearAgoRevenue": 331839000000.0,
@@ -118,12 +118,12 @@
           "growth": 0.1785
         },
         "+1y": {
-          "avg": 467327340200.0,
+          "avg": 467321614710.0,
           "low": 433178000000.0,
           "high": 503000000000.0,
-          "yearAgoRevenue": 391082621760.0,
+          "yearAgoRevenue": 391082295220.0,
           "numberOfAnalysts": 51.0,
-          "growth": 0.195
+          "growth": 0.1949
         }
       },
       "eps_trend": {
@@ -131,29 +131,29 @@
           "current": 4.7245,
           "7daysAgo": 4.7245,
           "30daysAgo": 4.7204,
-          "60daysAgo": 4.6224,
+          "60daysAgo": 4.6232,
           "90daysAgo": 4.6142
         },
         "+1q": {
-          "current": 4.8288,
+          "current": 4.8272,
           "7daysAgo": 4.8288,
           "30daysAgo": 4.8233,
-          "60daysAgo": 4.7869,
+          "60daysAgo": 4.7877,
           "90daysAgo": 4.777
         },
         "0y": {
           "current": 19.7531,
           "7daysAgo": 19.7531,
-          "30daysAgo": 19.6938,
-          "60daysAgo": 19.3857,
-          "90daysAgo": 19.3694
+          "30daysAgo": 19.7221,
+          "60daysAgo": 19.3894,
+          "90daysAgo": 19.373
         },
         "+1y": {
-          "current": 23.5733,
+          "current": 23.573,
           "7daysAgo": 23.5733,
-          "30daysAgo": 23.4742,
-          "60daysAgo": 22.577,
-          "90daysAgo": 22.6224
+          "30daysAgo": 23.5527,
+          "60daysAgo": 22.5874,
+          "90daysAgo": 22.6278
         }
       },
       "eps_revisions": {
@@ -183,9 +183,9 @@
         "signal": "upward",
         "trend_signal": "flat",
         "breadth_signal": "upward",
-        "eps_current": 23.5733,
-        "eps_30d_ago": 23.4742,
-        "eps_trend_pct_30d": 0.42,
+        "eps_current": 23.573,
+        "eps_30d_ago": 23.5527,
+        "eps_trend_pct_30d": 0.09,
         "up_30d": 19,
         "down_30d": 3,
         "net_30d": 16
@@ -214,8 +214,8 @@
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
-        "implied_price": 842.5,
-        "gap_pct": 71.1
+        "implied_price": 842.26,
+        "gap_pct": 71.0
       },
       {
         "key": "peer_pe",
@@ -236,11 +236,11 @@
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-11T01:36:04.781098+00:00",
+  "fetched_at": "2026-09-11T07:36:33.413546+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-11T10:36:04.783181",
-    "age_sec": 21418,
+    "cached_at": "2026-09-11T16:36:33.450923",
+    "age_sec": 1590,
     "stale": false,
     "refreshing": false
   },
