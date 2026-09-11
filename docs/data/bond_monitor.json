@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-12T05:53",
+  "asof": "2026-09-12T06:24",
   "yields": {
     "10y": {
       "value": 4.975,
@@ -196,10 +196,10 @@
   },
   "spreads": {
     "2s10s": {
-      "value": 0.39,
-      "chg_20d_bps": -9.0,
+      "value": 0.33,
+      "chg_20d_bps": -18.0,
       "regime": "正常",
-      "asof": "2026-09-10"
+      "asof": "2026-09-11"
     }
   },
   "gld_correlation": {
@@ -288,7 +288,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.8B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.7B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -321,13 +321,13 @@
     "sofr_pct": 3.62,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -3.0,
-    "usdjpy": 153.52,
-    "usdjpy_20d_pct": -3.7,
-    "usdjpy_20d_delta_pct": -3.7,
+    "usdjpy": 153.55,
+    "usdjpy_20d_pct": -3.69,
+    "usdjpy_20d_delta_pct": -3.69,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -6.31,
-    "krw_usd": 1340.9,
-    "krw_20d_pct": -5.36,
+    "usdjpy_pullback_from_60d_high_pct": -6.29,
+    "krw_usd": 1341.1,
+    "krw_20d_pct": -5.35,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 230.5,
@@ -344,9 +344,9 @@
     "kbe_spy_20d_delta_pct": -3.03,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 270.0,
-    "dxy": 99.14,
-    "dxy_pct_20d": -0.82,
-    "dxy_z_60d": -1.09,
+    "dxy": 99.1,
+    "dxy_pct_20d": -0.86,
+    "dxy_z_60d": -1.14,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -399,32 +399,32 @@
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29389.0,
-        "chg_pct": 0.87
+        "price": 29391.75,
+        "chg_pct": 0.88
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 100.34,
-        "chg_pct": -2.09
+        "price": 99.99,
+        "chg_pct": -2.43
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4388.2,
-        "chg_pct": 0.54
+        "price": 4390.0,
+        "chg_pct": 0.58
       }
     },
     "oil_uso": 154.9,
     "oil_pct_20d": 23.89,
-    "oil_wti": 100.34,
+    "oil_wti": 99.99,
     "eem_pct_20d": 1.74,
     "eem_vs_spx_20d": 3.49,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
         "label": "20+Y 美债",
-        "vol_z_20d": 0.17,
+        "vol_z_20d": 0.18,
         "notable": false
       },
       "real_rates": {
@@ -442,37 +442,37 @@
       "credit_ig": {
         "proxy": "LQD",
         "label": "投资级信用 ETF",
-        "vol_z_20d": 0.12,
+        "vol_z_20d": 0.14,
         "notable": false
       },
       "credit_hy": {
         "proxy": "HYG",
         "label": "高收益信用 ETF",
-        "vol_z_20d": 0.66,
+        "vol_z_20d": 0.78,
         "notable": false
       },
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": 0.56,
+        "vol_z_20d": 0.57,
         "notable": false
       },
       "em": {
         "proxy": "EEM",
         "label": "新兴市场 ETF",
-        "vol_z_20d": 1.1,
+        "vol_z_20d": 1.24,
         "notable": true
       },
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": 1.39,
+        "vol_z_20d": 1.46,
         "notable": true
       },
       "us_qqq": {
         "proxy": "QQQ",
         "label": "Nasdaq 100 ETF",
-        "vol_z_20d": -0.79,
+        "vol_z_20d": -0.75,
         "notable": false
       },
       "jp_equity": {
@@ -484,13 +484,13 @@
       "kr_equity": {
         "proxy": "EWY",
         "label": "iShares KR ETF (代 KOSPI)",
-        "vol_z_20d": -0.44,
+        "vol_z_20d": -0.42,
         "notable": false
       },
       "oil": {
         "proxy": "USO",
         "label": "WTI 原油 ETF",
-        "vol_z_20d": 1.03,
+        "vol_z_20d": 1.05,
         "notable": true
       }
     },
@@ -499,7 +499,7 @@
     "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 257.8,
+    "stablecoin_total_bn": 257.7,
     "usdt_bn": 183.4,
     "usdc_bn": 74.3,
     "vix": 15.84,
@@ -512,8 +512,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-12T05:54:15.061923",
-    "age_sec": 527,
+    "cached_at": "2026-09-12T06:25:15.534801",
+    "age_sec": 466,
     "stale": false,
     "refreshing": false
   }
