@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-12T08:28",
+  "asof": "2026-09-12T10:19",
   "yields": {
     "10y": {
       "value": 4.975,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.493,
-    "vs_tips_10y": -0.053,
+    "vs_10y": -0.505,
+    "vs_tips_10y": -0.11,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.053，对冲关系变弱"
+    "reason": "相关性 -0.11，对冲关系变弱"
   },
   "anomalies": [
     {
@@ -243,7 +243,7 @@
     },
     {
       "level": "warn",
-      "msg": "GLD/TIPS 对冲失效 (相关性 -0.05) — 通胀/流动性 regime 改变",
+      "msg": "GLD/TIPS 对冲失效 (相关性 -0.11) — 通胀/流动性 regime 改变",
       "key": "hedge_broken"
     },
     {
@@ -262,21 +262,6 @@
       "key": "cip_repatriation_signal"
     },
     {
-      "level": "bad",
-      "msg": "SPY-IEF 60d 相关 +0.389 → 股债对冲破裂 (2022 股债双杀水平)",
-      "key": "stock_bond_corr_broken"
-    },
-    {
-      "level": "warn",
-      "msg": "KBE/SPY 20d -3.03% 银行相对走弱 (需持续观察)",
-      "key": "bank_stress_warn"
-    },
-    {
-      "level": "warn",
-      "msg": "油价 20d +23.9% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
-      "key": "oil_rising"
-    },
-    {
       "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $5.3B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
@@ -288,7 +273,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.8B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.9B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -339,9 +324,8 @@
     "hedge_cost_jp": 2.35,
     "real_yield_gap_us_jp": 1.76,
     "cpi_jp_yoy_pct": 3.17,
-    "spy_ief_60d_corr": 0.389,
-    "kbe_spy_ratio": 0.08902,
-    "kbe_spy_20d_delta_pct": -3.03,
+    "kbe_spy_ratio": null,
+    "kbe_spy_20d_delta_pct": null,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 270.0,
     "dxy": 99.1,
@@ -415,11 +399,11 @@
         "chg_pct": 0.58
       }
     },
-    "oil_uso": 154.9,
-    "oil_pct_20d": 23.89,
+    "oil_uso": null,
+    "oil_pct_20d": null,
     "oil_wti": 99.99,
-    "eem_pct_20d": 1.74,
-    "eem_vs_spx_20d": 3.49,
+    "eem_pct_20d": null,
+    "eem_vs_spx_20d": null,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -499,9 +483,9 @@
     "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 257.8,
-    "usdt_bn": 183.4,
-    "usdc_bn": 74.3,
+    "stablecoin_total_bn": 257.9,
+    "usdt_bn": 183.5,
+    "usdc_bn": 74.4,
     "vix": 15.84,
     "bbi_score": 0.98,
     "bbi_components": {
@@ -512,8 +496,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-12T08:29:15.588594",
-    "age_sec": 227,
+    "cached_at": "2026-09-12T10:20:21.700030",
+    "age_sec": 760,
     "stale": false,
     "refreshing": false
   }
