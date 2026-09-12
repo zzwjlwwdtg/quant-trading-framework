@@ -5,18 +5,19 @@
       "date": "2026-09-16",
       "days_until": 4,
       "probabilities": {
-        "hold": 16,
-        "hike_25": 84
+        "hold": 14.5,
+        "hike_25": 85.5
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-10-28",
       "days_until": 46,
       "probabilities": {
-        "hold": 62,
-        "hike_25": 38
+        "cut_25": 7.2,
+        "hold": 49.6,
+        "hike_25": 43.2
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -25,46 +26,57 @@
       "date": "2026-12-09",
       "days_until": 88,
       "probabilities": {
-        "hold": 32,
-        "hike_25": 68
+        "cut_25": 2.6,
+        "hold": 22.7,
+        "hike_25": 47.3,
+        "hike_50": 27.4
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 137,
+      "probabilities": {
+        "cut_50": 1.6,
+        "cut_25": 14.6,
+        "hold": 37.3,
+        "hike_25": 35.5,
+        "hike_50": 11.1
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2026-12",
-  "data_snapshot_date": "2026-09-12",
-  "recent_event_impact": "2026-09-04 NFP +162K、失业率4.1%，就业强于预期；2026-09-10 PPI +0.4% m/m、+5.4% y/y；2026-09-11 CPI +0.4% m/m、+3.4% y/y，核心CPI +0.3% m/m。就业和通胀数据均推高加息定价，9月加息概率升至约84%-90%区间。",
-  "commentary": "Data snapshot为2026-09-12，CME官方FedWatch页面当日可访问但表格由嵌入工具加载；可抓取的实时替代源Frenzy Capital显示其概率来自CME Globex /ZQ并按FedWatch方法计算，页面说明交易时段每30秒刷新。最近7天内NFP、PPI、CPI均已发布，尤其9/10 PPI和9/11 CPI的能源驱动通胀上行把9月会议预期从接近平衡推向明确加息。",
+  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_date": "2027-Q3",
+  "data_snapshot_date": "2026-09-12 00:35 EDT",
+  "recent_event_impact": "2026-09-11 CPI: headline CPI +0.4% MoM / 3.4% YoY, core +0.3% MoM / 2.4% YoY; September hike odds rose to about 85-90%. 2026-09-10 PPI: final demand +0.4% MoM / 5.4% YoY, lifting September hike odds from about 62% to 74%. 2026-09-04 NFP: August payrolls +162K, unemployment 4.1%, reinforcing inflation-sensitive hike pricing.",
+  "commentary": "Snapshot is after the 2026-09-10 PPI and 2026-09-11 CPI releases, so the key inflation shock is reflected: markets now price a high-probability September hike and a hawkish path into early 2027. The latest NFP was slightly outside the strict 7-day window but showed solid hiring, while CPI/PPI were the dominant fresh catalysts pushing rate-hike odds higher.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fed_funds_futures_replica"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_based_alternative"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp_official"
+      "url": "https://www.marketwatch.com/livecoverage/cpi-report-today-august-inflation-fed-rates-live-updates/card/market-expectations-of-a-fed-interest-rate-hike-increase-after-of-cpi-report-NhhOSqaNSEq4b02be07u",
+      "type": "recent_event_cpi"
     },
     {
-      "url": "https://www.marketwatch.com/livecoverage/cpi-report-today-august-inflation-fed-rates-live-updates",
-      "type": "ppi_cpi_market_impact"
-    },
-    {
-      "url": "https://apnews.com/article/c76f53f7a53def0c464ca44ac637f203",
-      "type": "cpi_report"
+      "url": "https://www.barrons.com/livecoverage/stock-market-news-today-091026/card/rate-hike-odds-spike-after-ppi-report-BvzWpk5GNhS5QLsEVKYc",
+      "type": "recent_event_ppi"
     }
   ],
-  "confidence": "medium",
+  "confidence": "high",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-11T17:40:08+00:00",
+  "fetched_at": "2026-09-12T09:43:15+00:00",
   "_meta": {
-    "cached_at": "2026-09-12T02:40:08.083509",
-    "age_sec": 28374,
+    "cached_at": "2026-09-12T18:43:15.452898",
+    "age_sec": 6586,
     "stale": false,
     "refreshing": false
   }
