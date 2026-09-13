@@ -1,74 +1,81 @@
 {
   "ticker": "DOWA",
   "source_stock": "5714.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
-  "last_update": null,
+  "direction": "据え置き",
+  "revision_type": "maintained",
+  "magnitude": "小",
+  "last_update": "2026-08-07",
   "next_earnings": "2026-11-11",
-  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
-  "revision_reason": null,
+  "guidance_note": "2027年3月期通期予想は売上高9,410億円（+26.2% YoY）、営業利益530億円（+55.0% YoY）、親会社株主帰属純利益570億円（-8.7% YoY）、EPS 963.68円。",
+  "revision_reason": "2026年5月14日公表予想から据え置き：売上高9,410→9,410億円、営業利益530→530億円、純利益570→570億円、EPS 963.68→963.68円。1Qは金属価格・為替好転で製錬中心に大幅増益だが、需要面が概ね想定通りのため通期見通しを維持。",
   "market_reaction": "不明",
-  "confidence": "unverified",
+  "confidence": "high",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-09-10T08:56:58.276151+00:00",
-  "ai_error": "codex_codex_error: exit=1 stderr=2026-09-10T08:56:58.426481Z ERROR codex_models_manager::cache: failed to load models cache: u",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-09-13T08:58:00.205490+00:00",
+  "sources": [
+    {
+      "url": "https://hd.dowa.co.jp/ja/ir/schedule.html",
+      "type": "IR",
+      "title": "IRカレンダー"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 7,
     "recommendation": "hold",
-    "current_price": 9263.0,
+    "current_price": 8885.0,
     "forward_eps": 483.35,
-    "trailing_eps": 1049.62,
+    "trailing_eps": 1050.21,
     "eps_growth_pct": -54.0,
-    "forward_pe": 19.16,
-    "trailing_pe": 8.83,
+    "forward_pe": 18.38,
+    "trailing_pe": 8.46,
     "target_mean": 10201.43,
     "target_high": 12700.0,
     "target_low": 7710.0,
-    "target_upside_pct": 10.1,
+    "target_upside_pct": 14.8,
     "revenue_growth_pct": 58.2,
     "earnings_growth_pct": 268.9,
     "next_earnings": "2026-11-11",
-    "implied_pe_hold": 4265.61,
+    "implied_pe_hold": 4089.24,
     "implied_pe_hold_upside": -54.0,
     "peg_fair_price": null,
     "peg_ratio": null,
     "hist_pe_median": 10.91,
     "hist_pe_p25": 9.95,
     "hist_pe_p75": 12.24,
-    "hist_pe_n_days": 844,
+    "hist_pe_n_days": 845,
     "implied_hist_median": 5273.35,
     "implied_hist_p25": 4809.33,
     "implied_hist_p75": 5916.2,
-    "implied_hist_upside": -43.1,
-    "peer_pe_median": 22.95,
+    "implied_hist_upside": -40.6,
+    "peer_pe_median": 21.6,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "5857.T",
-        "pe": 20.83
+        "pe": 19.88
       },
       {
         "ticker": "5706.T",
-        "pe": 41.07
+        "pe": 38.64
       },
       {
         "ticker": "5713.T",
-        "pe": 25.06
+        "pe": 23.32
       },
       {
         "ticker": "5711.T",
-        "pe": 15.63
+        "pe": 14.94
       }
     ],
-    "implied_peer_median": 11092.88,
-    "implied_peer_upside": 19.8,
+    "implied_peer_median": 10440.36,
+    "implied_peer_upside": 17.5,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-09-10T17:57:32.614089",
-    "age_sec": 254131,
+    "cached_at": "2026-09-13T17:58:35.042206",
+    "age_sec": 2069,
     "stale": false,
     "refreshing": false
   }

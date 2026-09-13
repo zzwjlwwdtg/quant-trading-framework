@@ -1,47 +1,54 @@
 {
   "ticker": "MURATA",
   "source_stock": "6981.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
-  "last_update": null,
+  "direction": "上修",
+  "revision_type": "upward",
+  "magnitude": "中",
+  "last_update": "2026-07-31",
   "next_earnings": "2026-10-30",
-  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
-  "revision_reason": null,
-  "market_reaction": "不明",
-  "confidence": "unverified",
+  "guidance_note": "2027年3月期通期予想は売上収益2兆1,100億円、営業利益4,300億円、親会社帰属当期利益3,380億円、EPS185.68円。",
+  "revision_reason": "データセンター関連需要の高まりと円安進行を理由に上方修正。売上収益1兆9,600億円→2兆1,100億円（+7.7%）、営業利益3,800億円→4,300億円（+13.2%）、純利益2,930億円→3,380億円（+15.4%）、EPS160.96円→185.68円。",
+  "market_reaction": "高",
+  "confidence": "high",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-09-10T08:57:28.217468+00:00",
-  "ai_error": "codex_codex_error: exit=1 stderr=2026-09-10T08:57:28.358502Z ERROR codex_models_manager::cache: failed to load models cache: u",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-09-13T08:58:29.955519+00:00",
+  "sources": [
+    {
+      "url": "https://minkabu.jp/stock/5698/news/4581533?selected_platform=pc",
+      "type": "news",
+      "title": "＜動意株・３１日＞（大引け）＝村田製、アトラエ、ＱＰＳＨＤなど"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 17,
     "recommendation": "strong_buy",
-    "current_price": 7525.0,
+    "current_price": 7352.0,
     "forward_eps": 237.27,
-    "trailing_eps": 127.59,
-    "eps_growth_pct": 86.0,
-    "forward_pe": 31.71,
-    "trailing_pe": 58.98,
-    "target_mean": 10205.88,
-    "target_high": 15200.0,
+    "trailing_eps": 127.92,
+    "eps_growth_pct": 85.5,
+    "forward_pe": 30.99,
+    "trailing_pe": 57.47,
+    "target_mean": 10117.65,
+    "target_high": 15000.0,
     "target_low": 4200.0,
-    "target_upside_pct": 35.6,
+    "target_upside_pct": 37.6,
     "revenue_growth_pct": 20.7,
     "earnings_growth_pct": 66.5,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 13993.7,
-    "implied_pe_hold_upside": 86.0,
-    "peg_fair_price": 20405.22,
-    "peg_ratio": 0.37,
-    "hist_pe_median": 25.55,
+    "implied_pe_hold": 13636.72,
+    "implied_pe_hold_upside": 85.5,
+    "peg_fair_price": 20286.58,
+    "peg_ratio": 0.36,
+    "hist_pe_median": 25.56,
     "hist_pe_p25": 21.2,
     "hist_pe_p75": 29.67,
-    "hist_pe_n_days": 844,
-    "implied_hist_median": 6062.25,
+    "hist_pe_n_days": 845,
+    "implied_hist_median": 6064.62,
     "implied_hist_p25": 5030.12,
     "implied_hist_p75": 7039.8,
-    "implied_hist_upside": -19.4,
+    "implied_hist_upside": -17.5,
     "peer_pe_median": 33.12,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
@@ -51,28 +58,28 @@
       },
       {
         "ticker": "6976.T",
-        "pe": 50.21
+        "pe": 49.17
       },
       {
         "ticker": "6762.T",
-        "pe": 26.67
+        "pe": 26.28
       },
       {
         "ticker": "2327.TW",
-        "pe": 18.1
+        "pe": 17.21
       },
       {
         "ticker": "6971.T",
-        "pe": 38.76
+        "pe": 39.68
       }
     ],
     "implied_peer_median": 7858.38,
-    "implied_peer_upside": 4.4,
+    "implied_peer_upside": 6.9,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-09-10T17:58:03.176100",
-    "age_sec": 254100,
+    "cached_at": "2026-09-13T17:59:11.791658",
+    "age_sec": 2032,
     "stale": false,
     "refreshing": false
   }

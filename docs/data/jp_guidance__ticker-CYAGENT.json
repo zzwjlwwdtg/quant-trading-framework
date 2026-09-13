@@ -1,74 +1,81 @@
 {
   "ticker": "CYAGENT",
   "source_stock": "4751.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
-  "last_update": null,
+  "direction": "上修",
+  "revision_type": "upward",
+  "magnitude": "大",
+  "last_update": "2026-08-07",
   "next_earnings": "2026-11-11",
-  "guidance_note": "尚未接入该公司的官方 IR 结构化数据；已停用无来源模型数字。",
-  "revision_reason": null,
+  "guidance_note": "2026年9月期通期予想は、売上高9,500億円、営業利益770億円、経常利益780億円、親会社帰属純利益410億円、EPS 80.85円。",
+  "revision_reason": "主要3事業が好調に推移したため上方修正。売上高予想8,800→9,500億円（+8.0%）、営業利益500-600→770億円（+28.3-54.0%）、純利益250-300→410億円（+36.7-64.0%）。",
   "market_reaction": "不明",
-  "confidence": "unverified",
+  "confidence": "high",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-09-10T08:56:58.257510+00:00",
-  "ai_error": "codex_codex_error: exit=1 stderr=2026-09-10T08:56:58.409685Z ERROR codex_models_manager::cache: failed to load models cache: u",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-09-13T08:58:00.167458+00:00",
+  "sources": [
+    {
+      "url": "https://www.cyberagent.co.jp/ir/calendar/",
+      "type": "IR",
+      "title": "IRカレンダー"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 1235.5,
+    "current_price": 1231.5,
     "forward_eps": 51.25,
-    "trailing_eps": 80.36,
+    "trailing_eps": 80.29,
     "eps_growth_pct": -36.2,
-    "forward_pe": 24.11,
-    "trailing_pe": 15.37,
-    "target_mean": 1827.5,
+    "forward_pe": 24.03,
+    "trailing_pe": 15.34,
+    "target_mean": 1808.12,
     "target_high": 2200.0,
-    "target_low": 1470.0,
-    "target_upside_pct": 47.9,
+    "target_low": 1300.0,
+    "target_upside_pct": 46.8,
     "revenue_growth_pct": 9.4,
     "earnings_growth_pct": 5.8,
     "next_earnings": "2026-11-11",
-    "implied_pe_hold": 787.95,
+    "implied_pe_hold": 786.08,
     "implied_pe_hold_upside": -36.2,
     "peg_fair_price": null,
     "peg_ratio": null,
-    "hist_pe_median": 33.64,
-    "hist_pe_p25": 23.83,
+    "hist_pe_median": 33.59,
+    "hist_pe_p25": 23.82,
     "hist_pe_p75": 80.07,
-    "hist_pe_n_days": 966,
-    "implied_hist_median": 1724.05,
-    "implied_hist_p25": 1221.29,
+    "hist_pe_n_days": 967,
+    "implied_hist_median": 1721.49,
+    "implied_hist_p25": 1220.78,
     "implied_hist_p75": 4103.59,
-    "implied_hist_upside": 39.5,
-    "peer_pe_median": 17.2,
+    "implied_hist_upside": 39.8,
+    "peer_pe_median": 17.14,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "4324.T",
-        "pe": 11.11
+        "pe": 11.08
       },
       {
         "ticker": "2433.T",
-        "pe": 23.3
+        "pe": 23.19
       },
       {
         "ticker": "2432.T",
-        "pe": 26.34
+        "pe": 26.2
       },
       {
         "ticker": "9418.T",
-        "pe": 5.59
+        "pe": 5.61
       }
     ],
-    "implied_peer_median": 881.5,
+    "implied_peer_median": 878.43,
     "implied_peer_upside": -28.7,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-09-10T17:57:32.000392",
-    "age_sec": 254131,
+    "cached_at": "2026-09-13T17:58:45.709072",
+    "age_sec": 2058,
     "stale": false,
     "refreshing": false
   }
