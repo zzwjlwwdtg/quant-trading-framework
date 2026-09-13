@@ -3,80 +3,84 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 4,
+      "days_until": 3,
       "probabilities": {
-        "hold": 14.5,
-        "hike_25": 85.5
+        "hold": 11,
+        "hike_25": 89
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-10-28",
-      "days_until": 46,
+      "days_until": 45,
       "probabilities": {
-        "cut_25": 7.2,
-        "hold": 49.6,
-        "hike_25": 43.2
+        "hold": 6,
+        "hike_25": 53,
+        "hike_50": 41
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-12-09",
-      "days_until": 88,
+      "days_until": 87,
       "probabilities": {
-        "cut_25": 2.6,
-        "hold": 22.7,
-        "hike_25": 47.3,
-        "hike_50": 27.4
+        "hold": 2,
+        "hike_25": 21,
+        "hike_50": 49,
+        "hike_75": 28
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 137,
+      "days_until": 136,
       "probabilities": {
-        "cut_50": 1.6,
-        "cut_25": 14.6,
-        "hold": 37.3,
-        "hike_25": 35.5,
-        "hike_50": 11.1
+        "hold": 1,
+        "hike_25": 14,
+        "hike_50": 38,
+        "hike_75": 36,
+        "hike_100": 11
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q3",
-  "data_snapshot_date": "2026-09-12 00:35 EDT",
-  "recent_event_impact": "2026-09-11 CPI: headline CPI +0.4% MoM / 3.4% YoY, core +0.3% MoM / 2.4% YoY; September hike odds rose to about 85-90%. 2026-09-10 PPI: final demand +0.4% MoM / 5.4% YoY, lifting September hike odds from about 62% to 74%. 2026-09-04 NFP: August payrolls +162K, unemployment 4.1%, reinforcing inflation-sensitive hike pricing.",
-  "commentary": "Snapshot is after the 2026-09-10 PPI and 2026-09-11 CPI releases, so the key inflation shock is reflected: markets now price a high-probability September hike and a hawkish path into early 2027. The latest NFP was slightly outside the strict 7-day window but showed solid hiring, while CPI/PPI were the dominant fresh catalysts pushing rate-hike odds higher.",
+  "implied_terminal_rate": "4.25-4.50",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-11",
+  "recent_event_impact": "2026-09-04 NFP +162K、失业率4.1%，强化劳动力韧性；2026-09-10 PPI推高9月加息概率至约70%；2026-09-11 CPI headline +0.4% MoM / 3.4% YoY、core +0.3% MoM，使CME FedWatch 9月25bp加息概率升至约85%-90%。",
+  "commentary": "Data snapshot 为 2026-09-11，处于今天 2026-09-13 的最近1个交易日内，且晚于最近7天内的NFP、PPI和CPI发布。强于预期的就业与偏热的核心CPI/PPI使市场从此前的观望转向明显鹰派，未来3-4次会议均定价至少一次、且到12月累计两次以上加息的概率最高。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_based_alternative"
+      "url": "https://25bp.eu/en/fed/",
+      "type": "fed_funds_futures_probability_snapshot"
     },
     {
-      "url": "https://www.marketwatch.com/livecoverage/cpi-report-today-august-inflation-fed-rates-live-updates/card/market-expectations-of-a-fed-interest-rate-hike-increase-after-of-cpi-report-NhhOSqaNSEq4b02be07u",
-      "type": "recent_event_cpi"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp_release"
     },
     {
-      "url": "https://www.barrons.com/livecoverage/stock-market-news-today-091026/card/rate-hike-odds-spike-after-ppi-report-BvzWpk5GNhS5QLsEVKYc",
-      "type": "recent_event_ppi"
+      "url": "https://finance.yahoo.com/economy/policy/articles/fed-rate-hike-likelihood-jumps-171250985.html",
+      "type": "cpi_market_impact"
+    },
+    {
+      "url": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-09-10-2026/card/ppi-report-leaves-a-rate-hike-in-play-QPib8GLZOcQKDsj0FbJF",
+      "type": "ppi_market_impact"
     }
   ],
-  "confidence": "high",
+  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-12T09:43:15+00:00",
+  "fetched_at": "2026-09-13T01:44:50+00:00",
   "_meta": {
-    "cached_at": "2026-09-12T18:43:15.452898",
-    "age_sec": 28186,
+    "cached_at": "2026-09-13T10:44:50.025085",
+    "age_sec": 6492,
     "stale": false,
     "refreshing": false
   }
