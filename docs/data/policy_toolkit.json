@@ -1,30 +1,7 @@
 {
-  "as_of": "2026-09-14T15:59:01.419300",
-  "count_total_actions": 419,
+  "as_of": "2026-09-15T04:02:46.262601",
+  "count_total_actions": 423,
   "tools": [
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "已用",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "signaled",
-        "date": "2026-09-13",
-        "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "贝森特强硬喊话未压住债市，口头干预效果有限。",
-        "verbatim": "Bessent dared the markets to ‘bet against’ him. Bond traders did — and appear to be winning.",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNNWNEMVd3T01FcU85RHVabm9KNWk3dVFRVUZQMm5DQXNxc1ZwbGduMkFqNWZyOWJhT0o4eU5GY2s1OTB1cUtSNFAxNF9QVTl4Q2hMZ2hvRDZrZkozSDFzYkR2UUJSM2x6YWV6cmpmb0kxLW92QXdILUN3N0xlTGR4YS13?oc=5",
-        "confidence": 7
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 157
-    },
     {
       "tool_key": "qra_wording",
       "zh": "季度再融资声明措辞",
@@ -161,7 +138,30 @@
         "confidence": 6
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 16
+      "event_count_180d": 13
+    },
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "signaled",
+        "date": "2026-09-14",
+        "actor": "Treasury",
+        "amount_desc": "",
+        "commentary": "文章框定财政部与债市对抗，核心仍是通过买回影响收益率。",
+        "verbatim": "Why the US Treasury Is Battling the Bond Market and What Investors Can Do About It",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQVU9FSk1TZDFYdU1uOXI2S2ZDMXBIUmQ3NnRsUWNtU0JRZ19BR3JPd1E3VkZRdWRwNXZmclVqdHljMnpwb1RBRDVpLXRMZ0JXQ2RKcWpBTXBUSXdxQXFGYmFhVjJSN2lYbllVTnEybVhUTVRVNnZUcVlPVGdQVFI2RV9IeGdpWnluUkJUaDJIaWZDTWFnUHRNUXY5TWE0Q01OX040cFNLMA?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 159
     },
     {
       "tool_key": "fed_hawkish_signal",
@@ -184,7 +184,7 @@
         "confidence": 7
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 190
+      "event_count_180d": 195
     },
     {
       "tool_key": "fima_repo",
