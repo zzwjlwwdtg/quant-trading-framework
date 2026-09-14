@@ -1,13 +1,14 @@
 {
-  "asof": "2026-09-14T21:26",
+  "asof": "2026-09-14T21:58",
   "yields": {
     "10y": {
       "value": 4.975,
-      "chg_1d_bps": 3.1,
-      "chg_5d_bps": 21.3,
-      "chg_20d_bps": 33.4,
-      "z_score_20d": 0.76,
+      "chg_1d_bps": 0.0,
+      "chg_5d_bps": 19.1,
+      "chg_20d_bps": 27.9,
+      "z_score_20d": 0.0,
       "history": [
+        4.975,
         4.975,
         4.944,
         4.837,
@@ -26,20 +27,20 @@
         4.696,
         4.653,
         4.706,
-        4.724,
-        4.696
+        4.724
       ],
-      "asof": "2026-09-11",
+      "asof": "2026-09-14",
       "name": "10Y 国债名义",
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.791,
-      "chg_1d_bps": 5.8,
-      "chg_5d_bps": 28.2,
-      "chg_20d_bps": 47.8,
-      "z_score_20d": 1.38,
+      "value": 4.799,
+      "chg_1d_bps": 0.8,
+      "chg_5d_bps": 24.9,
+      "chg_20d_bps": 43.7,
+      "z_score_20d": 0.19,
       "history": [
+        4.799,
         4.791,
         4.733,
         4.614,
@@ -58,20 +59,20 @@
         4.387,
         4.353,
         4.367,
-        4.376,
-        4.362
+        4.376
       ],
-      "asof": "2026-09-11",
+      "asof": "2026-09-14",
       "name": "5Y 国债",
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.354,
-      "chg_1d_bps": -0.7,
-      "chg_5d_bps": 11.1,
-      "chg_20d_bps": 14.1,
-      "z_score_20d": -0.18,
+      "value": 5.353,
+      "chg_1d_bps": -0.1,
+      "chg_5d_bps": 10.7,
+      "chg_20d_bps": 8.8,
+      "z_score_20d": -0.03,
       "history": [
+        5.353,
         5.354,
         5.361,
         5.286,
@@ -90,20 +91,20 @@
         5.237,
         5.194,
         5.285,
-        5.309,
-        5.265
+        5.309
       ],
-      "asof": "2026-09-11",
+      "asof": "2026-09-14",
       "name": "30Y 国债",
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 3.913,
-      "chg_1d_bps": 6.8,
-      "chg_5d_bps": 17.3,
-      "chg_20d_bps": 20.8,
-      "z_score_20d": 2.73,
+      "value": 3.92,
+      "chg_1d_bps": 0.7,
+      "chg_5d_bps": 16.3,
+      "chg_20d_bps": 22.3,
+      "z_score_20d": 0.28,
       "history": [
+        3.92,
         3.913,
         3.845,
         3.805,
@@ -122,10 +123,9 @@
         3.703,
         3.7,
         3.705,
-        3.703,
-        3.697
+        3.703
       ],
-      "asof": "2026-09-11",
+      "asof": "2026-09-14",
       "name": "3M 短端",
       "source": "yfinance ^IRX"
     },
@@ -203,17 +203,12 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.493,
+    "vs_10y": -0.013,
     "vs_tips_10y": -0.053,
     "regime": "weak_hedge",
     "reason": "相关性 -0.053，对冲关系变弱"
   },
   "anomalies": [
-    {
-      "metric": "3m",
-      "reason": "3M 短端 单日 +6.8 bps (2.7σ · 上冲)",
-      "severity": "medium"
-    },
     {
       "metric": "2y",
       "reason": "2Y 国债 单日 +13.0 bps (2.6σ · 上冲)",
@@ -298,7 +293,7 @@
     }
   ],
   "macro_context": {
-    "term_spread_30_10_bps": 37.9,
+    "term_spread_30_10_bps": 37.8,
     "spx_trailing_pe": 25.75,
     "spx_eps_yield_pct": 3.88,
     "erp_vs_tips_pct": 1.33,
@@ -331,8 +326,8 @@
     "usdjpy_20d_delta_pct": -3.1,
     "usdjpy_60d_high": 163.86,
     "usdjpy_pullback_from_60d_high_pct": -5.73,
-    "krw_usd": 1346.6,
-    "krw_20d_pct": -4.86,
+    "krw_usd": 1348.9,
+    "krw_20d_pct": -4.7,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 230.5,
@@ -349,9 +344,9 @@
     "kbe_spy_20d_delta_pct": -3.03,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 270.0,
-    "dxy": 99.51,
-    "dxy_pct_20d": -0.16,
-    "dxy_z_60d": -0.7,
+    "dxy": 99.62,
+    "dxy_pct_20d": -0.05,
+    "dxy_z_60d": -0.57,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -398,31 +393,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7613.5,
-        "chg_pct": -0.6
+        "price": 7605.5,
+        "chg_pct": -0.71
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 28932.0,
-        "chg_pct": -1.55
+        "price": 28884.25,
+        "chg_pct": -1.71
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 102.86,
-        "chg_pct": 2.81
+        "price": 104.49,
+        "chg_pct": 4.44
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4333.2,
-        "chg_pct": -0.76
+        "price": 4318.6,
+        "chg_pct": -1.09
       }
     },
     "oil_uso": 154.9,
     "oil_pct_20d": 23.89,
-    "oil_wti": 102.86,
+    "oil_wti": 104.49,
     "eem_pct_20d": 1.74,
     "eem_vs_spx_20d": 3.49,
     "volume_confirm": {
@@ -507,18 +502,18 @@
     "stablecoin_total_bn": 257.6,
     "usdt_bn": 183.4,
     "usdc_bn": 74.2,
-    "vix": 17.59,
-    "bbi_score": 0.77,
+    "vix": 17.77,
+    "bbi_score": 0.74,
     "bbi_components": {
-      "vix": -0.07,
+      "vix": -0.04,
       "ig": -1.43,
       "hy": -1.19,
       "erp": 1.67
     }
   },
   "_meta": {
-    "cached_at": "2026-09-14T21:27:08.857455",
-    "age_sec": 354,
+    "cached_at": "2026-09-14T21:58:46.048312",
+    "age_sec": 256,
     "stale": false,
     "refreshing": false
   }
