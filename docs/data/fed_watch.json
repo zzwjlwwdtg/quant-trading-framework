@@ -3,81 +3,68 @@
   "meetings": [
     {
       "date": "2026-09-16",
-      "days_until": 2,
+      "days_until": 1,
       "probabilities": {
-        "hold": 14.5,
-        "hike_25": 85.5
+        "hold": 5,
+        "hike_25": 95
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2026-10-28",
-      "days_until": 44,
+      "days_until": 43,
       "probabilities": {
-        "hold": 7.2,
-        "hike_25": 49.6,
-        "hike_50": 43.2
+        "hold": 62,
+        "hike_25": 38
       },
-      "most_likely": "hike_25",
+      "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 86,
+      "days_until": 85,
       "probabilities": {
-        "hold": 2.6,
-        "hike_25": 22.7,
-        "hike_50": 74.7
+        "hold": 32,
+        "hike_25": 68
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 135,
-      "probabilities": {
-        "hold": 4.2,
-        "hike_25": 21.8,
-        "hike_50": 74.0
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.25-4.50",
-  "implied_terminal_date": "2027-H1",
-  "data_snapshot_date": "2026-09-11",
-  "recent_event_impact": "2026-09-04 NFP +162K、失业率4.1%；2026-09-10 PPI终需+0.4% MoM/+5.4% YoY；2026-09-11 CPI +0.4% MoM/+3.4% YoY、核心+0.3% MoM/+2.4% YoY；就业和通胀数据均把9月加息概率推升至约85-90%。",
-  "commentary": "数据 snapshot 为2026-09-11，属于2026-09-14的最近1个交易日；9月14日新闻仍显示本周25bp加息概率约85-87%，与CPI/PPI和强劲NFP后的鹰派重定价一致。因完整远期概率表来自9月11日快照，后续9月14日盘中只找到9月会议概率确认，远期会议置信度为medium。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2026-Q4",
+  "data_snapshot_date": "2026-09-14",
+  "recent_event_impact": "2026-09-10 PPI +0.4% m/m、+5.4% y/y 后，9月加息概率从约62.1%升至74%；2026-09-12 CPI +0.4% m/m、headline 3.4% y/y、core 2.4% y/y 后，9月加息概率进一步升至约85%-90%，2026-09-14 利率期货显示约95%概率加息。",
+  "commentary": "CME FedWatch 官方页面确认概率基于30-Day Fed Funds futures；可抓取页面未直接暴露完整概率表，因此9月使用2026-09-14公开市场报道的最新期货概率，10月和12月使用可检索到的Fed funds futures/FedWatch方法分布。最近7天内的PPI和CPI均已显著推高加息预期，尤其是能源和批发通胀压力使市场从降息/观望重新定价为9月高概率加息。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_fedwatch_secondary"
+      "url": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-09-14-2026/card/fed-rate-hike-odds-climb-to-90--PKjS440txiDqzMAPoCUC",
+      "type": "fed_funds_futures_report"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fed_funds_futures_alternative"
     },
     {
-      "url": "https://www.bls.gov/ppi/",
-      "type": "ppi"
+      "url": "https://www.barrons.com/livecoverage/stock-market-news-today-091026/card/rate-hike-odds-spike-after-ppi-report-BvzWpk5GNhS5QLsEVKYc",
+      "type": "recent_event_ppi"
     },
     {
-      "url": "https://www.realtor.com/research/cpi-inflation-august-2026/",
-      "type": "cpi"
+      "url": "https://www.kiplinger.com/investing/economy/cpi-report-august-2026-what-to-expect",
+      "type": "recent_event_cpi"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-14T09:49:32+00:00",
+  "fetched_at": "2026-09-15T02:04:09+00:00",
   "_meta": {
-    "cached_at": "2026-09-14T18:49:32.001354",
-    "age_sec": 27811,
+    "cached_at": "2026-09-15T11:04:09.799108",
+    "age_sec": 1734,
     "stale": false,
     "refreshing": false
   }
