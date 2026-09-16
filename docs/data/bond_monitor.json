@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-16T13:03",
+  "asof": "2026-09-16T13:33",
   "yields": {
     "10y": {
       "value": 4.996,
@@ -247,12 +247,12 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 155.36 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 155.32 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1366.9 韩元明显走弱",
+      "msg": "KRW/USD 1364.7 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -264,11 +264,6 @@
       "level": "bad",
       "msg": "SPY-IEF 60d 相关 +0.342 → 股债对冲破裂 (2022 股债双杀水平)",
       "key": "stock_bond_corr_broken"
-    },
-    {
-      "level": "warn",
-      "msg": "KOSPI (韩) +0.8% (5d -5.2%) 明显走弱",
-      "key": "asia_kospi_weak"
     },
     {
       "level": "warn",
@@ -287,7 +282,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.1B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.0B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -320,13 +315,13 @@
     "sofr_pct": 3.62,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -3.0,
-    "usdjpy": 155.36,
-    "usdjpy_20d_pct": -2.63,
-    "usdjpy_20d_delta_pct": -2.63,
+    "usdjpy": 155.32,
+    "usdjpy_20d_pct": -2.65,
+    "usdjpy_20d_delta_pct": -2.65,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -5.19,
-    "krw_usd": 1366.9,
-    "krw_20d_pct": -3.3,
+    "usdjpy_pullback_from_60d_high_pct": -5.21,
+    "krw_usd": 1364.7,
+    "krw_20d_pct": -3.46,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 205.6,
@@ -343,24 +338,24 @@
     "kbe_spy_20d_delta_pct": -2.45,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 271.0,
-    "dxy": 99.65,
-    "dxy_pct_20d": 0.01,
-    "dxy_z_60d": -0.55,
+    "dxy": 99.64,
+    "dxy_pct_20d": -0.01,
+    "dxy_z_60d": -0.56,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 63791.84,
-        "chg_1d": 0.48,
-        "chg_5d_pct": -2.07,
+        "close": 63821.09,
+        "chg_1d": 0.53,
+        "chg_5d_pct": -2.03,
         "asof": "2026-09-16"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 24685.95,
-        "chg_1d": 0.08,
-        "chg_5d_pct": -2.33,
+        "close": 24697.35,
+        "chg_1d": 0.12,
+        "chg_5d_pct": -2.29,
         "asof": "2026-09-16"
       },
       "SSE": {
@@ -382,9 +377,9 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6683.09,
-        "chg_1d": 0.84,
-        "chg_5d_pct": -5.23,
+        "close": 6711.16,
+        "chg_1d": 1.27,
+        "chg_5d_pct": -4.83,
         "asof": "2026-09-16"
       }
     },
@@ -392,31 +387,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7589.25,
-        "chg_pct": -0.47
+        "price": 7672.5,
+        "chg_pct": 1.1
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 28955.0,
-        "chg_pct": -0.68
+        "price": 29334.0,
+        "chg_pct": 1.31
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 105.83,
-        "chg_pct": 4.38
+        "price": 104.54,
+        "chg_pct": -1.22
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4332.8,
-        "chg_pct": -0.44
+        "price": 4369.0,
+        "chg_pct": 0.84
       }
     },
     "oil_uso": 161.86,
     "oil_pct_20d": 24.23,
-    "oil_wti": 105.83,
+    "oil_wti": 104.54,
     "eem_pct_20d": -2.32,
     "eem_vs_spx_20d": -0.34,
     "volume_confirm": {
@@ -498,7 +493,7 @@
     "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 257.1,
+    "stablecoin_total_bn": 257.0,
     "usdt_bn": 183.3,
     "usdc_bn": 73.7,
     "vix": 17.2,
@@ -511,8 +506,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-16T13:03:19.755468",
-    "age_sec": 1784,
+    "cached_at": "2026-09-16T13:33:19.767389",
+    "age_sec": 1785,
     "stale": true,
     "refreshing": true
   }
