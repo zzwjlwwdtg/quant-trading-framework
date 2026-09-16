@@ -5,16 +5,16 @@
   "analyst_consensus": {
     "n_analysts": 17,
     "recommendation": "buy",
-    "current_price": 212.19,
+    "current_price": 207.37,
     "forward_eps": -3.14,
-    "trailing_eps": -0.07,
+    "trailing_eps": -0.06,
     "eps_growth_pct": null,
-    "forward_pe": -67.55,
+    "forward_pe": -66.02,
     "trailing_pe": null,
     "target_mean": 290.71,
     "target_high": 415.0,
     "target_low": 144.0,
-    "target_upside_pct": 37.0,
+    "target_upside_pct": 40.2,
     "revenue_growth_pct": 454.0,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-10",
@@ -30,19 +30,19 @@
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 18.77,
+    "peer_pe_median": 18.33,
     "peer_pe_n_peers": 2,
     "peer_pe_details": [
       {
         "ticker": "ORCL",
-        "pe": 13.18
+        "pe": 12.77
       },
       {
         "ticker": "AMZN",
-        "pe": 24.37
+        "pe": 23.89
       }
     ],
-    "implied_peer_median": -58.96,
+    "implied_peer_median": -57.58,
     "implied_peer_upside": -127.8,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
@@ -156,12 +156,12 @@
         "0y": {
           "upLast7days": 0.0,
           "upLast30days": 3.0,
-          "downLast30days": 1.0
+          "downLast30days": 2.0
         },
         "+1y": {
           "upLast7days": 0.0,
           "upLast30days": 4.0,
-          "downLast30days": 1.0
+          "downLast30days": 2.0
         }
       },
       "revision_summary": {
@@ -173,8 +173,8 @@
         "eps_30d_ago": -4.8671,
         "eps_trend_pct_30d": 16.06,
         "up_30d": 4,
-        "down_30d": 1,
-        "net_30d": 3
+        "down_30d": 2,
+        "net_30d": 2
       }
     }
   },
@@ -189,27 +189,27 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 290.71,
-        "gap_pct": 37.0
+        "gap_pct": 40.2
       }
     ],
-    "median_gap_pct": 37.0,
+    "median_gap_pct": 40.2,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数高于现价 37.0%",
+      "多口径隐含价中位数高于现价 40.2%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-15T01:34:09.683627+00:00",
+  "fetched_at": "2026-09-16T00:04:13.897621+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-15T10:34:09.683627",
-    "age_sec": 81000,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-16T09:04:13.899625",
+    "age_sec": 1794,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "NBIS",
   "is_proxy": false

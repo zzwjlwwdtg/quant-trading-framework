@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-15T05:33:04.107915+00:00",
+  "ts": "2026-09-16T00:03:04.349919+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 2,
-      "value": "$103.28 (20d +22.2%)",
+      "value": "$105.36 (20d +24.7%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,15 +14,15 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$4.13 (Brent $107.41 - WTI $103.28)",
+      "value": "$3.10 (Brent $108.46 - WTI $105.36)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
-      "arrow": "▲",
+      "arrow": "·",
       "name": "XLE 能源板块",
-      "direction": "bullish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "XLE +4.2% vs SPY -2.0% (差 +6.2pp)",
+      "value": "XLE +nan% vs SPY +nan% (差 +nanpp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,23 +30,15 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "99.63 (5d +0.8%)",
+      "value": "99.68 (5d +0.8%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
-    },
-    {
-      "arrow": "▲",
-      "name": "美国汽油零售价",
-      "direction": "bullish",
-      "weight": 1,
-      "value": "$4.16/gal (4周 +3.8%)",
-      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
       "arrow": "▼",
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "59.46 · 极高（>45），市场恐慌",
+      "value": "61.73 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -58,18 +50,18 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "bullish",
-  "score": 3,
+  "direction": "neutral",
+  "score": 1,
   "notes": [
     "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股"
   ],
-  "price": 103.28,
-  "pct_5d": 11.02,
-  "pct_20d": 22.22,
+  "price": 105.36,
+  "pct_5d": 13.25,
+  "pct_20d": 24.69,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-15T14:33:05.832910",
-    "age_sec": 66598,
+    "cached_at": "2026-09-16T09:03:14.965369",
+    "age_sec": 1788,
     "stale": true,
     "refreshing": true
   }
