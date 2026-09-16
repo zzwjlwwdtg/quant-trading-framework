@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-15T14:03",
+  "asof": "2026-09-15T14:33",
   "yields": {
     "10y": {
       "value": 4.961,
@@ -247,7 +247,7 @@
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1354.0 韩元明显走弱",
+      "msg": "KRW/USD 1356.3 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -259,6 +259,11 @@
       "level": "bad",
       "msg": "SPY-IEF 60d 相关 +0.361 → 股债对冲破裂 (2022 股债双杀水平)",
       "key": "stock_bond_corr_broken"
+    },
+    {
+      "level": "warn",
+      "msg": "KOSPI (韩) -1.3% (5d -5.2%) 明显走弱",
+      "key": "asia_kospi_weak"
     },
     {
       "level": "warn",
@@ -310,13 +315,13 @@
     "sofr_pct": 3.62,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -3.0,
-    "usdjpy": 154.71,
-    "usdjpy_20d_pct": -2.91,
-    "usdjpy_20d_delta_pct": -2.91,
+    "usdjpy": 154.87,
+    "usdjpy_20d_pct": -2.81,
+    "usdjpy_20d_delta_pct": -2.81,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -5.59,
-    "krw_usd": 1354.0,
-    "krw_20d_pct": -4.29,
+    "usdjpy_pullback_from_60d_high_pct": -5.49,
+    "krw_usd": 1356.3,
+    "krw_20d_pct": -4.13,
     "jgb_10y_pct": 2.67,
     "jgb_asof": "2026-06-01",
     "ust_jgb_spread_bps": 229.1,
@@ -333,48 +338,48 @@
     "kbe_spy_20d_delta_pct": -2.99,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 265.0,
-    "dxy": 99.61,
-    "dxy_pct_20d": -0.03,
-    "dxy_z_60d": -0.6,
+    "dxy": 99.63,
+    "dxy_pct_20d": -0.01,
+    "dxy_z_60d": -0.58,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 63548.54,
-        "chg_1d": 0.09,
-        "chg_5d_pct": -2.64,
+        "close": 63210.12,
+        "chg_1d": -0.45,
+        "chg_5d_pct": -3.15,
         "asof": "2026-09-15"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 24859.45,
-        "chg_1d": -0.23,
-        "chg_5d_pct": -1.81,
+        "close": 24781.11,
+        "chg_1d": -0.55,
+        "chg_5d_pct": -2.12,
         "asof": "2026-09-15"
       },
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": 3881.41,
-        "chg_1d": -0.1,
-        "chg_5d_pct": -1.5,
+        "close": 3873.07,
+        "chg_1d": -0.32,
+        "chg_5d_pct": -1.71,
         "asof": "2026-09-15"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": 13389.63,
-        "chg_1d": 0.04,
-        "chg_5d_pct": -2.29,
+        "close": 13344.9,
+        "chg_1d": -0.3,
+        "chg_5d_pct": -2.61,
         "asof": "2026-09-15"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6642.88,
-        "chg_1d": -0.62,
-        "chg_5d_pct": -4.48,
+        "close": 6595.24,
+        "chg_1d": -1.33,
+        "chg_5d_pct": -5.17,
         "asof": "2026-09-15"
       }
     },
@@ -382,31 +387,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7671.0,
-        "chg_pct": 0.6
+        "price": 7664.5,
+        "chg_pct": 0.52
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29368.0,
-        "chg_pct": 0.74
+        "price": 29315.5,
+        "chg_pct": 0.56
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 103.3,
-        "chg_pct": 1.88
+        "price": 103.28,
+        "chg_pct": 1.86
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4345.3,
-        "chg_pct": -0.15
+        "price": 4337.7,
+        "chg_pct": -0.33
       }
     },
     "oil_uso": 156.66,
     "oil_pct_20d": 23.74,
-    "oil_wti": 103.3,
+    "oil_wti": 103.29,
     "eem_pct_20d": -0.93,
     "eem_vs_spx_20d": 1.06,
     "volume_confirm": {
@@ -501,8 +506,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-15T14:03:20.007543",
-    "age_sec": 1784,
+    "cached_at": "2026-09-15T14:33:18.695895",
+    "age_sec": 66585,
     "stale": true,
     "refreshing": true
   }
