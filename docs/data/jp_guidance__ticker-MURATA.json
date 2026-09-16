@@ -1,86 +1,79 @@
 {
   "ticker": "MURATA",
   "source_stock": "6981.T",
-  "direction": "上修",
-  "revision_type": "upward",
-  "magnitude": "中",
-  "last_update": "2026-07-31",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
+  "last_update": null,
   "next_earnings": "2026-10-30",
-  "guidance_note": "2027年3月期通期予想は売上収益2兆1,100億円、営業利益4,300億円、親会社帰属当期利益3,380億円、EPS185.68円。",
-  "revision_reason": "データセンター関連需要の高まりと円安進行を理由に上方修正。売上収益1兆9,600億円→2兆1,100億円（+7.7%）、営業利益3,800億円→4,300億円（+13.2%）、純利益2,930億円→3,380億円（+15.4%）、EPS160.96円→185.68円。",
-  "market_reaction": "高",
-  "confidence": "high",
+  "guidance_note": "AI 返回 上修 但未附可核验来源，已拒收",
+  "revision_reason": null,
+  "market_reaction": "不明",
+  "confidence": "unverified",
   "source_verified": true,
-  "source_status": "codex_cli_websearch",
-  "generated_at": "2026-09-13T08:58:29.955519+00:00",
-  "sources": [
-    {
-      "url": "https://minkabu.jp/stock/5698/news/4581533?selected_platform=pc",
-      "type": "news",
-      "title": "＜動意株・３１日＞（大引け）＝村田製、アトラエ、ＱＰＳＨＤなど"
-    }
-  ],
-  "source_via": "codex_cli_websearch",
+  "source_status": "analyst_only",
+  "generated_at": "2026-09-16T09:41:10.817683+00:00",
+  "ai_error": "no_trusted_source",
   "analyst_consensus": {
-    "n_analysts": 17,
+    "n_analysts": 18,
     "recommendation": "strong_buy",
-    "current_price": 7352.0,
+    "current_price": 7633.0,
     "forward_eps": 237.27,
-    "trailing_eps": 127.92,
-    "eps_growth_pct": 85.5,
-    "forward_pe": 30.99,
-    "trailing_pe": 57.47,
-    "target_mean": 10117.65,
-    "target_high": 15000.0,
+    "trailing_eps": 128.0,
+    "eps_growth_pct": 85.4,
+    "forward_pe": 32.17,
+    "trailing_pe": 59.63,
+    "target_mean": 10222.22,
+    "target_high": 17000.0,
     "target_low": 4200.0,
-    "target_upside_pct": 37.6,
+    "target_upside_pct": 33.9,
     "revenue_growth_pct": 20.7,
     "earnings_growth_pct": 66.5,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 13636.72,
-    "implied_pe_hold_upside": 85.5,
-    "peg_fair_price": 20286.58,
-    "peg_ratio": 0.36,
-    "hist_pe_median": 25.56,
+    "implied_pe_hold": 14149.08,
+    "implied_pe_hold_upside": 85.4,
+    "peg_fair_price": 20262.86,
+    "peg_ratio": 0.38,
+    "hist_pe_median": 25.58,
     "hist_pe_p25": 21.2,
-    "hist_pe_p75": 29.67,
-    "hist_pe_n_days": 845,
-    "implied_hist_median": 6064.62,
+    "hist_pe_p75": 29.76,
+    "hist_pe_n_days": 848,
+    "implied_hist_median": 6069.37,
     "implied_hist_p25": 5030.12,
-    "implied_hist_p75": 7039.8,
-    "implied_hist_upside": -17.5,
-    "peer_pe_median": 33.12,
+    "implied_hist_p75": 7061.16,
+    "implied_hist_upside": -20.5,
+    "peer_pe_median": 32.67,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "009150.KS",
-        "pe": 33.12
+        "pe": 32.67
       },
       {
         "ticker": "6976.T",
-        "pe": 49.17
+        "pe": 50.0
       },
       {
         "ticker": "6762.T",
-        "pe": 26.28
+        "pe": 26.87
       },
       {
         "ticker": "2327.TW",
-        "pe": 17.21
+        "pe": 17.04
       },
       {
         "ticker": "6971.T",
-        "pe": 39.68
+        "pe": 40.22
       }
     ],
-    "implied_peer_median": 7858.38,
-    "implied_peer_upside": 6.9,
+    "implied_peer_median": 7751.61,
+    "implied_peer_upside": 1.6,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-09-13T17:59:11.791658",
-    "age_sec": 261726,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-16T18:41:44.551696",
+    "age_sec": 1281,
+    "stale": false,
+    "refreshing": false
   }
 }
