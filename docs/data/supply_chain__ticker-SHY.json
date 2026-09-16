@@ -1,0 +1,119 @@
+{
+  "ticker": "SHY",
+  "sector": "短期美国国债ETF",
+  "business": "SHY 是 iShares 旗下固定收益 ETF，追踪 ICE 美国 1-3 年期国债指数，为投资者提供短久期美国国债敞口。",
+  "upstream": [
+    {
+      "name": "美国财政部",
+      "ticker": null,
+      "note": "发行基金主要持有的 1-3 年期美国国债，是底层资产来源",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "Intercontinental Exchange",
+      "ticker": "ICE",
+      "note": "通过 ICE U.S. Treasury 1-3 Year Bond Index 提供基准指数规则和指数数据",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "BlackRock",
+      "ticker": "BLK",
+      "note": "iShares 品牌管理人，负责基金管理、组合复制和运营",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "State Street",
+      "ticker": "STT",
+      "note": "ETF 托管、基金会计或相关后台服务的重要金融基础设施提供方",
+      "weight": 45,
+      "confidence": "medium"
+    },
+    {
+      "name": "JPMorgan Chase",
+      "ticker": "JPM",
+      "note": "可能作为授权参与人、做市或债券交易流动性提供方参与一级和二级市场",
+      "weight": 35,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "机构投资者",
+      "ticker": null,
+      "note": "买入 SHY 用于现金管理、短久期利率敞口和组合防御配置",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "Charles Schwab",
+      "ticker": "SCHW",
+      "note": "券商和财富管理平台客户可通过其平台买卖 SHY",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "Morgan Stanley",
+      "ticker": "MS",
+      "note": "财富管理和机构客户可能使用 SHY 进行短期国债配置",
+      "weight": 50,
+      "confidence": "low"
+    },
+    {
+      "name": "Bank of America",
+      "ticker": "BAC",
+      "note": "Merrill 等财富渠道客户可能将 SHY 用于低久期固定收益配置",
+      "weight": 45,
+      "confidence": "low"
+    },
+    {
+      "name": "Robinhood Markets",
+      "ticker": "HOOD",
+      "note": "零售投资者可通过平台买入 SHY 作为短期美债 ETF 工具",
+      "weight": 30,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Vanguard Short-Term Treasury ETF",
+      "ticker": "VGSH",
+      "note": "同类短期美国国债 ETF，久期和目标敞口接近",
+      "confidence": "high"
+    },
+    {
+      "name": "Schwab Short-Term U.S. Treasury ETF",
+      "ticker": "SCHO",
+      "note": "低费率短期美国国债 ETF，直接竞争 SHY 的配置需求",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR Portfolio Short Term Treasury ETF",
+      "ticker": "SPTS",
+      "note": "追踪短期美国国债组合，竞争现金管理和短久期债券资金",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares 3-7 Year Treasury Bond ETF",
+      "ticker": "IEI",
+      "note": "同属 iShares 国债 ETF，但久期更长，部分替代短中期国债配置",
+      "confidence": "medium"
+    },
+    {
+      "name": "iShares Short Treasury Bond ETF",
+      "ticker": "SHV",
+      "note": "更短期限美国国债 ETF，竞争超短久期和现金替代需求",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-05T03:33:32.054143+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-05T12:33:32.054665",
+    "age_sec": 997175,
+    "stale": false,
+    "refreshing": false
+  }
+}
