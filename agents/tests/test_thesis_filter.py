@@ -31,10 +31,18 @@ class ThesisConfigTests(unittest.TestCase):
                 self.assertIn("semi", reason.lower())
 
     def test_cloud_bond_ticker_is_whitelisted(self):
-        for tk in ["US.MSFT", "US.GOOGL", "US.SHY", "US.IEI"]:
+        # 2026-09-11 后 whitelist 收缩: bond (SHY/IEI) 和高 beta 云 (NBIS) 因 CPI hot 移除
+        for tk in ["US.MSFT", "US.GOOGL", "US.GLD", "US.XLV"]:
             with self.subTest(ticker=tk):
                 w, reason = thesis_config.is_ticker_whitelisted(tk)
                 self.assertTrue(w, f"{tk} should be whitelisted")
+
+    def test_bond_and_high_beta_cloud_removed_from_whitelist(self):
+        # regression: CPI hot reprice 后 SHY/IEI/NBIS 应该不在 whitelist
+        for tk in ["US.SHY", "US.IEI", "US.NBIS"]:
+            with self.subTest(ticker=tk):
+                w, _ = thesis_config.is_ticker_whitelisted(tk)
+                self.assertFalse(w, f"{tk} should NOT be whitelisted after 2026-09-11 CPI reprice")
 
     def test_ticker_prefix_handling(self):
         # 无 US. 前缀也匹配

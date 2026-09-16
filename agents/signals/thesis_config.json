@@ -1,9 +1,9 @@
 {
-  "version": "2026-Q3",
+  "version": "2026-Q3.1_cpi_reprice",
   "created_at": "2026-08-24",
-  "last_reviewed_at": "2026-09-02",
+  "last_reviewed_at": "2026-09-11",
   "review_interval_days": 30,
-  "thesis_summary": "Bond + Cloud long, avoid semi. 二阶导拐点交易: AI capex 放缓 / Fed 降息节奏加快 → 前端债券 + 云计算平台 outperform semi.",
+  "thesis_summary": "Cloud long, avoid semi. Bond long 因 2026-08 CPI hot (headline +0.4% / core +0.3% MoM) 被打脸, whitelist 已收缩去掉利率敏感三腿 (SHY/IEI/NBIS). Fed hike 概率 60-70%, semi 黑名单 in fact 更 valid (hawkish 打成长).",
   "blacklist_tickers": [
     "US.DRAM",
     "US.KLAC",
@@ -16,17 +16,14 @@
     "US.LITE",
     "US.CBRS"
   ],
-  "blacklist_reason": "semi + AI 芯片链 (违反 thesis avoid semi). 2026-07 → 09 paper trader 数据: 该 pool BUY 信号触发后 hit stop 83%, 直接造成 -24% drawdown.",
+  "blacklist_reason": "semi + AI 芯片链 (违反 thesis avoid semi). 2026-07 → 09 paper trader 数据: 该 pool BUY 信号触发后 hit stop 83%, 直接造成 -24% drawdown. 2026-09-11 CPI hot 后 blacklist 保留: Fed hawkish = 成长股再受伤, 逻辑更强.",
   "whitelist_tickers": [
-    "US.SHY",
-    "US.IEI",
     "US.MSFT",
     "US.GOOGL",
-    "US.NBIS",
     "US.GLD",
     "US.XLV"
   ],
-  "whitelist_reason": "bond + cloud + defensive hedge. 与 thesis 直接对齐.",
+  "whitelist_reason": "cloud + defensive hedge. 2026-09-11 trim: 移除 SHY/IEI (Fed hike reprice 直接伤前端债券), 移除 NBIS (高 beta 云基础设施 hawkish 下承压). 保留 MSFT/GOOGL (pricing power) + GLD (uncertainty hedge) + XLV (防御).",
   "invalidation_conditions": [
     {
       "id": "cpi_hot_reprice",
@@ -34,7 +31,8 @@
       "operator": ">",
       "threshold": 0.25,
       "source": "FRED CPIAUCSL",
-      "description": "月度 CPI MoM > 0.25% → 通胀二阶导没如期回落, Fed 降息路径 reprice, bond thesis 被打脸."
+      "description": "月度 CPI MoM > 0.25% → 通胀二阶导没如期回落, Fed 降息路径 reprice, bond thesis 被打脸.",
+      "last_triggered": "2026-09-11 (BLS 8月 CPI 0.4% MoM, manual calibration; FRED 未同步)"
     },
     {
       "id": "capex_upgrade",
@@ -46,5 +44,5 @@
     }
   ],
   "auto_clear_blacklist_on_invalidation": false,
-  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn."
+  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留 (逻辑更强)."
 }
