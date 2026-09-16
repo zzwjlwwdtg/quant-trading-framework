@@ -1,64 +1,8 @@
 {
-  "current_target_range": "3.50-3.75",
-  "meetings": [
-    {
-      "date": "2026-09-16",
-      "days_until": 0,
-      "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 8.2,
-        "hike_25": 91.8,
-        "hike_50": 0
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-10-28",
-      "days_until": 42,
-      "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 4.3,
-        "hike_25": 51.5,
-        "hike_50": 44.3
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-12-09",
-      "days_until": 84,
-      "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 1.4,
-        "hike_25": 20.2,
-        "hike_50": 78.3
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 133,
-      "probabilities": {
-        "cut_50": 0,
-        "cut_25": 0,
-        "hold": 0.9,
-        "hike_25": 13.5,
-        "hike_50": 85.6
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    }
-  ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-09-15 19:25 EDT",
-  "recent_event_impact": "2026-09-10 PPI: final demand +0.4% MoM, +5.4% YoY, pushed Sept hike odds roughly 62.1%→74%; 2026-09-11 CPI: CPI +0.4% MoM, +3.4% YoY, lifted Sept hike odds toward ~90%; latest snapshot prices 91.8% for a 25bp Sept hike.",
-  "commentary": "Data snapshot is 2026-09-15 19:25 EDT, after the 2026-09-10 PPI and 2026-09-11 CPI releases, so the latest inflation shock is reflected. Market pricing is strongly hawkish: a Sept 25bp hike is near fully priced, and cumulative pricing implies two or more 25bp hikes are the modal outcome by Dec/Jan.",
+  "error": "no_recent_data",
+  "confidence": "low",
+  "data_snapshot_date": "2026-09-16 12:55 EDT",
+  "commentary": "数据滞后：可核验的最新 FedWatch/替代快照为 2026-09-16 12:55 EDT，早于 2026-09-16 14:00 EDT 的 FOMC 决议；近 7 天内还有 2026-09-10 PPI 与 2026-09-11 CPI，因此不满足“关键事件之后发布”的要求。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -66,24 +10,27 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "fed_rate_monitor_cme_fed_funds_futures"
+      "type": "backup_fed_rate_monitor"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/ppi.nr0.htm",
+      "type": "ppi_event_check"
     },
     {
       "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "cpi_release"
+      "type": "cpi_event_check"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
-      "type": "ppi_release"
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "type": "fomc_event_check"
     }
   ],
-  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-16T00:04:27+00:00",
+  "fetched_at": "2026-09-16T17:43:32+00:00",
   "_meta": {
-    "cached_at": "2026-09-16T09:04:27.316239",
-    "age_sec": 34595,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-17T02:43:32.499631",
+    "age_sec": 1170,
+    "stale": false,
+    "refreshing": false
   }
 }
