@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-16T09:03",
+  "asof": "2026-09-16T09:33",
   "yields": {
     "10y": {
       "value": 4.996,
@@ -247,23 +247,18 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 155.25 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 155.27 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1364.6 韩元明显走弱",
+      "msg": "KRW/USD 1367.5 韩元明显走弱",
       "key": "krw_weak"
     },
     {
       "level": "bad",
       "msg": "BIS CIP: FX 对冲后 UST 10Y (2.83%) < JGB (2.94%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
-    },
-    {
-      "level": "warn",
-      "msg": "KOSPI (韩) -3.3% (5d -4.5%) 明显走弱",
-      "key": "asia_kospi_weak"
     },
     {
       "level": "warn",
@@ -277,7 +272,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $257.1B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $257.0B (USDT $183B + USDC $74B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -310,13 +305,13 @@
     "sofr_pct": 3.62,
     "iorb_pct": 3.65,
     "sofr_iorb_spread_bps": -3.0,
-    "usdjpy": 155.25,
-    "usdjpy_20d_pct": -2.7,
-    "usdjpy_20d_delta_pct": -2.7,
+    "usdjpy": 155.27,
+    "usdjpy_20d_pct": -2.68,
+    "usdjpy_20d_delta_pct": -2.68,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -5.26,
-    "krw_usd": 1364.6,
-    "krw_20d_pct": -3.46,
+    "usdjpy_pullback_from_60d_high_pct": -5.24,
+    "krw_usd": 1367.5,
+    "krw_20d_pct": -3.26,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 205.6,
@@ -332,17 +327,17 @@
     "kbe_spy_20d_delta_pct": null,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 271.0,
-    "dxy": 99.67,
-    "dxy_pct_20d": 0.03,
-    "dxy_z_60d": -0.53,
+    "dxy": 99.66,
+    "dxy_pct_20d": 0.02,
+    "dxy_z_60d": -0.54,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 63492.99,
-        "chg_1d": -0.81,
-        "chg_5d_pct": -4.38,
-        "asof": "2026-09-14"
+        "close": 63419.54,
+        "chg_1d": -0.12,
+        "chg_5d_pct": -2.83,
+        "asof": "2026-09-16"
       },
       "HSI": {
         "symbol": "^HSI",
@@ -371,41 +366,41 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6684.37,
-        "chg_1d": -3.26,
-        "chg_5d_pct": -4.45,
-        "asof": "2026-09-14"
+        "close": 6634.24,
+        "chg_1d": -0.75,
+        "chg_5d_pct": -4.61,
+        "asof": "2026-09-16"
       }
     },
     "us_futures": {
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7666.25,
-        "chg_pct": 0.54
+        "price": 7665.5,
+        "chg_pct": 0.53
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29284.0,
-        "chg_pct": 0.45
+        "price": 29275.5,
+        "chg_pct": 0.42
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 105.35,
-        "chg_pct": 3.91
+        "price": 104.94,
+        "chg_pct": 3.5
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4323.8,
-        "chg_pct": -0.65
+        "price": 4324.6,
+        "chg_pct": -0.63
       }
     },
     "oil_uso": null,
     "oil_pct_20d": null,
-    "oil_wti": 105.35,
+    "oil_wti": 104.94,
     "eem_pct_20d": null,
     "eem_vs_spx_20d": null,
     "volume_confirm": {
@@ -487,7 +482,7 @@
     "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 257.1,
+    "stablecoin_total_bn": 257.0,
     "usdt_bn": 183.3,
     "usdc_bn": 73.7,
     "vix": 17.2,
@@ -500,8 +495,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-16T09:04:50.309084",
-    "age_sec": 1693,
+    "cached_at": "2026-09-16T09:33:21.074555",
+    "age_sec": 1783,
     "stale": true,
     "refreshing": true
   }
