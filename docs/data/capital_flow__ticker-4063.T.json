@@ -6,7 +6,7 @@
     "reason": "",
     "score": 0.0,
     "peak_bars": [],
-    "day_ratio": 0.64,
+    "day_ratio": 0.74,
     "trading_date": "2026-09-17",
     "date_short": "9/17",
     "net_bias": "neutral",
@@ -19,28 +19,41 @@
         "trading_date": "2026-09-17",
         "date_short": "9/17",
         "peak_bars": [],
-        "slices": [],
-        "day_ratio": 0.64,
-        "day_chg_pct": -1.08,
+        "slices": [
+          {
+            "start": "13:10",
+            "end": "13:20",
+            "direction": "sell",
+            "n_bars": 3,
+            "total_value_oku": 21.07,
+            "total_shares": 366100,
+            "avg_ratio": 3.01,
+            "duration_min": 15,
+            "avg_price": 5757.05,
+            "tier": "multi_bar"
+          }
+        ],
+        "day_ratio": 0.74,
+        "day_chg_pct": -1.24,
         "day_open": 5824.0,
-        "day_close": 5761.0,
+        "day_close": 5752.0,
         "net_bias": "neutral",
         "buy_shares": 0,
         "sell_shares": 0,
         "buy_value_oku": 0,
         "sell_value_oku": 0,
         "full_bias": "sell",
-        "full_up_shares": 917300,
-        "full_down_shares": 1432200,
-        "full_up_value_oku": 53.19,
-        "full_down_value_oku": 82.93
+        "full_up_shares": 1098500,
+        "full_down_shares": 1658000,
+        "full_up_value_oku": 63.61,
+        "full_down_value_oku": 95.92
       },
       {
         "trading_date": "2026-09-16",
         "date_short": "9/16",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.97,
+        "day_ratio": 0.96,
         "day_chg_pct": 1.17,
         "day_open": 5749.0,
         "day_close": 5816.0,
@@ -60,7 +73,7 @@
         "date_short": "9/15",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 0.71,
+        "day_ratio": 0.7,
         "day_chg_pct": -0.16,
         "day_open": 5721.0,
         "day_close": 5712.0,
@@ -80,7 +93,7 @@
         "date_short": "9/14",
         "peak_bars": [],
         "slices": [],
-        "day_ratio": 1.07,
+        "day_ratio": 1.06,
         "day_chg_pct": 1.11,
         "day_open": 5678.0,
         "day_close": 5741.0,
@@ -122,12 +135,12 @@
       "value_oku_min": 1.0
     }
   },
-  "asof": "2026-09-17 13:15 JST",
+  "asof": "2026-09-17 13:40 JST",
   "source": "yfinance_intraday",
   "_meta": {
-    "cached_at": "2026-09-17T13:30:32.242379",
-    "age_sec": 151,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-17T13:58:02.661378",
+    "age_sec": 300,
+    "stale": true,
+    "refreshing": true
   }
 }
