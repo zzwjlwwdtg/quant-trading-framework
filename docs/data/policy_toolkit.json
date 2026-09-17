@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-16T21:11:34.738020",
-  "count_total_actions": 460,
+  "as_of": "2026-09-17T09:15:48.279518",
+  "count_total_actions": 481,
   "tools": [
     {
       "tool_key": "qra_wording",
@@ -92,7 +92,7 @@
         "confidence": 7
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 36
+      "event_count_180d": 37
     },
     {
       "tool_key": "fx_intervention",
@@ -118,29 +118,6 @@
       "event_count_180d": 4
     },
     {
-      "tool_key": "fed_dovish_signal",
-      "zh": "Fed 官员鸽派信号",
-      "owner": "Fed (口头)",
-      "feasibility": "high",
-      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
-      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "fed_dovish_signal",
-        "action_type": "signaled",
-        "date": "2026-09-13",
-        "actor": "Trump",
-        "amount_desc": "",
-        "commentary": "降息施压利多短端和风险资产，但Warsh加息预期削弱救市含义。",
-        "verbatim": "Trump Urges Federal Reserve To Cut Rates As Market Bets On Warsh Hike",
-        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
-        "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPaEVOMUNfTUZvb2hraDdJWDJDMTVJM21kSjJVV2lOdll4R09DQWZtcVZCZmIySE9QMW11dU1NMlUzazdRYmQzcUhTLURxcDhYeXQwbldmeGMyNGlpREJlMTQ2SXl0bEc1YWFUUzdWdnlkZTNYUjZLSnBwUkp6QXlTd18yVGlZYnJSTnktN0JpSU82amFfRk1uWXhwMA?oc=5",
-        "confidence": 6
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 13
-    },
-    {
       "tool_key": "long_end_buyback",
       "zh": "长端回购扩容",
       "owner": "Treasury",
@@ -161,7 +138,30 @@
         "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 171
+      "event_count_180d": 179
+    },
+    {
+      "tool_key": "fed_dovish_signal",
+      "zh": "Fed 官员鸽派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
+      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fed_dovish_signal",
+        "action_type": "signaled",
+        "date": "2026-09-16",
+        "actor": "Trump",
+        "amount_desc": "1% or lower interest rates",
+        "commentary": "特朗普要求1%或更低利率，是政治层面的宽松施压。非Fed决定，债市影响取决于执行。",
+        "verbatim": "Trump says he still has confidence in Fed Chair Warsh, demands 1% or lower interest rates",
+        "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
+        "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTFBzYXVXRVNMRmFVMkVqeGJMLVhsQklJNlVTOU4yN09nMVJMcXozWmJRUUFORlpzTTdBWHB2dU1aS1pGRkY0cWpBc3FjV1RaV3h1ZzdnbVVKQXNiVjBvY1NGYWFwRkdrQ2R6c3hyRjlGbzB6TXV10gF6QVVfeXFMTzlzVC1yMDVCc3UwVld5bEpIbm04VWx4Q3JYR1c4NVZDXy1YUElET05SNG82TVJnVUcydVo3UHozTHBXRDNQcm05YTRCOEo2M3BjTHUycko0MUZteEJzU0NRM2RsdWpJRkt0aU8weS1LRjhhVzdncWxiQXc?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 14
     },
     {
       "tool_key": "fed_hawkish_signal",
@@ -184,7 +184,7 @@
         "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 219
+      "event_count_180d": 230
     },
     {
       "tool_key": "fima_repo",

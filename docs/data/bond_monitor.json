@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-17T08:49",
+  "asof": "2026-09-17T09:22",
   "yields": {
     "10y": {
       "value": 5.006,
@@ -203,10 +203,10 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.384,
-    "vs_tips_10y": 0.044,
+    "vs_10y": -0.388,
+    "vs_tips_10y": 0.047,
     "regime": "aligned",
-    "reason": "相关性 0.044，正相关（可能通胀 regime，两者同向）"
+    "reason": "相关性 0.047，正相关（可能通胀 regime，两者同向）"
   },
   "anomalies": [],
   "warnings": [
@@ -231,34 +231,34 @@
       "key": "erp_low"
     },
     {
+      "level": "info",
+      "msg": "银行准备金 11.6% (< 12% 中性偏紧)",
+      "key": "reserves_neutral"
+    },
+    {
       "level": "warn",
-      "msg": "USDJPY 156.1 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 156.03 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1377.2 韩元明显走弱",
+      "msg": "KRW/USD 1376.0 韩元明显走弱",
       "key": "krw_weak"
     },
     {
       "level": "bad",
-      "msg": "SPY-IEF 60d 相关 +0.338 → 股债对冲破裂 (2022 股债双杀水平)",
-      "key": "stock_bond_corr_broken"
-    },
-    {
-      "level": "warn",
-      "msg": "KBE/SPY 20d -3.73% 银行相对走弱 (需持续观察)",
-      "key": "bank_stress_warn"
-    },
-    {
-      "level": "warn",
-      "msg": "油价 20d +19.5% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
-      "key": "oil_rising"
+      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.82%) < JGB (2.94%) = JP 投资者会抛售 UST",
+      "key": "cip_repatriation_signal"
     },
     {
       "level": "warn",
       "msg": "Fed 逆回购 (RRP) 仅剩 $5.4B (2023 峰值 $2500B, 流动性明显抽干)",
       "key": "rrp_drained"
+    },
+    {
+      "level": "info",
+      "msg": "CPI YoY +3.71% 通胀高于 Fed 目标 2%",
+      "key": "cpi_above_target"
     },
     {
       "level": "info",
@@ -272,11 +272,6 @@
     "spx_eps_yield_pct": 4.1,
     "erp_vs_tips_pct": 1.48,
     "erp_basis": "trailing",
-    "nfci": {
-      "value": -0.56,
-      "asof": "2026-09-11"
-    },
-    "nfci_12w_delta": -0.049,
     "rrp_bn": 5.4,
     "rrp_asof": "2026-09-16",
     "tga_bn": 883.3,
@@ -289,13 +284,19 @@
     "move_20d_delta": 5.7,
     "effr_pct": 3.63,
     "sofr_effr_spread_bps": 1.0,
-    "usdjpy": 156.1,
-    "usdjpy_20d_pct": -1.37,
-    "usdjpy_20d_delta_pct": -1.37,
+    "bank_reserves_bn": 2991.0,
+    "bank_total_assets_bn": 25709.0,
+    "bank_reserves_pct_of_assets": 11.6,
+    "sofr_pct": 3.64,
+    "iorb_pct": 3.9,
+    "sofr_iorb_spread_bps": -26.0,
+    "usdjpy": 156.03,
+    "usdjpy_20d_pct": -1.42,
+    "usdjpy_20d_delta_pct": -1.42,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -4.74,
-    "krw_usd": 1377.2,
-    "krw_20d_pct": -0.88,
+    "usdjpy_pullback_from_60d_high_pct": -4.78,
+    "krw_usd": 1376.0,
+    "krw_20d_pct": -0.96,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 206.6,
@@ -303,24 +304,25 @@
     "ktb_10y_pct": 4.29,
     "ktb_asof": "2026-08-01",
     "ust_ktb_spread_bps": 71.6,
+    "hedged_ust_10y_for_jp": 2.82,
+    "hedge_cost_jp": 2.18,
     "real_yield_gap_us_jp": 1.53,
     "cpi_jp_yoy_pct": 3.17,
-    "spy_ief_60d_corr": 0.338,
-    "kbe_spy_ratio": 0.08856,
-    "kbe_spy_20d_delta_pct": -3.73,
+    "kbe_spy_ratio": null,
+    "kbe_spy_20d_delta_pct": null,
     "cdx_ig_bps": 80.0,
     "cdx_hy_bps": 276.0,
-    "dxy": 100.34,
-    "dxy_pct_20d": 0.69,
-    "dxy_z_60d": 0.25,
+    "dxy": 100.23,
+    "dxy_pct_20d": 0.58,
+    "dxy_z_60d": 0.12,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 63484.1,
-        "chg_1d": -0.01,
-        "chg_5d_pct": -2.74,
-        "asof": "2026-09-15"
+        "close": 64486.67,
+        "chg_1d": 1.58,
+        "chg_5d_pct": -1.01,
+        "asof": "2026-09-17"
       },
       "HSI": {
         "symbol": "^HSI",
@@ -349,43 +351,43 @@
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6627.26,
-        "chg_1d": -0.85,
-        "chg_5d_pct": -4.71,
-        "asof": "2026-09-15"
+        "close": 6781.97,
+        "chg_1d": 2.33,
+        "chg_5d_pct": -3.82,
+        "asof": "2026-09-17"
       }
     },
     "us_futures": {
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7648.75,
-        "chg_pct": 0.78
+        "price": 7658.5,
+        "chg_pct": 0.91
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29424.75,
-        "chg_pct": 1.62
+        "price": 29432.0,
+        "chg_pct": 1.65
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 101.73,
-        "chg_pct": -3.87
+        "price": 101.53,
+        "chg_pct": -4.06
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4309.2,
-        "chg_pct": -0.54
+        "price": 4322.1,
+        "chg_pct": -0.25
       }
     },
-    "oil_uso": 156.17,
-    "oil_pct_20d": 19.52,
-    "oil_wti": 101.73,
-    "eem_pct_20d": 0.58,
-    "eem_vs_spx_20d": 2.33,
+    "oil_uso": null,
+    "oil_pct_20d": null,
+    "oil_wti": 101.53,
+    "eem_pct_20d": null,
+    "eem_vs_spx_20d": null,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
@@ -460,6 +462,9 @@
         "notable": false
       }
     },
+    "cpi_yoy_pct": 3.71,
+    "cpi_asof": "2026-08-01",
+    "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
     "stablecoin_total_bn": 256.9,
@@ -475,8 +480,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-17T08:51:21.237784",
-    "age_sec": 701,
+    "cached_at": "2026-09-17T09:23:32.020526",
+    "age_sec": 570,
     "stale": false,
     "refreshing": false
   }
