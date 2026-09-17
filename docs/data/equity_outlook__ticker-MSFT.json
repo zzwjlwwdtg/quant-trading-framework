@@ -5,57 +5,57 @@
   "analyst_consensus": {
     "n_analysts": 52,
     "recommendation": "strong_buy",
-    "current_price": 490.3,
+    "current_price": 495.38,
     "forward_eps": 23.59,
-    "trailing_eps": 17.7,
-    "eps_growth_pct": 33.3,
-    "forward_pe": 20.78,
-    "trailing_pe": 27.7,
+    "trailing_eps": 17.94,
+    "eps_growth_pct": 31.5,
+    "forward_pe": 21.0,
+    "trailing_pe": 27.61,
     "target_mean": 572.92,
     "target_high": 870.0,
     "target_low": 400.0,
-    "target_upside_pct": 16.8,
+    "target_upside_pct": 15.7,
     "revenue_growth_pct": 17.7,
     "earnings_growth_pct": 31.7,
     "next_earnings": "2026-10-29",
-    "implied_pe_hold": 653.53,
-    "implied_pe_hold_upside": 33.3,
-    "peg_fair_price": 785.64,
-    "peg_ratio": 0.62,
+    "implied_pe_hold": 651.47,
+    "implied_pe_hold_upside": 31.5,
+    "peg_fair_price": 743.17,
+    "peg_ratio": 0.67,
     "hist_pe_median": 35.72,
     "hist_pe_p25": 33.05,
     "hist_pe_p75": 38.3,
-    "hist_pe_n_days": 806,
+    "hist_pe_n_days": 807,
     "implied_hist_median": 842.73,
     "implied_hist_p25": 779.74,
     "implied_hist_p75": 903.6,
-    "implied_hist_upside": 71.9,
-    "peer_pe_median": 23.08,
+    "implied_hist_upside": 70.1,
+    "peer_pe_median": 23.22,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "AMZN",
-        "pe": 23.71
+        "pe": 24.24
       },
       {
         "ticker": "GOOGL",
-        "pe": 23.08
+        "pe": 23.22
       },
       {
         "ticker": "AAPL",
-        "pe": 34.67
+        "pe": 34.98
       },
       {
         "ticker": "ORCL",
-        "pe": 13.02
+        "pe": 13.74
       },
       {
         "ticker": "CRM",
-        "pe": 15.64
+        "pe": 15.29
       }
     ],
-    "implied_peer_median": 544.52,
-    "implied_peer_upside": 11.1,
+    "implied_peer_median": 547.82,
+    "implied_peer_upside": 10.6,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -136,7 +136,7 @@
         },
         "+1q": {
           "current": 4.8216,
-          "7daysAgo": 4.8288,
+          "7daysAgo": 4.8272,
           "30daysAgo": 4.8258,
           "60daysAgo": 4.7902,
           "90daysAgo": 4.777
@@ -150,7 +150,7 @@
         },
         "+1y": {
           "current": 23.5927,
-          "7daysAgo": 23.5733,
+          "7daysAgo": 23.573,
           "30daysAgo": 23.5733,
           "60daysAgo": 22.6063,
           "90daysAgo": 22.6278
@@ -203,44 +203,44 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 572.92,
-        "gap_pct": 16.8
+        "gap_pct": 15.7
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 653.53,
-        "gap_pct": 33.3
+        "implied_price": 651.47,
+        "gap_pct": 31.5
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 842.73,
-        "gap_pct": 71.9
+        "gap_pct": 70.1
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 544.52,
-        "gap_pct": 11.1
+        "implied_price": 547.82,
+        "gap_pct": 10.6
       }
     ],
-    "median_gap_pct": 25.0,
+    "median_gap_pct": 23.6,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -22.5,
-    "consensus_eps_growth_pct": 33.3,
-    "growth_cushion_pct": 55.8,
+    "required_eps_growth_pct": -22.7,
+    "consensus_eps_growth_pct": 31.5,
+    "growth_cushion_pct": 54.2,
     "rationale": [
-      "多口径隐含价中位数高于现价 25.0%",
+      "多口径隐含价中位数高于现价 23.6%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -22.5%，共识为 +33.3%"
+      "历史 PE 口径要求 EPS 增长 -22.7%，共识为 +31.5%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-17T10:05:35.150608+00:00",
+  "fetched_at": "2026-09-17T16:07:03.550606+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-17T19:05:35.151608",
-    "age_sec": 21451,
+    "cached_at": "2026-09-18T01:07:03.553121",
+    "age_sec": 1563,
     "stale": false,
     "refreshing": false
   },
