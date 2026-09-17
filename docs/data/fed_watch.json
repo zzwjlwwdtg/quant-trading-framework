@@ -3,85 +3,67 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 41,
+      "days_until": 40,
       "probabilities": {
-        "hold": 44.9,
-        "hike_25": 55.1
+        "hold": 47,
+        "hike_25": 53
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 83,
+      "days_until": 82,
       "probabilities": {
-        "hold": 11.9,
-        "hike_25": 47.6,
-        "hike_50": 40.5
+        "hold": 13,
+        "hike_25": 52,
+        "hike_50": 35
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 132,
+      "days_until": 131,
       "probabilities": {
-        "hold": 7.1,
-        "hike_25": 33.1,
-        "hike_50": 59.8
+        "cut_25": 12,
+        "hold": 36,
+        "hike_25": 36,
+        "hike_50": 16
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 181,
-      "probabilities": {
-        "hold": 2.3,
-        "hike_25": 15.7,
-        "hike_50": 82.0
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     }
   ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-H2",
-  "data_snapshot_date": "2026-09-17 04:55 EDT",
-  "recent_event_impact": "2026-09-04 NFP +162K、失业率4.1%；2026-09-10 PPI +0.4% m/m、+5.4% y/y；2026-09 CPI约+3.4% y/y、核心+2.4% y/y；2026-09-16 FOMC加息25bp至3.75-4.00，以上事件均已反映在Sep 17快照中。",
-  "commentary": "Sep 17快照显示市场已从9月加息后继续上修紧缩路径，10月再加25bp为小幅多数，12月及之后累计加息概率占主导。强于近期趋势的NFP、PPI再加速和CPI仍高于目标，强化了Warsh联储抗通胀叙事，因此数据不是滞后快照。",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-18",
+  "recent_event_impact": "2026-09-04 August NFP +162K vs +56K consensus pushed September hike odds above hold; 2026-09-11 August CPI headline +3.4% YoY and hotter core +0.3% MoM lifted September hike odds to roughly 85-90%; 2026-09-16 FOMC delivered a 25bp hike to 3.75-4.00 and kept markets pricing further tightening.",
+  "commentary": "Data snapshot is 2026-09-18, after the 2026-09-11 CPI and 2026-09-16 FOMC hike, so the key recent inflation and policy events are reflected. Hotter core CPI and strong August payrolls shifted pricing hawkishly: markets now lean toward another 25bp hike by October or December, with year-end pricing showing only about 13% odds of holding at 3.75-4.00.",
   "sources": [
-    {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "fed_funds_futures_monitor_cme_derived"
-    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-climb-after-selloff-federal-reserve-rate-hike/card/market-expects-a-fed-hike-in-october-as-bank-economists-eye-december-k8znLyc1pM1c5Gk1LyDv",
+      "type": "market_report"
     },
     {
-      "url": "https://www.marketwatch.com/story/wholesale-inflation-stirred-up-again-by-iran-conflict-and-higher-oil-prices-3f497534",
-      "type": "ppi"
+      "url": "https://www.barrons.com/livecoverage/fed-meeting-rate-decision-september-warsh/card/investors-expect-another-fed-hike-before-year-end-j91MxXZjfaW4QVYXisj6",
+      "type": "market_report"
     },
     {
-      "url": "https://www.businessinsider.com/cpi-inflation-august-consumer-price-index-2026-9",
-      "type": "cpi"
-    },
-    {
-      "url": "https://www.businessinsider.com/fed-meeting-fomc-interest-rate-hike-live-updates-2026-9",
-      "type": "fomc"
+      "url": "https://www.realtor.com/research/cpi-inflation-august-2026/",
+      "type": "macro_event"
     }
   ],
-  "confidence": "high",
+  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-17T09:46:15+00:00",
+  "fetched_at": "2026-09-17T17:47:24+00:00",
   "_meta": {
-    "cached_at": "2026-09-17T18:46:15.858280",
-    "age_sec": 28007,
+    "cached_at": "2026-09-18T02:47:24.366845",
+    "age_sec": 939,
     "stale": false,
     "refreshing": false
   }
