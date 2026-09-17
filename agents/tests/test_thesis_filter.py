@@ -52,15 +52,27 @@ class ThesisConfigTests(unittest.TestCase):
         self.assertTrue(b1)
 
     def test_invalidation_condition_triggered(self):
-        macro_hot = {"cpi_mom_pct": 0.30}
+        macro_hot = {"cpi_mom_pct": 0.30, "us2y_60d_delta_bps": 10}
         triggered = thesis_config.check_invalidation(macro_hot)
-        self.assertEqual(len(triggered), 1)
-        self.assertEqual(triggered[0]["id"], "cpi_hot_reprice")
+        ids = {t["id"] for t in triggered}
+        self.assertIn("cpi_hot_reprice", ids)
+        self.assertNotIn("continued_hike_regime", ids,
+                          "10bps 60d 变化在阈值 25 以下, 不该触发")
 
     def test_invalidation_condition_not_triggered(self):
-        macro_cool = {"cpi_mom_pct": 0.10}
+        macro_cool = {"cpi_mom_pct": 0.10, "us2y_60d_delta_bps": 5}
         triggered = thesis_config.check_invalidation(macro_cool)
         self.assertEqual(triggered, [])
+
+    def test_continued_hike_regime_triggers_on_2y_repricing(self):
+        # 2026-09-17 加入 (Sep FOMC 加息 +25bps 后): 2Y 60d ≥ 25bps
+        # → 市场对连续加息定价 → duration 敏感策略打脸
+        macro = {"cpi_mom_pct": 0.10, "us2y_60d_delta_bps": 40}
+        triggered = thesis_config.check_invalidation(macro)
+        ids = {t["id"] for t in triggered}
+        self.assertIn("continued_hike_regime", ids)
+        # CPI 冷 → cpi_hot_reprice 不触发
+        self.assertNotIn("cpi_hot_reprice", ids)
 
     def test_review_freshness(self):
         # config 里 last_reviewed_at = 2026-09-02, interval 30d

@@ -64,6 +64,44 @@ def _fetch_googl_amzn_capex_upgraded() -> bool | None:
     return None
 
 
+def _fetch_us2y_60d_delta_bps() -> float | None:
+    """FRED DGS2 (2Y 国债收益率) 60d 变化 bps —— 市场对 Fed 加息路径的定价.
+
+    上升 = 市场 pricing 更多 hike (thesis 里 bond long / duration 敏感策略被打脸).
+    下降 = 市场 pricing 降息.
+
+    正常 60d 波动 ±10bps, ±25bps 是明显 re-pricing, ±50bps 是 regime shift.
+    """
+    if not FRED_API_KEY:
+        print("  [us2y] FRED_API_KEY 未设, 跳过 2Y 拉取")
+        return None
+    # DGS2 是 daily; 拉 90 天数据足够找 60 交易日前
+    url = (f"https://api.stlouisfed.org/fred/series/observations"
+           f"?series_id=DGS2&api_key={FRED_API_KEY}&file_type=json"
+           f"&sort_order=desc&limit=90")
+    try:
+        with urllib.request.urlopen(url, timeout=15) as r:
+            data = json.loads(r.read())
+    except Exception as ex:
+        print(f"  [us2y] FRED 拉取失败: {ex}")
+        return None
+    obs = data.get("observations", [])
+    valid = [o for o in obs if o.get("value") not in ("", ".", None)]
+    if len(valid) < 61:
+        print(f"  [us2y] 数据不足 (只有 {len(valid)} 个观测, 需 ≥61)")
+        return None
+    try:
+        curr = float(valid[0]["value"])
+        # 60 交易日前 ≈ 12 周
+        prev = float(valid[60]["value"])
+        delta_bps = (curr - prev) * 100  # yield 单位是 %, 差 * 100 → bps
+        print(f"  [us2y] DGS2: {valid[0]['date']}={curr:.2f}%, {valid[60]['date']}={prev:.2f}%, "
+              f"60d delta={delta_bps:+.1f}bps")
+        return round(delta_bps, 1)
+    except Exception:
+        return None
+
+
 def main():
     print("=" * 70)
     print(f"Thesis Invalidation Check @ {datetime.now().isoformat(timespec='seconds')}")
@@ -96,6 +134,13 @@ def main():
         data_status["googl_amzn_capex_ttm_upgraded"] = "ok"
     else:
         data_status["googl_amzn_capex_ttm_upgraded"] = "unavailable"
+
+    us2y_60d = _fetch_us2y_60d_delta_bps()
+    if us2y_60d is not None:
+        macro["us2y_60d_delta_bps"] = us2y_60d
+        data_status["us2y_60d_delta_bps"] = "ok"
+    else:
+        data_status["us2y_60d_delta_bps"] = "unavailable"
 
     # 若关键数据全 unavailable → 显式 UNKNOWN, 不能说"无触发"
     unavailable_count = sum(1 for v in data_status.values() if v == "unavailable")

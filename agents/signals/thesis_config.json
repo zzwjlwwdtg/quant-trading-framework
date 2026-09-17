@@ -1,9 +1,9 @@
 {
-  "version": "2026-Q3.1_cpi_reprice",
+  "version": "2026-Q3.2_fed_hiking_confirmed",
   "created_at": "2026-08-24",
-  "last_reviewed_at": "2026-09-11",
+  "last_reviewed_at": "2026-09-17",
   "review_interval_days": 30,
-  "thesis_summary": "Cloud long, avoid semi. Bond long 因 2026-08 CPI hot (headline +0.4% / core +0.3% MoM) 被打脸, whitelist 已收缩去掉利率敏感三腿 (SHY/IEI/NBIS). Fed hike 概率 60-70%, semi 黑名单 in fact 更 valid (hawkish 打成长).",
+  "thesis_summary": "Cloud long, avoid semi + duration. 2026-09-17 Sep FOMC 已加息 +25bps → 3.75-4.00% (unanimous 12-0), dot plot 16/18 members 预期年内再加至少 1 次. 前瞻: continued_hike_regime 用 2Y yield 60d delta bps 追踪市场对后续加息的定价 (>25bps → 打脸 duration 敏感策略).",
   "blacklist_tickers": [
     "US.DRAM",
     "US.KLAC",
@@ -41,8 +41,16 @@
       "threshold": true,
       "source": "manual: 财报后 GOOGL/AMZN capex TTM 上调",
       "description": "云厂商 capex TTM 再上调 → AI 拐点被推迟, avoid semi 逻辑失效, 需重估 blacklist."
+    },
+    {
+      "id": "continued_hike_regime",
+      "metric": "us2y_60d_delta_bps",
+      "operator": ">",
+      "threshold": 25,
+      "source": "FRED DGS2 (2Y Treasury yield)",
+      "description": "2Y 收益率 60d 上升 > 25bps → 市场对连续加息定价, duration 敏感策略 (长债/rate-sensitive 云股) 继续承压, 前瞻性信号。正常波动 ±10bps, 25+bps 是明显 re-pricing."
     }
   ],
   "auto_clear_blacklist_on_invalidation": false,
-  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留 (逻辑更强)."
+  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标) 追踪后续加息定价."
 }
