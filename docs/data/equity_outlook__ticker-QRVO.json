@@ -5,41 +5,41 @@
   "analyst_consensus": {
     "n_analysts": 12,
     "recommendation": "hold",
-    "current_price": 113.97,
+    "current_price": 119.46,
     "forward_eps": 7.91,
-    "trailing_eps": 4.16,
-    "eps_growth_pct": 90.1,
-    "forward_pe": 14.41,
-    "trailing_pe": 27.4,
+    "trailing_eps": 4.31,
+    "eps_growth_pct": 83.4,
+    "forward_pe": 15.11,
+    "trailing_pe": 27.72,
     "target_mean": 90.17,
     "target_high": 105.0,
     "target_low": 66.0,
-    "target_upside_pct": -20.9,
+    "target_upside_pct": -24.5,
     "revenue_growth_pct": -4.2,
     "earnings_growth_pct": 255.6,
     "next_earnings": "2026-11-10",
-    "implied_pe_hold": 216.61,
-    "implied_pe_hold_upside": 90.1,
-    "peg_fair_price": 712.37,
-    "peg_ratio": 0.16,
-    "hist_pe_median": 106.35,
-    "hist_pe_p25": 92.96,
+    "implied_pe_hold": 219.14,
+    "implied_pe_hold_upside": 83.4,
+    "peg_fair_price": 659.39,
+    "peg_ratio": 0.18,
+    "hist_pe_median": 106.27,
+    "hist_pe_p25": 92.95,
     "hist_pe_p75": 140.84,
-    "hist_pe_n_days": 618,
-    "implied_hist_median": 840.84,
-    "implied_hist_p25": 734.98,
+    "hist_pe_n_days": 619,
+    "implied_hist_median": 840.21,
+    "implied_hist_p25": 734.9,
     "implied_hist_p75": 1113.54,
-    "implied_hist_upside": 637.8,
-    "peer_pe_median": 18.11,
+    "implied_hist_upside": 603.3,
+    "peer_pe_median": 18.65,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "SWKS",
-        "pe": 17.25
+        "pe": 18.37
       },
       {
         "ticker": "AVGO",
-        "pe": 17.52
+        "pe": 17.97
       },
       {
         "ticker": "6981.T",
@@ -47,15 +47,15 @@
       },
       {
         "ticker": "QCOM",
-        "pe": 18.11
+        "pe": 18.65
       },
       {
         "ticker": "MTSI",
-        "pe": 29.7
+        "pe": 30.57
       }
     ],
-    "implied_peer_median": 143.18,
-    "implied_peer_upside": 25.6,
+    "implied_peer_median": 147.45,
+    "implied_peer_upside": 23.4,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -131,7 +131,7 @@
           "current": 2.0693,
           "7daysAgo": 2.0693,
           "30daysAgo": 2.1076,
-          "60daysAgo": 1.9188,
+          "60daysAgo": 1.8982,
           "90daysAgo": 1.9188
         },
         "+1q": {
@@ -145,15 +145,15 @@
           "current": 7.57,
           "7daysAgo": 7.57,
           "30daysAgo": 7.6816,
-          "60daysAgo": 6.9002,
-          "90daysAgo": 6.9007
+          "60daysAgo": 6.8892,
+          "90daysAgo": 6.9002
         },
         "+1y": {
           "current": 7.9064,
           "7daysAgo": 7.9064,
           "30daysAgo": 7.9634,
-          "60daysAgo": 7.8291,
-          "90daysAgo": 7.8216
+          "60daysAgo": 7.8163,
+          "90daysAgo": 7.8291
         }
       },
       "eps_revisions": {
@@ -203,38 +203,38 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 90.17,
-        "gap_pct": -20.9
+        "gap_pct": -24.5
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 216.61,
-        "gap_pct": 90.1
+        "implied_price": 219.14,
+        "gap_pct": 83.4
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 143.18,
-        "gap_pct": 25.6
+        "implied_price": 147.45,
+        "gap_pct": 23.4
       }
     ],
-    "median_gap_pct": 25.6,
+    "median_gap_pct": 23.4,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -74.2,
-    "consensus_eps_growth_pct": 90.1,
-    "growth_cushion_pct": 164.3,
+    "required_eps_growth_pct": -73.9,
+    "consensus_eps_growth_pct": 83.4,
+    "growth_cushion_pct": 157.3,
     "rationale": [
-      "多口径隐含价中位数高于现价 25.6%",
+      "多口径隐含价中位数高于现价 23.4%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -74.2%，共识为 +90.1%"
+      "历史 PE 口径要求 EPS 增长 -73.9%，共识为 +83.4%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-17T13:25:03.453150+00:00",
+  "fetched_at": "2026-09-17T19:25:33.037739+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-17T22:25:03.454151",
-    "age_sec": 20283,
+    "cached_at": "2026-09-18T04:25:33.038738",
+    "age_sec": 454,
     "stale": false,
     "refreshing": false
   },
