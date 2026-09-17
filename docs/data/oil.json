@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-17T00:58:30.467684+00:00",
+  "ts": "2026-09-17T01:31:29.997645+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 2,
-      "value": "$101.32 (20d +19.3%)",
+      "value": "$102.12 (20d +20.2%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$3.32 (Brent $104.64 - WTI $101.32)",
+      "value": "$3.59 (Brent $105.71 - WTI $102.12)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "neutral",
       "weight": 1,
-      "value": "XLE +nan% vs SPY +nan% (差 +nanpp)",
+      "value": "XLE +0.6% vs SPY -1.8% (差 +2.3pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "100.29 (5d +1.5%)",
+      "value": "100.31 (5d +1.6%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -63,13 +63,13 @@
   "notes": [
     "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股"
   ],
-  "price": 101.32,
-  "pct_5d": 5.49,
-  "pct_20d": 19.28,
+  "price": 102.12,
+  "pct_5d": 6.32,
+  "pct_20d": 20.23,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-17T09:58:34.809235",
-    "age_sec": 268,
+    "cached_at": "2026-09-17T10:31:31.712310",
+    "age_sec": 90,
     "stale": false,
     "refreshing": false
   }
