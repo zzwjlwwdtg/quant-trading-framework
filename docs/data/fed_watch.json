@@ -1,35 +1,31 @@
 {
   "error": "no_recent_data",
   "confidence": "low",
-  "data_snapshot_date": "2026-09-16 12:55 EDT",
-  "commentary": "数据滞后：可核验的最新 FedWatch/替代快照为 2026-09-16 12:55 EDT，早于 2026-09-16 14:00 EDT 的 FOMC 决议；近 7 天内还有 2026-09-10 PPI 与 2026-09-11 CPI，因此不满足“关键事件之后发布”的要求。",
+  "data_snapshot_date": null,
+  "commentary": "无法取得 2026-09-17 或最近 1 个交易日内、且明确在 2026-09-16 FOMC 决议和 Warsh 记者会之后发布的 CME FedWatch 未来 3-4 次会议完整概率表。数据滞后：可见的概率摘录主要是 9月16日决议前快照；过去7天内已有 9月10日PPI、9月11日CPI、9月16日FOMC/Warsh讲话，这些事件会显著改变加息/维持预期，不能用会前概率替代会后数据。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "backup_fed_rate_monitor"
+      "url": "https://www.cmegroup.com/market-data/market-data-api/fedwatch-api.html",
+      "type": "cme_fedwatch_api"
     },
     {
-      "url": "https://www.bls.gov/news.release/ppi.nr0.htm",
-      "type": "ppi_event_check"
+      "url": "https://polymarketflow.com/odds/fed-rate-cut",
+      "type": "backup_pre_fomc_snapshot"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "cpi_event_check"
-    },
-    {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_event_check"
+      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-federal-reserve-interest-rate-decision-september-meeting",
+      "type": "backup_event_context"
     }
   ],
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-16T17:43:32+00:00",
+  "fetched_at": "2026-09-17T01:44:46+00:00",
   "_meta": {
-    "cached_at": "2026-09-17T02:43:32.499631",
-    "age_sec": 28169,
+    "cached_at": "2026-09-17T10:44:46.675526",
+    "age_sec": 1095,
     "stale": false,
     "refreshing": false
   }
