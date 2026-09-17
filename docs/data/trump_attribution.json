@@ -1,7 +1,7 @@
 {
   "posts_analyzed": 75,
   "posts_total": 82,
-  "snapshots_used": 169,
+  "snapshots_used": 170,
   "window_hours": 48,
   "top_movers": [
     {
@@ -36,6 +36,21 @@
       "delta": -25,
       "before_ts": "2026-08-20T12:00:00+00:00",
       "after_ts": "2026-08-25T19:51:54+00:00"
+    },
+    {
+      "post_time": "2026-09-15T19:11:50.954Z",
+      "event_type": "TARIFF",
+      "magnitude": "small",
+      "direction": "neutral",
+      "tickers": [
+        "SPY"
+      ],
+      "preview": "It was my Honor to write the Foreword for Brian Pannebecker's incredible new Book, \"Blue Collar Conservative: From Reaga",
+      "cut_prob_before": 27,
+      "cut_prob_after": 22,
+      "delta": -5,
+      "before_ts": "2026-09-15T02:03:18+00:00",
+      "after_ts": "2026-09-17T00:49:46+00:00"
     },
     {
       "post_time": "2026-08-15T12:31:50.605Z",
@@ -229,30 +244,13 @@
       "delta": 3,
       "before_ts": "2026-08-24T05:10:34+00:00",
       "after_ts": "2026-08-26T07:53:14+00:00"
-    },
-    {
-      "post_time": "2026-08-24T16:57:13.491Z",
-      "event_type": "GEOPOLITICAL",
-      "magnitude": "medium",
-      "direction": "bearish",
-      "tickers": [
-        "SPY",
-        "QQQ",
-        "GLD"
-      ],
-      "preview": "Trump's Patience With the Iranian Regime Runs Out: https://amgreatness.com/2026/07/10/trumps-patience-with-the-iranian-r",
-      "cut_prob_before": 27,
-      "cut_prob_after": 30,
-      "delta": 3,
-      "before_ts": "2026-08-24T05:10:34+00:00",
-      "after_ts": "2026-08-26T07:53:14+00:00"
     }
   ],
   "by_event_type": {
     "TARIFF": {
       "count": 18,
-      "avg_delta": -1.72,
-      "sum_delta": -31.0
+      "avg_delta": -2.0,
+      "sum_delta": -36.0
     },
     "GEOPOLITICAL": {
       "count": 27,
@@ -280,10 +278,10 @@
       "sum_delta": 0.0
     }
   },
-  "generated_at": "2026-09-17T00:47:30+00:00",
+  "generated_at": "2026-09-17T06:48:00+00:00",
   "_meta": {
-    "cached_at": "2026-09-17T09:47:30.743589",
-    "age_sec": 17132,
+    "cached_at": "2026-09-17T15:48:00.823250",
+    "age_sec": 2702,
     "stale": false,
     "refreshing": false
   }
