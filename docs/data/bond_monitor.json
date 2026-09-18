@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-19T05:48",
+  "asof": "2026-09-19T06:19",
   "yields": {
     "10y": {
       "value": 4.998,
@@ -196,10 +196,10 @@
   },
   "spreads": {
     "2s10s": {
-      "value": 0.27,
-      "chg_20d_bps": -23.0,
+      "value": 0.25,
+      "chg_20d_bps": -25.0,
       "regime": "曲线平坦",
-      "asof": "2026-09-17"
+      "asof": "2026-09-18"
     }
   },
   "gld_correlation": {
@@ -247,12 +247,12 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 156.84 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 156.85 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1385.6 韩元明显走弱",
+      "msg": "KRW/USD 1385.9 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -315,13 +315,13 @@
     "sofr_pct": 3.85,
     "iorb_pct": 3.9,
     "sofr_iorb_spread_bps": -5.0,
-    "usdjpy": 156.84,
-    "usdjpy_20d_pct": -1.29,
-    "usdjpy_20d_delta_pct": -1.29,
+    "usdjpy": 156.85,
+    "usdjpy_20d_pct": -1.28,
+    "usdjpy_20d_delta_pct": -1.28,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -4.29,
-    "krw_usd": 1385.6,
-    "krw_20d_pct": -0.37,
+    "usdjpy_pullback_from_60d_high_pct": -4.28,
+    "krw_usd": 1385.9,
+    "krw_20d_pct": -0.35,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 205.8,
@@ -338,9 +338,9 @@
     "kbe_spy_20d_delta_pct": -2.8,
     "cdx_ig_bps": 78.0,
     "cdx_hy_bps": 270.0,
-    "dxy": 100.2,
-    "dxy_pct_20d": 1.31,
-    "dxy_z_60d": 0.06,
+    "dxy": 100.21,
+    "dxy_pct_20d": 1.32,
+    "dxy_z_60d": 0.07,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -387,38 +387,38 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7724.5,
+        "price": 7725.0,
         "chg_pct": 1.11
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 29958.5,
-        "chg_pct": 1.74
+        "price": 29955.0,
+        "chg_pct": 1.73
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 95.39,
-        "chg_pct": -6.4
+        "price": 95.47,
+        "chg_pct": -6.32
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4418.2,
-        "chg_pct": 0.42
+        "price": 4415.9,
+        "chg_pct": 0.37
       }
     },
     "oil_uso": 153.82,
     "oil_pct_20d": 14.33,
-    "oil_wti": 95.39,
+    "oil_wti": 95.47,
     "eem_pct_20d": 0.62,
     "eem_vs_spx_20d": 0.74,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
         "label": "20+Y 美债",
-        "vol_z_20d": 0.65,
+        "vol_z_20d": 0.66,
         "notable": false
       },
       "real_rates": {
@@ -442,31 +442,31 @@
       "credit_hy": {
         "proxy": "HYG",
         "label": "高收益信用 ETF",
-        "vol_z_20d": -0.21,
+        "vol_z_20d": -0.18,
         "notable": false
       },
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": -0.62,
+        "vol_z_20d": -0.6,
         "notable": false
       },
       "em": {
         "proxy": "EEM",
         "label": "新兴市场 ETF",
-        "vol_z_20d": 0.52,
+        "vol_z_20d": 0.59,
         "notable": false
       },
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": 2.95,
+        "vol_z_20d": 3.17,
         "notable": true
       },
       "us_qqq": {
         "proxy": "QQQ",
         "label": "Nasdaq 100 ETF",
-        "vol_z_20d": 3.39,
+        "vol_z_20d": 3.53,
         "notable": true
       },
       "jp_equity": {
@@ -484,7 +484,7 @@
       "oil": {
         "proxy": "USO",
         "label": "WTI 原油 ETF",
-        "vol_z_20d": -0.43,
+        "vol_z_20d": -0.4,
         "notable": false
       }
     },
@@ -506,8 +506,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-19T05:49:14.233276",
-    "age_sec": 828,
+    "cached_at": "2026-09-19T06:20:18.990498",
+    "age_sec": 763,
     "stale": false,
     "refreshing": false
   }
