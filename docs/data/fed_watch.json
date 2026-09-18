@@ -3,53 +3,42 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 40,
+      "days_until": 39,
       "probabilities": {
-        "hold": 50.2,
-        "hike_25": 49.8
-      },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-12-09",
-      "days_until": 82,
-      "probabilities": {
-        "hold": 11.3,
-        "hike_25": 50.1,
-        "hike_50": 38.6
+        "hold": 38.0,
+        "hike_25": 62.0
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-27",
-      "days_until": 131,
+      "date": "2026-12-09",
+      "days_until": 81,
       "probabilities": {
-        "hold": 6.5,
-        "hike_25": 33.6,
-        "hike_50": 59.9
+        "hold": 10.2,
+        "hike_25": 44.5,
+        "hike_50": 45.3
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-03-17",
-      "days_until": 180,
+      "date": "2027-01-27",
+      "days_until": 130,
       "probabilities": {
-        "hold": 2.4,
-        "hike_25": 16.5,
-        "hike_50": 81.1
+        "hold": 0.8,
+        "hike_25": 6.4,
+        "hike_50": 92.8
       },
       "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "strong_hawkish"
     }
   ],
   "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-09-17 18:15 EDT",
-  "recent_event_impact": "2026-09-11 August CPI: headline CPI +0.4% m/m, +3.4% y/y; core CPI +0.3% m/m, +2.4% y/y, with gasoline +3.9% m/m. 2026-09-16 FOMC raised rates 25bp to 3.75-4.00; post-event FedWatch/derived data show October hike odds near 50% and December cumulative hike odds near 89%.",
-  "commentary": "Data snapshot is 2026-09-17 18:15 EDT, after both the 2026-09-11 CPI release and the 2026-09-16 FOMC/Warsh press event, so the key recent inflation and policy shocks are reflected. August CPI’s energy-led acceleration and the Fed’s hawkish 25bp hike shifted pricing toward at least one more 2026 hike, with the modal path reaching 4.00-4.25 by December and a higher terminal range around 4.50-4.75 in 2027.",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-18 12:15 EDT",
+  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00，Warsh称通胀仍过高；9/11 CPI为环比+0.4%、同比+3.4%，9/10 PPI为环比+0.4%、同比+5.4%，均强化后续加息定价；9/4 NFP +162K、失业率4.1%，显示劳动力市场仍有韧性。",
+  "commentary": "Data snapshot 为 2026-09-18 12:15 EDT，已晚于 2026-09-16 FOMC/Warsh press conference，因此关键近期事件已反映。CPI/PPI 的能源驱动反弹和NFP韧性使市场从降息/暂停预期转为明显鹰派，当前定价显示10月大概率再加25bp，12月及2027年1月进一步加息风险较高。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -57,27 +46,31 @@
     },
     {
       "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_derived_rate_monitor"
-    },
-    {
-      "url": "https://www.oanda.jp/lab-education/dictionary/fedwatchtool/",
-      "type": "cme_derived_rate_table"
+      "type": "cme_derived_snapshot"
     },
     {
       "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "cpi_release"
+      "type": "cpi"
     },
     {
-      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-climb-after-selloff-federal-reserve-rate-hike/card/market-expects-a-fed-hike-in-october-as-bank-economists-eye-december-k8znLyc1pM1c5Gk1LyDv",
-      "type": "market_report"
+      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
+      "type": "ppi"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents.htm",
+      "type": "fomc_event_check"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-18T01:48:24+00:00",
+  "fetched_at": "2026-09-18T17:51:05+00:00",
   "_meta": {
-    "cached_at": "2026-09-18T10:48:24.680158",
-    "age_sec": 27877,
+    "cached_at": "2026-09-19T02:51:05.931206",
+    "age_sec": 716,
     "stale": false,
     "refreshing": false
   }
