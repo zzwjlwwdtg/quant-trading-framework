@@ -52,5 +52,35 @@
     }
   ],
   "auto_clear_blacklist_on_invalidation": false,
-  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标) 追踪后续加息定价."
+  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标) 追踪后续加息定价.",
+  "next_thesis_conjecture": {
+    "conjectured_at": "2026-09-17",
+    "candidates": [
+      {
+        "id": "higher_for_longer",
+        "hypothesis": "Fed 高利率维持 12+ 月, 曲线不倒挂 → 现金/短债/高股息 quality 跑赢, 长久期 (TLT/EDV) 加入 blacklist, 半导体维持 blacklist. USD 走强, 黄金震荡偏强 (real rate + 避险博弈).",
+        "watch_metrics": [
+          "us2y_60d_delta_bps 是否维持 > 0 (不掉头)",
+          "dxy_60d_pct 是否 > +3% (强美元验证)",
+          "curve_2s10s_bps 是否维持正 spread (未倒挂)",
+          "sofr_effective_rate 3m 均值 (Fed 实际执行)"
+        ],
+        "watch_tickers": ["SGOV", "BIL", "SCHD", "DVY", "IWD", "UUP", "TLT (short candidate)"],
+        "promote_when": "us2y_60d_delta_bps 未跌破 0, DXY 60d +3%+, 且 2s10s spread > 20bps (曲线未倒挂). 三条同时满足 30 天."
+      },
+      {
+        "id": "recession_first_hiking_breaks_something",
+        "hypothesis": "过快加息触发 recession, 曲线深度倒挂 → 前 6 个月股票崩盘 + long-duration 债券反弹. Fed 被迫转向. 分两段: (1) risk-off crash → 现金+GLD+VIX, (2) 6 个月后 TLT/IEI 回归 whitelist, 半导体触底反弹.",
+        "watch_metrics": [
+          "curve_2s10s_bps 是否 < -50bps (深度倒挂)",
+          "credit_hy_oas_bps 是否 > 500bps (信用利差爆炸)",
+          "unemployment_rate 是否连续 3 月 > 4.5%",
+          "vix 是否连续 5 日 > 30"
+        ],
+        "watch_tickers": ["TLT (potential re-add)", "GLD (heavy)", "XLU / defensive", "VXX / SVXY 反手"],
+        "promote_when": "curve 2s10s < -50bps AND (HY OAS > 500bps OR unemp > 4.5%). 任一硬信号 + 曲线深度倒挂."
+      }
+    ],
+    "decision_process": "两个候选是 A/B 二叉: higher_for_longer 假设 Fed 加息软着陆成功 (base case ~60%), recession_first 假设加息破坏就业市场 (tail case ~35%). 剩 5% 是 Fed 突然鸽派转向 (低概率). 4 周内看 (1) 后续 CPI print (2) NFP unemp trend (3) 曲线形态, 决定 promote 哪个作正式 thesis-2026-Q4."
+  }
 }

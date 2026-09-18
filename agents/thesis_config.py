@@ -21,7 +21,8 @@ from typing import Any, Optional
 
 from config import SIGNALS_DIR
 
-_CONFIG_PATH = Path(SIGNALS_DIR) / "thesis_config.json"
+_CONFIG_PATH  = Path(SIGNALS_DIR) / "thesis_config.json"
+_ARCHIVE_PATH = Path(SIGNALS_DIR) / "thesis_archive.jsonl"
 _CACHE: dict = {"mtime": 0, "data": None}
 
 
@@ -154,4 +155,77 @@ def summary() -> dict:
         "last_reviewed_at": cfg.get("last_reviewed_at"),
         "needs_review": needs_review,
         "review_msg": review_msg,
+        "has_next_conjecture": bool(cfg.get("next_thesis_conjecture")),
+        "archived_count": _count_archived(),
     }
+
+
+def next_thesis_conjecture() -> Optional[dict]:
+    """返当前 thesis_config 里 next_thesis_conjecture 块 (若存在).
+
+    这是下一个 thesis 的候选假设 + 验证 metric + promote 条件, 供 dashboard
+    展示 / _check_thesis_invalidation 触发时给出 next 路线图.
+    """
+    cfg = _load()
+    if not cfg:
+        return None
+    return cfg.get("next_thesis_conjecture")
+
+
+def list_retired_theses() -> list[dict]:
+    """按时间顺序返 thesis_archive.jsonl 里所有 retired thesis 记录.
+
+    每条: { retired_at, retired_reason, invalidation_evidence,
+             promoted_to_version, thesis: {...full old config...} }
+    """
+    if not _ARCHIVE_PATH.exists():
+        return []
+    entries: list[dict] = []
+    for line in _ARCHIVE_PATH.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entries.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return entries
+
+
+def _count_archived() -> int:
+    """便宜的 count, 不 parse JSON."""
+    if not _ARCHIVE_PATH.exists():
+        return 0
+    try:
+        return sum(1 for l in _ARCHIVE_PATH.read_text(encoding="utf-8").splitlines()
+                    if l.strip())
+    except Exception:
+        return 0
+
+
+def archive_thesis_for_promotion(
+    new_thesis: dict,
+    retired_reason: str,
+    invalidation_evidence: Optional[list[dict]] = None,
+) -> None:
+    """在把新 thesis 写入 thesis_config.json **之前**调, 把当前 (即将 retire 的)
+    版本 append 到 thesis_archive.jsonl. 这样每次 promote 都留下审计轨迹.
+
+    调用方 pattern:
+        cur = _load()          # 拿当前 (即将 retire 的)
+        archive_thesis_for_promotion(new_thesis, "cpi hot triggered", [...])
+        # ... 然后写 new_thesis 到 thesis_config.json
+    """
+    cur = _load()
+    if not cur:
+        return   # 无当前 config, 无需 archive (首次创建)
+    entry = {
+        "retired_at":            datetime.now().isoformat(timespec="seconds"),
+        "retired_reason":        retired_reason,
+        "invalidation_evidence": invalidation_evidence or [],
+        "promoted_to_version":   new_thesis.get("version"),
+        "thesis":                cur,
+    }
+    _ARCHIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(_ARCHIVE_PATH, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")

@@ -75,13 +75,71 @@ class ThesisConfigTests(unittest.TestCase):
         self.assertNotIn("cpi_hot_reprice", ids)
 
     def test_review_freshness(self):
-        # config 里 last_reviewed_at = 2026-09-02, interval 30d
+        # 只断言接口 signature 正确 (date-dependent 不硬编)
         needs, msg = thesis_config.thesis_needs_review()
-        # 当前 date 距 2026-09-02 < 30d 时应 False
-        # 未来 date 距 > 30d 时应 True
-        # 只断言接口 signature 正确
         self.assertIsInstance(needs, bool)
         self.assertIsInstance(msg, str)
+
+
+class ThesisArchiveTests(unittest.TestCase):
+    """Regression: 历史 thesis 被证伪后必须保留在 archive, 不能 lost."""
+
+    def setUp(self):
+        thesis_config._CACHE = {"mtime": 0, "data": None}
+
+    def test_next_conjecture_exposed(self):
+        c = thesis_config.next_thesis_conjecture()
+        self.assertIsNotNone(c, "next_thesis_conjecture 缺失 (2026-09-17 加入)")
+        self.assertIn("candidates", c)
+        self.assertGreaterEqual(len(c["candidates"]), 2,
+                                 "至少 2 个候选便于对比 (higher_for_longer / recession_first)")
+
+    def test_archive_has_retired_theses(self):
+        arch = thesis_config.list_retired_theses()
+        self.assertGreaterEqual(len(arch), 2,
+                                 "至少 2 条历史 (2026-Q3, 2026-Q3.1) — 不能丢")
+        for e in arch:
+            self.assertIn("retired_at", e)
+            self.assertIn("retired_reason", e)
+            self.assertIn("thesis", e)
+            self.assertIn("version", e["thesis"])
+        # 顺序: 老版本在前
+        versions = [e["thesis"]["version"] for e in arch]
+        self.assertIn("2026-Q3", versions)
+        self.assertIn("2026-Q3.1_cpi_reprice", versions)
+
+    def test_summary_includes_archive_and_conjecture_flags(self):
+        s = thesis_config.summary()
+        self.assertTrue(s["ok"])
+        self.assertTrue(s.get("has_next_conjecture"))
+        self.assertGreaterEqual(s.get("archived_count", 0), 2)
+
+    def test_archive_thesis_for_promotion_appends_current(self):
+        # 隔离: 用 tempfile 假 archive path
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.jsonl',
+                                          encoding='utf-8') as f:
+            tmp_path = Path(f.name)
+        try:
+            with patch.object(thesis_config, "_ARCHIVE_PATH", tmp_path):
+                new_thesis = {"version": "test_v_next"}
+                thesis_config.archive_thesis_for_promotion(
+                    new_thesis,
+                    retired_reason="unit test",
+                    invalidation_evidence=[{"id": "test_trigger", "actual": 99}],
+                )
+                lines = tmp_path.read_text(encoding="utf-8").splitlines()
+                # tempfile was empty, now should have 1 line
+                self.assertEqual(len(lines), 1)
+                entry = json.loads(lines[0])
+                self.assertEqual(entry["promoted_to_version"], "test_v_next")
+                self.assertEqual(entry["retired_reason"], "unit test")
+                self.assertEqual(len(entry["invalidation_evidence"]), 1)
+                # 保存的 thesis 是当前 config (不是新的)
+                cur = thesis_config._load()
+                self.assertEqual(entry["thesis"]["version"], cur["version"])
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
 
 class ThesisFilterAppliedTests(unittest.TestCase):
