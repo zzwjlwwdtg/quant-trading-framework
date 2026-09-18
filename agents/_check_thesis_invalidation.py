@@ -24,7 +24,7 @@ sys.stdout.reconfigure(line_buffering=True)
 
 from config import FRED_API_KEY, SIGNALS_DIR
 from atomic_io import append_jsonl
-from thesis_config import check_invalidation, summary as thesis_summary
+from thesis_config import check_invalidation, next_thesis_conjecture, summary as thesis_summary
 
 _LOG_PATH = Path(SIGNALS_DIR) / "thesis_invalidation_log.jsonl"
 
@@ -217,6 +217,24 @@ def main():
 
     print("\n**行动**: 打开 signals/thesis_config.json 决定是否 (a) 更新 blacklist "
           "(b) 改 version (c) 忽略并等下次数据")
+
+    # 触发后展示 next_thesis_conjecture 供 promote 参考 (2026-09-18 加)
+    conj = next_thesis_conjecture()
+    if conj and conj.get("candidates"):
+        print(f"\n下一 thesis 候选 (conjectured_at {conj.get('conjectured_at', '?')}):")
+        for i, c in enumerate(conj["candidates"], 1):
+            print(f"\n  [{i}] {c.get('id', '?')}")
+            print(f"      hypothesis: {c.get('hypothesis', '')[:200]}")
+            wm = c.get("watch_metrics", [])
+            if wm:
+                print(f"      watch: {'; '.join(wm[:3])}"
+                      f"{' ...' if len(wm) > 3 else ''}")
+            pw = c.get("promote_when", "")
+            if pw:
+                print(f"      promote_when: {pw[:200]}")
+        dp = conj.get("decision_process", "")
+        if dp:
+            print(f"\n  decision: {dp[:300]}")
 
 
 if __name__ == "__main__":

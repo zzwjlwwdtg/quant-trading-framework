@@ -1163,6 +1163,18 @@ def _compute_oil() -> dict:
     return out
 
 
+def api_top_picks(n: int = 10) -> dict:
+    """今日值得关注 ticker 排行, thesis 过滤 + regime + freshness 加权.
+    dashboard 顶部展示. 内部 30s cache (数据只有 _latest.json 变才有意义)."""
+    def _compute():
+        try:
+            from top_picks import compute_top_picks
+            return compute_top_picks(n=n)
+        except Exception as e:
+            return {"ok": False, "error": str(e), "picks": []}
+    return _cached(f"top_picks_{n}", ttl_sec=30, compute_fn=_compute)
+
+
 def api_sectors() -> dict:
     """板块级 regime — 带 5min 后台缓存。"""
     # v2 避免旧版仅含方向标签的磁盘缓存掩盖新增 short_style 字段。
@@ -3071,6 +3083,45 @@ def api_trump_attribution() -> dict:
                    first_call_placeholder={"posts_analyzed": 0, "computing": True})
 
 
+def api_thesis_state() -> dict:
+    """thesis 时间线 + 下一候选 (dashboard 用).
+
+    返: {
+      current: { version, summary, blacklist_count, whitelist_count,
+                  last_reviewed_at, needs_review, review_msg },
+      retired: [ { retired_at, retired_reason, promoted_to_version,
+                    thesis: { version, thesis_summary } } ...],
+      next_conjecture: { candidates: [...], decision_process } or None
+    }
+    """
+    try:
+        from thesis_config import (list_retired_theses, next_thesis_conjecture,
+                                    summary as thesis_summary)
+        cur = thesis_summary()
+        retired_full = list_retired_theses()
+        # 减薄 retired: dashboard 不用完整 thesis body, 只需摘要
+        retired_slim = []
+        for e in retired_full:
+            th = e.get("thesis", {}) or {}
+            retired_slim.append({
+                "retired_at":          e.get("retired_at"),
+                "retired_reason":      e.get("retired_reason"),
+                "promoted_to_version": e.get("promoted_to_version"),
+                "invalidation_evidence": e.get("invalidation_evidence", []),
+                "version":             th.get("version"),
+                "thesis_summary":      th.get("thesis_summary"),
+                "blacklist_count":     len(th.get("blacklist_tickers", []) or []),
+                "whitelist_count":     len(th.get("whitelist_tickers", []) or []),
+            })
+        return {
+            "current":         cur,
+            "retired":         retired_slim,
+            "next_conjecture": next_thesis_conjecture(),
+        }
+    except Exception as e:
+        return {"error": str(e)[:200]}
+
+
 def api_thesis_forecast(days_ahead: int = 45) -> dict:
     """未来 N 天 forward-looking 事件 + 每事件 3 场景 (dovish/base/hawkish) 对 cut_prob 的规则版预测。"""
     def _compute():
@@ -4859,6 +4910,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_ai_analysis())
             elif path == "/api/sectors":
                 self._json(api_sectors())
+            elif path == "/api/top_picks":
+                n_arg = int(qs.get("n", ["10"])[0])
+                self._json(api_top_picks(n=n_arg))
             elif path == "/api/oil":
                 self._json(api_oil())
             elif path == "/api/option_walls_chart":
@@ -4905,6 +4959,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_bond_ai_interpret())
             elif path == "/api/trump_attribution":
                 self._json(api_trump_attribution())
+            elif path == "/api/thesis_state":
+                self._json(api_thesis_state())
             elif path == "/api/thesis_forecast":
                 _da = 45
                 try:
