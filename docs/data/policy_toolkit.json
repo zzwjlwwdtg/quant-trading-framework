@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-18T09:23:45.496364",
-  "count_total_actions": 500,
+  "as_of": "2026-09-18T21:27:48.058155",
+  "count_total_actions": 511,
   "tools": [
     {
       "tool_key": "fed_hawkish_signal",
@@ -13,20 +13,17 @@
       "last_action": {
         "tool_key": "fed_hawkish_signal",
         "action_type": "announced",
-        "date": "2026-09-17",
-        "actor": "Warsh and Fed Officials",
-        "amount_desc": "",
-        "commentary": "加息抗通胀是鹰派动作，推高短端利率并压制债市救助预期。",
-        "verbatim": "Warsh and Fed Officials Raise Interest Rates to Fight Inflation",
+        "date": "2026-09-18",
+        "actor": "Fed",
+        "amount_desc": "rate hike this week",
+        "commentary": "解释本周加息原因，确认政策重心仍在抗通胀。",
+        "verbatim": "Why the Federal Reserve hiked rates this week",
         "source": "GoogleNews: Warsh Federal Reserve rate hike inflation",
-        "url": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxQM2stY3BUc2U1Z0tFTDJIOWNLMlBTaFh3TUN0bTZ0REtxZnJGVDlFSjdEUjZuYmE3UnBkb2NtTC1UeFlPa2o0Uk9NdXZCX01GN0ZNMnFNTEhQa0l6eFYxMU9fdlVxWmhCdDZwdl9lUXRBWWo1SU9tZ3d1S0NfNEhNdjBVOGZOSDdi?oc=5",
-        "confidence": 9
+        "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOVUtVSDBnTFpEaUVCYXRtc3Uyb3g1Tjl4ZllBbGFaMUhTTUVaMVFuckZreTlZMGFtMXFRamRzaDhrMHAtVjFnRFpHSWxLeDROc1RZaGVfTWNpM01pN2JmdmFSQWROT0ExbkpQWDN3Nmg0NzBva21zMDN3STdaNk5aanlyTlE?oc=5",
+        "confidence": 8
       },
-      "yield_reaction_30y": {
-        "t0_bp": -5.3,
-        "yield_at_close": 5.296
-      },
-      "event_count_180d": 248
+      "yield_reaction_30y": {},
+      "event_count_180d": 255
     },
     {
       "tool_key": "qra_wording",
@@ -98,29 +95,6 @@
       "event_count_180d": 9
     },
     {
-      "tool_key": "tga_deployment",
-      "zh": "TGA 财政存款回购",
-      "owner": "Treasury",
-      "feasibility": "medium",
-      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
-      "invalidation": "一次性弹药, 用完就没了",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "tga_deployment",
-        "action_type": "signaled",
-        "date": "2026-09-03",
-        "actor": "Bessent",
-        "amount_desc": "nearly $1 trillion from TGA",
-        "commentary": "再次放风用 TGA 支持回购，重点是以现金缓冲长债供需冲击。",
-        "verbatim": "may use nearly $1 trillion from TGA for bond buybacks",
-        "source": "GoogleNews: TGA Treasury General Account debt buyback",
-        "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQLW1seGlnT3lCZUJZbjdpa0NOZ29XVGQtTmNTai1WSERLWHdMMUJRSFVwSGNNSUZSMUFMVWprN0ZGSWZFUkdCQW9rczFudjBrYnphNUFBU2FoYzN6SjFQUVVDRkZVd2dGZlpyYzNtNHgwWWY2SFdZMjgzc1NibUxHYVNZTUd1U3E1cjJObWVOTDBZcE5CMzJBUGYydWs5dUVZTWl1cnB4Y3hoenY5QkRBbDdR?oc=5",
-        "confidence": 7
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 37
-    },
-    {
       "tool_key": "fx_intervention",
       "zh": "汇市干预 (支撑日元)",
       "owner": "Treasury/G7",
@@ -144,6 +118,29 @@
       "event_count_180d": 4
     },
     {
+      "tool_key": "tga_deployment",
+      "zh": "TGA 财政存款回购",
+      "owner": "Treasury",
+      "feasibility": "medium",
+      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
+      "invalidation": "一次性弹药, 用完就没了",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "tga_deployment",
+        "action_type": "signaled",
+        "date": "2026-09-14",
+        "actor": "Treasury",
+        "amount_desc": "",
+        "commentary": "暗示财政部已在投放流动性，缓冲前端和黄金定价。",
+        "verbatim": "Gold Doesn’t Need a Rate Cut. It Needs What the Treasury Is Already Doing.",
+        "source": "GoogleNews: yield curve control QE Federal Reserve",
+        "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNci04dDE0TzB3cWhvd2VTNFBxdG1GaWZzMENReVc1WmtCTXByMDVFWWJDSHlURmVMZjJveVNRZ050cHoyUnB0RnZhS1RoMWtHYlJqYXQ5NjhaZUp2d2ktekM2V2xKdm9YQzg4TmhoUF9hdDNxVU1CdW5SUTRiSi1JbnBPQjE?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 39
+    },
+    {
       "tool_key": "long_end_buyback",
       "zh": "长端回购扩容",
       "owner": "Treasury",
@@ -164,7 +161,7 @@
         "confidence": 8
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 180
+      "event_count_180d": 181
     },
     {
       "tool_key": "fed_dovish_signal",
@@ -173,7 +170,7 @@
       "feasibility": "high",
       "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
       "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
-      "status": "口头/待发",
+      "status": "被否",
       "last_action": {
         "tool_key": "fed_dovish_signal",
         "action_type": "signaled",
@@ -187,7 +184,7 @@
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 14
+      "event_count_180d": 15
     },
     {
       "tool_key": "fima_repo",
