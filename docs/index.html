@@ -111,7 +111,7 @@
 </style>
 <script>
   window.STATIC_SNAPSHOT_MODE = true;
-  window.SNAPSHOT_META = {"generated_at": "2026-09-18T14:33:05", "endpoints_ok": 134, "endpoints_fail": 0};
+  window.SNAPSHOT_META = {"generated_at": "2026-09-18T16:33:03", "endpoints_ok": 134, "endpoints_fail": 0};
   document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('snapshot-ts');
     if (el && window.SNAPSHOT_META) el.textContent = window.SNAPSHOT_META.generated_at;
@@ -231,6 +231,14 @@
   <div class="card" style="border-left:3px solid #58a6ff">
     <h2 title="本地 AI CLI 综合解读（默认 Codex）— 结构化 TL;DR + 可展开完整分析">🎯 AI 综合分析 <small id="ai-mtime"></small></h2>
     <div id="ai-analysis"></div>
+  </div>
+</div>
+
+<!-- Row 0c: Thesis 时间线 (current + retired history + next conjecture 候选) -->
+<div class="grid">
+  <div class="card" style="border-left:3px solid #a371f7">
+    <h2 title="当前 thesis + 历史被证伪 thesis + 下一 thesis 候选 (higher_for_longer / recession_first). 数据源: signals/thesis_config.json + thesis_archive.jsonl">🧭 Thesis 时间线 <small id="thesis-timeline-meta">Current · History · Next</small></h2>
+    <div id="thesis-timeline"><small style="color:var(--muted)">加载中...</small></div>
   </div>
 </div>
 
@@ -3700,6 +3708,97 @@ const STYLE_CLS = {
   chop_bull:'warn', chop:'warn', chop_weak:'bad', mixed:'info', unknown:'info',
 };
 
+async function loadThesisTimeline() {
+  const container = $('thesis-timeline');
+  const meta = $('thesis-timeline-meta');
+  const r = await fetchJson('/api/thesis_state');
+  if (!r || r.error) {
+    if (container) container.innerHTML = '<small style="color:var(--warn)">thesis state 不可用</small>';
+    return;
+  }
+  const cur = r.current || {};
+  const retired = r.retired || [];
+  const conj = r.next_conjecture || null;
+  if (meta) meta.innerHTML =
+    `Current: <b>${cur.version || '?'}</b> · retired ${retired.length} · ` +
+    `next: ${conj && conj.candidates ? conj.candidates.length + ' 候选' : '(未定)'}`;
+
+  // Current thesis block
+  const reviewCls = cur.needs_review ? 'warn' : 'muted';
+  const curHtml = `
+    <div style="border:1px solid var(--border); border-radius:4px; padding:8px; margin-bottom:8px; background:rgba(163,113,247,0.06)">
+      <div style="display:flex; justify-content:space-between; align-items:baseline">
+        <b style="color:#a371f7">📌 CURRENT · ${cur.version || '?'}</b>
+        <small class="${reviewCls}">last_reviewed ${cur.last_reviewed_at || '?'} · ${cur.review_msg || ''}</small>
+      </div>
+      <div style="font-size:11px; color:var(--fg); margin-top:4px; line-height:1.5">${cur.summary || '(no summary)'}</div>
+      <div style="font-size:10px; color:var(--muted); margin-top:4px">
+        blacklist ${cur.blacklist_count || 0} · whitelist ${cur.whitelist_count || 0} · invalidation rules ${cur.invalidation_count || 0}
+      </div>
+    </div>`;
+
+  // Retired history (最老的在前 → 时间线从上到下)
+  const retiredHtml = retired.length ? `
+    <details style="margin-bottom:8px">
+      <summary style="cursor:pointer; font-size:12px; color:var(--muted)">
+        📜 历史被证伪 (${retired.length}) — 点开
+      </summary>
+      <div style="margin-top:6px; padding-left:8px; border-left:2px dashed var(--border)">
+      ${retired.map(e => {
+        const ev = (e.invalidation_evidence || []).map(x =>
+          `<span class="badge warn" style="font-size:9px" title="${x.source || ''}">${x.id || 'evidence'}: ${x.actual != null ? x.actual : '?'}</span>`
+        ).join(' ');
+        return `<div style="margin-bottom:8px; padding:6px; border:1px solid var(--border); border-radius:3px; background:rgba(210,153,34,0.04)">
+          <div style="display:flex; justify-content:space-between">
+            <b style="color:#d29922">${e.version || '?'}</b>
+            <small style="color:var(--muted)">retired ${(e.retired_at || '').substring(0, 10)}</small>
+          </div>
+          <div style="font-size:10px; color:var(--muted); margin-top:2px">
+            → promoted to <code>${e.promoted_to_version || '?'}</code>
+          </div>
+          <div style="font-size:11px; color:var(--fg); margin-top:3px; line-height:1.4">${e.thesis_summary || ''}</div>
+          <div style="font-size:10px; color:var(--muted); margin-top:3px"><b>reason:</b> ${e.retired_reason || ''}</div>
+          ${ev ? `<div style="margin-top:3px">${ev}</div>` : ''}
+        </div>`;
+      }).join('')}
+      </div>
+    </details>` : '';
+
+  // Next conjecture
+  let nextHtml = '';
+  if (conj && conj.candidates && conj.candidates.length) {
+    nextHtml = `
+      <div style="border:1px solid var(--border); border-radius:4px; padding:8px; background:rgba(56,139,253,0.05)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline">
+          <b style="color:#58a6ff">🔮 NEXT 候选 (${conj.candidates.length})</b>
+          <small style="color:var(--muted)">conjectured ${conj.conjectured_at || '?'}</small>
+        </div>
+        <div style="margin-top:6px; display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:6px">
+        ${conj.candidates.map((c, i) => {
+          const tickers = (c.watch_tickers || []).slice(0, 6).map(t =>
+            `<code style="font-size:9px; padding:1px 3px; background:rgba(255,255,255,0.04); margin-right:2px">${t}</code>`
+          ).join('');
+          const metrics = (c.watch_metrics || []).slice(0, 4).map(m =>
+            `<div style="font-size:10px; color:var(--muted)">· ${m}</div>`
+          ).join('');
+          return `<div style="border:1px solid var(--border); border-radius:3px; padding:6px; background:rgba(13,17,23,0.4)">
+            <div><b style="color:#58a6ff">[${i+1}] ${c.id || '?'}</b></div>
+            <div style="font-size:11px; color:var(--fg); margin:3px 0; line-height:1.4">${c.hypothesis || ''}</div>
+            ${metrics ? `<div style="margin-top:4px"><small style="color:var(--muted)">watch metrics:</small>${metrics}</div>` : ''}
+            ${tickers ? `<div style="margin-top:4px"><small style="color:var(--muted)">watch: </small>${tickers}</div>` : ''}
+            ${c.promote_when ? `<div style="margin-top:4px; font-size:10px; color:var(--muted)"><b>promote_when:</b> ${c.promote_when}</div>` : ''}
+          </div>`;
+        }).join('')}
+        </div>
+        ${conj.decision_process ? `<div style="margin-top:6px; padding:4px 6px; font-size:10px; color:var(--muted); border-top:1px dashed var(--border)"><b>decision process:</b> ${conj.decision_process}</div>` : ''}
+      </div>`;
+  } else {
+    nextHtml = `<div style="font-size:11px; color:var(--muted)"><i>无下一 thesis 候选. thesis_config.json 的 next_thesis_conjecture 未设.</i></div>`;
+  }
+
+  container.innerHTML = curHtml + retiredHtml + nextHtml;
+}
+
 async function loadSectors() {
   const r = await fetchJson('/api/sectors');
   const sf = $('sectors-freshness');
@@ -3842,6 +3941,7 @@ async function loadAll() {
     loadEvents(), loadJPWatch(),
     loadHmm(),          // 市场大周期是公开信号（非 owner-only）
     loadBondMonitor(),  // 美债 + Fed 政策路径（公开衍生信号）
+    loadThesisTimeline(),  // thesis 时间线 + next conjecture (2026-09-18)
   ];
   // Owner-only endpoints skip in static mode
   if (!window.STATIC_SNAPSHOT_MODE) {
