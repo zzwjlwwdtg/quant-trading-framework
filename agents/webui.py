@@ -3827,7 +3827,11 @@ def _convert_proxy_level(proxy_level: float | None, proxy_spot: float | None,
 
     proxy_move = source_level / source_spot - 1.0
     instant_factor = 1.0 + multiple * proxy_move
-    if instant_factor <= 0:
+    # F12 fix (2026-09-19): 边界 factor 用 threshold, 不用 <= 0.
+    # Factor ~0 会因浮点残余产生 $0.00 幽灵价 (test caught 133.33/200 3x = 0.0),
+    # audit 明确"偏离过大不生成可挂单价". 阈值 1% of anchor = leveraged 崩到 -99%
+    # 已经是不能挂单的场景, 强制返 None.
+    if instant_factor < 0.01:
         return None
     instant_level = target_spot * instant_factor
     result = {
