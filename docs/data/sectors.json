@@ -5,28 +5,28 @@
       "zh": "大盘 S&P500",
       "linked": "参考",
       "price": 761.69,
-      "pct_5d": -0.34,
-      "pct_20d": -0.12,
-      "dist_ma20": -0.34,
+      "pct_5d": -0.09,
+      "pct_20d": 0.13,
+      "dist_ma20": -0.11,
       "trend": "down",
       "regime": "chop",
       "regime_zh": "震荡",
-      "style": "chop_weak",
-      "style_zh": "震荡偏弱",
+      "style": "chop",
+      "style_zh": "横盘震荡",
       "chop_score": 4,
       "is_choppy": true,
-      "style_reason": "10日趋势效率偏低(0.28)；ADX偏低(13.8)；净涨跌小但路径反复；短期ATR放大(1.23x)",
+      "style_reason": "10日趋势效率偏低(0.23)；ADX偏低(13.5)；净涨跌小但路径反复；短期ATR放大(1.22x)",
       "style_metrics": {
-        "pct_5d": -0.34,
-        "pct_20d": -0.12,
-        "dist_ma20_pct": -0.34,
-        "dist_ma50_pct": 0.26,
-        "efficiency_10": 0.277,
-        "efficiency_20": 0.012,
-        "adx_14": 13.8,
-        "reversal_count_10d": 4,
+        "pct_5d": -0.09,
+        "pct_20d": 0.13,
+        "dist_ma20_pct": -0.11,
+        "dist_ma50_pct": 0.5,
+        "efficiency_10": 0.231,
+        "efficiency_20": 0.013,
+        "adx_14": 13.5,
+        "reversal_count_10d": 3,
         "ma20_crossings_10d": 1,
-        "atr_5_20_ratio": 1.234
+        "atr_5_20_ratio": 1.22
       },
       "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
@@ -75,7 +75,7 @@
       "style_zh": "震荡偏强",
       "chop_score": 5,
       "is_choppy": true,
-      "style_reason": "10日趋势效率很低(0.20)；ADX偏低(12.3)；10日穿越MA20 4次；净涨跌小但路径反复",
+      "style_reason": "10日趋势效率很低(0.20)；ADX偏低(12.6)；10日穿越MA20 4次；净涨跌小但路径反复",
       "style_metrics": {
         "pct_5d": 0.79,
         "pct_20d": 1.84,
@@ -83,10 +83,10 @@
         "dist_ma50_pct": 1.45,
         "efficiency_10": 0.199,
         "efficiency_20": 0.055,
-        "adx_14": 12.3,
+        "adx_14": 12.6,
         "reversal_count_10d": 4,
         "ma20_crossings_10d": 4,
-        "atr_5_20_ratio": 1.12
+        "atr_5_20_ratio": 1.196
       },
       "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
@@ -121,14 +121,14 @@
       "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     }
   ],
-  "ts": "2026-09-18T23:33:01.953924+00:00",
-  "canonical_regime": "neutral_chop",
+  "ts": "2026-09-19T01:32:29.794986+00:00",
+  "canonical_regime": "neutral",
   "n_disagreements_this_call": 0,
   "rotation_speed": {
-    "rotation_speed": 6,
+    "rotation_speed": 5,
     "window_weeks": 12,
     "n_weeks_evaluated": 12,
-    "current_top1": "SMH",
+    "current_top1": "XLE",
     "recent_top1_history": [
       "XLV",
       "XLF",
@@ -141,13 +141,13 @@
       "GLD",
       "XLE",
       "XLE",
-      "SMH"
+      "XLE"
     ],
-    "asof": "2026-09-18 00:00:00-04:00"
+    "asof": "2026-09-17 00:00:00-04:00"
   },
   "_meta": {
-    "cached_at": "2026-09-19T08:33:01.954928",
-    "age_sec": 1,
+    "cached_at": "2026-09-19T10:32:29.798973",
+    "age_sec": 32,
     "stale": false,
     "refreshing": false
   }
