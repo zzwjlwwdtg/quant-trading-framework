@@ -287,5 +287,77 @@ class TopPicksSoftBlacklistTests(unittest.TestCase):
         self.assertFalse(r.get("soft_blocked", False))
 
 
+class ThesisFilterExecutionGuardTests(unittest.TestCase):
+    """P2 integration: 确保 soft-blocked 信号经 _apply_thesis_filter 后, action 已经
+    不在 BUY_ACTIONS 里, 上游 orchestrator 就不会调 _place → 也就不会进 cohort_tracker.
+
+    这是防 regression: 若某天有人重构 decision 链路把 filter 放在 place 之后,
+    cohort_tracker 会记录 ghost trade (系统实际拒绝的但 log 里假装成交了).
+    """
+
+    def setUp(self):
+        thesis_config._CACHE = {"mtime": 0, "data": None}
+
+    def test_soft_blocked_action_not_in_buy_actions_after_filter(self):
+        from trading_contracts import BUY_ACTIONS
+        # soft-blocked ticker + low conf → filter 后 action 应不在 BUY_ACTIONS
+        decision = {"action": "WATCH_BUY", "confidence": 5, "reason": "trend"}
+        out = _apply_thesis_filter(decision, "US.IEI")
+        self.assertNotIn(out["action"], BUY_ACTIONS,
+                          "soft-blocked signal must not stay in BUY_ACTIONS or _place will fire")
+        self.assertEqual(out["action"], "HOLD")
+
+    def test_hard_blocked_action_not_in_buy_actions_after_filter(self):
+        from trading_contracts import BUY_ACTIONS
+        decision = {"action": "BUY", "confidence": 9, "reason": "breakout"}
+        out = _apply_thesis_filter(decision, "US.SOXL")
+        self.assertNotIn(out["action"], BUY_ACTIONS)
+        self.assertEqual(out["action"], "HOLD")
+
+    def test_soft_blocked_high_conf_stays_in_buy_actions(self):
+        # conf ≥ min 时穿透 → action 保留在 BUY_ACTIONS, _place 会跑, cohort 也会记
+        from trading_contracts import BUY_ACTIONS
+        decision = {"action": "BUY", "confidence": 8, "reason": "strong"}
+        out = _apply_thesis_filter(decision, "US.NBIS")
+        self.assertIn(out["action"], BUY_ACTIONS,
+                        "conf 8 ≥ min 7 应穿透 soft filter, action 保留 BUY")
+
+
+class SchemaValidationTests(unittest.TestCase):
+    """P2 defensive: config 手误 (soft_blacklist 写成 list, entry 缺 min_confidence)
+    应 fail-safe, 不 crash."""
+
+    def setUp(self):
+        thesis_config._CACHE = {"mtime": 0, "data": None}
+
+    def test_soft_blacklist_as_list_treated_as_empty(self):
+        bad_cfg = {"soft_blacklist": ["US.FOO"]}   # 手误: 应是 dict
+        with patch.object(thesis_config, "_load", return_value=bad_cfg):
+            blocked, _, _ = thesis_config.is_ticker_soft_blacklisted("US.FOO")
+            self.assertFalse(blocked, "malformed soft_blacklist 应 fail-safe 而非 crash")
+
+    def test_entry_missing_min_confidence_uses_default_7(self):
+        bad_cfg = {"soft_blacklist": {"US.FOO": {"since": "2026-09-01"}}}   # 缺 min_confidence
+        with patch.object(thesis_config, "_load", return_value=bad_cfg):
+            blocked, _, meta = thesis_config.is_ticker_soft_blacklisted("US.FOO")
+            self.assertTrue(blocked)
+            self.assertEqual(meta["min_confidence"], 7)
+
+    def test_entry_min_confidence_non_numeric_uses_default(self):
+        bad_cfg = {"soft_blacklist": {"US.FOO": {"min_confidence": "high"}}}
+        with patch.object(thesis_config, "_load", return_value=bad_cfg):
+            blocked, _, meta = thesis_config.is_ticker_soft_blacklisted("US.FOO")
+            self.assertTrue(blocked)
+            self.assertEqual(meta["min_confidence"], 7)
+
+    def test_entry_as_non_dict_still_blocks_with_default(self):
+        # entry 不是 dict (可能是字符串), 仍视为 blocked 用默认 min_conf
+        bad_cfg = {"soft_blacklist": {"US.FOO": "some string"}}
+        with patch.object(thesis_config, "_load", return_value=bad_cfg):
+            blocked, _, meta = thesis_config.is_ticker_soft_blacklisted("US.FOO")
+            self.assertTrue(blocked)
+            self.assertEqual(meta["min_confidence"], 7)
+
+
 if __name__ == "__main__":
     unittest.main()

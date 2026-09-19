@@ -89,21 +89,41 @@ def is_ticker_soft_blacklisted(ticker: str) -> tuple[bool, str, dict]:
 
     decision_agent._apply_thesis_filter 后续用: 若 soft-blocked 且 result.confidence
     < min_confidence → 降级 HOLD. min_confidence 未指定时默认 7.
+
+    Schema 防御 (2026-09-19 加): config 手误 (list 而非 dict / entry 非 dict /
+    min_confidence 非数字) 时 fail-safe 处理, 不 crash.
     """
     cfg = _load()
     if not cfg:
         return False, "", {}
-    soft = cfg.get("soft_blacklist", {}) or {}
+    soft = cfg.get("soft_blacklist", {})
+    if not isinstance(soft, dict):
+        # 手误: soft_blacklist 写成 list/其他类型 → 静默降级为空 dict
+        # 不 crash 但也不 block (fail-open, 因为 soft_blacklist 是 defense-in-depth)
+        return False, "", {}
     if not soft:
         return False, "", {}
     target = _normalize_ticker(ticker)
+    default_min_conf = 7
     for key, meta in soft.items():
-        if _normalize_ticker(key) == target:
-            reason = meta.get("reason", cfg.get("soft_blacklist_reason", "soft_thesis_block"))
-            return True, reason, {
-                "min_confidence": int(meta.get("min_confidence", 7)),
-                "since":          meta.get("since", ""),
+        if _normalize_ticker(key) != target:
+            continue
+        if not isinstance(meta, dict):
+            # entry 应是 dict, 不是就用默认 min_conf 且 fallback reason
+            return True, cfg.get("soft_blacklist_reason", "soft_thesis_block"), {
+                "min_confidence": default_min_conf,
+                "since":          "",
             }
+        # min_confidence 应可转 int, 不能就用默认
+        try:
+            min_conf = int(meta.get("min_confidence", default_min_conf))
+        except (TypeError, ValueError):
+            min_conf = default_min_conf
+        reason = meta.get("reason", cfg.get("soft_blacklist_reason", "soft_thesis_block"))
+        return True, reason, {
+            "min_confidence": min_conf,
+            "since":          meta.get("since", ""),
+        }
     return False, "", {}
 
 
