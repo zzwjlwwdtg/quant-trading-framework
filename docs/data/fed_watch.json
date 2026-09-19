@@ -5,72 +5,57 @@
       "date": "2026-10-28",
       "days_until": 39,
       "probabilities": {
-        "hold": 38.0,
-        "hike_25": 62.0
+        "hold": 46.9,
+        "hike_25": 53.1
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
       "days_until": 81,
       "probabilities": {
-        "hold": 10.2,
-        "hike_25": 44.5,
-        "hike_50": 45.3
+        "hold": 12.3,
+        "hike_25": 49.5,
+        "hike_50": 38.2
       },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-01-27",
-      "days_until": 130,
-      "probabilities": {
-        "hold": 0.8,
-        "hike_25": 6.4,
-        "hike_50": 92.8
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "strong_hawkish"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
     }
   ],
   "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-18 12:15 EDT",
-  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00，Warsh称通胀仍过高；9/11 CPI为环比+0.4%、同比+3.4%，9/10 PPI为环比+0.4%、同比+5.4%，均强化后续加息定价；9/4 NFP +162K、失业率4.1%，显示劳动力市场仍有韧性。",
-  "commentary": "Data snapshot 为 2026-09-18 12:15 EDT，已晚于 2026-09-16 FOMC/Warsh press conference，因此关键近期事件已反映。CPI/PPI 的能源驱动反弹和NFP韧性使市场从降息/暂停预期转为明显鹰派，当前定价显示10月大概率再加25bp，12月及2027年1月进一步加息风险较高。",
+  "implied_terminal_date": "2027-end",
+  "data_snapshot_date": "2026-09-18",
+  "recent_event_impact": "2026-09-16 FOMC 加息25bp至3.75-4.00；2026-09-11 CPI环比+0.4%、能源同比+16.3%；2026-09-10 PPI终需环比+0.4%、同比+5.4% → 市场将10月再加息概率推升至约53.1%，12月前至少一次额外加息概率约87.5%。",
+  "commentary": "data snapshot 为2026-09-18，已在2026-09-16 FOMC及Warsh鹰派表态之后，未发现之后7天内更新的NFP/CPI/PPI。8月CPI和PPI均显示能源与上游价格压力偏强，叠加FOMC称通胀仍高，使FedWatch定价明显转向继续加息；但只找到未来2次会议的可核验概率，未能完整提取3-4次会议。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_derived_snapshot"
+      "url": "https://finance.yahoo.com/economy/policy/articles/goldman-sachs-drops-surprise-call-174700113.html",
+      "type": "latest_report"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+      "type": "fomc_statement"
     },
     {
       "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
       "type": "cpi"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
+      "url": "https://www.bls.gov/ppi/news-release/home.htm",
       "type": "ppi"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
-    },
-    {
-      "url": "https://www.federalreserve.gov/newsevents.htm",
-      "type": "fomc_event_check"
     }
   ],
-  "confidence": "medium",
+  "confidence": "low",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-18T17:51:05+00:00",
+  "fetched_at": "2026-09-19T01:52:42+00:00",
   "_meta": {
-    "cached_at": "2026-09-19T02:51:05.931206",
-    "age_sec": 27716,
+    "cached_at": "2026-09-19T10:52:42.888626",
+    "age_sec": 6019,
     "stale": false,
     "refreshing": false
   }
