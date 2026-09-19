@@ -480,17 +480,39 @@ def _run_mid_impl(tickers=None, days=BACKTEST_DAYS) -> dict:
         start_price = float(histories[tk].loc[dates[0], "close"])
         bh_shares[tk] = bh_alloc / start_price
 
+    # WP04 深度重构 (2026-09-20): per-bar snapshot Context 代替 BACKTEST_MODE
+    # env flag. thesis_snapshot={} 明确"当时无 thesis" (无 look-ahead), 让
+    # backtest 结果反映纯信号规则而非当前 blacklist 事后加进去回填历史.
+    # Env flag 仍保留 (兼容期), 但走 context 路径的 backtest 更 proper.
+    from datetime import datetime as _dt, timezone as _tz
+    from decision_context import from_snapshot as _from_snapshot
+
     for d in dates:
         prices_today = {tk: float(histories[tk].loc[d, "close"]) for tk in tickers}
         power_today = account.value(prices_today)
         regime_today = _daily_regime(d)   # Layer 1 子类
+        # d 是 pandas Timestamp; 换成 python datetime with UTC
+        try:
+            as_of_utc = d.to_pydatetime().replace(tzinfo=_tz.utc)
+        except Exception:
+            as_of_utc = _dt.now(_tz.utc)
         for tk in tickers:
             row = histories[tk].loc[d]
             full = "US." + tk
             try:
                 mkt = build_mkt(full, row)
+                # WP04: per-bar frozen context (thesis empty → 无 look-ahead)
+                ctx = _from_snapshot(
+                    as_of=as_of_utc,
+                    market=mkt,
+                    events=fake_events,
+                    macro=fake_macro,
+                    thesis_snapshot={},   # 显式无 thesis
+                    board_regime=regime_today,
+                    strategy_version="backtest",
+                )
                 dec = get_decision(mkt, fake_events, fake_macro,
-                                   board_regime=regime_today)
+                                   board_regime=regime_today, context=ctx)
             except Exception:
                 continue
             action = dec.get("action", "HOLD")

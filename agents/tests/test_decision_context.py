@@ -191,5 +191,70 @@ class ContextMigrationCompatibilityTests(unittest.TestCase):
         self.assertTrue(out.get("thesis_soft_blocked"))
 
 
+class TopPicksContextMigrationTests(unittest.TestCase):
+    """top_picks._score_signal 新 context= kwarg (WP04 2026-09-20)."""
+
+    def test_top_picks_with_empty_context_bypasses_live_blacklist(self):
+        # SOXL 在 live blacklist. context={} → 应放行 (backtest 场景)
+        import top_picks
+        c = DecisionContext(as_of=datetime.now(timezone.utc), thesis_snapshot={})
+        sig = {
+            "market":   {"ticker": "US.SOXL"},
+            "decision": {"action": "WATCH_BUY", "confidence": 5, "regime": "bull_trending"},
+        }
+        r = top_picks._score_signal(sig, context=c)
+        self.assertFalse(r.get("excluded", False),
+                          "context with empty thesis 应放行 SOXL (backtest)")
+        self.assertNotEqual(r["score"], -999.0)
+
+    def test_top_picks_no_context_uses_live(self):
+        # 兼容: 不传 context → 走 live thesis, SOXL 应 blacklisted
+        import top_picks
+        sig = {
+            "market":   {"ticker": "US.SOXL"},
+            "decision": {"action": "WATCH_BUY", "confidence": 5, "regime": "bull_trending"},
+        }
+        r = top_picks._score_signal(sig)
+        self.assertTrue(r.get("excluded"))
+        self.assertEqual(r["score"], -999.0)
+
+
+class GetDecisionContextMigrationTests(unittest.TestCase):
+    """get_decision 新 context= kwarg (WP04)."""
+
+    def test_get_decision_with_backtest_context_bypasses_thesis(self):
+        # SOXL 在 live blacklist. get_decision(context=empty) 应放行
+        # (不进 HOLD, 保留原 action)
+        from decision_agent import get_decision
+        c = DecisionContext(as_of=datetime.now(timezone.utc), thesis_snapshot={})
+        fake_market = {"ticker": "SOXL", "price": 30.0, "pct_chg": 0.5,
+                        "rsi_14": 55, "trend": "up", "ma_stack": "bull",
+                        "vol_ratio": 1.0, "cum_5d_pct": 2.0}
+        fake_events = {"days_to_event": 99, "breaking_news": False,
+                        "risk_level": "moderate"}
+        r = get_decision(fake_market, fake_events, macro={"vix": 18},
+                          board_regime="neutral", context=c)
+        # 关键: thesis_blocked 不应为 True (context 里 SOXL 不在 blacklist)
+        self.assertFalse(r.get("thesis_blocked", False),
+                          "context={} → SOXL 不该被 thesis 拦")
+
+    def test_get_decision_no_context_uses_live_thesis(self):
+        # 兼容: 不传 context → live thesis 拦 SOXL BUY
+        from decision_agent import get_decision
+        fake_market = {"ticker": "SOXL", "price": 30.0, "pct_chg": 0.5,
+                        "rsi_14": 55, "trend": "up", "ma_stack": "bull",
+                        "vol_ratio": 1.0, "cum_5d_pct": 2.0}
+        fake_events = {"days_to_event": 99, "breaking_news": False,
+                        "risk_level": "moderate"}
+        r = get_decision(fake_market, fake_events, macro={"vix": 18},
+                          board_regime="neutral")
+        # 若 rule 出 BUY 类, 会被 thesis 拦; 若 rule 已经出 HOLD, 也 OK
+        # 关键: 若 action=HOLD 但 thesis_blocked=True → context 兼容 OK
+        # 若 action != HOLD (rule 判 BUY) 则必须 thesis_blocked
+        action = r.get("action", "")
+        if action in ("BUY", "WATCH_BUY", "WATCH_BUY_PROBE", "ADD", "PROBE"):
+            self.fail(f"live path 应拦 SOXL BUY, 但返 {action}")
+
+
 if __name__ == "__main__":
     unittest.main()

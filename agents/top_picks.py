@@ -68,8 +68,13 @@ def _load_signal(path: Path) -> Optional[dict]:
         return None
 
 
-def _score_signal(sig: dict) -> dict:
-    """给 signal 计算 opportunity score + 生成解释."""
+def _score_signal(sig: dict, context=None) -> dict:
+    """给 signal 计算 opportunity score + 生成解释.
+
+    WP04 (2026-09-20): 新增 context= kwarg (DecisionContext). 若提供,
+    thesis 过滤走 context.thesis_snapshot; 否则 fallback live thesis_config
+    (兼容旧调用). 迁移期间保持双路径.
+    """
     mkt = sig.get("market") or {}
     dec = sig.get("decision") or {}
     ticker = mkt.get("ticker") or dec.get("ticker") or ""
@@ -77,8 +82,14 @@ def _score_signal(sig: dict) -> dict:
     conf = float(dec.get("confidence") or 0)
     regime = (dec.get("regime") or "").lower()
 
-    # thesis 硬过滤
-    is_black, black_reason = is_ticker_blacklisted(ticker)
+    # thesis 硬过滤 (WP04: context 优先, live fallback)
+    if context is not None:
+        try:
+            is_black, black_reason = context.is_ticker_blacklisted(ticker)
+        except Exception:
+            is_black, black_reason = False, ""
+    else:
+        is_black, black_reason = is_ticker_blacklisted(ticker)
     if is_black:
         return {
             "ticker": ticker,
@@ -92,8 +103,15 @@ def _score_signal(sig: dict) -> dict:
 
     # thesis soft 过滤 (2026-09-19): 与 decision_agent._apply_thesis_filter 对齐.
     # F02 fix: min_confidence 是 canonical 10-scale, 需按当前 scale 换算.
+    # WP04 (2026-09-20): context 优先.
     if action in _BUY_ACTIONS:
-        soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
+        if context is not None:
+            try:
+                soft_blocked, soft_reason, soft_meta = context.is_ticker_soft_blacklisted(ticker)
+            except Exception:
+                soft_blocked, soft_reason, soft_meta = False, "", {}
+        else:
+            soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
         if soft_blocked:
             min_conf_canonical = int(soft_meta.get("min_confidence", 7))
             try:

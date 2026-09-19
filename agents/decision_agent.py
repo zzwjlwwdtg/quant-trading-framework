@@ -1353,7 +1353,8 @@ def _apply_thesis_filter(result: dict, ticker: str, context=None) -> dict:
 
 def get_decision(market: dict, events: dict, macro: dict | None = None,
                  confluence: dict | None = None,
-                 board_regime: str | None = None) -> dict:
+                 board_regime: str | None = None,
+                 context=None) -> dict:
     """
     ETF风险信号: REDUCE / HOLD / CAUTION / WATCH_BUY。置信度 1-10。
     confluence:   共振模块输出（含 bull_count/bear_count），传入后作为主技术评分源。
@@ -1361,6 +1362,10 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
                   始终使用 board_regime，**唯一允许的 override** 是单股当日暴跌
                   ≤ -5%（杠杆缩放后）→ 该 ticker override 成 "crisis"，全局 board
                   不变。board_regime=None（真未拿到）才 fallback per-ticker。
+    context:      DecisionContext (WP04 深度重构 2026-09-20). 若提供 → thesis
+                  filter 走 context.thesis_snapshot 而非 live thesis_config
+                  (支持 backtest 冻结历史 thesis, 消 look-ahead bias).
+                  兼容期: None 时 fallback live.
     """
     macro = macro or {}
     if board_regime is None:
@@ -1425,7 +1430,8 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
         result, market.get("ticker", ""), market, events
     )
     # thesis 硬过滤: 最后一步防 blacklist ticker 漏 BUY 信号
-    result = _apply_thesis_filter(result, market.get("ticker", ""))
+    # WP04: 传 context (若有) 让 backtest 走 snapshot thesis, live 走 live
+    result = _apply_thesis_filter(result, market.get("ticker", ""), context=context)
     return result
 
 
