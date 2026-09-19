@@ -1436,10 +1436,12 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
 
 
 def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
-                      board_regime: str | None = None) -> dict:
+                      board_regime: str | None = None, context=None) -> dict:
     """黄金方向信号: BUY / SELL / HOLD。置信度1-10。
     board_regime: 同 get_decision；**单一源**，board≠None 时始终采用，唯一 override
-                  是单股 ≤-5% 时 → crisis。"""
+                  是单股 ≤-5% 时 → crisis。
+    context: DecisionContext (WP04 2026-09-20). 若提供 → thesis filter 走
+             snapshot; 否则 fallback live. 与 get_decision 完全对称."""
     macro = macro or {}
     if board_regime is None:
         try:
@@ -1498,5 +1500,6 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
     result = _apply_options_flow_guard(
         result, market.get("ticker", ""), market, events
     )
-    result = _apply_thesis_filter(result, market.get("ticker", ""))
+    # WP04: 传 context 让 gold 决策也能走 snapshot thesis (backtest 用)
+    result = _apply_thesis_filter(result, market.get("ticker", ""), context=context)
     return result

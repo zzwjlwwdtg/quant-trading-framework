@@ -219,6 +219,62 @@ class TopPicksContextMigrationTests(unittest.TestCase):
         self.assertEqual(r["score"], -999.0)
 
 
+class CohortTrackerContextMigrationTests(unittest.TestCase):
+    """WP04 (2026-09-20): cohort_tracker.on_buy/on_sell stamps ts from
+    context.as_of if provided — backtest replay 应记录历史 ts, 非 now()."""
+
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        import cohort_tracker
+        self.tmpdir = tempfile.mkdtemp()
+        self._orig_ledger = cohort_tracker._LEDGER
+        self._orig_active = cohort_tracker._ACTIVE
+        cohort_tracker._LEDGER = Path(self.tmpdir) / "ledger.jsonl"
+        cohort_tracker._ACTIVE = Path(self.tmpdir) / "active.json"
+
+    def tearDown(self):
+        import shutil, cohort_tracker
+        cohort_tracker._LEDGER = self._orig_ledger
+        cohort_tracker._ACTIVE = self._orig_active
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_on_buy_uses_context_as_of_when_ts_not_given(self):
+        import cohort_tracker
+        historical_ts = datetime(2024, 3, 15, 14, 30, tzinfo=timezone.utc)
+        c = DecisionContext(as_of=historical_ts, thesis_snapshot={})
+        cohort = cohort_tracker.on_buy(
+            "US.TEST_CTX_AS_OF", 100.0, 10,
+            signal_ctx={"action": "BUY"}, context=c,
+        )
+        # 关键: cohort 的 open_ts 应是 2024-03-15, 不是 now()
+        self.assertEqual(cohort["open_ts"], historical_ts.isoformat())
+        self.assertTrue(cohort["cohort_id"].endswith(historical_ts.isoformat()))
+
+    def test_explicit_ts_still_wins_over_context(self):
+        # 优先级: 显式 ts > context.as_of > now()
+        import cohort_tracker
+        explicit_ts = "2024-05-01T09:00:00+00:00"
+        c = DecisionContext(as_of=datetime(2024, 3, 15, tzinfo=timezone.utc))
+        cohort = cohort_tracker.on_buy(
+            "US.TEST_TS_WINS", 100.0, 10,
+            signal_ctx={"action": "BUY"},
+            ts=explicit_ts, context=c,
+        )
+        self.assertEqual(cohort["open_ts"], explicit_ts)
+
+    def test_no_context_no_ts_uses_now(self):
+        # 兼容: 都不传 → now() (原行为)
+        import cohort_tracker
+        cohort = cohort_tracker.on_buy(
+            "US.TEST_NOW", 100.0, 10,
+            signal_ctx={"action": "BUY"},
+        )
+        self.assertIsNotNone(cohort.get("open_ts"))
+        # 应是 recent — 简单 sanity: 包含当前年份
+        self.assertIn(str(datetime.now(timezone.utc).year), cohort["open_ts"])
+
+
 class GetDecisionContextMigrationTests(unittest.TestCase):
     """get_decision 新 context= kwarg (WP04)."""
 

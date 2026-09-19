@@ -90,12 +90,22 @@ def _append_ledger(entry: dict) -> None:
 
 
 def on_buy(ticker: str, exec_price: float, exec_qty: int,
-           signal_ctx: Optional[dict] = None, ts: Optional[str] = None) -> dict:
+           signal_ctx: Optional[dict] = None, ts: Optional[str] = None,
+           context=None) -> dict:
     """处理 BUY 成交: 无 active cohort → open, 有 → add.
     signal_ctx 建议含: {action, confidence, regime, entry_target, reason, tag}
-    返回当前 cohort 状态."""
+    返回当前 cohort 状态.
+
+    WP04 (2026-09-20): 若 context (DecisionContext) 提供且未显式传 ts,
+    用 context.as_of 时间戳 — 让 backtest replay 打出的 cohort 有历史 ts
+    而非 now(). 优先级: 显式 ts > context.as_of > now()."""
     if exec_qty <= 0 or exec_price <= 0:
         return {}
+    if ts is None and context is not None:
+        try:
+            ts = context.as_of.isoformat()
+        except Exception:
+            ts = None
     ts = ts or _now_iso()
     signal_ctx = signal_ctx or {}
     state = _load_active()
@@ -173,11 +183,20 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
 
 
 def on_sell(ticker: str, exec_price: float, exec_qty: int,
-            exit_reason: str = "", ts: Optional[str] = None) -> Optional[dict]:
+            exit_reason: str = "", ts: Optional[str] = None,
+            context=None) -> Optional[dict]:
     """处理 SELL 成交: 部分卖 → 记 exit; 卖到 qty=0 → close cohort + 记 stats.
-    返回 closed cohort (若 close 了), 否则 None (仅部分退出)."""
+    返回 closed cohort (若 close 了), 否则 None (仅部分退出).
+
+    WP04 (2026-09-20): 同 on_buy — context.as_of 作为默认 ts, 允许 backtest
+    replay 记录历史时间戳."""
     if exec_qty <= 0 or exec_price <= 0:
         return None
+    if ts is None and context is not None:
+        try:
+            ts = context.as_of.isoformat()
+        except Exception:
+            ts = None
     ts = ts or _now_iso()
     state = _load_active()
     cohort = state.get(ticker)
