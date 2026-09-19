@@ -129,26 +129,39 @@ def classify_sector(sector_etf: str) -> Optional[dict]:
     return result
 
 
-def classify_ticker_sector(ticker: str, ticker_to_sector: dict) -> Optional[str]:
+def classify_ticker_sector(ticker: str, ticker_to_sector: dict | None = None) -> Optional[str]:
     """decision_agent 用: ticker → sector_etf → regime (仅 downward label).
 
-    F01 fix (2026-09-19, per audit): 兼容裸 ticker 和 US./HK./JP. 前缀. 之前
+    WP01 (2026-09-20): ticker_to_sector 现在 optional. 未传时直接查
+    instrument_registry (registry 是 ticker 元数据单一源). 传入 dict → 保留
+    F01 归一化 fallback 逻辑, 向后兼容旧调用.
+
+    F01 fix (2026-09-19): 兼容裸 ticker 和 US./HK./JP. 前缀. 之前
     market_watch 返裸 'SOXL' 但 TICKER_TO_SECTOR 用 'US.SOXL' → 直接返 None,
     实时/UI/回测在同一 ticker 得到不同板块约束.
     """
-    if not ticker or not ticker_to_sector:
+    if not ticker:
         return None
-    # 1. 直接匹配 (向后兼容)
+    # WP01: 优先 registry (单一源, 无需 caller 传 map)
+    if ticker_to_sector is None:
+        try:
+            from instrument_registry import get
+            inst = get(ticker)
+            if inst and inst.sector_bucket:
+                info = classify_sector(inst.sector_bucket)
+                return info["regime"] if info else None
+        except Exception:
+            pass
+        return None
+    # 兼容: 显式传 dict 时走原逻辑 (F01 归一化)
     sector = ticker_to_sector.get(ticker)
     if sector is None:
-        # 2. 归一化后互查: 裸 ticker → 尝试 US./HK./JP. 前缀; 带前缀 → 尝试裸
         t_upper = ticker.upper().strip()
         stripped = t_upper
         for pfx in ("US.", "HK.", "JP."):
             if t_upper.startswith(pfx):
                 stripped = t_upper[len(pfx):]
                 break
-        # 尝试所有可能形式
         for candidate in (stripped, f"US.{stripped}", f"HK.{stripped}", f"JP.{stripped}"):
             if candidate in ticker_to_sector:
                 sector = ticker_to_sector[candidate]

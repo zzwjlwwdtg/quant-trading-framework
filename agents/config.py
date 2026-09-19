@@ -177,15 +177,23 @@ TRADE_ELIGIBLE_TICKERS = frozenset((*TICKERS, *TRACKED_TICKERS, "US.GLD"))
 # --- Leverage Factors ---
 # 杠杆 ETF 单日波动是标的的 N 倍 → 各种"暴跌/暴涨"绝对阈值要按倍数缩放
 # 否则 SOXL 一天 -5% (正常 1σ 波动) 就误触发 crisis
-LEVERAGE_FACTORS = {
-    "US.TQQQ": 3.0, "US.SOXL": 3.0, "US.TECL": 3.0, "US.UPRO": 3.0,
-    "US.MULL": 2.0, "US.NVDU": 2.0, "US.NVDX": 2.0,
-    "US.TSLL": 1.5, "US.AAPU": 2.0, "US.GGLL": 2.0,
-    # 反向杠杆（绝对值看波动幅度一样）
-    "US.SQQQ": 3.0, "US.SOXS": 3.0, "US.SPXU": 3.0,
-    "US.NVDD": 1.5, "US.TSLZ": 2.0, "US.TSLQ": 2.0,
-    # 默认 1x（正常股票/ETF）
-}
+#
+# WP01 (2026-09-20): 从 instrument_registry 派生, 加新杠杆 ETF 只改 registry.
+# Fallback dict 保留 (registry 导入失败时保底), 但正常 = registry.
+def _build_leverage_factors():
+    try:
+        from instrument_registry import leverage_factors_map
+        return leverage_factors_map()
+    except Exception:
+        return {
+            "US.TQQQ": 3.0, "US.SOXL": 3.0, "US.TECL": 3.0, "US.UPRO": 3.0,
+            "US.MULL": 2.0, "US.NVDU": 2.0, "US.NVDX": 2.0,
+            "US.TSLL": 1.5, "US.AAPU": 2.0, "US.GGLL": 2.0,
+            "US.SQQQ": 3.0, "US.SOXS": 3.0, "US.SPXU": 3.0,
+            "US.NVDD": 1.5, "US.TSLZ": 2.0, "US.TSLQ": 2.0,
+        }
+
+LEVERAGE_FACTORS = _build_leverage_factors()
 
 # --- moomoo OpenD ---
 OPEND_HOST = "127.0.0.1"

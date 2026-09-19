@@ -125,6 +125,42 @@ _REGISTRY: dict[str, Instrument] = {
                              sector_bucket="SMH", notes="半导体 ETF; SOXL options proxy"),
     "US.SOXX":  Instrument("US.SOXX", "SOXX", "sector_etf",
                              sector_bucket="SMH", notes="半导体 ETF; SOXL price anchor"),
+    # Additional leveraged ETFs (存在于 config.LEVERAGE_FACTORS, 未主动 tracked
+    # 但 leverage 判断要覆盖 — 防 SOXL 一天 -5% 误触发 crisis)
+    "US.TECL":  Instrument("US.TECL", "TECL", "leveraged_etf", leverage=3.0,
+                             sector_bucket="QQQ", notes="3x tech"),
+    "US.UPRO":  Instrument("US.UPRO", "UPRO", "leveraged_etf", leverage=3.0,
+                             sector_bucket="SPY", notes="3x S&P"),
+    "US.SQQQ":  Instrument("US.SQQQ", "SQQQ", "leveraged_etf", leverage=3.0,
+                             is_short=True, sector_bucket="QQQ",
+                             notes="-3x Nasdaq inverse"),
+    "US.SPXU":  Instrument("US.SPXU", "SPXU", "leveraged_etf", leverage=3.0,
+                             is_short=True, sector_bucket="SPY",
+                             notes="-3x S&P inverse"),
+    "US.NVDU":  Instrument("US.NVDU", "NVDU", "leveraged_etf", leverage=2.0,
+                             price_proxy="US.NVDA", sector_bucket="SMH",
+                             notes="2x NVDA long"),
+    "US.NVDX":  Instrument("US.NVDX", "NVDX", "leveraged_etf", leverage=2.0,
+                             price_proxy="US.NVDA", sector_bucket="SMH",
+                             notes="2x NVDA long alternate"),
+    "US.NVDD":  Instrument("US.NVDD", "NVDD", "leveraged_etf", leverage=1.5,
+                             is_short=True, price_proxy="US.NVDA",
+                             sector_bucket="SMH", notes="-1.5x NVDA inverse"),
+    "US.TSLL":  Instrument("US.TSLL", "TSLL", "leveraged_etf", leverage=1.5,
+                             price_proxy="US.TSLA", sector_bucket="QQQ",
+                             notes="1.5x TSLA long"),
+    "US.TSLZ":  Instrument("US.TSLZ", "TSLZ", "leveraged_etf", leverage=2.0,
+                             is_short=True, price_proxy="US.TSLA",
+                             sector_bucket="QQQ", notes="-2x TSLA inverse"),
+    "US.TSLQ":  Instrument("US.TSLQ", "TSLQ", "leveraged_etf", leverage=2.0,
+                             is_short=True, price_proxy="US.TSLA",
+                             sector_bucket="QQQ", notes="-2x TSLA inverse alt"),
+    "US.AAPU":  Instrument("US.AAPU", "AAPU", "leveraged_etf", leverage=2.0,
+                             price_proxy="US.AAPL", sector_bucket="QQQ",
+                             notes="2x AAPL long"),
+    "US.GGLL":  Instrument("US.GGLL", "GGLL", "leveraged_etf", leverage=2.0,
+                             price_proxy="US.GOOGL", sector_bucket="QQQ",
+                             notes="2x GOOGL long"),
 }
 
 
@@ -204,3 +240,9 @@ def leverage_of(ticker: str) -> float:
     """Return leverage (1.0 if unknown / not leveraged)."""
     inst = get(ticker)
     return inst.leverage if inst else 1.0
+
+
+def leverage_factors_map() -> dict[str, float]:
+    """Derived: {canonical → leverage} for all instruments with leverage != 1.0.
+    供 config.LEVERAGE_FACTORS 迁移用."""
+    return {i.canonical: i.leverage for i in _REGISTRY.values() if i.leverage != 1.0}
