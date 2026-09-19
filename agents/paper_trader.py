@@ -1157,6 +1157,35 @@ def _log_trade(ticker: str, side: str, qty: int, price: float,
             f.write(__import__("json").dumps(entry, ensure_ascii=False) + "\n")
     except Exception:
         pass
+    # Cohort tracking (2026-09-08, F04 fix 2026-09-19):
+    # - DRY_RUN: 立即触发 cohort (dry = 模拟即时成交, 提交 = 成交)
+    # - LIVE: **不在这里触发** — 只在 refresh_execution_ledger 拿到真实 fill/partial
+    #   事件时才 on_buy/on_sell, 避免"提交 = 已成交"这个 phantom bug.
+    #   audit F04: paper_trader._place 立即调 _log_trade → 未成交/撤单也进 cohort.
+    # - 排除 REBALANCE (不是 signal 驱动的持仓周期)
+    try:
+        upper_tag = (tag or "").upper()
+        if "REBALANCE" in upper_tag:
+            return
+        if not DRY_RUN:
+            return   # LIVE 走 refresh_execution_ledger fill 路径, 不在 submit 时记
+        from cohort_tracker import on_buy, on_sell
+        ts = entry.get("ts")
+        side_upper = (side or "").upper()
+        if side_upper == "BUY":
+            sig_ctx = {
+                "action":       decision.get("action") if decision else None,
+                "confidence":   decision.get("confidence") if decision else None,
+                "regime":       decision.get("regime") if decision else None,
+                "reason":       (decision.get("reason") or "")[:120] if decision else "",
+                "tag":          tag,
+                "entry_target": (extra or {}).get("effective_entry_ref"),
+            }
+            on_buy(ticker, float(price), int(qty), signal_ctx=sig_ctx, ts=ts)
+        elif side_upper in ("SELL", "SELL_ALL", "REDUCE"):
+            on_sell(ticker, float(price), int(qty), exit_reason=tag, ts=ts)
+    except Exception:
+        pass   # cohort tracking 静默失败, 主流程绝不阻塞
 
 
 def _place(code: str, side, qty: int, price: float, tag: str = "",
@@ -1372,6 +1401,43 @@ def refresh_execution_ledger() -> None:
             "average_fill_price": avg_fill,
             "quality": quality,
         })
+        # F04 fix (2026-09-19, audit): cohort_tracker 只在真实 fill 上入账,
+        # 不再受 phantom "submitted" 污染. 用增量 dealt 防重复计数.
+        # cancelled 事件不进 cohort. rebalance 标签排除.
+        try:
+            base_tag = (base.get("tag") or "").upper() if base.get("tag") else ""
+            if event_name in ("partial", "filled") and dealt > 0 and "REBALANCE" not in base_tag:
+                # 计算本次增量 (基于 seen 里上次记录的 dealt qty)
+                prev_sig = seen.get(oid, "")
+                prev_dealt = 0.0
+                if prev_sig:
+                    try:
+                        # signature format: "status|dealt|avg" — parse dealt from prev
+                        prev_dealt = float(prev_sig.split("|")[1])
+                    except (IndexError, ValueError):
+                        prev_dealt = 0.0
+                delta = dealt - prev_dealt
+                if delta > 0:
+                    from cohort_tracker import on_buy, on_sell
+                    ticker_full = base.get("ticker") or ""
+                    side_norm = str(base.get("side") or "").upper()
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    if side_norm == "BUY":
+                        sig_ctx = {
+                            "action":    "BUY_FILL",
+                            "tag":       base.get("tag") or "",
+                            "order_id":  oid,
+                            "requested": requested,
+                            "dealt":     dealt,
+                        }
+                        on_buy(ticker_full, float(avg_fill), int(delta),
+                                signal_ctx=sig_ctx, ts=now_iso)
+                    elif side_norm in ("SELL", "SELL_ALL", "REDUCE"):
+                        on_sell(ticker_full, float(avg_fill), int(delta),
+                                 exit_reason=f"{base.get('tag') or ''} (fill oid={oid})",
+                                 ts=now_iso)
+        except Exception:
+            pass   # cohort 失败静默, 主流程 (reconcile) 不阻塞
         seen[oid] = signature
         dirty = True
     if dirty:

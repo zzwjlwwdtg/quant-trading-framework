@@ -33,6 +33,31 @@ def _series(values: Iterable[float] | pd.Series | None) -> pd.Series:
     return out.reset_index(drop=True)
 
 
+def _align_ohlc(close, high, low) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """F07 fix (2026-09-19, per audit): 三列 OHLC 独立 dropna + reset_index 会导致
+    同一位置对应不同日期. 现在做 joint dropna 保证 index 对齐.
+
+    返 (close, high, low) 三 aligned Series. 若 high/low None, 只清理 close.
+    """
+    close_raw = pd.Series(close, dtype=float).replace([np.inf, -np.inf], np.nan) if close is not None else pd.Series(dtype=float)
+    if high is None or low is None:
+        c = close_raw.dropna().reset_index(drop=True)
+        return c, pd.Series(dtype=float), pd.Series(dtype=float)
+    high_raw = pd.Series(high, dtype=float).replace([np.inf, -np.inf], np.nan)
+    low_raw  = pd.Series(low,  dtype=float).replace([np.inf, -np.inf], np.nan)
+    # 若三序列长度就不匹配, 无法按位置对齐 — 用 range index 硬对齐前先 warn (返 close 单列)
+    if not (len(close_raw) == len(high_raw) == len(low_raw)):
+        return close_raw.dropna().reset_index(drop=True), pd.Series(dtype=float), pd.Series(dtype=float)
+    # joint index: 若原始三列有各自 index 且相同, 用它; 否则用 range
+    if not (close_raw.index.equals(high_raw.index) and close_raw.index.equals(low_raw.index)):
+        close_raw = close_raw.reset_index(drop=True)
+        high_raw  = high_raw.reset_index(drop=True)
+        low_raw   = low_raw.reset_index(drop=True)
+    df = pd.DataFrame({"close": close_raw, "high": high_raw, "low": low_raw}).dropna()
+    df = df.reset_index(drop=True)
+    return df["close"], df["high"], df["low"]
+
+
 def _finite(value, digits: int = 3):
     try:
         number = float(value)
@@ -93,9 +118,9 @@ def analyze_price_style(close, high=None, low=None) -> dict:
     MA20 crossings, or a small net move despite a non-trivial travelled path.
     ATR expansion is supporting evidence, not a mandatory condition.
     """
-    close_s = _series(close)
-    high_s = _series(high)
-    low_s = _series(low)
+    # F07 fix: joint dropna keeps 三列位置对齐. 之前 _series 独立 reset_index
+    # 会让 same-length 三列出现 date mismatch → ADX 拿到错位数据.
+    close_s, high_s, low_s = _align_ohlc(close, high, low)
     if len(close_s) < 21:
         return {
             "style": "unknown",
