@@ -130,8 +130,29 @@ def classify_sector(sector_etf: str) -> Optional[dict]:
 
 
 def classify_ticker_sector(ticker: str, ticker_to_sector: dict) -> Optional[str]:
-    """decision_agent 用: ticker → sector_etf → regime (仅 downward label)."""
+    """decision_agent 用: ticker → sector_etf → regime (仅 downward label).
+
+    F01 fix (2026-09-19, per audit): 兼容裸 ticker 和 US./HK./JP. 前缀. 之前
+    market_watch 返裸 'SOXL' 但 TICKER_TO_SECTOR 用 'US.SOXL' → 直接返 None,
+    实时/UI/回测在同一 ticker 得到不同板块约束.
+    """
+    if not ticker or not ticker_to_sector:
+        return None
+    # 1. 直接匹配 (向后兼容)
     sector = ticker_to_sector.get(ticker)
+    if sector is None:
+        # 2. 归一化后互查: 裸 ticker → 尝试 US./HK./JP. 前缀; 带前缀 → 尝试裸
+        t_upper = ticker.upper().strip()
+        stripped = t_upper
+        for pfx in ("US.", "HK.", "JP."):
+            if t_upper.startswith(pfx):
+                stripped = t_upper[len(pfx):]
+                break
+        # 尝试所有可能形式
+        for candidate in (stripped, f"US.{stripped}", f"HK.{stripped}", f"JP.{stripped}"):
+            if candidate in ticker_to_sector:
+                sector = ticker_to_sector[candidate]
+                break
     if not sector:
         return None
     info = classify_sector(sector)

@@ -90,23 +90,32 @@ def _score_signal(sig: dict) -> dict:
             "excluded": True,
         }
 
-    # thesis soft 过滤 (2026-09-19 加): 与 decision_agent._apply_thesis_filter 对齐,
-    # 否则 top_picks 会推荐 IEI/SHY/NBIS conf=5 但 decision_agent 会拒执行 → 前后台不一致.
+    # thesis soft 过滤 (2026-09-19): 与 decision_agent._apply_thesis_filter 对齐.
+    # F02 fix: min_confidence 是 canonical 10-scale, 需按当前 scale 换算.
     if action in _BUY_ACTIONS:
         soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
         if soft_blocked:
-            min_conf = int(soft_meta.get("min_confidence", 7))
-            if conf < min_conf:
+            min_conf_canonical = int(soft_meta.get("min_confidence", 7))
+            try:
+                from decision_agent import _conf_scale
+                scale = _conf_scale()
+            except Exception:
+                scale = 5   # 保底 TECHNICAL_ONLY 默认
+            effective_min = max(1, round(min_conf_canonical * scale / 10))
+            if conf < effective_min:
                 return {
                     "ticker": ticker,
                     "score": -999.0,
-                    "why": [f"❌ soft-blocked (conf {conf:.0f}<{min_conf}): {soft_reason[:60]}"],
+                    "why": [f"❌ soft-blocked (conf {conf:.0f}<{effective_min}/{scale}, "
+                             f"canonical {min_conf_canonical}/10): {soft_reason[:50]}"],
                     "action": action,
                     "confidence": conf,
                     "regime": regime,
                     "excluded": True,
                     "soft_blocked": True,
-                    "min_confidence_required": min_conf,
+                    "min_confidence_required":  effective_min,
+                    "min_confidence_canonical": min_conf_canonical,
+                    "confidence_scale":         scale,
                 }
 
     is_white, _ = is_ticker_whitelisted(ticker)

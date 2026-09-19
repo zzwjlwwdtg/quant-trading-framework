@@ -189,25 +189,47 @@ class ThesisFilterAppliedTests(unittest.TestCase):
         self.assertEqual(out["action"], "REDUCE_RISK")
 
     def test_soft_blacklist_low_confidence_buy_blocked(self):
-        # 2026-09-18 加: whitelist 移除的 ticker (IEI/SHY/NBIS) 需要 conf ≥ 7
-        # conf 5 (常规 WATCH_BUY) 应被 soft-block 到 HOLD
-        decision = {"action": "WATCH_BUY", "confidence": 5, "reason": "trend up"}
+        # F02 fix (2026-09-19): min_confidence 是 canonical 10-scale, 在 TECHNICAL_ONLY=1
+        # (scale=5) 下 effective_min = round(7*5/10) = 4. conf 3 < 4 应 block.
+        import os
+        os.environ["TECHNICAL_ONLY"] = "1"
+        decision = {"action": "WATCH_BUY", "confidence": 3, "reason": "weak trend"}
         out = _apply_thesis_filter(decision, "US.IEI")
         self.assertEqual(out["action"], "HOLD")
         self.assertTrue(out.get("thesis_soft_blocked"))
         self.assertFalse(out.get("thesis_blocked", False),
                           "IEI 不在 hard blacklist, 只在 soft")
-        self.assertEqual(out.get("min_confidence_required"), 7)
+        # effective (in current scale) 应显示 4 (7*5/10 rounded)
+        self.assertEqual(out.get("min_confidence_required"), 4)
+        self.assertEqual(out.get("min_confidence_canonical"), 7)
+        self.assertEqual(out.get("confidence_scale"), 5)
         self.assertIn("soft_blocked", out["reason"])
 
     def test_soft_blacklist_high_confidence_buy_allowed(self):
-        # conf 8 ≥ 7 → 允许穿透
-        decision = {"action": "BUY", "confidence": 8, "reason": "strong breakout"}
+        # F02 fix: 在 TECHNICAL_ONLY=1 (scale=5) 下, conf 4 ≥ effective 4 → 穿透
+        import os
+        os.environ["TECHNICAL_ONLY"] = "1"
+        decision = {"action": "BUY", "confidence": 4, "reason": "strong breakout"}
         out = _apply_thesis_filter(decision, "US.NBIS")
         self.assertEqual(out["action"], "BUY")
-        self.assertEqual(out["confidence"], 8)
+        self.assertEqual(out["confidence"], 4)
         self.assertFalse(out.get("thesis_soft_blocked", False),
-                          "conf 8 ≥ min 7, 不该 block")
+                          "conf 4 ≥ effective min 4 (canonical 7/10 * scale 5/10), 应穿透")
+
+    def test_soft_blacklist_effective_min_scales_with_confidence_scale(self):
+        # F02 regression: 若某天切到 TECHNICAL_ONLY=0 (10-scale), effective_min 应变 7
+        # 相同 canonical 7/10 → 10-scale 下需 conf ≥ 7 才穿透
+        import os
+        os.environ["TECHNICAL_ONLY"] = "0"
+        try:
+            decision = {"action": "BUY", "confidence": 6, "reason": "trend"}
+            out = _apply_thesis_filter(decision, "US.IEI")
+            self.assertEqual(out["action"], "HOLD",
+                              "10-scale 下 conf 6 < effective 7 应 block")
+            self.assertEqual(out.get("min_confidence_required"), 7)
+            self.assertEqual(out.get("confidence_scale"), 10)
+        finally:
+            os.environ["TECHNICAL_ONLY"] = "1"   # 恢复默认
 
     def test_soft_blacklist_shy_iei_nbis_all_covered(self):
         # regression: 60d 复盘发现 IEI/SHY/NBIS 移除后仍被 BUY, 现在应全部 soft-blocked
@@ -251,27 +273,31 @@ class TopPicksSoftBlacklistTests(unittest.TestCase):
         thesis_config._CACHE = {"mtime": 0, "data": None}
 
     def test_soft_blocked_low_conf_excluded_from_scoring(self):
-        import top_picks
+        # F02 fix: conf 3 < effective 4 (canonical 7/10, scale 5) → excluded
+        import os, top_picks
+        os.environ["TECHNICAL_ONLY"] = "1"
         sig = {
             "market":   {"ticker": "US.IEI"},
-            "decision": {"action": "WATCH_BUY", "confidence": 5, "regime": "neutral_chop"},
+            "decision": {"action": "WATCH_BUY", "confidence": 3, "regime": "neutral_chop"},
         }
         r = top_picks._score_signal(sig)
         self.assertEqual(r["score"], -999.0)
         self.assertTrue(r.get("excluded"))
         self.assertTrue(r.get("soft_blocked"))
-        self.assertEqual(r.get("min_confidence_required"), 7)
+        self.assertEqual(r.get("min_confidence_required"), 4)
+        self.assertEqual(r.get("min_confidence_canonical"), 7)
         self.assertIn("soft-blocked", r["why"][0])
 
     def test_soft_blocked_high_conf_scored_normally(self):
-        # conf 8 ≥ min 7 → 不 exclude, 正常进入 scoring 流程
-        import top_picks
+        # F02 fix: conf 4 ≥ effective 4 → 穿透
+        import os, top_picks
+        os.environ["TECHNICAL_ONLY"] = "1"
         sig = {
             "market":   {"ticker": "US.NBIS"},
-            "decision": {"action": "BUY", "confidence": 8, "regime": "bull_trending"},
+            "decision": {"action": "BUY", "confidence": 4, "regime": "bull_trending"},
         }
         r = top_picks._score_signal(sig)
-        self.assertGreater(r["score"], 0, "conf 8 应通过 soft 过滤并得正 score")
+        self.assertGreater(r["score"], 0, "conf 4 应通过 soft 过滤并得正 score")
         self.assertFalse(r.get("soft_blocked", False))
         self.assertFalse(r.get("excluded", False))
 
@@ -299,9 +325,12 @@ class ThesisFilterExecutionGuardTests(unittest.TestCase):
         thesis_config._CACHE = {"mtime": 0, "data": None}
 
     def test_soft_blocked_action_not_in_buy_actions_after_filter(self):
+        # F02 fix: TECHNICAL_ONLY=1 (scale 5), effective_min=4 (from canonical 7/10),
+        # conf 3 < 4 应 HOLD
+        import os
+        os.environ["TECHNICAL_ONLY"] = "1"
         from trading_contracts import BUY_ACTIONS
-        # soft-blocked ticker + low conf → filter 后 action 应不在 BUY_ACTIONS
-        decision = {"action": "WATCH_BUY", "confidence": 5, "reason": "trend"}
+        decision = {"action": "WATCH_BUY", "confidence": 3, "reason": "trend"}
         out = _apply_thesis_filter(decision, "US.IEI")
         self.assertNotIn(out["action"], BUY_ACTIONS,
                           "soft-blocked signal must not stay in BUY_ACTIONS or _place will fire")

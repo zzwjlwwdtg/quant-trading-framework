@@ -1217,27 +1217,40 @@ def _apply_thesis_filter(result: dict, ticker: str) -> dict:
         return result
 
     # Layer 2: SOFT blacklist (whitelist 移除的 ticker 需要更高置信度)
+    #
+    # F02 fix (2026-09-19, per audit): min_confidence in config 是 canonical 10-scale
+    # (作者原意 "高置信度=7/10"), 但 TECHNICAL_ONLY=1 时 _conf_scale()=5, 满分 5
+    # 也永远达不到 7 → soft 变 hard block (违反设计). 现在换算成当前 scale:
+    #   effective_min = round(min_conf_canonical * scale / 10)
+    # 例: canonical 7 + scale 5 → effective 4; canonical 7 + scale 10 → effective 7
     if action in BUY_ACTIONS:
         soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
         if soft_blocked:
             cur_conf = int((result or {}).get("confidence") or 0)
-            min_conf = int(soft_meta.get("min_confidence", 7))
-            if cur_conf < min_conf:
+            min_conf_canonical = int(soft_meta.get("min_confidence", 7))
+            scale = _conf_scale()
+            # 半凑整避免 int 截断: 7*5/10 = 3.5 → 4 (更严格; 保留原意"高置信度")
+            effective_min = max(1, round(min_conf_canonical * scale / 10))
+            if cur_conf < effective_min:
                 original = action
                 result = dict(result)
                 result["action"] = "HOLD"
                 result["thesis_soft_blocked"] = True
                 result["thesis_reason"] = soft_reason
-                result["min_confidence_required"] = min_conf
+                result["min_confidence_required"] = effective_min
+                result["min_confidence_canonical"] = min_conf_canonical
+                result["confidence_scale"] = scale
                 result["demoted_from"] = original
                 prev_reason = result.get("reason") or ""
-                result["reason"] = (f"thesis_soft_blocked (conf {cur_conf}<{min_conf}): "
-                                     f"{soft_reason[:80]} (orig={original}, prev={prev_reason[:60]})")
+                result["reason"] = (f"thesis_soft_blocked (conf {cur_conf}<{effective_min}/{scale}, "
+                                     f"canonical {min_conf_canonical}/10): "
+                                     f"{soft_reason[:60]} (orig={original}, prev={prev_reason[:40]})")
                 result["confidence"] = 0
                 try:
                     from notifier import logger as _lg
                     _lg.info(f"[thesis_filter] {ticker} {original} → HOLD "
-                             f"(soft block, conf {cur_conf} < min {min_conf})")
+                             f"(soft block, conf {cur_conf} < effective_min {effective_min}"
+                             f"/{scale}, canonical {min_conf_canonical}/10)")
                 except Exception:
                     pass
 
