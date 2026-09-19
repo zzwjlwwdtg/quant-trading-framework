@@ -296,6 +296,9 @@ def _today_log_path() -> Path:
 
 
 def api_health() -> dict:
+    """WP13/F11/F10 (2026-09-19): 除进程+端口, 加入版本/校准/AI/log freshness,
+    让 healthcheck 能回答"程序正常但模型是否真在跑" (audit 明确的 pattern).
+    """
     orch_pid = None
     orch_alive = False
     if LOCK_PATH.exists():
@@ -307,18 +310,90 @@ def api_health() -> dict:
     opend_alive = _port_open("127.0.0.1", 11111)
     log_path = _today_log_path()
     last_log_ts = None
+    log_age_min = None
     if log_path.exists():
         try:
-            last_log_ts = datetime.fromtimestamp(log_path.stat().st_mtime).isoformat()
+            mtime = log_path.stat().st_mtime
+            last_log_ts = datetime.fromtimestamp(mtime).isoformat()
+            log_age_min = round((time.time() - mtime) / 60.0, 1)
         except Exception:
             pass
+    # 版本: git HEAD + dirty flag (从 baseline_manifest 复用逻辑)
+    version_info = {"git_head": "unknown", "is_dirty": False}
+    try:
+        from _baseline_manifest import _git_status
+        gs = _git_status()
+        version_info = {
+            "git_head":       gs.get("head", "unknown"),
+            "is_dirty":       gs.get("is_dirty", False),
+            "modified_files": gs.get("modified_files", 0),
+            "untracked_files": gs.get("untracked_files", 0),
+        }
+    except Exception:
+        pass
+    # 校准 stale 检查 (F10)
+    calib = {"exists": False}
+    try:
+        from decision_agent import get_calibration_info
+        calib = get_calibration_info()
+    except Exception:
+        pass
+    # AI call freshness (F11): 最近一次 AI call 时间
+    ai_last_call = None
+    try:
+        ai_log = SIGNALS_DIR / "ai_calls.jsonl"
+        if ai_log.exists():
+            # tail 最后一行, 避读大文件
+            with open(ai_log, "rb") as f:
+                f.seek(0, 2)
+                sz = f.tell()
+                seek = max(0, sz - 4096)
+                f.seek(seek)
+                tail = f.read().decode("utf-8", errors="replace")
+            lines = [l for l in tail.splitlines() if l.strip()]
+            if lines:
+                try:
+                    ai_last_call = json.loads(lines[-1]).get("ts")
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    # 最近 thesis invalidation (F11/闭环)
+    last_invalidation = None
+    try:
+        inv_log = SIGNALS_DIR / "thesis_invalidation_log.jsonl"
+        if inv_log.exists():
+            with open(inv_log, "rb") as f:
+                f.seek(0, 2)
+                sz = f.tell()
+                seek = max(0, sz - 2048)
+                f.seek(seek)
+                tail = f.read().decode("utf-8", errors="replace")
+            lines = [l for l in tail.splitlines() if l.strip()]
+            if lines:
+                try:
+                    last_invalidation = json.loads(lines[-1]).get("ts")
+                except Exception:
+                    pass
+    except Exception:
+        pass
     return {
         "orchestrator_pid":    orch_pid,
         "orchestrator_alive":  orch_alive,
         "opend_alive":         opend_alive,
         "last_log_mtime":      last_log_ts,
+        "log_age_min":         log_age_min,
         "log_path":            str(log_path),
         "now":                 datetime.now(timezone.utc).isoformat(),
+        # F11/F10/WP00/WP13 augmentations (2026-09-19):
+        "version":             version_info,
+        "calibration":         {
+            "exists":    calib.get("exists"),
+            "age_days":  calib.get("age_days"),
+            "is_stale":  calib.get("is_stale"),
+        },
+        "ai_last_call_ts":     ai_last_call,
+        "last_invalidation":   last_invalidation,
     }
 
 
