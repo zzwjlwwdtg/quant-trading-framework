@@ -367,6 +367,12 @@ def _conf_scale() -> int:
 
 _CALIB_CACHE = {"loaded": False, "data": None}
 
+# F10 lite (2026-09-19, audit): 校准若超过 N 天就 warn 一次, 让用户知道
+# 覆盖的 ticker 是否需要重训 (2026-08-11 校准只覆盖 5 个 ticker, 新加的
+# 单股/债券没校准). 不自动重训 (需要漂移证据), 只 audit + surface.
+_CALIB_STALE_WARN_DAYS = 60
+_CALIB_STALE_WARNED = {"done": False}
+
 
 def _load_calibration() -> dict | None:
     """读校准 JSON（缓存一次，避免每次调用 IO）。"""
@@ -381,6 +387,58 @@ def _load_calibration() -> dict | None:
         _CALIB_CACHE["data"] = None
     _CALIB_CACHE["loaded"] = True
     return _CALIB_CACHE["data"]
+
+
+def get_calibration_info() -> dict:
+    """F10: 校准 metadata 摘要 (dashboard / audit 用).
+
+    返: {
+      exists, ts, age_days, is_stale (> 60d),
+      covered_tickers, lookback_days, forward_days
+    }
+    """
+    from datetime import datetime as _dt
+    data = _load_calibration()
+    if not data:
+        return {"exists": False, "is_stale": True, "reason": "no_calibration_file"}
+    ts_str = data.get("ts", "")
+    age_days = None
+    is_stale = False
+    try:
+        # ts 无 tz → 用 naive datetime
+        if "T" in ts_str:
+            calib_dt = _dt.fromisoformat(ts_str.split("+")[0].split("Z")[0])
+            age_days = (_dt.now() - calib_dt).days
+            is_stale = age_days > _CALIB_STALE_WARN_DAYS
+    except Exception:
+        pass
+    return {
+        "exists":            True,
+        "ts":                ts_str,
+        "age_days":          age_days,
+        "is_stale":          is_stale,
+        "stale_threshold_days": _CALIB_STALE_WARN_DAYS,
+        "covered_tickers":   data.get("tickers", []) or [],
+        "lookback_days":     data.get("lookback_days"),
+        "forward_days":      data.get("forward_days"),
+    }
+
+
+def _warn_stale_calibration_once() -> None:
+    """启动时一次性 warn 校准过期. 避免每 cycle 刷屏."""
+    if _CALIB_STALE_WARNED["done"]:
+        return
+    _CALIB_STALE_WARNED["done"] = True
+    info = get_calibration_info()
+    if info.get("is_stale"):
+        try:
+            from notifier import logger as _lg
+            reason = info.get("reason", f"age {info.get('age_days')}d > {_CALIB_STALE_WARN_DAYS}d")
+            _lg.warning(f"[calibration] STALE: {reason}, "
+                         f"covered={len(info.get('covered_tickers', []))} tickers. "
+                         f"考虑重训 _calibrate_confidence.py")
+        except Exception:
+            pass
 
 
 # ── Regime Detection ──────────────────────────────────────────────────────────

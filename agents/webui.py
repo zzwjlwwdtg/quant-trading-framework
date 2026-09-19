@@ -3125,11 +3125,18 @@ def api_thesis_state() -> dict:
             soft_bl = raw.get("soft_blacklist", {}) or {}
         except Exception:
             pass
+        # F10 lite: 校准状态 (age + stale + covered tickers) 供 dashboard 展示
+        try:
+            from decision_agent import get_calibration_info
+            calib_info = get_calibration_info()
+        except Exception:
+            calib_info = {"exists": False, "error": "unable_to_load"}
         return {
             "current":         cur,
             "soft_blacklist":  soft_bl,
             "retired":         retired_slim,
             "next_conjecture": next_thesis_conjecture(),
+            "calibration":     calib_info,
         }
     except Exception as e:
         return {"error": str(e)[:200]}

@@ -1041,6 +1041,19 @@ def generate_ai_prompt(mode: str = "review") -> tuple[Path | None, bool]:
                   "\n\n=== モジュール過去精度（過去250日バックテスト） ===\n")
         trimmed = trimmed + header + module_acc + "\n=== END 模块准确率 ===\n"
 
+    # 今日 top picks (thesis 过滤 + regime alignment + confluence 综合排名)
+    try:
+        from top_picks import compute_top_picks, format_picks_text
+        tp_result = compute_top_picks(n=10)
+        tp_text = format_picks_text(tp_result)
+        if tp_text:
+            header = ("\n\n=== 🎯 今日 Top Picks (thesis-filtered + regime-aligned) ===\n"
+                      if not ja_mode else
+                      "\n\n=== 🎯 今日おすすめ (thesis フィルター + regime 整合) ===\n")
+            trimmed = trimmed + header + tp_text + "\n=== END Top Picks ===\n"
+    except Exception:
+        pass
+
     # 交易复盘 (weekly _trade_postmortem.py 生成) — 让 AI 看到实盘表现校准建议
     postmortem = _read_trade_postmortem()
     if postmortem:
@@ -1221,15 +1234,52 @@ def _codex_safe_env() -> dict[str, str]:
 
 # ── AI 模型分级 ────────────────────────────────────────────────────────
 # 按 complexity 选 model, 简单任务 (news 解析 / regime 确认) 用便宜, 深度分析用高端.
-# env var 允许 override, 默认按用户 codex CLI 全局设置 (若 CODEX_MODEL_* 空).
 #   simple  → CODEX_MODEL_SIMPLE  (news_analyzer / fed_watch / policy_toolkit / jp_extractor)
 #   medium  → CODEX_MODEL_MEDIUM  (claude_gate / bond_ai_interpret)
 #   complex → CODEX_MODEL_COMPLEX (ai_prompt.print_analysis 主分析)
+#
+# F11 fix (2026-09-19, audit): 之前注释说"默认按用户 codex CLI 全局设置", 但
+# 实际调用带 --ignore-user-config → 忽略 ~/.codex/config.toml. 若 env 未设,
+# 走的是 codex CLI 内置默认 (通常 gpt-5-codex 或 CLI 打包的 default), 不是
+# 用户的 config.toml. 故实际有 3 种可能: (a) CODEX_MODEL_* env 显式指定,
+# (b) --model 未传 → CLI internal default, (c) 若移除 --ignore-user-config
+# 才是 config.toml. 现在 (b) 是默认.
 _COMPLEXITY_MODEL_ENV = {
     "simple":  "CODEX_MODEL_SIMPLE",
     "medium":  "CODEX_MODEL_MEDIUM",
     "complex": "CODEX_MODEL_COMPLEX",
 }
+
+# F11: 结构化 AI 调用审计 log (ts, provider, model, complexity, status, duration_s)
+# 让 dashboard/复盘可以看到"这次 backtest 实际用了什么模型"而不是靠注释猜测.
+_AI_CALL_LOG_PATH = None   # 延迟初始化, 避 import 循环
+
+def _log_ai_call(*, provider: str, model: str | None, complexity: str,
+                  status: str, duration_s: float, fallback_reason: str = "") -> None:
+    """Append 一条 AI call metadata 到 signals/ai_calls.jsonl. 静默失败."""
+    import json as _json
+    from datetime import datetime as _dt, timezone as _tz
+    global _AI_CALL_LOG_PATH
+    if _AI_CALL_LOG_PATH is None:
+        try:
+            from config import SIGNALS_DIR as _SD
+            _AI_CALL_LOG_PATH = Path(_SD) / "ai_calls.jsonl"
+        except Exception:
+            return
+    try:
+        _AI_CALL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_AI_CALL_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(_json.dumps({
+                "ts":               _dt.now(_tz.utc).isoformat(),
+                "provider":         provider,
+                "model":            model or "cli_internal_default",
+                "complexity":       complexity,
+                "status":           status,
+                "duration_s":       round(duration_s, 2),
+                "fallback_reason":  fallback_reason,
+            }, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def _resolve_codex_model(complexity: str) -> str | None:
@@ -1365,11 +1415,20 @@ def query_ai_cli(
     the primary CLI is missing and no fallback was configured, try the other
     CLI once.
     """
+    import time as _time
     policy = get_ai_cli_policy()
     primary = policy["primary"]
     fallback = policy["fallback"]
 
+    # F11: 记录实际 model (若 env 空, 记 cli_internal_default 让人能看出)
+    model_used = _resolve_codex_model(complexity) if primary == "codex" else None
+
+    t0 = _time.monotonic()
     output, status = _query_named_cli(primary, prompt, timeout, web_search, complexity)
+    dur = _time.monotonic() - t0
+    # F11: 每次调用后 log (无论成功/失败) — 如果 fallback 起飞我们要有两条 audit
+    _log_ai_call(provider=primary, model=model_used, complexity=complexity,
+                  status=status, duration_s=dur)
     if output:
         return output, status, primary.title(), ""
 
@@ -1382,12 +1441,21 @@ def query_ai_cli(
         return None, status, primary.title(), ""
 
     fallback_reason = f"{primary}: {_redact_cli_text(status)}"
+    fb_model = _resolve_codex_model(complexity) if fallback == "codex" else None
+    t1 = _time.monotonic()
     output, fallback_status = _query_named_cli(
         fallback, prompt, timeout, web_search, complexity
     )
+    fb_dur = _time.monotonic() - t1
     if output:
+        _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
+                      status=fallback_status, duration_s=fb_dur,
+                      fallback_reason=fallback_reason)
         return output, fallback_status, fallback.title(), fallback_reason
     combined = f"{fallback_reason}; {fallback}={fallback_status}"
+    _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
+                  status=fallback_status, duration_s=fb_dur,
+                  fallback_reason=fallback_reason)
     return None, _redact_cli_text(combined), fallback.title(), fallback_reason
 
 
