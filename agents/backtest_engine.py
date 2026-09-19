@@ -351,7 +351,38 @@ class SimAccount:
 
 
 def run_mid(tickers=None, days=BACKTEST_DAYS) -> dict:
-    """完整模拟：每天对每个 ticker 算决策，按 trader 逻辑模拟下单。"""
+    """完整模拟：每天对每个 ticker 算决策，按 trader 逻辑模拟下单。
+
+    F05 (2026-09-19, audit): 用 _backtest_mode context 让 decision_agent
+    跳过 thesis filter + LLM 调用, 防止历史回测被当前 blacklist / 当前 LLM
+    结果污染 (look-ahead + 不可重放). Context 出口自动恢复原 env, 不 leak.
+    """
+    with _backtest_mode_env():
+        return _run_mid_impl(tickers=tickers, days=days)
+
+
+def _backtest_mode_env():
+    """Context manager: set BACKTEST_MODE=1 for backtest scope, restore on exit.
+    避免 env leak 影响其他 test (regression: test_coupling_regressions 三次调
+    run_mid, 之前 env 一直挂着导致后续 thesis_filter 测试全 fail)."""
+    import os
+    from contextlib import contextmanager
+    @contextmanager
+    def _ctx():
+        prev = os.environ.get("BACKTEST_MODE")
+        os.environ["BACKTEST_MODE"] = "1"
+        try:
+            yield
+        finally:
+            if prev is None:
+                os.environ.pop("BACKTEST_MODE", None)
+            else:
+                os.environ["BACKTEST_MODE"] = prev
+    return _ctx()
+
+
+def _run_mid_impl(tickers=None, days=BACKTEST_DAYS) -> dict:
+    """原 run_mid 实现. run_mid 是加了 BACKTEST_MODE 保护的 wrapper."""
     from decision_agent import _conf_scale, get_decision
     tickers = tickers or TICKERS
     fake_events = {"breaking_news": False, "days_to_event": 99,

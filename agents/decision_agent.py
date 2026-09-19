@@ -1155,6 +1155,10 @@ Output: {"action":"BUY|SELL|HOLD","confidence":1-10,"reason":"max 10 words","ent
 
 def _llm_call(system: str, market: dict, events: dict, macro: dict,
               m_keys: tuple, e_keys: tuple) -> dict | None:
+    # F05 fix (2026-09-19): BACKTEST_MODE=1 时禁 LLM 调用 — 历史 backtest
+    # 不能读 as-of-today LLM 结果 (look-ahead + 不可重放 + AI 版本不冻结)
+    if os.environ.get("BACKTEST_MODE") == "1":
+        return None
     if not OPENAI_API_KEY:
         return None
     payload = json.dumps({
@@ -1190,7 +1194,14 @@ def _apply_thesis_filter(result: dict, ticker: str) -> dict:
     memory rule (project_stop_distance_backtest / project_thesis_2026Q3): 系统必须
     读 thesis_config, 否则 rule engine 会持续给 blacklist ticker 出 BUY 信号 (2026-07 → 09
     因此造成 -24% drawdown).
+
+    F05 fix (2026-09-19, audit): BACKTEST_MODE=1 时跳过 thesis filter,
+    因为 backtest 用历史数据但 thesis_config 是当前状态 → look-ahead bias.
+    Backtest 显式豁免让 historical 结果反映信号规则本身, 而非 2026-09
+    的 blacklist 事后加进去回填历史.
     """
+    if os.environ.get("BACKTEST_MODE") == "1":
+        return result   # 历史 backtest 不受当前 thesis 影响 (F05)
     try:
         from thesis_config import is_ticker_blacklisted, is_ticker_soft_blacklisted
     except Exception:
