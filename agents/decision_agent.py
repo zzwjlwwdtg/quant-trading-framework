@@ -1241,7 +1241,7 @@ def _llm_call(system: str, market: dict, events: dict, macro: dict,
 
 
 # ── Thesis 硬过滤 (thesis_config 单一源) ──────────────────────────────────────
-def _apply_thesis_filter(result: dict, ticker: str) -> dict:
+def _apply_thesis_filter(result: dict, ticker: str, context=None) -> dict:
     """两层 thesis 保护:
 
     1. HARD blacklist → 任何 BUY 都降级 HOLD (thesis_blocked=True)
@@ -1249,25 +1249,37 @@ def _apply_thesis_filter(result: dict, ticker: str) -> dict:
        < min_confidence 才降级 HOLD (thesis_soft_blocked=True), 允许高置信度
        穿透.
 
+    WP04 深度重构 (2026-09-20): 新增 context= kwarg (DecisionContext).
+    若提供 context, 从 context.thesis_snapshot 读 blacklist (支持 backtest 用
+    冻结历史 thesis, 不用当前 live thesis). context=None 时 fallback 读 live
+    (兼容旧调用者, 迁移期间).
+
     memory rule (project_stop_distance_backtest / project_thesis_2026Q3): 系统必须
     读 thesis_config, 否则 rule engine 会持续给 blacklist ticker 出 BUY 信号 (2026-07 → 09
     因此造成 -24% drawdown).
 
-    F05 fix (2026-09-19, audit): BACKTEST_MODE=1 时跳过 thesis filter,
-    因为 backtest 用历史数据但 thesis_config 是当前状态 → look-ahead bias.
-    Backtest 显式豁免让 historical 结果反映信号规则本身, 而非 2026-09
-    的 blacklist 事后加进去回填历史.
+    F05 fix (2026-09-19): BACKTEST_MODE=1 环境标记跳过 thesis filter (兼容期).
+    正式做法是 caller 传 context (thesis_snapshot={}). Env flag 全部 caller
+    migrate 后删除.
     """
     if os.environ.get("BACKTEST_MODE") == "1":
-        return result   # 历史 backtest 不受当前 thesis 影响 (F05)
-    try:
-        from thesis_config import is_ticker_blacklisted, is_ticker_soft_blacklisted
-    except Exception:
-        return result
+        return result   # 历史 backtest 不受当前 thesis 影响 (F05 兼容)
     action = (result or {}).get("action") or ""
 
-    # Layer 1: HARD blacklist
-    is_blocked, reason = is_ticker_blacklisted(ticker)
+    # WP04: 优先从 context 读; 无 context 则 fallback live thesis_config
+    if context is not None:
+        try:
+            is_blocked, reason = context.is_ticker_blacklisted(ticker)
+        except Exception:
+            is_blocked, reason = False, ""
+    else:
+        try:
+            from thesis_config import is_ticker_blacklisted
+            is_blocked, reason = is_ticker_blacklisted(ticker)
+        except Exception:
+            return result
+
+    # Layer 1: HARD blacklist (统一路径, 无论来源)
     if is_blocked and action in BUY_ACTIONS:
         original = action
         result = dict(result)
@@ -1293,7 +1305,18 @@ def _apply_thesis_filter(result: dict, ticker: str) -> dict:
     #   effective_min = round(min_conf_canonical * scale / 10)
     # 例: canonical 7 + scale 5 → effective 4; canonical 7 + scale 10 → effective 7
     if action in BUY_ACTIONS:
-        soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
+        # WP04: soft blacklist 同样支持 context 优先, live fallback
+        if context is not None:
+            try:
+                soft_blocked, soft_reason, soft_meta = context.is_ticker_soft_blacklisted(ticker)
+            except Exception:
+                soft_blocked, soft_reason, soft_meta = False, "", {}
+        else:
+            try:
+                from thesis_config import is_ticker_soft_blacklisted
+                soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
+            except Exception:
+                soft_blocked, soft_reason, soft_meta = False, "", {}
         if soft_blocked:
             cur_conf = int((result or {}).get("confidence") or 0)
             min_conf_canonical = int(soft_meta.get("min_confidence", 7))
