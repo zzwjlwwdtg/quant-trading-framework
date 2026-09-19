@@ -26,7 +26,19 @@ from decision_agent import get_decision, get_regime
 
 DAYS = 250                # 用 1 年
 FORWARD_DAYS = 5          # 信号后第 N 天测净收益
-CONF_MIN = 6              # 最低置信度
+# CONF_MIN as canonical 10-scale. Runtime scales to actual mode:
+#   TECHNICAL_ONLY=1 (default) → scale=5 → effective threshold = round(6*5/10) = 3
+#   TECHNICAL_ONLY=0            → scale=10 → effective threshold = 6
+# 2026-09-19 fix: 之前硬编 6, TECHNICAL_ONLY=1 下 max conf=5 → 所有采样为 0
+CONF_MIN_CANONICAL = 6
+def _effective_conf_min() -> int:
+    try:
+        from decision_agent import _conf_scale
+        scale = _conf_scale()
+    except Exception:
+        scale = 5   # TECHNICAL_ONLY default
+    return max(1, round(CONF_MIN_CANONICAL * scale / 10))
+CONF_MIN = _effective_conf_min()   # 用于内层比较
 FAKE_EVENTS = {"breaking_news": False, "days_to_event": 99,
                "risk_level": "moderate", "gold_bias": "neutral",
                "trump_signal": {"fallback": True}}
@@ -40,8 +52,6 @@ def run_one(tk: str):
     df = df.dropna(subset=["rsi_14","ma20","ma50","bb_pct","cci_20"])
     dates = list(df.index)[-DAYS:]
     results = {"legacy": defaultdict(list), "new": defaultdict(list)}
-    quant_zero = {"buy_score":0,"sell_score":0,"n_rules":0,"buy_hits":[],"sell_hits":[]}
-
     for i, d in enumerate(dates):
         if i + FORWARD_DAYS >= len(dates):
             break
@@ -55,9 +65,9 @@ def run_one(tk: str):
         # 两种决策
         try:
             dec_legacy = get_decision(mkt, FAKE_EVENTS, FAKE_MACRO,
-                                       board_regime=legacy_regime, quant=quant_zero)
+                                       board_regime=legacy_regime)
             dec_new    = get_decision(mkt, FAKE_EVENTS, FAKE_MACRO,
-                                       board_regime="neutral", quant=quant_zero)
+                                       board_regime="neutral")
         except Exception:
             continue
 
