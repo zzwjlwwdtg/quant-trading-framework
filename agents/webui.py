@@ -3732,10 +3732,19 @@ TICKER_TO_OPTION_SOURCE = {
 # 这些卡片用流动性更深的 1x ETF 期权链判断结构，但所有可执行价位必须
 # 映射回用户实际交易的杠杆 ETF。映射以同一时点的两只 ETF 现价为锚；
 # 到期估值另用历史日收益残差估算波动折损/跟踪偏差，并明确给出误差带。
-LEVERAGED_OPTION_PRICE_MAP = {
-    "TQQQ": {"source": "QQQ", "leverage": 3.0},
-    "SOXL": {"source": "SOXX", "leverage": 3.0},
-}
+#
+# WP01 (2026-09-20): 从 instrument_registry 派生, 加新杠杆 ETF 只改 registry.
+def _build_leveraged_option_price_map():
+    try:
+        from instrument_registry import leveraged_option_price_map
+        return leveraged_option_price_map()
+    except Exception:
+        return {
+            "TQQQ": {"source": "QQQ", "leverage": 3.0},
+            "SOXL": {"source": "SOXX", "leverage": 3.0},
+        }
+
+LEVERAGED_OPTION_PRICE_MAP = _build_leveraged_option_price_map()
 
 TICKER_OPTIONS_CACHE_SCHEMA = 6
 

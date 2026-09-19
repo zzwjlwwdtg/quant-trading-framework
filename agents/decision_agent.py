@@ -61,27 +61,26 @@ def _get_hmm_meta_state() -> str | None:
 
 # ── 板块级 regime（比 SPY 大盘更贴合具体标的） ─────────────────────────────
 # 例：SOXL/DRAM/MULL 跟半导体 SMH，不跟大盘 SPY
-TICKER_TO_SECTOR = {
-    "US.TQQQ": "QQQ",   # 3x QQQ → 参考 Nasdaq
-    "US.SQQQ": "QQQ",
-    "US.SOXL": "SMH",   # 3x 半导体 → 参考 SMH
-    "US.SOXS": "SMH",
-    "US.DRAM": "SMH",   # 内存 ETF → 参考半导体
-    "US.MULL": "SMH",   # 2x MU → 参考半导体
-    "US.GLD":  "GLD",   # 黄金 → 参考自己
-    "US.TLT":  "TLT",   # 长期债券
-    # TRACKED_TICKERS 补齐 (config.py L154+)
-    "US.NVDA": "SMH",   # 半导体链条领头
-    "US.MSFT": "QQQ",   # 云 AI + FAANG (Nasdaq 权重)
-    "US.AAPL": "QQQ",   # QQQ 最大权重
-    "US.NBIS": "SMH",   # AI cloud, 情绪同 semis
-    "US.LITE": "SMH",   # 光通信, 跟半导体
-    "US.CBRS": "SMH",   # AI 芯片
-    "US.SHY":  "IEI",   # 短端债 → 中端债 ETF 作 proxy
-    "US.IEI":  "IEI",   # 中端债 → 自己
-    "US.USO":  "USO",   # 原油 → 自己
-    "US.XLV":  "XLV",   # 医疗防御 → 自己
-}
+#
+# WP01 (2026-09-20): 从 instrument_registry 派生, 不再硬编码. registry 是
+# ticker 元数据单一源, 加新 ticker 只改 registry, 不用改这里.
+# 兼容层: 保留 TICKER_TO_SECTOR 名字, 其他 module 若引用不影响.
+def _build_ticker_to_sector():
+    try:
+        from instrument_registry import ticker_to_sector_map
+        return ticker_to_sector_map()
+    except Exception:
+        # Fallback (registry import fail 时的静态副本): 保证系统仍能启动
+        return {
+            "US.TQQQ": "QQQ", "US.SOXL": "SMH", "US.SOXS": "SMH",
+            "US.DRAM": "SMH", "US.MULL": "SMH", "US.GLD": "GLD",
+            "US.TLT": "TLT", "US.NVDA": "SMH", "US.MSFT": "QQQ",
+            "US.AAPL": "QQQ", "US.NBIS": "SMH", "US.LITE": "SMH",
+            "US.CBRS": "SMH", "US.SHY": "IEI", "US.IEI": "IEI",
+            "US.USO": "USO", "US.XLV": "XLV",
+        }
+
+TICKER_TO_SECTOR = _build_ticker_to_sector()
 def _get_sector_regime(ticker: str) -> str | None:
     """按 ticker → 板块基准计算方向与短线震荡。
     只做单向收紧，绝不因板块标签放宽买入。
