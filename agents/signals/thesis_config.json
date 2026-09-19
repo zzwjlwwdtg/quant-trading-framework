@@ -1,9 +1,9 @@
 {
-  "version": "2026-Q3.2_fed_hiking_confirmed",
+  "version": "2026-Q3.3_blacklist_expanded_soft_block",
   "created_at": "2026-08-24",
-  "last_reviewed_at": "2026-09-17",
+  "last_reviewed_at": "2026-09-18",
   "review_interval_days": 30,
-  "thesis_summary": "Cloud long, avoid semi + duration. 2026-09-17 Sep FOMC 已加息 +25bps → 3.75-4.00% (unanimous 12-0), dot plot 16/18 members 预期年内再加至少 1 次. 前瞻: continued_hike_regime 用 2Y yield 60d delta bps 追踪市场对后续加息的定价 (>25bps → 打脸 duration 敏感策略).",
+  "thesis_summary": "Cloud long, avoid semi + duration. 2026-09-17 Sep FOMC 已加息 +25bps → 3.75-4.00% (unanimous 12-0), dot plot 16/18 members 预期年内再加至少 1 次. 前瞻: continued_hike_regime 用 2Y yield 60d delta bps 追踪市场对后续加息的定价 (>25bps → 打脸 duration 敏感策略). 2026-09-18: 60d 复盘胜率 16.1% -$31k, 扩 blacklist (漏网 semi 追加) + 新增 soft_blacklist (whitelist 移除后仍需高置信度).",
   "blacklist_tickers": [
     "US.DRAM",
     "US.KLAC",
@@ -14,9 +14,19 @@
     "US.NVDA",
     "US.MU",
     "US.LITE",
-    "US.CBRS"
+    "US.CBRS",
+    "US.QRVO",
+    "US.SWKS",
+    "US.MPWR",
+    "US.STM"
   ],
-  "blacklist_reason": "semi + AI 芯片链 (违反 thesis avoid semi). 2026-07 → 09 paper trader 数据: 该 pool BUY 信号触发后 hit stop 83%, 直接造成 -24% drawdown. 2026-09-11 CPI hot 后 blacklist 保留: Fed hawkish = 成长股再受伤, 逻辑更强.",
+  "blacklist_reason": "semi + AI 芯片链 (违反 thesis avoid semi). 2026-07 → 09 paper trader 数据: 该 pool BUY 信号触发后 hit stop 83%, 直接造成 -24% drawdown. 2026-09-11 CPI hot 后 blacklist 保留: Fed hawkish = 成长股再受伤, 逻辑更强. 2026-09-18 扩展: 复盘发现 QRVO (RF semi, 已亏 -$2224) 未在 blacklist 而被系统买入; 追加所有 tracked universe 里遗漏的 semi (QRVO/SWKS/MPWR/STM). 覆盖 memory (MU/DRAM), 设备 (KLAC/AMAT), RF (QRVO/SWKS), 电源 (MPWR), 光学 (LITE), 分立 (STM), 中国半导体 (CBRS), 3x levered (SOXL/SOXS), AI 龙头 (NVDA), 中概 (MULL).",
+  "soft_blacklist": {
+    "US.SHY": {"since": "2026-09-11", "min_confidence": 7, "reason": "2026-09-11 从 whitelist 移除 (Fed hike 打脸前端债券). 60d 复盘: 4W 全负, avg -0.42%, 累积 -$1790. 若技术面高置信度 (≥7) 才允许 BUY."},
+    "US.IEI": {"since": "2026-09-11", "min_confidence": 7, "reason": "2026-09-11 从 whitelist 移除 (Fed hike 打脸前端债券). 60d 复盘: 5W 全负, avg -1.58%, 累积 -$6313. 若技术面高置信度 (≥7) 才允许 BUY."},
+    "US.NBIS": {"since": "2026-09-11", "min_confidence": 7, "reason": "2026-09-11 从 whitelist 移除 (高 beta 云 hawkish 承压). 2026-09-18 复盘发现: 移除后仍被 BUY (whitelist 移除≠阻止). 若技术面高置信度 (≥7) 才允许 BUY."}
+  },
+  "soft_blacklist_reason": "whitelist 移除的 ticker 需要更高置信度 (min_confidence) 才允许 BUY. 2026-09-18 加: 之前 whitelist 移除只是 '不给加分', 不阻止 BUY, 导致 IEI/SHY/NBIS 移除后仍被系统交易且继续亏. 现在 confidence < min → HOLD.",
   "whitelist_tickers": [
     "US.MSFT",
     "US.GOOGL",
@@ -52,7 +62,7 @@
     }
   ],
   "auto_clear_blacklist_on_invalidation": false,
-  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted, blacklisted ticker 的 BUY_* 全部降级为 HOLD 并 log 'thesis_blocked'. 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标) 追踪后续加息定价.",
+  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted (hard block → HOLD) 和 is_ticker_soft_blacklisted (soft block → 要求 confidence ≥ min_confidence, 不满足降级 HOLD). 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标). 2026-09-18: 60d 复盘 -$31k 后加 QRVO/SWKS/MPWR/STM 到 hard blacklist, 加 soft_blacklist (SHY/IEI/NBIS) 阻止 whitelist 移除后的低置信度 BUY.",
   "next_thesis_conjecture": {
     "conjectured_at": "2026-09-17",
     "candidates": [

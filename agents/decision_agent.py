@@ -1180,27 +1180,32 @@ def _llm_call(system: str, market: dict, events: dict, macro: dict,
 
 # ── Thesis 硬过滤 (thesis_config 单一源) ──────────────────────────────────────
 def _apply_thesis_filter(result: dict, ticker: str) -> dict:
-    """若 ticker 在 thesis blacklist 且 result.action 是 BUY 类, 降级为 HOLD.
+    """两层 thesis 保护:
+
+    1. HARD blacklist → 任何 BUY 都降级 HOLD (thesis_blocked=True)
+    2. SOFT blacklist (2026-09-18 加, whitelist 移除的 ticker) → confidence
+       < min_confidence 才降级 HOLD (thesis_soft_blocked=True), 允许高置信度
+       穿透.
+
     memory rule (project_stop_distance_backtest / project_thesis_2026Q3): 系统必须
     读 thesis_config, 否则 rule engine 会持续给 blacklist ticker 出 BUY 信号 (2026-07 → 09
-    因此造成 -24% drawdown)."""
+    因此造成 -24% drawdown).
+    """
     try:
-        from thesis_config import is_ticker_blacklisted
+        from thesis_config import is_ticker_blacklisted, is_ticker_soft_blacklisted
     except Exception:
         return result
-    is_blocked, reason = is_ticker_blacklisted(ticker)
-    if not is_blocked:
-        return result
     action = (result or {}).get("action") or ""
-    # BUY-类动作都拦
-    if action in BUY_ACTIONS:
+
+    # Layer 1: HARD blacklist
+    is_blocked, reason = is_ticker_blacklisted(ticker)
+    if is_blocked and action in BUY_ACTIONS:
         original = action
         result = dict(result)
         result["action"] = "HOLD"
         result["thesis_blocked"] = True
         result["thesis_reason"] = reason
         result["demoted_from"] = original
-        # 保留原 reason 供审计
         prev_reason = result.get("reason") or ""
         result["reason"] = f"thesis_blocked: {reason[:100]} (orig={original}, prev_reason={prev_reason[:80]})"
         result["confidence"] = 0
@@ -1209,6 +1214,33 @@ def _apply_thesis_filter(result: dict, ticker: str) -> dict:
             _lg.info(f"[thesis_filter] {ticker} {original} → HOLD (thesis blacklist)")
         except Exception:
             pass
+        return result
+
+    # Layer 2: SOFT blacklist (whitelist 移除的 ticker 需要更高置信度)
+    if action in BUY_ACTIONS:
+        soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
+        if soft_blocked:
+            cur_conf = int((result or {}).get("confidence") or 0)
+            min_conf = int(soft_meta.get("min_confidence", 7))
+            if cur_conf < min_conf:
+                original = action
+                result = dict(result)
+                result["action"] = "HOLD"
+                result["thesis_soft_blocked"] = True
+                result["thesis_reason"] = soft_reason
+                result["min_confidence_required"] = min_conf
+                result["demoted_from"] = original
+                prev_reason = result.get("reason") or ""
+                result["reason"] = (f"thesis_soft_blocked (conf {cur_conf}<{min_conf}): "
+                                     f"{soft_reason[:80]} (orig={original}, prev={prev_reason[:60]})")
+                result["confidence"] = 0
+                try:
+                    from notifier import logger as _lg
+                    _lg.info(f"[thesis_filter] {ticker} {original} → HOLD "
+                             f"(soft block, conf {cur_conf} < min {min_conf})")
+                except Exception:
+                    pass
+
     return result
 
 

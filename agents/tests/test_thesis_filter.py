@@ -30,6 +30,13 @@ class ThesisConfigTests(unittest.TestCase):
                 self.assertTrue(blocked, f"{tk} should be blacklisted")
                 self.assertIn("semi", reason.lower())
 
+    def test_expanded_blacklist_2026_09_18(self):
+        # 2026-09-18 复盘后追加: QRVO/SWKS/MPWR/STM (漏网的 semi in universe)
+        for tk in ["US.QRVO", "US.SWKS", "US.MPWR", "US.STM"]:
+            with self.subTest(ticker=tk):
+                blocked, _ = thesis_config.is_ticker_blacklisted(tk)
+                self.assertTrue(blocked, f"{tk} should be blacklisted after 2026-09-18 expansion")
+
     def test_cloud_bond_ticker_is_whitelisted(self):
         # 2026-09-11 后 whitelist 收缩: bond (SHY/IEI) 和高 beta 云 (NBIS) 因 CPI hot 移除
         for tk in ["US.MSFT", "US.GOOGL", "US.GLD", "US.XLV"]:
@@ -180,6 +187,43 @@ class ThesisFilterAppliedTests(unittest.TestCase):
         decision = {"action": "REDUCE_RISK", "confidence": 6, "reason": "rsi high"}
         out = _apply_thesis_filter(decision, "US.SOXL")
         self.assertEqual(out["action"], "REDUCE_RISK")
+
+    def test_soft_blacklist_low_confidence_buy_blocked(self):
+        # 2026-09-18 加: whitelist 移除的 ticker (IEI/SHY/NBIS) 需要 conf ≥ 7
+        # conf 5 (常规 WATCH_BUY) 应被 soft-block 到 HOLD
+        decision = {"action": "WATCH_BUY", "confidence": 5, "reason": "trend up"}
+        out = _apply_thesis_filter(decision, "US.IEI")
+        self.assertEqual(out["action"], "HOLD")
+        self.assertTrue(out.get("thesis_soft_blocked"))
+        self.assertFalse(out.get("thesis_blocked", False),
+                          "IEI 不在 hard blacklist, 只在 soft")
+        self.assertEqual(out.get("min_confidence_required"), 7)
+        self.assertIn("soft_blocked", out["reason"])
+
+    def test_soft_blacklist_high_confidence_buy_allowed(self):
+        # conf 8 ≥ 7 → 允许穿透
+        decision = {"action": "BUY", "confidence": 8, "reason": "strong breakout"}
+        out = _apply_thesis_filter(decision, "US.NBIS")
+        self.assertEqual(out["action"], "BUY")
+        self.assertEqual(out["confidence"], 8)
+        self.assertFalse(out.get("thesis_soft_blocked", False),
+                          "conf 8 ≥ min 7, 不该 block")
+
+    def test_soft_blacklist_shy_iei_nbis_all_covered(self):
+        # regression: 60d 复盘发现 IEI/SHY/NBIS 移除后仍被 BUY, 现在应全部 soft-blocked
+        for tk in ["US.SHY", "US.IEI", "US.NBIS"]:
+            with self.subTest(ticker=tk):
+                soft, reason, meta = thesis_config.is_ticker_soft_blacklisted(tk)
+                self.assertTrue(soft, f"{tk} should be soft-blacklisted")
+                self.assertGreaterEqual(meta.get("min_confidence", 0), 7,
+                                          f"{tk} min_confidence should be ≥ 7")
+
+    def test_hard_blocked_takes_priority_over_soft(self):
+        # 若同时 hard + soft, hard 优先 (虽然 config 里应该互斥)
+        decision = {"action": "BUY", "confidence": 9, "reason": "breakout"}
+        out = _apply_thesis_filter(decision, "US.SOXL")  # SOXL 只在 hard
+        self.assertEqual(out["action"], "HOLD")
+        self.assertTrue(out.get("thesis_blocked"))
 
     def test_hot_reload_on_config_mtime_change(self):
         # 改 config 内容 → cache 应自动刷新

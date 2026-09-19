@@ -80,6 +80,33 @@ def is_ticker_whitelisted(ticker: str) -> tuple[bool, str]:
     return False, ""
 
 
+def is_ticker_soft_blacklisted(ticker: str) -> tuple[bool, str, dict]:
+    """Soft block (2026-09-18 加): whitelist 移除的 ticker 需要更高置信度才能 BUY.
+
+    Returns:
+      (True, reason, {"min_confidence": N, "since": "YYYY-MM-DD"})
+      (False, "", {}) if not soft-blocked
+
+    decision_agent._apply_thesis_filter 后续用: 若 soft-blocked 且 result.confidence
+    < min_confidence → 降级 HOLD. min_confidence 未指定时默认 7.
+    """
+    cfg = _load()
+    if not cfg:
+        return False, "", {}
+    soft = cfg.get("soft_blacklist", {}) or {}
+    if not soft:
+        return False, "", {}
+    target = _normalize_ticker(ticker)
+    for key, meta in soft.items():
+        if _normalize_ticker(key) == target:
+            reason = meta.get("reason", cfg.get("soft_blacklist_reason", "soft_thesis_block"))
+            return True, reason, {
+                "min_confidence": int(meta.get("min_confidence", 7)),
+                "since":          meta.get("since", ""),
+            }
+    return False, "", {}
+
+
 def get_thesis_version() -> Optional[str]:
     cfg = _load()
     return cfg.get("version") if cfg else None
@@ -157,6 +184,7 @@ def summary() -> dict:
         "review_msg": review_msg,
         "has_next_conjecture": bool(cfg.get("next_thesis_conjecture")),
         "archived_count": _count_archived(),
+        "soft_blacklist_count": len(cfg.get("soft_blacklist", {}) or {}),
     }
 
 
