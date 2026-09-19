@@ -251,12 +251,20 @@ def _load_state(*, allow_stale: bool = False) -> dict | None:
     return data
 
 
-def get_today_regime() -> str:
-    """轻量调用：读市场日期匹配的 regime；缺失/失效 fallback 'neutral'。"""
+def get_today_regime(default: str = "unknown") -> str:
+    """轻量调用：读市场日期匹配的 regime；缺失/失效 fallback (default).
+
+    F08 fix (2026-09-19, audit): 之前 fallback 'neutral' 让"数据缺失"和
+    "真实 neutral" 无法区分, 关键 downstream 无法采取更保守 default. 现在默认
+    返 'unknown'; 旧路径可显式传 default='neutral' 保留原行为.
+    """
     data = _load_state()
     if not data:
-        return "neutral"
-    return data.get("regime", "neutral") or "neutral"
+        return default
+    regime = data.get("regime")
+    if not regime:
+        return default
+    return regime
 
 
 def get_today_info(*, allow_stale: bool = False) -> dict:
@@ -275,6 +283,7 @@ _REGIME_LABEL = {
     "recession_risk": "衰退风险 (避险偏向, 仅极端入场)",
     "crisis":         "危机防御 (现金为王, 几乎不动)",
     "neutral":        "中性 (无强方向)",
+    "unknown":        "状态未知 (数据缺失/过期, 采用保守 default, 不当真中性)",
 }
 
 

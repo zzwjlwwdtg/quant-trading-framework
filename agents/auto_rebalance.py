@@ -58,7 +58,22 @@ _TARGET_TEMPLATE = {
 
 _CASH_FLOOR_PCT = 15.0      # 现金底线, 不允许一次 rebalance 用光
 _MIN_ORDER_DIFF_PCT = 3.0   # 偏差 < 3% 不动 (避免小抖动)
-_MIN_ORDER_USD = 5000       # 最小订单金额
+
+# F09 fix (2026-09-19, audit): 之前 _MIN_ORDER_USD=5000 全局硬规则, 让 <$100k 账户
+# 几乎所有 rebalance 单被过滤. 改成按账户 NAV 比例 + 绝对下限二者取大.
+#   NAV $10k → max(50, 50) = $50 min
+#   NAV $50k → max(50, 250) = $250 min
+#   NAV $100k → max(50, 500) = $500 min
+#   NAV $1M → max(50, 5000) = $5000 min (与旧行为一致)
+# 绝对下限 $50 覆盖 commission+slippage, pct-based 保证经济意义.
+_MIN_ORDER_USD_FLOOR = 50
+_MIN_ORDER_PCT_NAV = 0.5    # 0.5% NAV
+
+def _min_order_usd(nav: float) -> float:
+    """Rebalance 最小订单金额 (per-account, F09 fix)."""
+    if nav is None or nav <= 0:
+        return _MIN_ORDER_USD_FLOOR
+    return max(_MIN_ORDER_USD_FLOOR, nav * _MIN_ORDER_PCT_NAV / 100)
 
 # 传导链断点 → duration/敞口 联动调整
 # 根据 bond_ai_interpret 的 chain_blocked_at 动态改 target max_pct.
@@ -754,11 +769,13 @@ def plan_rebalance(positions: dict, cash: float, nav: float,
         })
 
     # 2) 卖优先: diff < -3% → SELL. 用释放的现金池给后续 BUY.
+    # F09 fix: min order 按 NAV 换算, 不再全局硬 5000
+    min_order = _min_order_usd(nav)
     projected_cash = cash
     for d in sorted(diffs, key=lambda x: x["diff_pct"]):
         if d["diff_pct"] > -_MIN_ORDER_DIFF_PCT:
             break
-        if abs(d["diff_usd"]) < _MIN_ORDER_USD:
+        if abs(d["diff_usd"]) < min_order:
             continue
         if d["price"] <= 0:
             continue
@@ -787,7 +804,7 @@ def plan_rebalance(positions: dict, cash: float, nav: float,
         if d["price"] <= 0:
             continue
         want_usd = min(d["diff_usd"], available)
-        if want_usd < _MIN_ORDER_USD:
+        if want_usd < min_order:   # F09: NAV-scaled min
             continue
         buy_qty = int(want_usd / d["price"])
         if buy_qty <= 0:
