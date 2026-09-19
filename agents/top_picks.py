@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from config import SIGNALS_DIR
-from thesis_config import is_ticker_blacklisted, is_ticker_whitelisted
+from thesis_config import is_ticker_blacklisted, is_ticker_soft_blacklisted, is_ticker_whitelisted
 
 _SIG_DIR = Path(SIGNALS_DIR)
 _MAX_AGE_HOURS = 48
@@ -89,6 +89,25 @@ def _score_signal(sig: dict) -> dict:
             "regime": regime,
             "excluded": True,
         }
+
+    # thesis soft 过滤 (2026-09-19 加): 与 decision_agent._apply_thesis_filter 对齐,
+    # 否则 top_picks 会推荐 IEI/SHY/NBIS conf=5 但 decision_agent 会拒执行 → 前后台不一致.
+    if action in _BUY_ACTIONS:
+        soft_blocked, soft_reason, soft_meta = is_ticker_soft_blacklisted(ticker)
+        if soft_blocked:
+            min_conf = int(soft_meta.get("min_confidence", 7))
+            if conf < min_conf:
+                return {
+                    "ticker": ticker,
+                    "score": -999.0,
+                    "why": [f"❌ soft-blocked (conf {conf:.0f}<{min_conf}): {soft_reason[:60]}"],
+                    "action": action,
+                    "confidence": conf,
+                    "regime": regime,
+                    "excluded": True,
+                    "soft_blocked": True,
+                    "min_confidence_required": min_conf,
+                }
 
     is_white, _ = is_ticker_whitelisted(ticker)
 

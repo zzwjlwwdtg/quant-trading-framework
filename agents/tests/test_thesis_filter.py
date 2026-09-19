@@ -227,7 +227,6 @@ class ThesisFilterAppliedTests(unittest.TestCase):
 
     def test_hot_reload_on_config_mtime_change(self):
         # 改 config 内容 → cache 应自动刷新
-        # 使用 mock 避免真的写盘
         real_load = thesis_config._load
         cfg_v1 = {"version": "v1", "blacklist_tickers": ["US.FOO"],
                   "whitelist_tickers": [], "invalidation_conditions": []}
@@ -242,6 +241,50 @@ class ThesisFilterAppliedTests(unittest.TestCase):
             b2, _ = thesis_config.is_ticker_blacklisted("US.BAR")
         self.assertTrue(b1)
         self.assertTrue(b2)
+
+
+class TopPicksSoftBlacklistTests(unittest.TestCase):
+    """P1 coupling fix (2026-09-19): top_picks 需与 decision_agent._apply_thesis_filter
+    对齐, 否则前后台不一致 (top_picks 推荐 IEI conf=5 但 decision_agent 会 HOLD)."""
+
+    def setUp(self):
+        thesis_config._CACHE = {"mtime": 0, "data": None}
+
+    def test_soft_blocked_low_conf_excluded_from_scoring(self):
+        import top_picks
+        sig = {
+            "market":   {"ticker": "US.IEI"},
+            "decision": {"action": "WATCH_BUY", "confidence": 5, "regime": "neutral_chop"},
+        }
+        r = top_picks._score_signal(sig)
+        self.assertEqual(r["score"], -999.0)
+        self.assertTrue(r.get("excluded"))
+        self.assertTrue(r.get("soft_blocked"))
+        self.assertEqual(r.get("min_confidence_required"), 7)
+        self.assertIn("soft-blocked", r["why"][0])
+
+    def test_soft_blocked_high_conf_scored_normally(self):
+        # conf 8 ≥ min 7 → 不 exclude, 正常进入 scoring 流程
+        import top_picks
+        sig = {
+            "market":   {"ticker": "US.NBIS"},
+            "decision": {"action": "BUY", "confidence": 8, "regime": "bull_trending"},
+        }
+        r = top_picks._score_signal(sig)
+        self.assertGreater(r["score"], 0, "conf 8 应通过 soft 过滤并得正 score")
+        self.assertFalse(r.get("soft_blocked", False))
+        self.assertFalse(r.get("excluded", False))
+
+    def test_non_soft_blocked_ticker_untouched(self):
+        # MSFT 在 whitelist, 不应受 soft 影响
+        import top_picks
+        sig = {
+            "market":   {"ticker": "US.MSFT"},
+            "decision": {"action": "WATCH_BUY", "confidence": 5, "regime": "bull_trending"},
+        }
+        r = top_picks._score_signal(sig)
+        self.assertGreater(r["score"], 0)
+        self.assertFalse(r.get("soft_blocked", False))
 
 
 if __name__ == "__main__":

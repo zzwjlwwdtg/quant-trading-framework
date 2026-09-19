@@ -3711,12 +3711,29 @@ async function loadThesisTimeline() {
   const cur = r.current || {};
   const retired = r.retired || [];
   const conj = r.next_conjecture || null;
+  const softBl = r.soft_blacklist || {};
+  const softKeys = Object.keys(softBl);
   if (meta) meta.innerHTML =
     `Current: <b>${cur.version || '?'}</b> · retired ${retired.length} · ` +
     `next: ${conj && conj.candidates ? conj.candidates.length + ' 候选' : '(未定)'}`;
 
   // Current thesis block
   const reviewCls = cur.needs_review ? 'warn' : 'muted';
+  const softBlHtml = softKeys.length ? `
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer; font-size:10px; color:#d29922">
+          ⚠ soft blacklist (${softKeys.length}) — 点开看门槛
+        </summary>
+        <div style="margin-top:4px; display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:4px">
+        ${softKeys.map(tk => {
+          const m = softBl[tk] || {};
+          return `<div style="padding:4px 6px; border:1px solid var(--border); border-radius:3px; background:rgba(210,153,34,0.05); font-size:10px" title="${(m.reason || '').replace(/"/g, '&quot;')}">
+            <code style="color:#d29922">${tk}</code> · min_conf <b>${m.min_confidence || 7}</b>
+            <div style="color:var(--muted); font-size:9px">since ${m.since || '?'}</div>
+          </div>`;
+        }).join('')}
+        </div>
+      </details>` : '';
   const curHtml = `
     <div style="border:1px solid var(--border); border-radius:4px; padding:8px; margin-bottom:8px; background:rgba(163,113,247,0.06)">
       <div style="display:flex; justify-content:space-between; align-items:baseline">
@@ -3725,8 +3742,9 @@ async function loadThesisTimeline() {
       </div>
       <div style="font-size:11px; color:var(--fg); margin-top:4px; line-height:1.5">${cur.summary || '(no summary)'}</div>
       <div style="font-size:10px; color:var(--muted); margin-top:4px">
-        blacklist ${cur.blacklist_count || 0} · whitelist ${cur.whitelist_count || 0} · invalidation rules ${cur.invalidation_count || 0}
+        blacklist ${cur.blacklist_count || 0} · whitelist ${cur.whitelist_count || 0} · soft ${softKeys.length} · invalidation rules ${cur.invalidation_count || 0}
       </div>
+      ${softBlHtml}
     </div>`;
 
   // Retired history (最老的在前 → 时间线从上到下)

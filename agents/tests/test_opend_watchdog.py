@@ -109,15 +109,35 @@ class MainFlowTests(unittest.TestCase):
         events = [e["event"] for e in self._read_log()]
         self.assertIn("launched_waiting_login", events)
 
-    def test_process_dead_triggers_launch(self):
+    def test_process_dead_triggers_launch_and_waits_for_port(self):
+        # 2026-09-19 race fix: launch 后必须 poll port 直到 bound 才返回,
+        # 否则 orchestrator watchdog 紧随其后启动 orchestrator 时会连到未 login 的 OpenD
+        # 模拟: 第 1 次 poll (main 初始检查) False, launch, 第 2 次 poll (post-launch loop) True
+        port_calls = [False, True]   # 初始不通 (触发 launch) → launch 后立即通
         with patch.object(ow, "_opend_process_alive", return_value=None), \
-             patch.object(ow, "_port_open", return_value=False), \
-             patch.object(ow, "_launch_opend", return_value=8888) as fake_launch:
+             patch.object(ow, "_port_open", side_effect=lambda *a, **kw: port_calls.pop(0) if port_calls else True), \
+             patch.object(ow, "_launch_opend", return_value=8888) as fake_launch, \
+             patch.object(ow, "POST_LAUNCH_POLL_INTERVAL_SEC", 0.01), \
+             patch.object(ow, "POST_LAUNCH_POLL_MAX_SEC", 5):
             rc = ow.main()
         self.assertEqual(rc, 1)
         self.assertEqual(fake_launch.call_count, 1)
         events = [e["event"] for e in self._read_log()]
         self.assertIn("process_dead_restart", events)
+
+    def test_launched_but_port_never_bound_returns_5(self):
+        # 边界: launch 成功但 port 一直不通 (auto-login 失败). 不应无限等,
+        # timeout 后返回 5, log 'launched_but_port_never_bound'
+        with patch.object(ow, "_opend_process_alive", return_value=None), \
+             patch.object(ow, "_port_open", return_value=False), \
+             patch.object(ow, "_launch_opend", return_value=9999) as fake_launch, \
+             patch.object(ow, "POST_LAUNCH_POLL_INTERVAL_SEC", 0.01), \
+             patch.object(ow, "POST_LAUNCH_POLL_MAX_SEC", 0.05):
+            rc = ow.main()
+        self.assertEqual(rc, 5)
+        self.assertEqual(fake_launch.call_count, 1)
+        events = [e["event"] for e in self._read_log()]
+        self.assertIn("launched_but_port_never_bound", events)
 
     def test_launch_failure_returns_4(self):
         with patch.object(ow, "_opend_process_alive", return_value=None), \

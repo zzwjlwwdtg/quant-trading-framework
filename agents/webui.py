@@ -3088,14 +3088,19 @@ def api_thesis_state() -> dict:
 
     返: {
       current: { version, summary, blacklist_count, whitelist_count,
-                  last_reviewed_at, needs_review, review_msg },
+                  last_reviewed_at, needs_review, review_msg,
+                  soft_blacklist_count },
+      soft_blacklist: { ticker: {min_confidence, since, reason} }  (2026-09-19),
       retired: [ { retired_at, retired_reason, promoted_to_version,
                     thesis: { version, thesis_summary } } ...],
       next_conjecture: { candidates: [...], decision_process } or None
     }
     """
     try:
-        from thesis_config import (list_retired_theses, next_thesis_conjecture,
+        import json as _json
+        from pathlib import Path as _Path
+        from thesis_config import (_CONFIG_PATH, list_retired_theses,
+                                    next_thesis_conjecture,
                                     summary as thesis_summary)
         cur = thesis_summary()
         retired_full = list_retired_theses()
@@ -3113,8 +3118,16 @@ def api_thesis_state() -> dict:
                 "blacklist_count":     len(th.get("blacklist_tickers", []) or []),
                 "whitelist_count":     len(th.get("whitelist_tickers", []) or []),
             })
+        # soft_blacklist dict (2026-09-19 加, dashboard 需详情不只 count)
+        soft_bl: dict = {}
+        try:
+            raw = _json.loads(_Path(_CONFIG_PATH).read_text(encoding="utf-8"))
+            soft_bl = raw.get("soft_blacklist", {}) or {}
+        except Exception:
+            pass
         return {
             "current":         cur,
+            "soft_blacklist":  soft_bl,
             "retired":         retired_slim,
             "next_conjecture": next_thesis_conjecture(),
         }

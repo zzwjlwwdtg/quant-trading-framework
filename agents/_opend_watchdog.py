@@ -20,6 +20,7 @@ import os
 import socket
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +28,12 @@ from config import OPEND_HOST, OPEND_PORT, _cfg
 
 SCRIPT_DIR = Path(__file__).parent
 LOG_PATH   = SCRIPT_DIR / "signals" / "opend_watchdog.jsonl"
+
+# OpenD 冷启动 + auto-login 大约 15-30s. watchdog.bat 里 orchestrator 紧随其后跑,
+# 若不等 port bound 就返回, orchestrator 起来时会连到未 login 的 OpenD → 静默 hang
+# (这正是 opend_watchdog 本来要修的 bug). 所以启动后必须等 port bound 才返回.
+POST_LAUNCH_POLL_INTERVAL_SEC = 3
+POST_LAUNCH_POLL_MAX_SEC      = 45
 
 # exe 位置: 默认 moomoo_OpenD 10.10.7008 installer path. 可用 env override.
 DEFAULT_OPEND_EXE = r"C:\Users\masa\AppData\Roaming\moomoo_OpenD\moomoo_OpenD.exe"
@@ -118,17 +125,31 @@ def main() -> int:
         print(f"[{now_str}] OpenD PID={pid} 存在但端口未通 (登录中?), 不重复启动")
         return 3
 
-    # 进程不存在: 启动
+    # 进程不存在: 启动 + 轮询 port bound (阻塞 max 45s), 防止 orchestrator watchdog
+    # 紧随其后启动 orchestrator 时 OpenD 还没登录完 → 静默 hang
     new_pid = _launch_opend()
-    if new_pid:
-        _log("process_dead_restart", new_pid,
-             f"launched {OPEND_EXE}, auto-login 由 OpenD 自身处理")
-        print(f"[{now_str}] OpenD 不在跑, 已启动 → PID {new_pid} "
-              f"(登录靠 OpenD 内置 auto-login)")
-        return 1
-    _log("launch_failed", None, f"exe={OPEND_EXE}")
-    print(f"[{now_str}] OpenD 启动失败 exe={OPEND_EXE}")
-    return 4
+    if not new_pid:
+        _log("launch_failed", None, f"exe={OPEND_EXE}")
+        print(f"[{now_str}] OpenD 启动失败 exe={OPEND_EXE}")
+        return 4
+    print(f"[{now_str}] OpenD 已启动 PID={new_pid}, 等 port {OPEND_PORT} bound...")
+    deadline = time.monotonic() + POST_LAUNCH_POLL_MAX_SEC
+    poll_n = 0
+    while time.monotonic() < deadline:
+        poll_n += 1
+        if _port_open(OPEND_HOST, OPEND_PORT, timeout=1.0):
+            elapsed = int(POST_LAUNCH_POLL_MAX_SEC - (deadline - time.monotonic()))
+            _log("process_dead_restart", new_pid,
+                 f"launched + port bound after {elapsed}s ({poll_n} polls)")
+            print(f"[{now_str}] OpenD PID={new_pid} port bound after {elapsed}s")
+            return 1
+        time.sleep(POST_LAUNCH_POLL_INTERVAL_SEC)
+    # timeout: OpenD 起来了但 port 一直没通 (auto-login 失败? 网络?) — 不阻死后续 watchdog
+    _log("launched_but_port_never_bound", new_pid,
+         f"waited {POST_LAUNCH_POLL_MAX_SEC}s, port {OPEND_PORT} 仍未监听 (login 失败?)")
+    print(f"[{now_str}] ⚠ OpenD PID={new_pid} 起了但等 {POST_LAUNCH_POLL_MAX_SEC}s "
+          f"port 未 bound (login 失败? 手动 check GUI)")
+    return 5
 
 
 if __name__ == "__main__":
