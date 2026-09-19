@@ -25,6 +25,9 @@ from backtest_engine import (
     load_history, add_indicators, build_mkt, TICKERS,
 )
 from decision_agent import get_decision
+# WP04 (2026-09-20): backtest context 隔离历史 thesis
+from decision_context import from_snapshot as _from_snapshot
+from datetime import timezone as _tz
 
 DAYS = 500       # V 型日比较稀有，要更长窗口
 FORWARD = [5, 10, 20]
@@ -32,9 +35,6 @@ FAKE_EVENTS = {"breaking_news": False, "days_to_event": 99,
                "risk_level": "moderate", "gold_bias": "neutral",
                "trump_signal": {"fallback": True}}
 FAKE_MACRO  = {"vix": 18, "fg_score": 55, "t10y2y": 0.4}
-QUANT_ZERO  = {"buy_score": 0, "sell_score": 0, "n_rules": 0,
-                "buy_hits": [], "sell_hits": []}
-
 
 def _find_v_days(df: pd.DataFrame, scaled_prev_threshold: float = -3.0,
                   scaled_today_threshold: float = 2.0,
@@ -95,10 +95,19 @@ def backtest(tk: str, leverage: float = 1.0) -> dict:
         try:
             mkt_new = build_mkt(full, row)
             mkt_legacy = {**mkt_new, "prev_pct": 0}  # 屏蔽 V 分支
+            # WP04: per-bar context, thesis_snapshot={} 消 look-ahead bias
+            try:
+                as_of = d.to_pydatetime().replace(tzinfo=_tz.utc)
+            except Exception:
+                as_of = None
+            ctx = _from_snapshot(as_of=as_of, market=mkt_new,
+                                  events=FAKE_EVENTS, macro=FAKE_MACRO,
+                                  thesis_snapshot={}, board_regime="neutral",
+                                  strategy_version="backtest_v_bounce") if as_of else None
             dec_new = get_decision(mkt_new, FAKE_EVENTS, FAKE_MACRO,
-                                    board_regime="neutral", quant=QUANT_ZERO)
+                                    board_regime="neutral", context=ctx)
             dec_leg = get_decision(mkt_legacy, FAKE_EVENTS, FAKE_MACRO,
-                                    board_regime="neutral", quant=QUANT_ZERO)
+                                    board_regime="neutral", context=ctx)
         except Exception:
             continue
 

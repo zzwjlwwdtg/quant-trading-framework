@@ -28,6 +28,9 @@ os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 from backtest_engine import load_history, add_indicators, build_mkt
 from decision_agent import get_decision
+# WP04 (2026-09-20): backtest context 隔离历史 thesis
+from decision_context import from_snapshot as _from_snapshot
+from datetime import timezone as _tz
 from confluence import get_confluence
 
 
@@ -35,8 +38,6 @@ FAKE_EVENTS = {"breaking_news": False, "days_to_event": 99, "risk_level": "norma
                "next_event_impact": "moderate", "gold_bias": "neutral",
                "trump_signal": {"fallback": True}}
 FAKE_MACRO  = {"vix": 18, "fg_score": 50, "t10y2y": 0.27, "fedfunds": 3.63}
-FAKE_QUANT  = {"buy_score": 0, "sell_score": 0}
-
 HORIZONS = [1, 5, 10, 20]
 
 
@@ -78,8 +79,17 @@ def analyze(ticker: str, days: int = 250) -> dict | None:
     for date, r in df.iterrows():
         mkt = _enrich_mkt(r, full)
         cf  = get_confluence(mkt)
+        # WP04: per-bar context, thesis empty → 消 look-ahead
+        try:
+            as_of = date.to_pydatetime().replace(tzinfo=_tz.utc)
+        except Exception:
+            as_of = None
+        ctx = _from_snapshot(as_of=as_of, market=mkt, events=FAKE_EVENTS,
+                              macro=FAKE_MACRO, thesis_snapshot={},
+                              board_regime="neutral",
+                              strategy_version="backtest_trend_capture") if as_of else None
         d   = get_decision(mkt, FAKE_EVENTS, FAKE_MACRO,
-                            confluence=cf, quant=FAKE_QUANT, board_regime="neutral")
+                            confluence=cf, board_regime="neutral", context=ctx)
         actions.append(d.get("action", "?"))
         confs.append(d.get("confidence", 0))
     df["action"] = actions

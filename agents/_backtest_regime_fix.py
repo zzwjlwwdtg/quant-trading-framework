@@ -23,6 +23,9 @@ from backtest_engine import (
     load_history, add_indicators, build_mkt, TICKERS, BACKTEST_DAYS
 )
 from decision_agent import get_decision, get_regime
+# WP04 (2026-09-20): backtest context 消 look-ahead
+from decision_context import from_snapshot as _from_snapshot
+from datetime import timezone as _tz
 
 DAYS = 250                # 用 1 年
 FORWARD_DAYS = 5          # 信号后第 N 天测净收益
@@ -62,12 +65,21 @@ def run_one(tk: str):
             continue
         # 当时的"per-ticker regime"（修前行为）
         legacy_regime = get_regime(FAKE_MACRO, mkt)
+        # WP04: per-bar context, thesis empty → 历史 backtest 不受当前 blacklist 干扰
+        try:
+            as_of = d.to_pydatetime().replace(tzinfo=_tz.utc)
+        except Exception:
+            as_of = None
+        ctx = _from_snapshot(as_of=as_of, market=mkt, events=FAKE_EVENTS,
+                              macro=FAKE_MACRO, thesis_snapshot={},
+                              board_regime="neutral",
+                              strategy_version="backtest_regime_fix") if as_of else None
         # 两种决策
         try:
             dec_legacy = get_decision(mkt, FAKE_EVENTS, FAKE_MACRO,
-                                       board_regime=legacy_regime)
+                                       board_regime=legacy_regime, context=ctx)
             dec_new    = get_decision(mkt, FAKE_EVENTS, FAKE_MACRO,
-                                       board_regime="neutral")
+                                       board_regime="neutral", context=ctx)
         except Exception:
             continue
 
