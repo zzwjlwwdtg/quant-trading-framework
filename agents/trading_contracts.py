@@ -6,14 +6,21 @@ tradable in one component while silently ignored by another.
 from __future__ import annotations
 
 
-BUY_ACTIONS = frozenset({"BUY", "WATCH_BUY", "WATCH_BUY_PROBE"})
-SELL_ACTIONS = frozenset({"SELL"})
+BUY_ACTIONS = frozenset({"BUY", "WATCH_BUY", "WATCH_BUY_PROBE",
+                          # R07 fix (2026-09-20 audit): canonical action enum
+                          # 值也要在这里, 否则新 caller 输出 PROBE/ADD 会被
+                          # ORDER_ACTIONS 检查漏掉, 生产 filter/execute 忽略.
+                          "PROBE", "ADD"})
+SELL_ACTIONS = frozenset({"SELL",
+                           "EXIT"})   # R07: canonical EXIT 也算 sell
 REDUCE_ACTIONS = frozenset({"REDUCE"})
 ORDER_ACTIONS = BUY_ACTIONS | SELL_ACTIONS | REDUCE_ACTIONS
 
-PROBE_ONLY_ACTIONS = frozenset({"WATCH_BUY_PROBE"})
+PROBE_ONLY_ACTIONS = frozenset({"WATCH_BUY_PROBE",
+                                 "PROBE"})   # R07: canonical PROBE
 CRISIS_PROBE_TARGET_VOL = 0.05
-NON_EXECUTING_BULLISH_ACTIONS = frozenset({"WATCH_BUY_LONG_HOLD"})
+NON_EXECUTING_BULLISH_ACTIONS = frozenset({"WATCH_BUY_LONG_HOLD",
+                                             "WATCH"})   # R07: canonical WATCH
 BULLISH_SIGNAL_ACTIONS = BUY_ACTIONS | NON_EXECUTING_BULLISH_ACTIONS
 BEARISH_SIGNAL_ACTIONS = SELL_ACTIONS | REDUCE_ACTIONS | frozenset({"CAUTION"})
 

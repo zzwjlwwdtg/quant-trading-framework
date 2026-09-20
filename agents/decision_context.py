@@ -28,10 +28,23 @@ backtest 传显式 context (thesis_snapshot={}), 不需要 flag hack. flag 保�
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Optional
+
+
+def _immutable(value):
+    """R04 partial (2026-09-20 audit): wrap dicts / lists so外部 mutation 不透.
+    dataclass frozen=True 只挡字段重新赋值, 不挡 ctx.market['price'] = 999.
+    """
+    if isinstance(value, dict):
+        return MappingProxyType({k: _immutable(v) for k, v in value.items()})
+    if isinstance(value, list):
+        return tuple(_immutable(v) for v in value)
+    return value
 
 
 @dataclass(frozen=True)
@@ -66,8 +79,14 @@ class DecisionContext:
 
     def with_updates(self, **kwargs) -> "DecisionContext":
         """Return a new DecisionContext with some fields overridden.
-        Frozen dataclass 不能就地改, 用这个显式复制 + 覆盖."""
-        return replace(self, **kwargs)
+        Frozen dataclass 不能就地改, 用这个显式复制 + 覆盖.
+
+        R04 partial: 对 dict/list 类字段 deep copy, 防新 context 与旧 context
+        共享 mutable state.
+        """
+        deep_kwargs = {k: copy.deepcopy(v) if isinstance(v, (dict, list)) else v
+                        for k, v in kwargs.items()}
+        return replace(self, **deep_kwargs)
 
     def is_ticker_blacklisted(self, ticker: str) -> tuple[bool, str]:
         """Read blacklist from thesis_snapshot (if provided) instead of live.

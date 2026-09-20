@@ -89,32 +89,41 @@ def get_fills(
 
 
 def get_position(ticker: str, since: Optional[str] = None) -> dict:
-    """Derive current position from cumulative fill events.
+    """Derive current position from time-ordered fill events (FIFO).
 
-    Returns: {ticker, qty, avg_cost, total_bought, total_sold, n_fills}
+    Returns: {ticker, qty, avg_cost, total_bought, total_sold, n_fills, realized_pnl}
 
-    避免用 last dealt_qty: 那是 broker 累计, 每次事件是当前总量, 不是增量.
-    从这里出的数字是"根据 fills 应该多少 qty".
+    R03 fix (2026-09-20 audit): avg_cost 是**当前持仓**成本, 不是历史平均.
+    卖出释放对应比例成本; 清仓后重买 → avg_cost = 新买价 (不是历史 blended).
+    实现: FIFO layers.
+
+    避免用 last dealt_qty: broker 累计 dealt_qty 是当前总量, 不是增量. 同一 oid
+    多个 partial 事件, 只取最后一次 dealt_qty (最终累计) 作 fill 总量.
     """
     fills = get_fills(ticker=ticker, since=since, include_partial=True)
-    # 按 order_id 聚合最终 dealt (因为 partial 事件里的 dealt_qty 是当时的累计,
-    # 同一 order 最后一次 fill 事件的 dealt_qty 是最终值)
+    # 按 oid 取最后事件 (最终 dealt = 累计)
     final_by_oid: dict[str, dict] = {}
     for ev in fills:
         oid = str(ev.get("order_id") or "")
         if not oid:
             continue
-        # keep the latest event per oid (by ts)
         prev = final_by_oid.get(oid)
         if prev is None or ev.get("ts", "") > prev.get("ts", ""):
             final_by_oid[oid] = ev
 
+    # 按 ts 排序, 时间序列处理 (FIFO)
+    ordered = sorted(final_by_oid.values(), key=lambda e: e.get("ts", ""))
+
+    # FIFO layers: 每层 {qty, price}
+    layers: list[dict] = []
     total_bought_qty = 0.0
-    total_bought_cash = 0.0
-    total_sold_qty = 0.0
-    total_sold_cash = 0.0
+    total_sold_qty   = 0.0
+    total_bought_cash = 0.0   # 累计买入现金 (informational)
+    total_sold_cash   = 0.0
+    realized_pnl = 0.0
     n_fills = 0
-    for oid, ev in final_by_oid.items():
+
+    for ev in ordered:
         side = (ev.get("side") or "").upper()
         dealt = float(ev.get("dealt_qty") or 0)
         avg = float(ev.get("average_fill_price") or 0)
@@ -122,20 +131,45 @@ def get_position(ticker: str, since: Optional[str] = None) -> dict:
             continue
         n_fills += 1
         if side == "BUY":
-            total_bought_qty += dealt
+            layers.append({"qty": dealt, "price": avg})
+            total_bought_qty  += dealt
             total_bought_cash += dealt * avg
         elif side in ("SELL", "SELL_ALL", "REDUCE"):
-            total_sold_qty += dealt
+            remaining = dealt
+            total_sold_qty  += dealt
             total_sold_cash += dealt * avg
+            while remaining > 0 and layers:
+                layer = layers[0]
+                take = min(remaining, layer["qty"])
+                realized_pnl += take * (avg - layer["price"])
+                layer["qty"] -= take
+                remaining     -= take
+                if layer["qty"] <= 1e-9:
+                    layers.pop(0)
+            # 剩余 remaining 是"短仓" (超卖)— 罕见, 记 realized_pnl 假 avg_cost=0
+            if remaining > 0:
+                realized_pnl += remaining * avg   # 视为 avg_cost=0 (空仓卖出)
+                # 记一个负 layer 表示短仓
+                layers.append({"qty": -remaining, "price": avg})
 
-    net_qty = total_bought_qty - total_sold_qty
-    avg_cost = (total_bought_cash / total_bought_qty) if total_bought_qty > 0 else None
+    # 当前持仓 qty + avg_cost 从 layers 计算
+    current_qty = sum(l["qty"] for l in layers)
+    current_cash = sum(l["qty"] * l["price"] for l in layers)
+    if current_qty > 1e-9:
+        avg_cost = current_cash / current_qty
+    elif current_qty < -1e-9:
+        # 净短仓
+        avg_cost = current_cash / current_qty
+    else:
+        avg_cost = None   # 零持仓 → 无 avg_cost
+
     return {
         "ticker":         ticker,
-        "qty":            int(net_qty) if abs(net_qty - round(net_qty)) < 1e-6 else round(net_qty, 4),
-        "avg_cost":       round(avg_cost, 4) if avg_cost else None,
+        "qty":            int(current_qty) if abs(current_qty - round(current_qty)) < 1e-6 else round(current_qty, 4),
+        "avg_cost":       round(avg_cost, 4) if avg_cost is not None else None,
         "total_bought":   int(total_bought_qty) if abs(total_bought_qty - round(total_bought_qty)) < 1e-6 else round(total_bought_qty, 4),
         "total_sold":     int(total_sold_qty) if abs(total_sold_qty - round(total_sold_qty)) < 1e-6 else round(total_sold_qty, 4),
+        "realized_pnl":   round(realized_pnl, 2),
         "n_fills":        n_fills,
         "since":          since,
     }

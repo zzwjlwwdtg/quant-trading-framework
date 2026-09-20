@@ -1260,9 +1260,14 @@ def _apply_thesis_filter(result: dict, ticker: str, context=None) -> dict:
     F05 fix (2026-09-19): BACKTEST_MODE=1 环境标记跳过 thesis filter (兼容期).
     正式做法是 caller 传 context (thesis_snapshot={}). Env flag 全部 caller
     migrate 后删除.
+
+    R05 fix (2026-09-20 audit): context 存在时优先, env flag 不 override 显式
+    context. audit 复现: BACKTEST_MODE=1 + context 里明确禁止 MSFT → BUY 仍
+    保留 BUY (env 一起跳过了历史观点). 现在: 若 context 提供, 严格按 context
+    走; 只有无 context 时 env flag 才生效.
     """
-    if os.environ.get("BACKTEST_MODE") == "1":
-        return result   # 历史 backtest 不受当前 thesis 影响 (F05 兼容)
+    if context is None and os.environ.get("BACKTEST_MODE") == "1":
+        return result   # env flag 只在无 context 时生效 (兼容旧 caller)
     action = (result or {}).get("action") or ""
 
     # WP04: 优先从 context 读; 无 context 则 fallback live thesis_config

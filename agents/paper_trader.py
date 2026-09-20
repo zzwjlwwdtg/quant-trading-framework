@@ -1401,45 +1401,69 @@ def refresh_execution_ledger() -> None:
             "average_fill_price": avg_fill,
             "quality": quality,
         })
-        # F04 fix (2026-09-19, audit): cohort_tracker 只在真实 fill 上入账,
-        # 不再受 phantom "submitted" 污染. 用增量 dealt 防重复计数.
-        # cancelled 事件不进 cohort. rebalance 标签排除.
+        # R02 partial (2026-09-20 audit): 之前 cohort 回调先跑 → 再存 checkpoint,
+        # 若期间进程崩 → 下次 replay 时 seen 里没这 oid → 再次入账 → 双计数.
+        # 现在把 signature 先写 seen 并立即 checkpoint save, 再触发 cohort 回调.
+        # 若 cohort 失败, 下次 reconcile 因 seen 已包含 signature 不会重试 —
+        # cohort 是 downstream audit trail, 不影响 broker reconcile 正确性.
+        seen[oid] = signature
+        state["__execution_reconcile"] = dict(list(seen.items())[-500:])
+        _state_save(state)
+        dirty = True   # 已存, 循环结束时不需要再存
+        # F04 fix (2026-09-19, audit): cohort_tracker 只在真实 fill 上入账.
+        # R01 fix (2026-09-20 audit): 用累计成交金额差 / 数量差算增量真实价格.
         try:
             base_tag = (base.get("tag") or "").upper() if base.get("tag") else ""
             if event_name in ("partial", "filled") and dealt > 0 and "REBALANCE" not in base_tag:
-                # 计算本次增量 (基于 seen 里上次记录的 dealt qty)
                 prev_sig = seen.get(oid, "")
                 prev_dealt = 0.0
+                prev_avg   = 0.0
                 if prev_sig:
                     try:
-                        # signature format: "status|dealt|avg" — parse dealt from prev
-                        prev_dealt = float(prev_sig.split("|")[1])
+                        # signature format: "status|dealt|avg"
+                        parts = prev_sig.split("|")
+                        prev_dealt = float(parts[1])
+                        prev_avg   = float(parts[2]) if len(parts) > 2 else 0.0
                     except (IndexError, ValueError):
                         prev_dealt = 0.0
-                delta = dealt - prev_dealt
-                if delta > 0:
+                        prev_avg   = 0.0
+                delta_qty = dealt - prev_dealt
+                if delta_qty > 0:
+                    # R01: 增量真实价 = (总金额 - 已入账金额) / 增量数量
+                    if prev_dealt > 0 and prev_avg > 0:
+                        delta_cash = dealt * avg_fill - prev_dealt * prev_avg
+                        if delta_cash > 0:
+                            delta_price = delta_cash / delta_qty
+                        else:
+                            # 券商回报异常 (累计金额减少?), fallback avg_fill 保守
+                            delta_price = float(avg_fill)
+                    else:
+                        # 首次入账: prev 为 0, 增量价 = 当前 avg (等于 dealt 全量)
+                        delta_price = float(avg_fill)
                     from cohort_tracker import on_buy, on_sell
                     ticker_full = base.get("ticker") or ""
                     side_norm = str(base.get("side") or "").upper()
                     now_iso = datetime.now(timezone.utc).isoformat()
                     if side_norm == "BUY":
                         sig_ctx = {
-                            "action":    "BUY_FILL",
-                            "tag":       base.get("tag") or "",
-                            "order_id":  oid,
-                            "requested": requested,
-                            "dealt":     dealt,
+                            "action":         "BUY_FILL",
+                            "tag":            base.get("tag") or "",
+                            "order_id":       oid,
+                            "requested":      requested,
+                            "dealt":          dealt,
+                            "batch_avg_fill": float(avg_fill),
+                            "delta_price":    round(delta_price, 4),
                         }
-                        on_buy(ticker_full, float(avg_fill), int(delta),
+                        on_buy(ticker_full, float(delta_price), int(delta_qty),
                                 signal_ctx=sig_ctx, ts=now_iso)
                     elif side_norm in ("SELL", "SELL_ALL", "REDUCE"):
-                        on_sell(ticker_full, float(avg_fill), int(delta),
-                                 exit_reason=f"{base.get('tag') or ''} (fill oid={oid})",
+                        on_sell(ticker_full, float(delta_price), int(delta_qty),
+                                 exit_reason=(f"{base.get('tag') or ''} "
+                                              f"(fill oid={oid}, delta @${delta_price:.2f})"),
                                  ts=now_iso)
         except Exception:
-            pass   # cohort 失败静默, 主流程 (reconcile) 不阻塞
-        seen[oid] = signature
-        dirty = True
+            pass   # cohort 失败静默; R02 partial: checkpoint 已存, 不会 double-count
+    # R02: checkpoint 现在每笔 fill 单独 save; 循环末尾无需再存 (备用: 确保 dirty)
     if dirty:
         state["__execution_reconcile"] = dict(list(seen.items())[-500:])
         _state_save(state)

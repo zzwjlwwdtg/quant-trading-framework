@@ -3184,12 +3184,33 @@ def api_thesis_state(as_of: str | None = None) -> dict:
                                     summary as thesis_summary)
         retired_full = list_retired_theses()
         # WP04 wave 5: as_of 模式 — 从 archive 找最近的历史 thesis
-        if as_of:
-            historical = _historical_thesis_at(as_of, retired_full)
-            if historical:
-                cur = _thesis_body_to_summary(historical)
+        # R06 fix (2026-09-20 audit): 之前 as_of 只切换 'current', 其他字段
+        # (soft_blacklist / next_conjecture / calibration) 仍返 live → 时间混用.
+        # 现在: as_of 模式下, 所有 live-only 字段清空/标 historical_unavailable,
+        # 且不确定日期 (early than archive) 显式返 historical_unknown.
+        historical_mode = bool(as_of)
+        historical_thesis = None
+        historical_unknown = False
+        if historical_mode:
+            historical_thesis = _historical_thesis_at(as_of, retired_full)
+            if historical_thesis:
+                cur = _thesis_body_to_summary(historical_thesis)
             else:
-                cur = thesis_summary()   # fallback to live
+                # R06: 明确标 historical_unknown, 不静默 fallback
+                # 若 as_of 早于所有 archive → 无历史证据; 若晚 → live 时代
+                # 判定: retired 里最早的 retired_at, 若 as_of 早于它, 是 unknown
+                if retired_full:
+                    earliest_retired = min(retired_full,
+                                            key=lambda e: e.get("retired_at", ""))
+                    if as_of < earliest_retired.get("retired_at", ""):
+                        historical_unknown = True
+                        cur = {"ok": False, "historical_unknown": True,
+                                "reason": f"as_of={as_of} 早于任何 archive 记录; 无历史证据."}
+                    else:
+                        # as_of 晚于所有 retire → live 时代
+                        cur = thesis_summary()
+                else:
+                    cur = thesis_summary()
         else:
             cur = thesis_summary()
         # 减薄 retired: dashboard 不用完整 thesis body, 只需摘要
@@ -3206,26 +3227,46 @@ def api_thesis_state(as_of: str | None = None) -> dict:
                 "blacklist_count":     len(th.get("blacklist_tickers", []) or []),
                 "whitelist_count":     len(th.get("whitelist_tickers", []) or []),
             })
-        # soft_blacklist dict (2026-09-19 加, dashboard 需详情不只 count)
+        # soft_blacklist / calibration / next_conjecture
+        # R06 fix (2026-09-20): historical 模式下这些字段不能返 live, 否则时间混用.
+        # 若 as_of 且 historical_thesis 找到 → 从 historical body 读 soft_blacklist;
+        # 若 historical_unknown → 全部标 unavailable.
         soft_bl: dict = {}
-        try:
-            raw = _json.loads(_Path(_CONFIG_PATH).read_text(encoding="utf-8"))
-            soft_bl = raw.get("soft_blacklist", {}) or {}
-        except Exception:
-            pass
-        # F10 lite: 校准状态 (age + stale + covered tickers) 供 dashboard 展示
-        try:
-            from decision_agent import get_calibration_info
-            calib_info = get_calibration_info()
-        except Exception:
-            calib_info = {"exists": False, "error": "unable_to_load"}
+        calib_info: dict = {}
+        next_conj = None
+        if historical_mode:
+            if historical_thesis:
+                # 从冻结的 historical thesis body 读, 不读 live
+                soft_bl = historical_thesis.get("soft_blacklist") or {}
+                # historical 无 calibration snapshot (未来 WP04 完整 Context 会有)
+                calib_info = {"exists": False, "note": "historical_unavailable"}
+                next_conj = historical_thesis.get("next_thesis_conjecture")
+            else:
+                soft_bl = {}
+                calib_info = {"exists": False, "note": "historical_unknown"}
+                next_conj = None
+        else:
+            # Live 模式: 读当前 live 数据 (原行为)
+            try:
+                raw = _json.loads(_Path(_CONFIG_PATH).read_text(encoding="utf-8"))
+                soft_bl = raw.get("soft_blacklist", {}) or {}
+            except Exception:
+                pass
+            try:
+                from decision_agent import get_calibration_info
+                calib_info = get_calibration_info()
+            except Exception:
+                calib_info = {"exists": False, "error": "unable_to_load"}
+            next_conj = next_thesis_conjecture()
         return {
-            "as_of":           as_of,
-            "current":         cur,
-            "soft_blacklist":  soft_bl,
-            "retired":         retired_slim,
-            "next_conjecture": next_thesis_conjecture(),
-            "calibration":     calib_info,
+            "as_of":              as_of,
+            "historical_mode":    historical_mode,
+            "historical_unknown": historical_unknown,
+            "current":            cur,
+            "soft_blacklist":     soft_bl,
+            "retired":            retired_slim,
+            "next_conjecture":    next_conj,
+            "calibration":        calib_info,
         }
     except Exception as e:
         return {"error": str(e)[:200]}
@@ -3235,18 +3276,27 @@ def _historical_thesis_at(as_of_iso: str, retired: list[dict]) -> dict | None:
     """从 retired thesis archive 里找 as_of 日期时**当时有效**的 thesis body.
 
     Algorithm: 找 retired_at > as_of 的最早那条 retired entry — 它 retire 时,
-    as_of 那天用的是它的 body (or previous). 若都在 as_of 之前 retire, 返 None
-    (表示 live 那时).
+    as_of 那天用的是它的 body (前提: as_of >= 该 thesis 的 created_at).
+    若 as_of 早于该 thesis 的 created_at → 那天该 thesis 还没存在 → 返 None.
+    若都在 as_of 之前 retire → 返 None (live 那时).
+
+    R06 fix (2026-09-20 audit): 之前只看 retired_at, 未验证 created_at, 导致
+    2020-01-01 也返 2026 年 thesis. 现在验证 created_at boundary.
     """
     if not retired or not as_of_iso:
         return None
-    # retired sorted by retired_at ascending
     later = [e for e in retired if e.get("retired_at", "") > as_of_iso]
     if not later:
         return None
-    # 找 retired_at 最小的 later entry — 它是 as_of 那天生效的 thesis
     later.sort(key=lambda e: e.get("retired_at", ""))
-    return later[0].get("thesis") or None
+    candidate = later[0].get("thesis") or None
+    if not candidate:
+        return None
+    # R06: 检查 as_of 是否在 thesis created_at 之后
+    created = candidate.get("created_at", "")
+    if created and as_of_iso < created:
+        return None   # as_of 早于该 thesis 创建时间 → 那时它还不存在
+    return candidate
 
 
 def _thesis_body_to_summary(thesis: dict) -> dict:

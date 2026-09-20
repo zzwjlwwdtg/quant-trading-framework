@@ -326,25 +326,31 @@ def stats(since_days: int = 30) -> dict:
     pnl_usds = [c.get("realized_pnl_usd", 0) for c in cohorts]
     holds = [c.get("hold_days", 0) for c in cohorts]
 
-    # F04 deep: 查 fill_ledger 交叉验证. 若 cohort 数 vs fill 数偏差大, warn.
+    # F04 deep: 查 fill_ledger 交叉验证.
+    # R08 fix (2026-09-20 audit): 之前 heuristic 有洞 — cohort > 0 但 fill sells=0
+    # 时不 warn (因为条件 fill_sells>0). 现在: 只要 cohort 存在 broker 无对应
+    # fill sell 就 warn (完全无成交对账证据). 明确标示 "sample heuristic, 非权威".
     authority = "cohort_ledger_only"
     warning = None
     try:
         from fill_ledger import get_fills
-        from datetime import datetime as _dt
-        cutoff_iso = _dt.now().replace(microsecond=0).isoformat()   # crude
         # 只做 sanity: 计算 fills 里的 sell count vs cohort close count
-        # 大差异 = fill_ledger 与 cohort 不一致, 提示用户
-        # 简单 heuristic: 若 cohort close 数 > fill sells 数 (超 2x), 疑 phantom
         fill_sells = [ev for ev in get_fills(include_partial=False)
                        if (ev.get("side") or "").upper() in ("SELL", "SELL_ALL", "REDUCE")]
-        if len(cohorts) > 0 and len(fill_sells) > 0:
-            ratio = len(cohorts) / max(1, len(fill_sells))
-            if ratio > 2.0:
-                authority = "cohort_ledger_only_unreconciled"
-                warning = (f"cohort close 数 ({len(cohorts)}) 显著多于 broker fill sells "
-                            f"({len(fill_sells)}), 部分 cohort 可能是 phantom "
-                            f"(pre-F04-fix). 建议 _reconcile_cohorts.py 交叉核实.")
+        if len(cohorts) > 0:
+            if len(fill_sells) == 0:
+                # R08: 0 broker sells 但 N cohort close → 完全无成交证据
+                authority = "cohort_ledger_only_no_broker_evidence"
+                warning = (f"{len(cohorts)} closed cohorts but broker has 0 SELL fills. "
+                            f"cohort 数据 pre-dates ledger 或 broker 侧无对账证据. "
+                            f"这些数字仅供参考, 不是 authoritative P&L.")
+            else:
+                ratio = len(cohorts) / len(fill_sells)
+                if ratio > 2.0:
+                    authority = "cohort_ledger_only_unreconciled"
+                    warning = (f"cohort close 数 ({len(cohorts)}) 显著多于 broker fill sells "
+                                f"({len(fill_sells)}), 部分 cohort 可能是 phantom "
+                                f"(pre-F04-fix). 建议 _reconcile_cohorts.py 交叉核实.")
     except Exception:
         pass
 
