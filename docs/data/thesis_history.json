@@ -3,30 +3,6 @@
   "count": 158,
   "rows": [
     {
-      "ts": "2026-03-24T12:00:00+00:00",
-      "date": "2026-03-24",
-      "y10": 4.39,
-      "y30": 4.94,
-      "tips": 2.06,
-      "cpi_yoy": 3.29,
-      "core_cpi_yoy": 2.6,
-      "unrate": 4.3,
-      "ig_bps": 87.0,
-      "hy_bps": 319.0,
-      "nfci": null,
-      "rrp_bn": 1.1,
-      "tga_bn": null,
-      "vix": null,
-      "dxy": null,
-      "oil_uso": null,
-      "oil_pct_20d": null,
-      "bbi": null,
-      "stablecoin_bn": null,
-      "erp": null,
-      "_source": "fred_backfill",
-      "cut_probability_pct": 50
-    },
-    {
       "ts": "2026-03-25T12:00:00+00:00",
       "date": "2026-03-25",
       "y10": 4.33,
@@ -3634,10 +3610,31 @@
       "bbi": 1.24,
       "stablecoin_bn": 257.5,
       "cut_probability_pct": 22
+    },
+    {
+      "ts": "2026-09-20T13:04:03+00:00",
+      "date": "2026-09-20",
+      "y10": 4.998,
+      "y30": 5.331,
+      "tips": 2.61,
+      "cpi_yoy": 3.71,
+      "core_cpi_yoy": 2.76,
+      "unrate": 4.1,
+      "vix": 14.81,
+      "ig_bps": 78.0,
+      "hy_bps": 270.0,
+      "nfci": -0.56,
+      "dxy": 100.22,
+      "oil_uso": 153.82,
+      "oil_pct_20d": 14.33,
+      "erp": 1.44,
+      "bbi": 1.24,
+      "stablecoin_bn": 257.5,
+      "cut_probability_pct": 22
     }
   ],
   "trend_30d": {
-    "n_samples": 53,
+    "n_samples": 54,
     "period_days": 30,
     "cut_prob_start": 27,
     "cut_prob_latest": 22,
@@ -3655,11 +3652,11 @@
     "cut_prob_start": 45,
     "cut_prob_latest": 22,
     "cut_prob_delta": -23,
-    "y10_delta_bps": 49.0,
+    "y10_delta_bps": 50.0,
     "cpi_yoy_delta_pp": 0.25,
     "unrate_delta_pp": -0.1,
     "vix_delta": null,
-    "hy_delta_bps": 5.0,
+    "hy_delta_bps": -1.0,
     "dxy_delta": null
   }
 }
