@@ -3158,10 +3158,15 @@ def api_trump_attribution() -> dict:
                    first_call_placeholder={"posts_analyzed": 0, "computing": True})
 
 
-def api_thesis_state() -> dict:
+def api_thesis_state(as_of: str | None = None) -> dict:
     """thesis 时间线 + 下一候选 (dashboard 用).
 
+    WP04 wave 5 (2026-09-20): 新增 as_of 参数. 传 ISO date (YYYY-MM-DD) 时,
+    'current' 字段返回该日期最接近的**历史** thesis (从 archive 查找), 而非
+    live current. 用于 dashboard 时间旅行 / backtest as-of view.
+
     返: {
+      as_of: 请求日期 (None = 当前),
       current: { version, summary, blacklist_count, whitelist_count,
                   last_reviewed_at, needs_review, review_msg,
                   soft_blacklist_count },
@@ -3177,8 +3182,16 @@ def api_thesis_state() -> dict:
         from thesis_config import (_CONFIG_PATH, list_retired_theses,
                                     next_thesis_conjecture,
                                     summary as thesis_summary)
-        cur = thesis_summary()
         retired_full = list_retired_theses()
+        # WP04 wave 5: as_of 模式 — 从 archive 找最近的历史 thesis
+        if as_of:
+            historical = _historical_thesis_at(as_of, retired_full)
+            if historical:
+                cur = _thesis_body_to_summary(historical)
+            else:
+                cur = thesis_summary()   # fallback to live
+        else:
+            cur = thesis_summary()
         # 减薄 retired: dashboard 不用完整 thesis body, 只需摘要
         retired_slim = []
         for e in retired_full:
@@ -3207,6 +3220,7 @@ def api_thesis_state() -> dict:
         except Exception:
             calib_info = {"exists": False, "error": "unable_to_load"}
         return {
+            "as_of":           as_of,
             "current":         cur,
             "soft_blacklist":  soft_bl,
             "retired":         retired_slim,
@@ -3215,6 +3229,42 @@ def api_thesis_state() -> dict:
         }
     except Exception as e:
         return {"error": str(e)[:200]}
+
+
+def _historical_thesis_at(as_of_iso: str, retired: list[dict]) -> dict | None:
+    """从 retired thesis archive 里找 as_of 日期时**当时有效**的 thesis body.
+
+    Algorithm: 找 retired_at > as_of 的最早那条 retired entry — 它 retire 时,
+    as_of 那天用的是它的 body (or previous). 若都在 as_of 之前 retire, 返 None
+    (表示 live 那时).
+    """
+    if not retired or not as_of_iso:
+        return None
+    # retired sorted by retired_at ascending
+    later = [e for e in retired if e.get("retired_at", "") > as_of_iso]
+    if not later:
+        return None
+    # 找 retired_at 最小的 later entry — 它是 as_of 那天生效的 thesis
+    later.sort(key=lambda e: e.get("retired_at", ""))
+    return later[0].get("thesis") or None
+
+
+def _thesis_body_to_summary(thesis: dict) -> dict:
+    """把 archive 里的 thesis body 转成与 thesis_summary() 兼容的 dict."""
+    return {
+        "ok":                    True,
+        "version":               thesis.get("version"),
+        "summary":               thesis.get("thesis_summary"),
+        "blacklist_count":       len(thesis.get("blacklist_tickers", []) or []),
+        "whitelist_count":       len(thesis.get("whitelist_tickers", []) or []),
+        "invalidation_count":    len(thesis.get("invalidation_conditions", []) or []),
+        "last_reviewed_at":      thesis.get("last_reviewed_at"),
+        "needs_review":          None,
+        "review_msg":            "historical (archive)",
+        "has_next_conjecture":   False,
+        "archived_count":        None,
+        "soft_blacklist_count":  len(thesis.get("soft_blacklist", {}) or {}),
+    }
 
 
 def api_thesis_forecast(days_ahead: int = 45) -> dict:
@@ -5068,7 +5118,14 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/trump_attribution":
                 self._json(api_trump_attribution())
             elif path == "/api/thesis_state":
-                self._json(api_thesis_state())
+                # WP04 wave 5: ?as_of=YYYY-MM-DD 支持历史视图
+                _as_of = None
+                try:
+                    if "as_of" in qs and qs["as_of"]:
+                        _as_of = qs["as_of"][0]
+                except Exception:
+                    pass
+                self._json(api_thesis_state(as_of=_as_of))
             elif path == "/api/thesis_forecast":
                 _da = 45
                 try:

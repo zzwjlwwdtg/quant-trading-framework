@@ -311,14 +311,43 @@ def _load_closed_cohorts(since_days: int = 30) -> list[dict]:
 
 
 def stats(since_days: int = 30) -> dict:
-    """聚合近 N 天已 close 的 cohorts: n / win_rate / avg_pnl_pct / total_pnl_usd / best / worst / avg_hold."""
+    """聚合近 N 天已 close 的 cohorts: n / win_rate / avg_pnl_pct / total_pnl_usd / best / worst / avg_hold.
+
+    F04 deep audit (2026-09-19): cohort ledger 有 36% legacy_unreconciled
+    (pre-fill-migration 期间的 phantom entries). 结果字段附 `authority`
+    警示等级 + 建议用 fill_ledger 交叉验证.
+    """
     cohorts = _load_closed_cohorts(since_days)
     if not cohorts:
-        return {"n": 0, "since_days": since_days}
+        return {"n": 0, "since_days": since_days,
+                "authority": "no_data", "warning": None}
     wins = [c for c in cohorts if c.get("is_winner")]
     pnl_pcts = [c.get("realized_pnl_pct", 0) for c in cohorts]
     pnl_usds = [c.get("realized_pnl_usd", 0) for c in cohorts]
     holds = [c.get("hold_days", 0) for c in cohorts]
+
+    # F04 deep: 查 fill_ledger 交叉验证. 若 cohort 数 vs fill 数偏差大, warn.
+    authority = "cohort_ledger_only"
+    warning = None
+    try:
+        from fill_ledger import get_fills
+        from datetime import datetime as _dt
+        cutoff_iso = _dt.now().replace(microsecond=0).isoformat()   # crude
+        # 只做 sanity: 计算 fills 里的 sell count vs cohort close count
+        # 大差异 = fill_ledger 与 cohort 不一致, 提示用户
+        # 简单 heuristic: 若 cohort close 数 > fill sells 数 (超 2x), 疑 phantom
+        fill_sells = [ev for ev in get_fills(include_partial=False)
+                       if (ev.get("side") or "").upper() in ("SELL", "SELL_ALL", "REDUCE")]
+        if len(cohorts) > 0 and len(fill_sells) > 0:
+            ratio = len(cohorts) / max(1, len(fill_sells))
+            if ratio > 2.0:
+                authority = "cohort_ledger_only_unreconciled"
+                warning = (f"cohort close 数 ({len(cohorts)}) 显著多于 broker fill sells "
+                            f"({len(fill_sells)}), 部分 cohort 可能是 phantom "
+                            f"(pre-F04-fix). 建议 _reconcile_cohorts.py 交叉核实.")
+    except Exception:
+        pass
+
     return {
         "n":               len(cohorts),
         "since_days":      since_days,
@@ -331,6 +360,8 @@ def stats(since_days: int = 30) -> dict:
         "best_pnl_pct":    round(max(pnl_pcts), 3),
         "worst_pnl_pct":   round(min(pnl_pcts), 3),
         "avg_hold_days":   round(statistics.mean(holds), 2),
+        "authority":       authority,
+        "warning":         warning,
     }
 
 
