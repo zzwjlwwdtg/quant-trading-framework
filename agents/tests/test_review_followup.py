@@ -109,6 +109,77 @@ class R01R02_ProductionFlowCohortCalledPerFill(unittest.TestCase):
                                  msg="R01: 第二 batch 增量价应是 120, 不是 batch avg 110")
 
 
+class R02_EventSourcedIdempotency(unittest.TestCase):
+    """R02 event-sourced dedup: 即使 __execution_reconcile checkpoint 被清空,
+    __cohort_fired_deltas 仍应阻止重复触发 cohort. 复现 audit "崩溃后 replay
+    再次入账" scenario."""
+
+    def test_cohort_fired_deltas_blocks_replay_after_seen_reset(self):
+        import paper_trader
+        import cohort_tracker
+        import pandas as pd
+
+        # Broker 每次都返 same filled event (dealt=10 avg=100, full fill)
+        def fake_order_list_query(**kw):
+            df = pd.DataFrame([{
+                "order_id": "OID_TEST_R02", "qty": 10, "dealt_qty": 10.0,
+                "dealt_avg_price": 100.0, "order_status": "FILLED_ALL",
+            }])
+            return (0, df)
+
+        tmpdir = tempfile.mkdtemp()
+        exec_log = Path(tmpdir) / "execution_ledger.jsonl"
+        submit_event = {
+            "event": "submitted", "order_id": "OID_TEST_R02",
+            "ticker": "US.TEST_R02", "side": "BUY",
+            "requested_qty": 10, "order_price": 100.0,
+            "reference_price": 100.0, "plan": {}, "ts": "2026-09-20T14:00:00Z",
+        }
+        with open(exec_log, "w", encoding="utf-8") as f:
+            f.write(json.dumps(submit_event) + "\n")
+
+        # 模拟状态: 第 1 次 reconcile 后状态被外部 "replay" 清 seen 但保留 cohort_fired
+        state = {}
+        def fake_state_load():
+            return state
+        def fake_state_save(s):
+            nonlocal state
+            state = s
+
+        fake_ctx = MagicMock()
+        fake_ctx.order_list_query = fake_order_list_query
+        buy_calls = []
+        def fake_on_buy(ticker, price, qty, signal_ctx=None, ts=None, context=None):
+            buy_calls.append({"qty": qty})
+            return {}
+
+        with patch.object(paper_trader, "EXECUTION_LOG_PATH", exec_log), \
+             patch.object(paper_trader, "DRY_RUN", False), \
+             patch.object(paper_trader, "_ctx_get", return_value=fake_ctx), \
+             patch.object(paper_trader, "_state_load", side_effect=fake_state_load), \
+             patch.object(paper_trader, "_state_save", side_effect=fake_state_save), \
+             patch.object(paper_trader, "RET_OK", 0), \
+             patch.object(paper_trader, "TRD_ENV", "SIMULATE"), \
+             patch.object(paper_trader, "ACC_ID", 12345), \
+             patch.object(cohort_tracker, "on_buy", side_effect=fake_on_buy):
+            # 第 1 次 reconcile: 应 fire on_buy 一次
+            paper_trader.refresh_execution_ledger()
+            self.assertEqual(len(buy_calls), 1,
+                              f"第 1 次 reconcile 应触 1 次, 实际 {len(buy_calls)}")
+
+            # 模拟崩溃: 清 seen (但 cohort_fired_deltas 仍在, 因为 state persist)
+            if "__execution_reconcile" in state:
+                del state["__execution_reconcile"]
+
+            # 第 2 次 reconcile: seen 被清, 但 cohort_fired 保护, 不应重复 fire
+            paper_trader.refresh_execution_ledger()
+            self.assertEqual(len(buy_calls), 1,
+                              f"R02: seen 被清后 replay, cohort_fired 应防重复; 实际 {len(buy_calls)} 次")
+
+        import shutil
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 class R03_InterleavedSameOrderIntersectsWithOtherSells(unittest.TestCase):
     """R03 followup: Buy oid B partial → Sell oid S → Buy oid B partial (累积)
     正确: 剩 5@120, realized=50. Bug: 550."""

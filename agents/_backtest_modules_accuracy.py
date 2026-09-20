@@ -1,11 +1,10 @@
 """
 模块准确率回测 — 对每个标的 × 每个系统模块 × 每个持仓周期跑回测，
-输出 `signals/module_accuracy.md` 供 Claude prompt 注入参考。
+输出 `signals/module_accuracy.md` 供 AI prompt 注入参考。
 
 回测对象（模块）：
   · decision_agent.action       (REDUCE / CAUTION / WATCH_BUY)
   · confluence (bull-bear)      (净多/净空/中性)
-  · 进化规则 quant_signal       (buy_score / sell_score 净值)
 
 周期：1d / 5d / 10d / 20d
 判定：方向命中（信号方向 == N 天后实际方向，收益 > 0 即 bullish）
@@ -14,22 +13,23 @@
 缓存：报告 mtime < 7 天则跳过。
 """
 from __future__ import annotations
-import json
 import sys
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
 import numpy as np
-import pandas as pd
-
 from backtest_engine import (
     load_history, add_indicators, build_mkt, TICKERS
 )
 from config import SIGNALS_DIR
 from decision_agent import get_decision
+# WP04 (2026-09-20 followup): per-bar context 隔离历史 thesis/regime/calib.
+# 修正上轮 commit 里错误声明 "modules_accuracy 无 thesis 暴露" (它 line 87
+# 确实调 get_decision, thesis filter 会跑).
+from decision_context import from_snapshot as _from_snapshot
+from datetime import timezone as _tz
 from trading_contracts import BULLISH_SIGNAL_ACTIONS, BEARISH_SIGNAL_ACTIONS
 
 DAYS = 250
@@ -65,18 +65,6 @@ def _confluence_to_direction(conf: dict) -> str:
     return "skip"
 
 
-def _quant_to_direction(quant: dict) -> str:
-    if not quant:
-        return "skip"
-    buy = quant.get("buy_score", 0)
-    sell = quant.get("sell_score", 0)
-    if buy - sell >= 2:
-        return "bullish"
-    if sell - buy >= 2:
-        return "bearish"
-    return "skip"
-
-
 # ── 回测单标的 ─────────────────────────────────────────────────────────────
 def backtest_ticker(tk: str) -> dict:
     """{module: {period: {hit, n, avg_ret, samples}}}"""
@@ -89,11 +77,9 @@ def backtest_ticker(tk: str) -> dict:
     results = {
         "decision":   {p: {"hit": 0, "n": 0, "rets": []} for p in PERIODS},
         "confluence": {p: {"hit": 0, "n": 0, "rets": []} for p in PERIODS},
-        "quant":      {p: {"hit": 0, "n": 0, "rets": []} for p in PERIODS},
     }
 
     from confluence import get_confluence
-    from quant_signal import evaluate as eval_quant
 
     for i, d in enumerate(dates):
         # 检查最长周期 N 后是否还在数据范围内
@@ -103,10 +89,18 @@ def backtest_ticker(tk: str) -> dict:
         try:
             mkt = build_mkt(full, row)
             conf = get_confluence(mkt)
-            quant = eval_quant(full, mkt)
+            # WP04: per-bar snapshot context, thesis/calibration empty → 消 look-ahead
+            try:
+                as_of = d.to_pydatetime().replace(tzinfo=_tz.utc)
+            except Exception:
+                as_of = None
+            ctx = _from_snapshot(as_of=as_of, market=mkt,
+                                  events=FAKE_EVENTS, macro=FAKE_MACRO,
+                                  thesis_snapshot={}, board_regime="neutral",
+                                  strategy_version="modules_accuracy") if as_of else None
             dec = get_decision(mkt, FAKE_EVENTS, FAKE_MACRO,
-                                confluence=conf, quant=quant,
-                                board_regime="neutral")
+                                confluence=conf,
+                                board_regime="neutral", context=ctx)
         except Exception:
             continue
 
@@ -114,7 +108,6 @@ def backtest_ticker(tk: str) -> dict:
         directions = {
             "decision":   _action_to_direction(dec.get("action", "HOLD")),
             "confluence": _confluence_to_direction(conf),
-            "quant":      _quant_to_direction(quant),
         }
 
         today_close = float(df.loc[d, "close"])
@@ -163,7 +156,6 @@ def format_report(all_results: dict) -> str:
         "",
         "- **decision**：[decision_agent.get_decision](f:/fsi-skills/agents/decision_agent.py) 的 action 字段（WATCH_BUY/BUY = bullish，REDUCE/SELL/CAUTION = bearish）",
         "- **confluence**：[confluence.get_confluence](f:/fsi-skills/agents/confluence.py) 的 (bull_count - bear_count) ≥+2 算 bullish, ≤-2 算 bearish",
-        "- **quant**：[quant_signal.evaluate](f:/fsi-skills/agents/quant_signal.py) 的 (buy_score - sell_score) ≥+2 算 bullish, ≤-2 算 bearish（即多条进化规则共振）",
         "",
         "## 已知补充数据（其它回测脚本）",
         "",
@@ -177,7 +169,7 @@ def format_report(all_results: dict) -> str:
     for tk in sorted(all_results.keys()):
         lines.append(f"## {tk}")
         lines.append("")
-        for mod in ("decision", "confluence", "quant"):
+        for mod in ("decision", "confluence"):
             lines.append(f"### {mod}")
             lines.append("")
             lines.append("| 周期 | N | 准确率 | 平均收益(按信号方向) | 评级 |")
@@ -216,7 +208,7 @@ def format_report(all_results: dict) -> str:
     lines.append("**使用建议**：")
     lines.append("")
     lines.append("- 看到信号矛盾时，按 **最佳周期 + 准确率高** 的模块为主")
-    lines.append("- 短线（1-5d）信下 decision / confluence；中线（10-20d）信下 quant（进化规则）")
+    lines.append("- 以 decision / confluence 的最佳周期和样本量判断技术信号稳定性")
     lines.append("- N < 30 的数据不要作为决策依据，仅供参考")
     lines.append("- 评级\"反向\"的模块当反指标用（信号反过来跟）")
     return "\n".join(lines) + "\n"
@@ -235,7 +227,7 @@ def main():
             res = backtest_ticker(tk)
             all_results[tk] = res
             # 摘要打印
-            for mod in ("decision", "confluence", "quant"):
+            for mod in ("decision", "confluence"):
                 line = f"  {mod:<11}: "
                 for p in PERIODS:
                     c = res[mod][p]

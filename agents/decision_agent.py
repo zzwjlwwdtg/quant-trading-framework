@@ -372,9 +372,25 @@ _CALIB_CACHE = {"loaded": False, "data": None}
 _CALIB_STALE_WARN_DAYS = 60
 _CALIB_STALE_WARNED = {"done": False}
 
+# R04 (2026-09-20 followup): contextvar 让 get_decision 里深层 helper 也能读到
+# context.calibration_snapshot, 不用改所有 helper 函数签名. 进入 get_decision
+# 时 set, 退出时 reset. 线程安全 (contextvars module).
+import contextvars as _contextvars
+_ACTIVE_CONTEXT: _contextvars.ContextVar = _contextvars.ContextVar(
+    "decision_active_context", default=None)
+
 
 def _load_calibration() -> dict | None:
-    """读校准 JSON（缓存一次，避免每次调用 IO）。"""
+    """读校准 JSON（缓存一次，避免每次调用 IO）。
+
+    R04: 若 active context 有 calibration_snapshot, 优先它 (避免 live cache 泄漏).
+    """
+    ctx = _ACTIVE_CONTEXT.get()
+    if ctx is not None:
+        snap = getattr(ctx, "calibration_snapshot", None)
+        if snap is not None:
+            # 空 dict {} 明确表示"无校准" (backtest 场景)
+            return snap if snap else None
     if _CALIB_CACHE["loaded"]:
         return _CALIB_CACHE["data"]
     try:
@@ -1374,19 +1390,39 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
                   filter 走 context.thesis_snapshot 而非 live thesis_config
                   (支持 backtest 冻结历史 thesis, 消 look-ahead bias).
                   兼容期: None 时 fallback live.
+                  R04 (2026-09-20 followup): context.calibration_snapshot 也走
+                  contextvar, 让深层 helper (_bull_score/_bear_score) 读到.
     """
+    # R04: set active context for downstream _load_calibration lookup
+    _ctx_token = _ACTIVE_CONTEXT.set(context) if context is not None else None
+    try:
+        return _get_decision_impl(market, events, macro, confluence, board_regime, context)
+    finally:
+        if _ctx_token is not None:
+            _ACTIVE_CONTEXT.reset(_ctx_token)
+
+
+def _get_decision_impl(market: dict, events: dict, macro: dict | None,
+                        confluence: dict | None, board_regime: str | None,
+                        context) -> dict:
+    """Implementation split so get_decision can wrap in contextvar management."""
     macro = macro or {}
+    # R04 (2026-09-20 followup): context.board_regime 优先, 避免 live regime cache 泄漏.
+    # 优先级: 显式 board_regime > context.board_regime > live get_today_regime().
     if board_regime is None:
-        try:
-            from regime_today import get_today_regime
-            board_regime = get_today_regime()
-        except Exception as _e:
-            board_regime = None
+        if context is not None and context.board_regime is not None:
+            board_regime = context.board_regime
+        else:
             try:
-                from notifier import logger as _lg
-                _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
-            except Exception:
-                pass
+                from regime_today import get_today_regime
+                board_regime = get_today_regime()
+            except Exception as _e:
+                board_regime = None
+                try:
+                    from notifier import logger as _lg
+                    _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
+                except Exception:
+                    pass
     if board_regime:
         pct_eff_t = _scaled_pct(market.get("pct_chg", 0) or 0, market.get("ticker"))
         regime = "crisis" if pct_eff_t <= -5 else board_regime
@@ -1451,18 +1487,34 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
                   是单股 ≤-5% 时 → crisis。
     context: DecisionContext (WP04 2026-09-20). 若提供 → thesis filter 走
              snapshot; 否则 fallback live. 与 get_decision 完全对称."""
+    # R04 (2026-09-20 followup): same contextvar wrap as get_decision
+    _ctx_token = _ACTIVE_CONTEXT.set(context) if context is not None else None
+    try:
+        return _get_gold_decision_impl(market, events, macro, board_regime, context)
+    finally:
+        if _ctx_token is not None:
+            _ACTIVE_CONTEXT.reset(_ctx_token)
+
+
+def _get_gold_decision_impl(market: dict, events: dict, macro: dict | None,
+                             board_regime: str | None, context) -> dict:
     macro = macro or {}
+    # R04 (2026-09-20 followup): context.board_regime 优先, 避免 live regime cache 泄漏.
+    # 优先级: 显式 board_regime > context.board_regime > live get_today_regime().
     if board_regime is None:
-        try:
-            from regime_today import get_today_regime
-            board_regime = get_today_regime()
-        except Exception as _e:
-            board_regime = None
+        if context is not None and context.board_regime is not None:
+            board_regime = context.board_regime
+        else:
             try:
-                from notifier import logger as _lg
-                _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
-            except Exception:
-                pass
+                from regime_today import get_today_regime
+                board_regime = get_today_regime()
+            except Exception as _e:
+                board_regime = None
+                try:
+                    from notifier import logger as _lg
+                    _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
+                except Exception:
+                    pass
     if board_regime:
         pct_eff_t = _scaled_pct(market.get("pct_chg", 0) or 0, market.get("ticker"))
         regime = "crisis" if pct_eff_t <= -5 else board_regime

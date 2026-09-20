@@ -1406,8 +1406,15 @@ def refresh_execution_ledger() -> None:
         # 时读到的是**本次**signature → delta_qty = dealt - dealt = 0 → 永不入账.
         # 现在: 先读 prev (旧值) → 计算 delta → 再写 seen + checkpoint → 触 cohort.
         # 若 cohort fail, 下次 reconcile 因 seen 已更新不会重试; cohort 是 downstream
-        # audit trail, 与 broker reconcile 正确性分离. R02 完整幂等 (event-sourced)
-        # 归 WP03 深度 session.
+        # audit trail, 与 broker reconcile 正确性分离.
+        #
+        # R02 event-sourced idempotency (2026-09-20 followup audit v2):
+        # 新增 __cohort_fired_deltas per-oid set: 记录已 fire 的 (oid, cum_dealt).
+        # 若 checkpoint 丢失 or 状态回滚导致 seen 里没这 oid, 但 cohort_fired
+        # 里有 → 仍跳过 cohort 回调 (真幂等). 也持久化, 不因重启丢.
+        cohort_fired = state.get("__cohort_fired_deltas", {})
+        if not isinstance(cohort_fired, dict):
+            cohort_fired = {}
         try:
             base_tag = (base.get("tag") or "").upper() if base.get("tag") else ""
             # STEP 1: 读旧 prev (仍是上次的 signature)
@@ -1429,9 +1436,13 @@ def refresh_execution_ledger() -> None:
             state["__execution_reconcile"] = dict(list(seen.items())[-500:])
             _state_save(state)
             dirty = True
+            # R02 event-sourced: 独立 idempotency 检查. Key = "{oid}|{cum_dealt}",
+            # 即使 seen 被回滚, cohort_fired 记录仍能阻止重复.
+            fired_key = f"{oid}|{dealt:.6f}"
+            already_fired = fired_key in cohort_fired
             # STEP 4: 触发 cohort 回调 (基于 STEP 2 的 delta)
             if event_name in ("partial", "filled") and dealt > 0 and delta_qty > 0 \
-                    and "REBALANCE" not in base_tag:
+                    and "REBALANCE" not in base_tag and not already_fired:
                 if prev_dealt > 0 and prev_avg > 0:
                     delta_cash = dealt * avg_fill - prev_dealt * prev_avg
                     if delta_cash > 0:
@@ -1461,11 +1472,16 @@ def refresh_execution_ledger() -> None:
                              exit_reason=(f"{base.get('tag') or ''} "
                                           f"(fill oid={oid}, delta @${delta_price:.2f})"),
                              ts=now_iso)
+                # R02: 记录已 fire, 持久化到 state (存在 STEP 3 checkpoint 后, cohort
+                # 前会不会重复触发这里 setup, 但 cohort_fired 会在下次 reconcile 加载)
+                cohort_fired[fired_key] = True
         except Exception:
-            pass   # cohort 失败静默; R02 partial: checkpoint 已存, 不会 double-count
-    # cleanup: 若 dirty 但 STEP 3 里已存, 这里无 op (defensive)
+            pass   # cohort 失败静默; checkpoint 已存, 不会 double-count
+    # R02: 保存 cohort_fired 到 state (与 seen 同 tail 500 upper bound)
     if dirty:
         state["__execution_reconcile"] = dict(list(seen.items())[-500:])
+        # trim cohort_fired 也保持有限大小
+        state["__cohort_fired_deltas"] = dict(list(cohort_fired.items())[-500:])
         _state_save(state)
 
 
