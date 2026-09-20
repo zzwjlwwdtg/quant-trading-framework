@@ -3196,19 +3196,29 @@ def api_thesis_state(as_of: str | None = None) -> dict:
             if historical_thesis:
                 cur = _thesis_body_to_summary(historical_thesis)
             else:
-                # R06: 明确标 historical_unknown, 不静默 fallback
-                # 若 as_of 早于所有 archive → 无历史证据; 若晚 → live 时代
-                # 判定: retired 里最早的 retired_at, 若 as_of 早于它, 是 unknown
+                # R06 followup fix (2026-09-20 audit): 之前 archive 空时静默 fallback
+                # live → 请求 2020-01-01 返 LIVE_2026, historical_unknown=false.
+                # 现在: 若 archive 空 AND as_of 早于 live thesis created_at, 也 unknown.
+                # 若 archive 有内容, 按 earliest retired_at 判 (原逻辑).
+                is_unknown = False
                 if retired_full:
                     earliest_retired = min(retired_full,
                                             key=lambda e: e.get("retired_at", ""))
                     if as_of < earliest_retired.get("retired_at", ""):
-                        historical_unknown = True
-                        cur = {"ok": False, "historical_unknown": True,
-                                "reason": f"as_of={as_of} 早于任何 archive 记录; 无历史证据."}
-                    else:
-                        # as_of 晚于所有 retire → live 时代
-                        cur = thesis_summary()
+                        is_unknown = True
+                else:
+                    # archive 空: 用 live thesis 的 created_at 判
+                    try:
+                        raw = _json.loads(_Path(_CONFIG_PATH).read_text(encoding="utf-8"))
+                        live_created = raw.get("created_at", "")
+                        if live_created and as_of < live_created:
+                            is_unknown = True
+                    except Exception:
+                        pass
+                if is_unknown:
+                    historical_unknown = True
+                    cur = {"ok": False, "historical_unknown": True,
+                            "reason": f"as_of={as_of} 早于所有已知 thesis 记录; 无历史证据."}
                 else:
                     cur = thesis_summary()
         else:

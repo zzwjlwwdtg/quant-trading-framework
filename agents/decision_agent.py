@@ -1211,10 +1211,14 @@ Output: {"action":"BUY|SELL|HOLD","confidence":1-10,"reason":"max 10 words","ent
 
 
 def _llm_call(system: str, market: dict, events: dict, macro: dict,
-              m_keys: tuple, e_keys: tuple) -> dict | None:
+              m_keys: tuple, e_keys: tuple, context=None) -> dict | None:
     # F05 fix (2026-09-19): BACKTEST_MODE=1 时禁 LLM 调用 — 历史 backtest
     # 不能读 as-of-today LLM 结果 (look-ahead + 不可重放 + AI 版本不冻结)
+    # R05 followup fix (2026-09-20 audit): context.is_backtest=True 也应禁 LLM,
+    # 之前只查 env flag → 仅传 is_backtest context 未设 env 时仍调 AI.
     if os.environ.get("BACKTEST_MODE") == "1":
+        return None
+    if context is not None and getattr(context, "is_backtest", False):
         return None
     if not OPENAI_API_KEY:
         return None
@@ -1407,6 +1411,7 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
         m_keys=("ticker", "price", "pct_chg", "rsi_14", "vol_ratio",
                 "is_new_52w_high", "trend", "ma_stack"),
         e_keys=("next_event", "days_to_event", "breaking_news", "risk_level"),
+        context=context,
     )
     if result is None:
         result = _etf_rules(market, events, macro, regime, confluence)
@@ -1481,6 +1486,7 @@ def get_gold_decision(market: dict, events: dict, macro: dict | None = None,
         m_keys=("ticker", "price", "pct_chg", "rsi_14", "vol_ratio", "is_new_52w_high",
                 "trend", "ma_stack", "atr_14", "resistance", "support"),
         e_keys=("next_event", "days_to_event", "breaking_news", "risk_level", "gold_bias"),
+        context=context,
     )
     if result is None:
         result = _gold_rules(market, events, macro, regime, confluence=confluence)

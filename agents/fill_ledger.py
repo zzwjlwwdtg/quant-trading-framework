@@ -91,87 +91,92 @@ def get_fills(
 def get_position(ticker: str, since: Optional[str] = None) -> dict:
     """Derive current position from time-ordered fill events (FIFO).
 
-    Returns: {ticker, qty, avg_cost, total_bought, total_sold, n_fills, realized_pnl}
+    Returns: {ticker, qty, avg_cost, total_bought, total_sold, n_fills,
+              realized_pnl, unreconciled_sells}
 
     R03 fix (2026-09-20 audit): avg_cost 是**当前持仓**成本, 不是历史平均.
     卖出释放对应比例成本; 清仓后重买 → avg_cost = 新买价 (不是历史 blended).
-    实现: FIFO layers.
 
-    避免用 last dealt_qty: broker 累计 dealt_qty 是当前总量, 不是增量. 同一 oid
-    多个 partial 事件, 只取最后一次 dealt_qty (最终累计) 作 fill 总量.
+    R03 followup fix (2026-09-20 followup audit): 之前把 oid 压成"最后 event"
+    再按 ts 排序 → 交错成交丢失时序. 复现: Buy oid B (5@100 at 14:00),
+    Sell oid S (5@110 at 14:01), Buy oid B (+5@120 at 14:02, broker 累计
+    10@110). 旧代码返 avg_cost=110/realized=550, 正确应 avg_cost=120/realized=50.
+    Fix: 按 ts 排全部 event, 用 per-oid running dealt 计算 event 增量, 走 FIFO.
+
+    Unreconciled sells (无 buy 覆盖) 记 unreconciled_sells, 不当零成本盈利.
     """
     fills = get_fills(ticker=ticker, since=since, include_partial=True)
-    # 按 oid 取最后事件 (最终 dealt = 累计)
-    final_by_oid: dict[str, dict] = {}
-    for ev in fills:
-        oid = str(ev.get("order_id") or "")
-        if not oid:
-            continue
-        prev = final_by_oid.get(oid)
-        if prev is None or ev.get("ts", "") > prev.get("ts", ""):
-            final_by_oid[oid] = ev
+    # R03 followup: 全部 events 按 ts 排序 (不压 oid)
+    ordered = sorted(fills, key=lambda e: e.get("ts", ""))
 
-    # 按 ts 排序, 时间序列处理 (FIFO)
-    ordered = sorted(final_by_oid.values(), key=lambda e: e.get("ts", ""))
+    # Per-oid running cumulative dealt (broker 每 event 里 dealt_qty 是累计, 需转增量)
+    per_oid_prev_dealt: dict[str, float] = {}
+    per_oid_prev_cash:  dict[str, float] = {}
 
-    # FIFO layers: 每层 {qty, price}
     layers: list[dict] = []
-    total_bought_qty = 0.0
-    total_sold_qty   = 0.0
-    total_bought_cash = 0.0   # 累计买入现金 (informational)
-    total_sold_cash   = 0.0
+    total_bought_qty  = 0.0
+    total_sold_qty    = 0.0
     realized_pnl = 0.0
-    n_fills = 0
+    unreconciled_sells = 0.0   # sells 无 buy 覆盖 → 无法对账
+    n_events = 0
 
     for ev in ordered:
+        oid = str(ev.get("order_id") or "")
         side = (ev.get("side") or "").upper()
-        dealt = float(ev.get("dealt_qty") or 0)
-        avg = float(ev.get("average_fill_price") or 0)
-        if dealt <= 0 or avg <= 0:
+        cum_dealt = float(ev.get("dealt_qty") or 0)
+        cum_avg   = float(ev.get("average_fill_price") or 0)
+        if cum_dealt <= 0 or cum_avg <= 0:
             continue
-        n_fills += 1
+        n_events += 1
+
+        # Per-oid 增量 = 本次累计 - 上次累计
+        prev_dealt = per_oid_prev_dealt.get(oid, 0.0)
+        prev_cash  = per_oid_prev_cash.get(oid, 0.0)
+        delta_qty  = cum_dealt - prev_dealt
+        if delta_qty <= 0:
+            # broker 回报重复或倒退, 跳过
+            continue
+        cum_cash = cum_dealt * cum_avg
+        delta_cash = cum_cash - prev_cash
+        # Fallback: 若 delta_cash <= 0 (回报异常), 用 cum_avg 保守
+        delta_price = (delta_cash / delta_qty) if delta_cash > 0 else cum_avg
+        # 更新 per-oid state
+        per_oid_prev_dealt[oid] = cum_dealt
+        per_oid_prev_cash[oid]  = cum_cash
+
         if side == "BUY":
-            layers.append({"qty": dealt, "price": avg})
-            total_bought_qty  += dealt
-            total_bought_cash += dealt * avg
+            layers.append({"qty": delta_qty, "price": delta_price})
+            total_bought_qty += delta_qty
         elif side in ("SELL", "SELL_ALL", "REDUCE"):
-            remaining = dealt
-            total_sold_qty  += dealt
-            total_sold_cash += dealt * avg
-            while remaining > 0 and layers:
+            remaining = delta_qty
+            total_sold_qty += delta_qty
+            while remaining > 0 and layers and layers[0]["qty"] > 0:
                 layer = layers[0]
                 take = min(remaining, layer["qty"])
-                realized_pnl += take * (avg - layer["price"])
+                realized_pnl += take * (delta_price - layer["price"])
                 layer["qty"] -= take
                 remaining     -= take
                 if layer["qty"] <= 1e-9:
                     layers.pop(0)
-            # 剩余 remaining 是"短仓" (超卖)— 罕见, 记 realized_pnl 假 avg_cost=0
+            # R03 followup: 无 buy 覆盖的卖出 → unreconciled, 不算盈利
             if remaining > 0:
-                realized_pnl += remaining * avg   # 视为 avg_cost=0 (空仓卖出)
-                # 记一个负 layer 表示短仓
-                layers.append({"qty": -remaining, "price": avg})
+                unreconciled_sells += remaining
 
-    # 当前持仓 qty + avg_cost 从 layers 计算
-    current_qty = sum(l["qty"] for l in layers)
-    current_cash = sum(l["qty"] * l["price"] for l in layers)
-    if current_qty > 1e-9:
-        avg_cost = current_cash / current_qty
-    elif current_qty < -1e-9:
-        # 净短仓
-        avg_cost = current_cash / current_qty
-    else:
-        avg_cost = None   # 零持仓 → 无 avg_cost
+    current_qty = sum(l["qty"] for l in layers if l["qty"] > 0)
+    current_cash = sum(l["qty"] * l["price"] for l in layers if l["qty"] > 0)
+    avg_cost = (current_cash / current_qty) if current_qty > 1e-9 else None
 
     return {
-        "ticker":         ticker,
-        "qty":            int(current_qty) if abs(current_qty - round(current_qty)) < 1e-6 else round(current_qty, 4),
-        "avg_cost":       round(avg_cost, 4) if avg_cost is not None else None,
-        "total_bought":   int(total_bought_qty) if abs(total_bought_qty - round(total_bought_qty)) < 1e-6 else round(total_bought_qty, 4),
-        "total_sold":     int(total_sold_qty) if abs(total_sold_qty - round(total_sold_qty)) < 1e-6 else round(total_sold_qty, 4),
-        "realized_pnl":   round(realized_pnl, 2),
-        "n_fills":        n_fills,
-        "since":          since,
+        "ticker":              ticker,
+        "qty":                 int(current_qty) if abs(current_qty - round(current_qty)) < 1e-6 else round(current_qty, 4),
+        "avg_cost":            round(avg_cost, 4) if avg_cost is not None else None,
+        "total_bought":        int(total_bought_qty) if abs(total_bought_qty - round(total_bought_qty)) < 1e-6 else round(total_bought_qty, 4),
+        "total_sold":          int(total_sold_qty) if abs(total_sold_qty - round(total_sold_qty)) < 1e-6 else round(total_sold_qty, 4),
+        "realized_pnl":        round(realized_pnl, 2),
+        "unreconciled_sells":  int(unreconciled_sells) if abs(unreconciled_sells - round(unreconciled_sells)) < 1e-6 else round(unreconciled_sells, 4),
+        "n_events":            n_events,
+        "n_fills":             n_events,   # backwards-compat name
+        "since":               since,
     }
 
 
