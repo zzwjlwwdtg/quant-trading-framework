@@ -5,8 +5,8 @@
       "date": "2026-10-28",
       "days_until": 37,
       "probabilities": {
-        "hold": 45,
-        "hike_25": 55
+        "hold": 42.4,
+        "hike_25": 57.6
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -15,8 +15,9 @@
       "date": "2026-12-09",
       "days_until": 79,
       "probabilities": {
-        "hold": 20,
-        "hike_25": 80
+        "hold": 9.9,
+        "hike_25": 46.0,
+        "hike_50": 44.1
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
@@ -25,65 +26,48 @@
       "date": "2027-01-27",
       "days_until": 128,
       "probabilities": {
-        "hold": 61,
-        "hike_25": 39
+        "hold": 5.8,
+        "hike_25": 31.1,
+        "hike_50": 63.1
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 177,
-      "probabilities": {
-        "hold": 34,
-        "hike_25": 66
-      },
-      "most_likely": "hike_25",
+      "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_rate": "4.25-4.50",
   "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-21",
-  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00且Warsh强调通胀仍高；此前8月CPI 0.4% m/m、核心CPI 0.3% m/m，PPI终值需求0.4% m/m、5.4% y/y，8月NFP +162K、失业率4.1%，共同推动市场从降息/观望转向继续加息定价。",
-  "commentary": "Data snapshot为2026-09-21，已在9/16 FOMC和Warsh记者会之后；最近7天内无新的NFP/CPI/PPI发布，但9/11 CPI和9/10 PPI的通胀粘性、9/4 NFP的就业韧性已被9/16决议后的期货价格反映。CME/Fed funds期货定价显示10月和12月仍偏向加息，隐含终点在2027-Q1附近升至约4.50-4.75。",
+  "data_snapshot_date": "2026-09-18",
+  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00且点阵图偏鹰；9/11 CPI 0.4% m/m、3.4% y/y，9/10 PPI 0.4% m/m、5.4% y/y，9/4 NFP +162K且高于预期，均推动市场从降息预期转向继续加息定价。",
+  "commentary": "CME FedWatch 最新可得结算快照为2026-09-18，已在9/16 FOMC、9/11 CPI、9/10 PPI和9/4 NFP之后，未发现数据滞后。市场对10月再加25bp定价约58%，到12月已有约90%概率落在更高利率区间，强就业与高于目标的CPI/PPI使预期明显偏鹰。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.frenzycap.com/fedwatch",
-      "type": "fedwatch_replica_live_zq"
-    },
-    {
-      "url": "https://www.tradingview.com/symbols/CBOT-ZQ1!/contracts/",
-      "type": "fed_funds_futures_quotes"
-    },
-    {
-      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
-      "type": "fomc_statement"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "cpi_release"
-    },
-    {
-      "url": "https://www.bls.gov/ppi/",
-      "type": "ppi_release"
+      "url": "https://pypi.org/project/cme-fedwatch/0.2.1/",
+      "type": "cme_fedwatch_snapshot"
     },
     {
       "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp_release"
+      "type": "nfp"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
+      "type": "cpi"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
+      "type": "ppi"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-21T02:02:10+00:00",
+  "fetched_at": "2026-09-21T10:03:14+00:00",
   "_meta": {
-    "cached_at": "2026-09-21T11:02:10.794146",
-    "age_sec": 28852,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-21T19:03:14.061011",
+    "age_sec": 1788,
+    "stale": false,
+    "refreshing": false
   }
 }
