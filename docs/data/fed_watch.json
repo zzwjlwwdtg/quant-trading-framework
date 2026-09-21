@@ -3,7 +3,7 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 37,
+      "days_until": 36,
       "probabilities": {
         "hold": 42.4,
         "hike_25": 57.6
@@ -13,32 +13,40 @@
     },
     {
       "date": "2026-12-09",
-      "days_until": 79,
+      "days_until": 78,
       "probabilities": {
-        "hold": 9.9,
-        "hike_25": 46.0,
-        "hike_50": 44.1
+        "hold": 23.3,
+        "hike_25": 76.7
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
-      "days_until": 128,
+      "days_until": 127,
       "probabilities": {
-        "hold": 5.8,
-        "hike_25": 31.1,
-        "hike_50": 63.1
+        "hold": 58.6,
+        "hike_25": 41.4
       },
-      "most_likely": "hike_50",
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 176,
+      "probabilities": {
+        "hold": 34.5,
+        "hike_25": 65.5
+      },
+      "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.25-4.50",
-  "implied_terminal_date": "2027-Q1",
+  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_date": "2027-H2",
   "data_snapshot_date": "2026-09-18",
-  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00且点阵图偏鹰；9/11 CPI 0.4% m/m、3.4% y/y，9/10 PPI 0.4% m/m、5.4% y/y，9/4 NFP +162K且高于预期，均推动市场从降息预期转向继续加息定价。",
-  "commentary": "CME FedWatch 最新可得结算快照为2026-09-18，已在9/16 FOMC、9/11 CPI、9/10 PPI和9/4 NFP之后，未发现数据滞后。市场对10月再加25bp定价约58%，到12月已有约90%概率落在更高利率区间，强就业与高于目标的CPI/PPI使预期明显偏鹰。",
+  "recent_event_impact": "9/11 CPI: headline CPI +0.4% m/m and +3.4% y/y, core +0.3% m/m; 9/16 FOMC raised 25bp to 3.75-4.00 and signaled persistent inflation concern, pushing FedWatch-implied odds toward additional hikes.",
+  "commentary": "Data snapshot is 2026-09-18, after the 2026-09-16 FOMC hike and after the 2026-09-11 CPI release, so the key CPI/FOMC repricing is reflected. CPI’s firm headline reading and the Fed’s 25bp hike shifted market pricing hawkish: the next two meetings imply further hike risk rather than cuts.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
@@ -46,27 +54,27 @@
     },
     {
       "url": "https://pypi.org/project/cme-fedwatch/0.2.1/",
-      "type": "cme_fedwatch_snapshot"
+      "type": "cme_fedwatch_derived_snapshot"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.htm",
-      "type": "nfp"
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+      "type": "fomc_statement"
     },
     {
       "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "cpi"
+      "type": "cpi_release"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
-      "type": "ppi"
+      "url": "https://www.barrons.com/articles/the-markets-see-rates-going-higher-than-the-fed-does-is-stagflation-ahead-4ceb3d0f",
+      "type": "market_report"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-21T10:03:14+00:00",
+  "fetched_at": "2026-09-21T18:04:39+00:00",
   "_meta": {
-    "cached_at": "2026-09-21T19:03:14.061011",
-    "age_sec": 28789,
+    "cached_at": "2026-09-22T03:04:39.756592",
+    "age_sec": 1703,
     "stale": false,
     "refreshing": false
   }
