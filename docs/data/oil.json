@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-21T12:57:47.574646+00:00",
+  "ts": "2026-09-21T13:30:17.462880+00:00",
   "factors": [
     {
       "arrow": "▼",
       "name": "WTI 油价",
       "direction": "bearish",
       "weight": 1,
-      "value": "$93.19 (20d +7.0%)",
+      "value": "$92.79 (20d +6.6%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "bullish",
       "weight": 1,
-      "value": "$7.78 (Brent $100.97 - WTI $93.19)",
+      "value": "$7.86 (Brent $100.65 - WTI $92.79)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "neutral",
       "weight": 1,
-      "value": "XLE +0.9% vs SPY +0.1% (差 +0.8pp)",
+      "value": "XLE -0.4% vs SPY +0.4% (差 -0.8pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "100.27 (5d +0.8%)",
+      "value": "100.28 (5d +0.8%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -63,14 +63,14 @@
   "notes": [
     "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
   ],
-  "price": 93.19,
-  "pct_5d": -8.09,
-  "pct_20d": 7.04,
+  "price": 92.79,
+  "pct_5d": -8.48,
+  "pct_20d": 6.58,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-21T21:57:52.767416",
-    "age_sec": 312,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-21T22:30:26.539834",
+    "age_sec": 156,
+    "stale": false,
+    "refreshing": false
   }
 }
