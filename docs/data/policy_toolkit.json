@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-21T09:48:38.682246",
-  "count_total_actions": 541,
+  "as_of": "2026-09-21T21:52:43.318511",
+  "count_total_actions": 546,
   "tools": [
     {
       "tool_key": "fed_hawkish_signal",
@@ -22,31 +22,11 @@
         "url": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxON3hFUzkwR1E4VklXWkZzb3FWeG5Nb0c2QnM5QVg4MC1UV1ZTbGpWOVpxOGFDaThlTmw3MlV6RFRfRFlLYTY4YnJrVE5ldHJ1eFN5NW5WM0V2RHFoMDJVUTBjeDB2Ym1kdzVaa0tCaDFrVkdqVnE3WVl2cWRydm5QVkwyNjh2eUNpVjhaNEkwUGFHSDFIRzZrQjZKcnVQa0lEYmJVNWNPcWpRbTJzZEkwWUYyTTYzemxQZUlz0gHAAUFVX3lxTE9IR0xCTjVudjlGY2xSU1JHbVJ2MGU1VG1TYUVBTm1XLVdVMHYycm1veTBkX2pLMWU0OVByci1ETlgzTUN6dWVtT2hFeDZmMkJ5X3FaUlJ5cEJmczVIWXhYTGZPa1k0ak45OUNfcU9sbTY1ZFFNR0N3LWRrSXJEYnRKT3d4UVlNWTM5cHRqS3Y3SXV0R3pZcEhodkFNNmZaV2oyX3ozbDN4WUtUbldqMXJrT0JsY0otTkRfWTVMV25mYQ?oc=5",
         "confidence": 8
       },
-      "yield_reaction_30y": {},
-      "event_count_180d": 274
-    },
-    {
-      "tool_key": "qra_wording",
-      "zh": "季度再融资声明措辞",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "把 '增加发债' 改成 '变化', 暗示可能减少长债供给",
-      "invalidation": "只是预期管理, 未实际减少融资需求",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "qra_wording",
-        "action_type": "signaled",
-        "date": "2026-08-20",
-        "actor": "Treasury",
-        "amount_desc": "",
-        "commentary": "财政部安抚债市通常经发行措辞传导，压低期限溢价。",
-        "verbatim": "Dollar hugs three-month lows as Treasury seeks to sooth the bond market",
-        "source": "GoogleNews: yield curve control QE Federal Reserve",
-        "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxPanJ4Mlg1ZF9lRHhtVmVUYUJxM0l1dENEaFVDLUN0dW1iOGJocS1tb09jMnVqb1hGZXFBTTMzc1FHenJtM1E1bHZkcGdLTlFVTHMxdE16VmhvNnAyUXlEZ3YzUzVuS2ota1BjSy1pSTNMRjdZRy1yN2tacl9CM1Y3Wkw2SzBqNmxrMEZYaFFFc1Qtek1UQ2doQjV0MF9Ddw?oc=5",
-        "confidence": 5
+      "yield_reaction_30y": {
+        "t0_bp": -3.4,
+        "yield_at_close": 5.297
       },
-      "yield_reaction_30y": {},
-      "event_count_180d": 3
+      "event_count_180d": 276
     },
     {
       "tool_key": "ycc",
@@ -72,27 +52,27 @@
       "event_count_180d": 5
     },
     {
-      "tool_key": "duration_shortening",
-      "zh": "缩短发债久期",
+      "tool_key": "qra_wording",
+      "zh": "季度再融资声明措辞",
       "owner": "Treasury",
       "feasibility": "high",
-      "canonical_desc": "多发 T-bill 少发长债, 压制长端供给",
-      "invalidation": "短端供给爆棚, 靠 MMF/RRP 吸收; RRP 见底就断供",
+      "canonical_desc": "把 '增加发债' 改成 '变化', 暗示可能减少长债供给",
+      "invalidation": "只是预期管理, 未实际减少融资需求",
       "status": "口头/待发",
       "last_action": {
-        "tool_key": "duration_shortening",
+        "tool_key": "qra_wording",
         "action_type": "signaled",
-        "date": "2026-08-27",
-        "actor": "Bessent",
+        "date": "2026-08-24",
+        "actor": "Treasury",
         "amount_desc": "",
-        "commentary": "讨论其债市动作可能合理，偏向认可财政部压长端收益率的策略。",
-        "verbatim": "Scott Bessent’s bond market moves may not be so misguided after all",
-        "source": "GoogleNews: Treasury bond market intervention Bessent",
-        "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNLWdHaTNCVUxxaXFGTmkxWlh2SERTNGtYMDYxR1JRblVtOU5FWk5WRVE1TlRHN3dCU2JEOGZQRUpsd2NZNTlsT0poel8xcUl4TmlDdDJxbllvWDdCTEg2VTVaZmpkWkNDS0dQbGlQMmRrMmJ3TzNYRDVYV2FaajM5WGlmRjFGQk82M25vNE4zS3RSMndIcGxucGd0aG5sWXlKbnlfQWdHLVE1QQ?oc=5",
+        "commentary": "“进一步财政部行动”推动收益率下行，像是市场押注后续QRA或供给措辞变化。",
+        "verbatim": "Global Bond Yields Fall on Declining Oil, Prospects of Further Treasury Action",
+        "source": "GoogleNews: TGA Treasury General Account debt buyback",
+        "url": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxQTVhNb1pHcVR0dkxQRlRQeThpeFZrZUp6VEFrTHJyNEN6YWladF9jMHZaRnVkMU5zN0pRTEJJVE9fXzVDS2F6UFZ5Ul95Wm9oNWVITXJORlJZbEpwa0ItWFQ3ZnV6cnZITlJOcmxhUjZGSjR6dmxSX1Q5TDdWbjZtRTZmQWJ0c3lrNGpUZHdURkJCQkZVaXNIMnIwa0JPcEdyZGVEZDhwUzA2Nmh4czdfblMyTnJsaUxPSURKVmI3ZzZOeEV5X3lpbzhTYTQ4c3dKa2t3bll6TkJQbEl3ZXB3?oc=5",
         "confidence": 5
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 9
+      "event_count_180d": 4
     },
     {
       "tool_key": "fx_intervention",
@@ -116,6 +96,29 @@
       },
       "yield_reaction_30y": {},
       "event_count_180d": 4
+    },
+    {
+      "tool_key": "duration_shortening",
+      "zh": "缩短发债久期",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "多发 T-bill 少发长债, 压制长端供给",
+      "invalidation": "短端供给爆棚, 靠 MMF/RRP 吸收; RRP 见底就断供",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "duration_shortening",
+        "action_type": "signaled",
+        "date": "2026-09-14",
+        "actor": "Treasury",
+        "amount_desc": "",
+        "commentary": "暗示财政部已通过发行结构减轻长端压力，利好期限溢价。",
+        "verbatim": "Gold Doesn’t Need a Rate Cut. It Needs What the Treasury Is Already Doing.",
+        "source": "GoogleNews: yield curve control QE Federal Reserve",
+        "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNci04dDE0TzB3cWhvd2VTNFBxdG1GaWZzMENReVc1WmtCTXByMDVFWWJDSHlURmVMZjJveVNRZ050cHoyUnB0RnZhS1RoMWtHYlJqYXQ5NjhaZUp2d2ktekM2V2xKdm9YQzg4TmhoUF9hdDNxVU1CdW5SUTRiSi1JbnBPQjE?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 10
     },
     {
       "tool_key": "tga_deployment",
@@ -151,17 +154,17 @@
       "last_action": {
         "tool_key": "long_end_buyback",
         "action_type": "signaled",
-        "date": "2026-09-16",
+        "date": "2026-09-21",
         "actor": "Bessent",
         "amount_desc": "",
-        "commentary": "重复强调稳定债市工具，属于对买盘后续可用性的口头托底。",
-        "verbatim": "Bessent calls Treasury bond buyback successful, reiterates he has tools t",
+        "commentary": "财政部买回长债被视为稳市信号，说明收益率压力已触及政策容忍线。",
+        "verbatim": "Scott Bessent's bond plan showed markets what will make the treasury flinch",
         "source": "GoogleNews: Bessent Treasury buyback",
-        "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxQaTJFRDdjUjd1Q0xCbEZOaDJlNjlNcXllRXp1Nzg5RmtMZ3VfbXhjRnc3NjVBaGdCdHFUdmdjZXB2MTg0cnVUZUtobDFKQmlMNmFKd0o1SDRBV1luOHhIV2ZlV00zUlNiX3VYcEsxSkx3d1lVckk1bjkydkxOVFRJOWM2THpNandzSUdOOUhNYTluUVMxSUFIdVBlRjNqZzRuMk1kUtIBqgFBVV95cUxOcl80bE5CTm1yOG5HNHNkQk9ya1I5enpaelI4aVZSamNzNElOZkNvdDNBN3h2MEtGN3VhOElnQjg2Wm9yQ0hpRFpjcDR2amlFbENPNEZtSXJjRGJHREJuWGl4aklHdTVlVFRsLURJUElOV2hyYjVrVkh6eFNjWHJndEdqZ01DLUdFdlAtd0lkNFBaTWNpaFNHbmh5UWY1YmlZakYxTHN4dDNJQQ?oc=5",
-        "confidence": 8
+        "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNS19YaTFfaERqS25wSjg5cjVrQllva1ZLeE9BYXVrSzExWW0yZWxNSDQ0UEVzYnJUUEdNR2gyMXFTSWV2Z1FZMVdzRXB0YXNIeGlFdmg4dnp2anNFZHdFejNMMWdRUURzYlFlWlA5ckRoRkpfU3pnQTVQNWtGR1J2VU9WZHJycllZUEtLYlduNHE?oc=5",
+        "confidence": 7
       },
       "yield_reaction_30y": {},
-      "event_count_180d": 190
+      "event_count_180d": 191
     },
     {
       "tool_key": "fed_dovish_signal",

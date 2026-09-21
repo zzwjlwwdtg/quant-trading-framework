@@ -7,12 +7,36 @@
     "direction": "neutral",
     "magnitude": "small",
     "score": 0,
-    "event_counts": {},
-    "breaking": [],
+    "event_counts": {
+      "NOISE": 4,
+      "DOMESTIC_POLICY": 2,
+      "MEDIA_ATTACK": 3,
+      "GEOPOLITICAL": 1
+    },
+    "breaking": [
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bearish",
+        "magnitude": "medium",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "Russia has unfortunately lost control of its Diesel Oil Industry due to its War with Ukraine. A large number of their Di",
+        "verbatim": "Russia has unfortunately lost control of its Diesel Oil Industry due to its War with Ukraine.",
+        "post_time": "2026-09-21T12:03:41.441Z"
+      }
+    ],
     "summary": {
-      "text": null,
-      "state": "empty",
-      "post_ids": []
+      "text": "涉俄能源供给风险升温，叠加媒体争议，情绪偏谨慎避险。",
+      "state": "cached",
+      "post_ids": [
+        "117308930224398545",
+        "117308890736529824",
+        "117307292070204943"
+      ]
     }
   },
   "gold_macro": {
