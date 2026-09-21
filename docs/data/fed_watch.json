@@ -1,39 +1,88 @@
 {
-  "error": "no_recent_data",
-  "confidence": "low",
-  "data_snapshot_date": "2026-09-17",
-  "commentary": "未能找到截至2026-09-21或最近1个交易日内的 CME FedWatch 完整3-4次FOMC会议概率；可核验的最新公开快照为2026-09-17，已在9/10 PPI、9/11 CPI和9/16 FOMC之后发布。该快照显示9/16加息后市场仍偏鹰派，但因不满足T日/前1交易日时效要求，不能作为最新数据使用。",
+  "current_target_range": "3.75-4.00",
+  "meetings": [
+    {
+      "date": "2026-10-28",
+      "days_until": 37,
+      "probabilities": {
+        "hold": 45,
+        "hike_25": 55
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2026-12-09",
+      "days_until": 79,
+      "probabilities": {
+        "hold": 20,
+        "hike_25": 80
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 128,
+      "probabilities": {
+        "hold": 61,
+        "hike_25": 39
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 177,
+      "probabilities": {
+        "hold": 34,
+        "hike_25": 66
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    }
+  ],
+  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-09-21",
+  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00且Warsh强调通胀仍高；此前8月CPI 0.4% m/m、核心CPI 0.3% m/m，PPI终值需求0.4% m/m、5.4% y/y，8月NFP +162K、失业率4.1%，共同推动市场从降息/观望转向继续加息定价。",
+  "commentary": "Data snapshot为2026-09-21，已在9/16 FOMC和Warsh记者会之后；最近7天内无新的NFP/CPI/PPI发布，但9/11 CPI和9/10 PPI的通胀粘性、9/4 NFP的就业韧性已被9/16决议后的期货价格反映。CME/Fed funds期货定价显示10月和12月仍偏向加息，隐含终点在2027-Q1附近升至约4.50-4.75。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-climb-after-selloff-federal-reserve-rate-hike/card/market-expects-a-fed-hike-in-october-as-bank-economists-eye-december-k8znLyc1pM1c5Gk1LyDv",
-      "type": "secondary_fedwatch_snapshot"
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fedwatch_replica_live_zq"
     },
     {
-      "url": "https://www.kucoin.com/news/flash/fed-october-rate-hike-probability-nears-50",
-      "type": "secondary_fedwatch_snapshot"
+      "url": "https://www.tradingview.com/symbols/CBOT-ZQ1!/contracts/",
+      "type": "fed_funds_futures_quotes"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+      "type": "fomc_statement"
     },
     {
       "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "recent_cpi_event"
+      "type": "cpi_release"
     },
     {
-      "url": "https://www.bls.gov/ppi/news-release/home.htm",
-      "type": "recent_ppi_event"
+      "url": "https://www.bls.gov/ppi/",
+      "type": "ppi_release"
     },
     {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_calendar"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp_release"
     }
   ],
+  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-20T17:59:47+00:00",
+  "fetched_at": "2026-09-21T02:02:10+00:00",
   "_meta": {
-    "cached_at": "2026-09-21T02:59:47.879412",
-    "age_sec": 27194,
+    "cached_at": "2026-09-21T11:02:10.794146",
+    "age_sec": 5451,
     "stale": false,
     "refreshing": false
   }
