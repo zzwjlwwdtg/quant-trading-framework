@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-23T01:47",
+  "asof": "2026-09-23T02:19",
   "yields": {
     "10y": {
       "value": 4.978,
@@ -34,13 +34,13 @@
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.853,
-      "chg_1d_bps": 1.9,
-      "chg_5d_bps": 2.7,
-      "chg_20d_bps": 44.5,
-      "z_score_20d": 0.46,
+      "value": 4.855,
+      "chg_1d_bps": 2.1,
+      "chg_5d_bps": 2.9,
+      "chg_20d_bps": 44.7,
+      "z_score_20d": 0.5,
       "history": [
-        4.853,
+        4.855,
         4.834,
         4.856,
         4.801,
@@ -204,9 +204,9 @@
   },
   "gld_correlation": {
     "vs_10y": -0.464,
-    "vs_tips_10y": -0.075,
+    "vs_tips_10y": -0.068,
     "regime": "weak_hedge",
-    "reason": "相关性 -0.075，对冲关系变弱"
+    "reason": "相关性 -0.068，对冲关系变弱"
   },
   "anomalies": [],
   "warnings": [
@@ -257,12 +257,12 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 157.55 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 157.52 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1359.0 韩元明显走弱",
+      "msg": "KRW/USD 1358.3 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -277,12 +277,12 @@
     },
     {
       "level": "warn",
-      "msg": "KBE/SPY 20d -5.69% 银行相对走弱 (需持续观察)",
+      "msg": "KBE/SPY 20d -5.67% 银行相对走弱 (需持续观察)",
       "key": "bank_stress_warn"
     },
     {
       "level": "warn",
-      "msg": "油价 20d +11.3% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
+      "msg": "油价 20d +11.0% 明显上涨 (通胀反弹压力, 阻碍 Fed 降息)",
       "key": "oil_rising"
     },
     {
@@ -330,13 +330,13 @@
     "sofr_pct": 3.85,
     "iorb_pct": 3.9,
     "sofr_iorb_spread_bps": -5.0,
-    "usdjpy": 157.55,
-    "usdjpy_20d_pct": -1.0,
-    "usdjpy_20d_delta_pct": -1.0,
+    "usdjpy": 157.52,
+    "usdjpy_20d_pct": -1.02,
+    "usdjpy_20d_delta_pct": -1.02,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -3.85,
-    "krw_usd": 1359.0,
-    "krw_20d_pct": -1.58,
+    "usdjpy_pullback_from_60d_high_pct": -3.87,
+    "krw_usd": 1358.3,
+    "krw_20d_pct": -1.63,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 203.8,
@@ -349,8 +349,8 @@
     "real_yield_gap_us_jp": 1.5,
     "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.474,
-    "kbe_spy_ratio": 0.08471,
-    "kbe_spy_20d_delta_pct": -5.69,
+    "kbe_spy_ratio": 0.08472,
+    "kbe_spy_20d_delta_pct": -5.67,
     "cdx_ig_bps": 77.0,
     "cdx_hy_bps": 268.0,
     "dxy": 100.67,
@@ -402,104 +402,104 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7826.5,
-        "chg_pct": -0.09
+        "price": 7830.0,
+        "chg_pct": -0.04
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 30907.5,
-        "chg_pct": 0.4
+        "price": 30941.5,
+        "chg_pct": 0.51
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 91.51,
-        "chg_pct": -4.46
+        "price": 91.18,
+        "chg_pct": -4.8
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4366.1,
-        "chg_pct": -0.41
+        "price": 4375.9,
+        "chg_pct": -0.18
       }
     },
-    "oil_uso": 147.21,
-    "oil_pct_20d": 11.35,
-    "oil_wti": 91.51,
+    "oil_uso": 146.7,
+    "oil_pct_20d": 10.96,
+    "oil_wti": 91.18,
     "eem_pct_20d": 3.99,
-    "eem_vs_spx_20d": 2.47,
+    "eem_vs_spx_20d": 2.46,
     "volume_confirm": {
       "rates": {
         "proxy": "TLT",
         "label": "20+Y 美债",
-        "vol_z_20d": -1.74,
+        "vol_z_20d": -1.66,
         "notable": true
       },
       "real_rates": {
         "proxy": "TIP",
         "label": "TIPS ETF",
-        "vol_z_20d": -2.51,
+        "vol_z_20d": -2.35,
         "notable": true
       },
       "dxy": {
         "proxy": "UUP",
         "label": "美元 ETF",
-        "vol_z_20d": -1.42,
+        "vol_z_20d": -1.37,
         "notable": true
       },
       "credit_ig": {
         "proxy": "LQD",
         "label": "投资级信用 ETF",
-        "vol_z_20d": -2.52,
+        "vol_z_20d": -2.31,
         "notable": true
       },
       "credit_hy": {
         "proxy": "HYG",
         "label": "高收益信用 ETF",
-        "vol_z_20d": -2.5,
+        "vol_z_20d": -2.37,
         "notable": true
       },
       "vol": {
         "proxy": "VXX",
         "label": "VIX 期货 ETF",
-        "vol_z_20d": -1.4,
+        "vol_z_20d": -1.25,
         "notable": true
       },
       "em": {
         "proxy": "EEM",
         "label": "新兴市场 ETF",
-        "vol_z_20d": -2.27,
+        "vol_z_20d": -2.07,
         "notable": true
       },
       "us_equity": {
         "proxy": "SPY",
         "label": "S&P 500 ETF",
-        "vol_z_20d": -2.64,
+        "vol_z_20d": -2.48,
         "notable": true
       },
       "us_qqq": {
         "proxy": "QQQ",
         "label": "Nasdaq 100 ETF",
-        "vol_z_20d": -1.99,
+        "vol_z_20d": -1.82,
         "notable": true
       },
       "jp_equity": {
         "proxy": "EWJ",
         "label": "iShares JP ETF (代 N225)",
-        "vol_z_20d": -0.73,
+        "vol_z_20d": -0.64,
         "notable": false
       },
       "kr_equity": {
         "proxy": "EWY",
         "label": "iShares KR ETF (代 KOSPI)",
-        "vol_z_20d": -1.63,
-        "notable": true
+        "vol_z_20d": -0.99,
+        "notable": false
       },
       "oil": {
         "proxy": "USO",
         "label": "WTI 原油 ETF",
-        "vol_z_20d": -0.68,
+        "vol_z_20d": -0.51,
         "notable": false
       }
     },
@@ -511,7 +511,7 @@
     "stablecoin_total_bn": 258.0,
     "usdt_bn": 183.4,
     "usdc_bn": 74.6,
-    "vix": 14.26,
+    "vix": 14.25,
     "bbi_score": 1.24,
     "bbi_components": {
       "vix": -0.62,
@@ -521,9 +521,9 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-23T01:47:31.114800",
-    "age_sec": 931,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-23T02:20:04.433833",
+    "age_sec": 778,
+    "stale": false,
+    "refreshing": false
   }
 }
