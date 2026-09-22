@@ -518,6 +518,42 @@ STATE_PATH    = Path(__file__).parent / "trader_state.json"
 UNIVERSE_PATH = Path(__file__).parent / "universe_state.json"
 EXECUTION_LOG_PATH = Path(__file__).parent / "signals" / "execution_ledger.jsonl"
 
+# R02 v3 (2026-09-20 audit): 独立 cohort dedup ledger, 与 state file 分离.
+# state.clear() 或 state file 丢失时, 这个 ledger 仍能防重复入账.
+# Format: 每行一个 fired_key "{env}|{acc}|{oid}|{cum_dealt}". Append-only.
+COHORT_FIRED_LEDGER_PATH = Path(__file__).parent / "signals" / "cohort_fired_ledger.jsonl"
+
+
+def _load_cohort_fired_ledger() -> set[str]:
+    """Load already-fired keys as a set. Missing file → empty set."""
+    if not COHORT_FIRED_LEDGER_PATH.exists():
+        return set()
+    try:
+        keys = set()
+        with open(COHORT_FIRED_LEDGER_PATH, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    keys.add(line)
+        return keys
+    except Exception:
+        return set()
+
+
+def _append_cohort_fired_ledger(fired_key: str) -> None:
+    """Append single key + newline. flush + fsync for durability."""
+    try:
+        COHORT_FIRED_LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(COHORT_FIRED_LEDGER_PATH, "a", encoding="utf-8") as f:
+            f.write(fired_key + "\n")
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except Exception:
+                pass
+    except Exception:
+        pass
+
 
 # ---------- Trade context (lazy singleton) ----------
 
@@ -1408,13 +1444,12 @@ def refresh_execution_ledger() -> None:
         # 若 cohort fail, 下次 reconcile 因 seen 已更新不会重试; cohort 是 downstream
         # audit trail, 与 broker reconcile 正确性分离.
         #
-        # R02 event-sourced idempotency (2026-09-20 followup audit v2):
-        # 新增 __cohort_fired_deltas per-oid set: 记录已 fire 的 (oid, cum_dealt).
-        # 若 checkpoint 丢失 or 状态回滚导致 seen 里没这 oid, 但 cohort_fired
-        # 里有 → 仍跳过 cohort 回调 (真幂等). 也持久化, 不因重启丢.
-        cohort_fired = state.get("__cohort_fired_deltas", {})
-        if not isinstance(cohort_fired, dict):
-            cohort_fired = {}
+        # R02 event-sourced idempotency (2026-09-20 followup v3):
+        # audit 3rd round: __cohort_fired_deltas 在 state 里 → state.clear() 会
+        # 一起丢. 现在: 独立 append-only file signals/cohort_fired_ledger.jsonl,
+        # 与 state 完全分离. 崩溃/state 回滚不影响.
+        # Key = (env, acc, oid, cum_dealt) — 符合 audit 要求 (env+acc+oid+fill_rev).
+        cohort_fired = _load_cohort_fired_ledger()
         try:
             base_tag = (base.get("tag") or "").upper() if base.get("tag") else ""
             # STEP 1: 读旧 prev (仍是上次的 signature)
@@ -1436,9 +1471,10 @@ def refresh_execution_ledger() -> None:
             state["__execution_reconcile"] = dict(list(seen.items())[-500:])
             _state_save(state)
             dirty = True
-            # R02 event-sourced: 独立 idempotency 检查. Key = "{oid}|{cum_dealt}",
-            # 即使 seen 被回滚, cohort_fired 记录仍能阻止重复.
-            fired_key = f"{oid}|{dealt:.6f}"
+            # R02 event-sourced: 独立 idempotency 检查, key = (env, acc, oid, cum_dealt).
+            # 即使 seen 被回滚 (state.clear()), cohort_fired ledger 独立 append-only,
+            # 保证同一 broker cumulative report 只 fire 一次.
+            fired_key = f"{TRD_ENV}|{ACC_ID}|{oid}|{dealt:.6f}"
             already_fired = fired_key in cohort_fired
             # STEP 4: 触发 cohort 回调 (基于 STEP 2 的 delta)
             if event_name in ("partial", "filled") and dealt > 0 and delta_qty > 0 \
@@ -1472,16 +1508,13 @@ def refresh_execution_ledger() -> None:
                              exit_reason=(f"{base.get('tag') or ''} "
                                           f"(fill oid={oid}, delta @${delta_price:.2f})"),
                              ts=now_iso)
-                # R02: 记录已 fire, 持久化到 state (存在 STEP 3 checkpoint 后, cohort
-                # 前会不会重复触发这里 setup, 但 cohort_fired 会在下次 reconcile 加载)
-                cohort_fired[fired_key] = True
+                # R02 v3: append 到独立 cohort_fired_ledger (不进 state, 崩溃可存活)
+                _append_cohort_fired_ledger(fired_key)
+                cohort_fired.add(fired_key)
         except Exception:
             pass   # cohort 失败静默; checkpoint 已存, 不会 double-count
-    # R02: 保存 cohort_fired 到 state (与 seen 同 tail 500 upper bound)
     if dirty:
         state["__execution_reconcile"] = dict(list(seen.items())[-500:])
-        # trim cohort_fired 也保持有限大小
-        state["__cohort_fired_deltas"] = dict(list(cohort_fired.items())[-500:])
         _state_save(state)
 
 

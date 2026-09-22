@@ -83,7 +83,9 @@ class R01R02_ProductionFlowCohortCalledPerFill(unittest.TestCase):
             buy_calls.append({"ticker": ticker, "price": price, "qty": qty})
             return {}
 
+        cohort_ledger_tmp = Path(tmpdir) / "cohort_fired.jsonl"
         with patch.object(paper_trader, "EXECUTION_LOG_PATH", exec_log), \
+             patch.object(paper_trader, "COHORT_FIRED_LEDGER_PATH", cohort_ledger_tmp), \
              patch.object(paper_trader, "DRY_RUN", False), \
              patch.object(paper_trader, "_ctx_get", return_value=fake_ctx), \
              patch.object(paper_trader, "_state_load", side_effect=fake_state_load), \
@@ -153,7 +155,9 @@ class R02_EventSourcedIdempotency(unittest.TestCase):
             buy_calls.append({"qty": qty})
             return {}
 
+        cohort_ledger_tmp = Path(tmpdir) / "cohort_fired.jsonl"
         with patch.object(paper_trader, "EXECUTION_LOG_PATH", exec_log), \
+             patch.object(paper_trader, "COHORT_FIRED_LEDGER_PATH", cohort_ledger_tmp), \
              patch.object(paper_trader, "DRY_RUN", False), \
              patch.object(paper_trader, "_ctx_get", return_value=fake_ctx), \
              patch.object(paper_trader, "_state_load", side_effect=fake_state_load), \

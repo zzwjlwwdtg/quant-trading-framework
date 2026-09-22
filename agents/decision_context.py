@@ -36,15 +36,43 @@ from types import MappingProxyType
 from typing import Any, Optional
 
 
-def _immutable(value):
-    """R04 partial (2026-09-20 audit): wrap dicts / lists so外部 mutation 不透.
-    dataclass frozen=True 只挡字段重新赋值, 不挡 ctx.market['price'] = 999.
-    """
+def _to_immutable(value):
+    """R04: deep copy first (isolate from source), then recursively wrap
+    dict → MappingProxyType, list → tuple. Result: reads work like dict/list,
+    writes raise TypeError."""
+    if value is None:
+        return None
+    if isinstance(value, MappingProxyType):
+        # Already immutable - unwrap for deepcopy, then re-wrap
+        return _to_immutable(dict(value))
     if isinstance(value, dict):
-        return MappingProxyType({k: _immutable(v) for k, v in value.items()})
-    if isinstance(value, list):
-        return tuple(_immutable(v) for v in value)
+        # deep copy leaves
+        return MappingProxyType({k: _to_immutable(v) for k, v in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_to_immutable(v) for v in value)
+    # Primitives (int, float, str, bool, datetime, etc.) are already immutable
     return value
+
+
+def _mutable_copy(value):
+    """R04: convert immutable-wrapped value back to plain dict/list so it can
+    be passed into a new DecisionContext (which will re-wrap via __post_init__).
+    Used by with_updates() to break sharing."""
+    if value is None:
+        return None
+    if isinstance(value, MappingProxyType):
+        return {k: _mutable_copy(v) for k, v in value.items()}
+    if isinstance(value, dict):
+        return {k: _mutable_copy(v) for k, v in value.items()}
+    if isinstance(value, tuple):
+        return [_mutable_copy(v) for v in value]
+    if isinstance(value, list):
+        return [_mutable_copy(v) for v in value]
+    return value
+
+
+# Back-compat alias
+_immutable = _to_immutable
 
 
 @dataclass(frozen=True)
@@ -53,40 +81,73 @@ class DecisionContext:
 
     Fields:
       as_of                  : 决策时点 (决定 "现在是什么时候" 的单一源)
-      market                 : ticker snapshot (price/indicators/ts)
-      events                 : earnings/econ calendar 已按 as_of 过滤
-      macro                  : vix/rates/etc at as_of
+      market                 : ticker snapshot (price/indicators/ts) - IMMUTABLE
+      events                 : earnings/econ calendar 已按 as_of 过滤 - IMMUTABLE
+      macro                  : vix/rates/etc at as_of - IMMUTABLE
       thesis_snapshot        : blacklist/whitelist/soft_blacklist at as_of
                                 (None → mean live; {} → mean 无 thesis, e.g. historical)
       calibration_snapshot   : 校准参数 (若 as_of 有对应版本)
       board_regime           : regime label at as_of
+      hmm_state              : HMM meta state (R04 2026-09-20 followup, 从 live cache 迁走)
+      sector_regime_snapshot : per-ticker sector regime map (R04)
       strategy_version       : code version tag (git SHA / manifest hash)
       data_version           : data snapshot version tag
       is_backtest            : True = 历史重放; False = live decision
       builder                : "live" / "snapshot" / "explicit" — 追溯来源
+
+    R04 followup fix (2026-09-20 audit v2): dict/list fields wrapped in
+    MappingProxyType/tuple at __post_init__ (via object.__setattr__ since
+    frozen=True). External mutation of the source dict does not leak in;
+    caller mutation of ctx.market["price"] = X raises TypeError.
     """
-    as_of:                datetime
-    market:               dict[str, Any]        = field(default_factory=dict)
-    events:               dict[str, Any]        = field(default_factory=dict)
-    macro:                dict[str, Any]        = field(default_factory=dict)
-    thesis_snapshot:      Optional[dict]        = None
-    calibration_snapshot: Optional[dict]        = None
-    board_regime:         Optional[str]         = None
-    strategy_version:     str                   = "unknown"
-    data_version:         str                   = "unknown"
-    is_backtest:          bool                  = False
-    builder:              str                   = "explicit"
+    as_of:                    datetime
+    market:                   Any                   = field(default_factory=dict)
+    events:                   Any                   = field(default_factory=dict)
+    macro:                    Any                   = field(default_factory=dict)
+    thesis_snapshot:          Optional[Any]         = None
+    calibration_snapshot:     Optional[Any]         = None
+    board_regime:             Optional[str]         = None
+    hmm_state:                Optional[str]         = None
+    sector_regime_snapshot:   Optional[Any]         = None
+    strategy_version:         str                   = "unknown"
+    data_version:             str                   = "unknown"
+    is_backtest:              bool                  = False
+    builder:                  str                   = "explicit"
+
+    def __post_init__(self):
+        # R04: deep-immutable wrap for dict/list-like fields.
+        # frozen=True disallows normal assignment; use object.__setattr__.
+        for name in ("market", "events", "macro", "thesis_snapshot",
+                      "calibration_snapshot", "sector_regime_snapshot"):
+            raw = object.__getattribute__(self, name)
+            if raw is None:
+                continue
+            wrapped = _to_immutable(raw)
+            object.__setattr__(self, name, wrapped)
 
     def with_updates(self, **kwargs) -> "DecisionContext":
-        """Return a new DecisionContext with some fields overridden.
-        Frozen dataclass 不能就地改, 用这个显式复制 + 覆盖.
-
-        R04 partial: 对 dict/list 类字段 deep copy, 防新 context 与旧 context
-        共享 mutable state.
+        """Return an independent snapshot with overrides. All fields
+        (updated or not) get fresh deep copies, then re-wrapped as immutable
+        by __post_init__ on the new instance. Nothing shares references
+        with the parent context.
         """
-        deep_kwargs = {k: copy.deepcopy(v) if isinstance(v, (dict, list)) else v
-                        for k, v in kwargs.items()}
-        return replace(self, **deep_kwargs)
+        base = {
+            "as_of":                  self.as_of,
+            "market":                 _mutable_copy(self.market),
+            "events":                 _mutable_copy(self.events),
+            "macro":                  _mutable_copy(self.macro),
+            "thesis_snapshot":        _mutable_copy(self.thesis_snapshot),
+            "calibration_snapshot":   _mutable_copy(self.calibration_snapshot),
+            "board_regime":           self.board_regime,
+            "hmm_state":              self.hmm_state,
+            "sector_regime_snapshot": _mutable_copy(self.sector_regime_snapshot),
+            "strategy_version":       self.strategy_version,
+            "data_version":           self.data_version,
+            "is_backtest":            self.is_backtest,
+            "builder":                self.builder,
+        }
+        base.update(kwargs)
+        return DecisionContext(**base)
 
     def is_ticker_blacklisted(self, ticker: str) -> tuple[bool, str]:
         """Read blacklist from thesis_snapshot (if provided) instead of live.
@@ -121,12 +182,12 @@ class DecisionContext:
             except Exception:
                 return False, "", {}
         soft = snap.get("soft_blacklist") or {}
-        if not isinstance(soft, dict):
+        if not isinstance(soft, (dict, MappingProxyType)):
             return False, "", {}
         norm_target = _norm(ticker)
         for key, meta in soft.items():
             if _norm(key) == norm_target:
-                if not isinstance(meta, dict):
+                if not isinstance(meta, (dict, MappingProxyType)):
                     return True, snap.get("soft_blacklist_reason", "soft_thesis_block"), {
                         "min_confidence": 7, "since": "",
                     }

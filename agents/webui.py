@@ -3302,10 +3302,12 @@ def _historical_thesis_at(as_of_iso: str, retired: list[dict]) -> dict | None:
     candidate = later[0].get("thesis") or None
     if not candidate:
         return None
-    # R06: 检查 as_of 是否在 thesis created_at 之后
-    created = candidate.get("created_at", "")
-    if created and as_of_iso < created:
-        return None   # as_of 早于该 thesis 创建时间 → 那时它还不存在
+    # R06 v3 fix (2026-09-20 followup): effective_from 优先于 created_at.
+    # created_at 是"何时被创建的", effective_from 是"何时开始生效的"; 两者
+    # 可以不同 (预先创建, 延迟生效). audit: created_at 不能替 effective_time.
+    effective = candidate.get("effective_from") or candidate.get("created_at", "")
+    if effective and as_of_iso < effective:
+        return None   # as_of 早于该 thesis 生效时间 → 那时它还未生效
     return candidate
 
 

@@ -34,7 +34,16 @@ _HMM_MAX_AGE_HOURS = 72   # weekly.bat 重训, > 72h 视为 stale (跨长周末+
 def _get_hmm_meta_state() -> str | None:
     """读 signals/hmm_state.json 的 current_label。失败/stale → None。
     用于 _etf_rules 仅做"更保守方向"的阈值微调（不会放宽）。
-    加 TTL check: 若 hmm_state.json mtime > 72h → 视为 stale, 忽略."""
+    加 TTL check: 若 hmm_state.json mtime > 72h → 视为 stale, 忽略.
+
+    R04 (2026-09-20 followup v2): 若 active DecisionContext 提供 hmm_state,
+    直接返 context 值 (不读 live disk cache). 空 str 表示 explicit unavailable.
+    """
+    ctx = _ACTIVE_CONTEXT.get() if '_ACTIVE_CONTEXT' in globals() else None
+    if ctx is not None:
+        hmm = getattr(ctx, "hmm_state", None)
+        if hmm is not None:
+            return hmm if hmm else None   # empty str → None (explicit unavailable)
     try:
         from hmm_regime import load as _hmm_load, HMM_STATE_PATH
         import time
@@ -85,7 +94,19 @@ def _get_sector_regime(ticker: str) -> str | None:
     """按 ticker → 板块基准计算方向与短线震荡。
     只做单向收紧，绝不因板块标签放宽买入。
     统一实现: 委托给 sector_regime.classify_ticker_sector (单一源).
+
+    R04 (2026-09-20 followup v2): active context 提供 sector_regime_snapshot
+    → 从 context 读, 不访问 live sector data. 空 dict 表示 explicit unavailable.
     """
+    ctx = _ACTIVE_CONTEXT.get() if '_ACTIVE_CONTEXT' in globals() else None
+    if ctx is not None:
+        snap = getattr(ctx, "sector_regime_snapshot", None)
+        if snap is not None:
+            # 空 dict {} = 明确无历史 sector data
+            if not snap:
+                return None
+            # snap 可能是 MappingProxyType, 支持 .get
+            return snap.get(ticker) if hasattr(snap, "get") else None
     from sector_regime import classify_ticker_sector
     return classify_ticker_sector(ticker, TICKER_TO_SECTOR)
 
