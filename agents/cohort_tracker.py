@@ -371,6 +371,73 @@ def stats(since_days: int = 30) -> dict:
     }
 
 
+def stats_from_fills(since_days: int = 30) -> dict:
+    """R02 audit followup (2026-09-21): 事件重放 stats — 从 execution_ledger
+    (broker fill 事件) 直接派生, 不依赖 cohort ledger.
+
+    audit 明确: fills 是唯一事实, cohort 是可重建结果. 这是 cohort_ledger 的
+    平行/替代实现: 崩溃/state 丢, 只要 execution_ledger 完整, stats 就能重建.
+
+    与 stats() 的差异:
+    - stats() 从 _LEDGER (每 cohort open/close event) 累计
+    - stats_from_fills() 从 execution_ledger.jsonl (broker fills) FIFO 重建
+      每 ticker 已实现 PnL
+
+    差异 = 数据分歧 → 参考 authority flag 判权威.
+    """
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    try:
+        from fill_ledger import get_fills
+    except Exception:
+        return {"n": 0, "since_days": since_days,
+                "authority": "fill_ledger_unavailable",
+                "warning": "fill_ledger import failed"}
+    cutoff = (_dt.now(_tz.utc) - _td(days=since_days)).isoformat()
+    fills = get_fills(since=cutoff, include_partial=True)
+    if not fills:
+        return {"n": 0, "since_days": since_days,
+                "authority": "fills_replay",
+                "warning": None,
+                "n_events": 0}
+    # Group fills by ticker, then FIFO-reduce per ticker
+    from collections import defaultdict as _dd
+    by_ticker = _dd(list)
+    for ev in fills:
+        tk = ev.get("ticker")
+        if tk:
+            by_ticker[tk].append(ev)
+
+    # Reuse fill_ledger.get_position's FIFO logic per ticker
+    from fill_ledger import get_position as _get_pos
+    positions = {}
+    for tk in by_ticker:
+        positions[tk] = _get_pos(tk, since=cutoff)
+
+    # Aggregate closed-position P&L (positions with qty==0 = fully closed)
+    closed_positions = [p for p in positions.values()
+                         if p.get("qty") == 0 and p.get("total_sold", 0) > 0]
+    total_realized = sum(p.get("realized_pnl", 0) or 0 for p in positions.values())
+    n_closed = len(closed_positions)
+    winners = [p for p in closed_positions if (p.get("realized_pnl") or 0) > 0]
+    losers  = [p for p in closed_positions if (p.get("realized_pnl") or 0) <= 0]
+
+    return {
+        "n":               n_closed,
+        "since_days":      since_days,
+        "n_winners":       len(winners),
+        "n_losers":        len(losers),
+        "win_rate":        round(len(winners) / n_closed * 100, 1) if n_closed else 0.0,
+        "total_pnl_usd":   round(total_realized, 2),
+        "n_events":        len(fills),
+        "n_tickers":       len(by_ticker),
+        "authority":       "fills_replay",
+        "warning":         None if fills else "no fills in window",
+        "positions":       {tk: {"qty": p["qty"], "avg_cost": p["avg_cost"],
+                                   "realized_pnl": p["realized_pnl"]}
+                              for tk, p in positions.items()},
+    }
+
+
 def format_stats(since_days: int = 30) -> str:
     s = stats(since_days)
     if s["n"] == 0:
