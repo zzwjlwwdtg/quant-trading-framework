@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-22T14:21",
+  "asof": "2026-09-22T16:25",
   "yields": {
     "10y": {
       "value": 4.963,
@@ -252,12 +252,12 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 157.05 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 157.7 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1355.1 韩元明显走弱",
+      "msg": "KRW/USD 1360.0 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -292,7 +292,7 @@
     },
     {
       "level": "info",
-      "msg": "稳定币影子美元 $258.1B (USDT $183B + USDC $75B, 抽血 EM 通胀国 + 压低美债短端)",
+      "msg": "稳定币影子美元 $258.0B (USDT $183B + USDC $75B, 抽血 EM 通胀国 + 压低美债短端)",
       "key": "stablecoin_large"
     }
   ],
@@ -325,13 +325,13 @@
     "sofr_pct": 3.85,
     "iorb_pct": 3.9,
     "sofr_iorb_spread_bps": -5.0,
-    "usdjpy": 157.05,
-    "usdjpy_20d_pct": -1.17,
-    "usdjpy_20d_delta_pct": -1.17,
+    "usdjpy": 157.7,
+    "usdjpy_20d_pct": -0.9,
+    "usdjpy_20d_delta_pct": -0.9,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -4.16,
-    "krw_usd": 1355.1,
-    "krw_20d_pct": -1.86,
+    "usdjpy_pullback_from_60d_high_pct": -3.76,
+    "krw_usd": 1360.0,
+    "krw_20d_pct": -1.5,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 202.3,
@@ -348,9 +348,9 @@
     "kbe_spy_20d_delta_pct": -4.55,
     "cdx_ig_bps": 77.0,
     "cdx_hy_bps": 268.0,
-    "dxy": 100.33,
-    "dxy_pct_20d": 1.34,
-    "dxy_z_60d": 0.18,
+    "dxy": 100.45,
+    "dxy_pct_20d": 1.46,
+    "dxy_z_60d": 0.32,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -363,33 +363,33 @@
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 25135.19,
-        "chg_1d": 0.37,
-        "chg_5d_pct": 1.9,
+        "close": 25054.32,
+        "chg_1d": 0.05,
+        "chg_5d_pct": 1.57,
         "asof": "2026-09-22"
       },
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": 3953.68,
-        "chg_1d": 0.1,
-        "chg_5d_pct": 2.31,
+        "close": 3952.13,
+        "chg_1d": 0.06,
+        "chg_5d_pct": 2.27,
         "asof": "2026-09-22"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": 13788.55,
-        "chg_1d": 0.43,
-        "chg_5d_pct": 3.77,
+        "close": 13723.74,
+        "chg_1d": -0.05,
+        "chg_5d_pct": 3.28,
         "asof": "2026-09-22"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 7047.17,
-        "chg_1d": 0.56,
-        "chg_5d_pct": 6.34,
+        "close": 7017.91,
+        "chg_1d": 0.15,
+        "chg_5d_pct": 5.89,
         "asof": "2026-09-22"
       }
     },
@@ -397,31 +397,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7833.25,
-        "chg_pct": -0.0
+        "price": 7836.5,
+        "chg_pct": 0.04
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 30808.0,
-        "chg_pct": 0.08
+        "price": 30783.5,
+        "chg_pct": -0.0
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 93.39,
-        "chg_pct": -2.5
+        "price": 93.4,
+        "chg_pct": -2.48
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4382.8,
-        "chg_pct": -0.03
+        "price": 4358.6,
+        "chg_pct": -0.58
       }
     },
     "oil_uso": 148.16,
     "oil_pct_20d": 10.04,
-    "oil_wti": 93.39,
+    "oil_wti": 93.4,
     "eem_pct_20d": 2.55,
     "eem_vs_spx_20d": 1.28,
     "volume_confirm": {
@@ -503,7 +503,7 @@
     "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
-    "stablecoin_total_bn": 258.1,
+    "stablecoin_total_bn": 258.0,
     "usdt_bn": 183.3,
     "usdc_bn": 74.7,
     "vix": 14.87,
@@ -516,8 +516,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-22T14:22:02.388605",
-    "age_sec": 659,
+    "cached_at": "2026-09-22T16:26:04.434299",
+    "age_sec": 419,
     "stale": false,
     "refreshing": false
   }
