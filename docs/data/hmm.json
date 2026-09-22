@@ -13,32 +13,32 @@
   "scope": "slow_macro_background",
   "warning": "慢周期背景，不是当前买入或加仓信号",
   "trading": {
-    "regime": "neutral_chop",
-    "regime_zh": "中性震荡",
-    "base_regime": "neutral",
+    "regime": "bull_chop",
+    "regime_zh": "偏多背景下震荡",
+    "base_regime": "bull_pulling",
     "style": {
-      "style": "chop",
-      "style_zh": "横盘震荡",
-      "chop_score": 4,
+      "style": "chop_bull",
+      "style_zh": "震荡偏强",
+      "chop_score": 5,
       "is_choppy": true,
-      "reason": "10日趋势效率偏低(0.23)；ADX偏低(13.3)；净涨跌小但路径反复；短期ATR放大(1.22x)",
+      "reason": "10日趋势效率很低(0.10)；ADX偏低(13.0)；净涨跌小但路径反复；短期ATR放大(1.36x)",
       "metrics": {
-        "pct_5d": -0.09,
-        "pct_20d": 0.13,
-        "dist_ma20_pct": -0.11,
-        "dist_ma50_pct": 0.5,
-        "efficiency_10": 0.231,
-        "efficiency_20": 0.013,
-        "adx_14": 13.3,
+        "pct_5d": 1.91,
+        "pct_20d": 1.27,
+        "dist_ma20_pct": 1.38,
+        "dist_ma50_pct": 2.01,
+        "efficiency_10": 0.104,
+        "efficiency_20": 0.115,
+        "adx_14": 13.0,
         "reversal_count_10d": 3,
         "ma20_crossings_10d": 1,
-        "atr_5_20_ratio": 1.22
+        "atr_5_20_ratio": 1.359
       },
       "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
     },
-    "date": "2026-09-21",
+    "date": "2026-09-22",
     "expected_date": "2026-09-22",
-    "stale": true,
-    "ts": "2026-09-21T13:21:27.964973+00:00"
+    "stale": false,
+    "ts": "2026-09-22T12:34:40.041643+00:00"
   }
 }
