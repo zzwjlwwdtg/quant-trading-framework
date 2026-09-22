@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-22T18:57:48.779468+00:00",
+  "ts": "2026-09-22T19:30:18.699228+00:00",
   "factors": [
     {
       "arrow": "▼",
       "name": "WTI 油价",
       "direction": "bearish",
       "weight": 1,
-      "value": "$90.58 (20d +6.5%)",
+      "value": "$90.26 (20d +6.2%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "bullish",
       "weight": 1,
-      "value": "$8.81 (Brent $99.39 - WTI $90.58)",
+      "value": "$8.79 (Brent $99.05 - WTI $90.26)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "neutral",
       "weight": 1,
-      "value": "XLE -0.9% vs SPY +1.6% (差 -2.5pp)",
+      "value": "XLE -1.3% vs SPY +1.7% (差 -3.0pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "100.6 (5d +0.9%)",
+      "value": "100.58 (5d +0.9%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -38,7 +38,7 @@
       "name": "美国汽油零售价",
       "direction": "bullish",
       "weight": 1,
-      "value": "$4.16/gal (4周 +3.8%)",
+      "value": "$4.48/gal (4周 +9.6%)",
       "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
@@ -46,7 +46,7 @@
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "50.9 · 极高（>45），市场恐慌",
+      "value": "51.74 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -63,14 +63,14 @@
   "notes": [
     "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
   ],
-  "price": 90.58,
-  "pct_5d": -14.41,
-  "pct_20d": 6.55,
+  "price": 90.26,
+  "pct_5d": -14.71,
+  "pct_20d": 6.18,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-23T03:57:50.464890",
-    "age_sec": 312,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-23T04:30:25.896882",
+    "age_sec": 158,
+    "stale": false,
+    "refreshing": false
   }
 }
