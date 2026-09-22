@@ -1,78 +1,78 @@
 {
   "ticker": "XLV",
-  "sector": "医疗保健综合ETF",
-  "business": "XLV 是追踪标普500医疗保健板块的ETF，核心暴露于大型制药、生物科技、医疗器械、医保服务和生命科学工具公司。",
+  "sector": "医疗保健ETF",
+  "business": "XLV 是跟踪 Health Care Select Sector Index 的美国医疗保健行业 ETF，核心暴露为大型制药、医疗器械、医疗服务、医保管理和生物科技公司。",
   "upstream": [
     {
-      "name": "Thermo Fisher Scientific",
-      "ticker": "TMO",
-      "note": "为药企、生物科技和诊断公司提供实验室仪器、试剂、临床研究和生产服务",
-      "weight": 85,
-      "confidence": "medium"
+      "name": "Eli Lilly",
+      "ticker": "LLY",
+      "note": "核心指数成分股，提供糖尿病、肥胖症、肿瘤和免疫药物等大市值制药暴露",
+      "weight": 100,
+      "confidence": "high"
     },
     {
-      "name": "Danaher",
-      "ticker": "DHR",
-      "note": "提供生物工艺、诊断、生命科学仪器和耗材，是药物研发与生产链的重要供应商",
-      "weight": 78,
-      "confidence": "medium"
+      "name": "Johnson & Johnson",
+      "ticker": "JNJ",
+      "note": "核心指数成分股，提供创新药和医疗器械综合医疗保健暴露",
+      "weight": 70,
+      "confidence": "high"
     },
     {
-      "name": "West Pharmaceutical Services",
-      "ticker": "WST",
-      "note": "提供注射药包装、给药系统和药用密封件，服务生物药和疫苗生产",
-      "weight": 62,
-      "confidence": "medium"
+      "name": "AbbVie",
+      "ticker": "ABBV",
+      "note": "核心指数成分股，提供免疫、肿瘤、神经科学和美容医药暴露",
+      "weight": 50,
+      "confidence": "high"
     },
     {
-      "name": "IQVIA Holdings",
-      "ticker": "IQV",
-      "note": "提供临床试验、真实世界数据和商业化外包服务",
-      "weight": 58,
-      "confidence": "medium"
+      "name": "Merck & Co.",
+      "ticker": "MRK",
+      "note": "核心指数成分股，提供肿瘤、疫苗和处方药暴露",
+      "weight": 39,
+      "confidence": "high"
     },
     {
-      "name": "Lonza Group",
-      "ticker": null,
-      "note": "提供生物药CDMO、细胞基因治疗和原料药生产服务",
-      "weight": 52,
-      "confidence": "medium"
+      "name": "UnitedHealth Group",
+      "ticker": "UNH",
+      "note": "核心指数成分股，提供医保管理、医疗服务和健康数据平台暴露",
+      "weight": 37,
+      "confidence": "high"
     }
   ],
   "downstream": [
     {
+      "name": "UnitedHealth Group",
+      "ticker": "UNH",
+      "note": "通过医保支付、药品福利和医疗服务网络影响药品、医疗器械和医疗服务需求",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
       "name": "CVS Health",
       "ticker": "CVS",
-      "note": "通过PBM、药房和保险业务采购及分发处方药，并影响药品报销渠道",
-      "weight": 82,
+      "note": "通过 Aetna 医保、CVS 药房和 Caremark PBM 承接处方药分发、报销和患者触达",
+      "weight": 75,
       "confidence": "medium"
     },
     {
-      "name": "McKesson",
-      "ticker": "MCK",
-      "note": "作为大型药品批发商采购和分销处方药、特药及医疗产品",
-      "weight": 80,
-      "confidence": "medium"
-    },
-    {
-      "name": "Cencora",
-      "ticker": "COR",
-      "note": "药品分销和特药渠道服务，是制药公司商业化的重要下游通路",
-      "weight": 74,
+      "name": "Cigna Group",
+      "ticker": "CI",
+      "note": "通过医保和 Express Scripts PBM 采购、管理和报销处方药及医疗服务",
+      "weight": 65,
       "confidence": "medium"
     },
     {
       "name": "HCA Healthcare",
       "ticker": "HCA",
-      "note": "医院集团采购药品、医疗器械、诊断产品和医疗服务方案",
-      "weight": 65,
+      "note": "医院运营商，采购医疗器械、耗材、药品和临床服务用于住院及门诊治疗",
+      "weight": 55,
       "confidence": "medium"
     },
     {
-      "name": "UnitedHealth Group",
-      "ticker": "UNH",
-      "note": "医保和医疗服务平台影响药品、器械和医疗服务支付与使用",
-      "weight": 60,
+      "name": "McKesson",
+      "ticker": "MCK",
+      "note": "医药分销商，向医院、药房和诊所分销处方药及医疗产品",
+      "weight": 50,
       "confidence": "medium"
     }
   ],
@@ -80,40 +80,40 @@
     {
       "name": "Vanguard Health Care ETF",
       "ticker": "VHT",
-      "note": "美国医疗保健板块广泛市值加权ETF",
+      "note": "同类美国医疗保健行业宽基ETF，覆盖范围较 XLV 更宽",
       "confidence": "high"
     },
     {
       "name": "iShares U.S. Healthcare ETF",
       "ticker": "IYH",
-      "note": "覆盖美国大型医疗保健公司，与XLV行业暴露相近",
+      "note": "同类美国医疗保健行业ETF，竞争医疗保健板块配置资金",
       "confidence": "high"
     },
     {
       "name": "Fidelity MSCI Health Care Index ETF",
       "ticker": "FHLC",
-      "note": "低费率医疗保健指数ETF，竞争长期配置资金",
+      "note": "低费率医疗保健行业ETF，跟踪 MSCI 美国医疗保健相关指数",
       "confidence": "high"
     },
     {
       "name": "Invesco S&P 500 Equal Weight Health Care ETF",
       "ticker": "RSPH",
-      "note": "等权重医疗保健ETF，减少对超大型药企和医保公司的集中度",
+      "note": "等权重医疗保健ETF，削弱超大市值制药股集中度",
       "confidence": "medium"
     },
     {
-      "name": "iShares Biotechnology ETF",
-      "ticker": "IBB",
-      "note": "偏生物科技子行业，部分替代XLV中的创新药风险暴露",
+      "name": "VanEck Pharmaceutical ETF",
+      "ticker": "PPH",
+      "note": "偏制药子行业ETF，与 XLV 的大型药企暴露部分重叠",
       "confidence": "medium"
     }
   ],
-  "generated_at": "2026-08-23T05:47:15.663695+00:00",
+  "generated_at": "2026-09-22T07:33:34.774254+00:00",
   "source": "codex",
   "_meta": {
-    "cached_at": "2026-08-23T14:47:15.663695",
-    "age_sec": 2598349,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-22T16:33:34.777759",
+    "age_sec": 1769,
+    "stale": false,
+    "refreshing": false
   }
 }
