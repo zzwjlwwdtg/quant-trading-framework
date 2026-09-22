@@ -1,26 +1,19 @@
 {
   "ticker": "FUJIKURA",
   "source_stock": "5803.T",
-  "direction": "上修",
-  "revision_type": "upward",
-  "magnitude": "大",
-  "last_update": "2026-08-07",
-  "next_earnings": "2026-11-06",
-  "guidance_note": "2027年3月期通期予想は売上高17,550億円、営業利益4,320億円、親会社株主帰属純利益3,260億円、EPS 196.88円。",
-  "revision_reason": "前回予想から売上高14,620→17,550億円（+20.0%）、営業利益3,100→4,320億円（+39.4%）、純利益2,290→3,260億円（+42.4%）、EPS 138.31→196.88円へ上方修正。データセンター向け需要拡大を背景に情報通信事業の光コンポーネント製品が伸長し、通期でも需要継続を見込むため。",
+  "direction": "待核验",
+  "revision_type": "unverified",
+  "magnitude": "不明",
+  "last_update": null,
+  "next_earnings": "2026-11-10",
+  "guidance_note": "AI 返回 上修 但未附可核验来源，已拒收",
+  "revision_reason": null,
   "market_reaction": "不明",
-  "confidence": "high",
+  "confidence": "unverified",
   "source_verified": true,
-  "source_status": "codex_cli_websearch",
-  "generated_at": "2026-09-19T09:42:17.581175+00:00",
-  "sources": [
-    {
-      "url": "https://kabuyoho.ifis.co.jp/index.php?action=tp1&bcode=5803&sa=report",
-      "type": "news",
-      "title": "5803 フジクラ - IFIS株予報 - 業績進ちょくと決算スケジュール"
-    }
-  ],
-  "source_via": "codex_cli_websearch",
+  "source_status": "analyst_only",
+  "generated_at": "2026-09-22T09:43:18.539769+00:00",
+  "ai_error": "no_trusted_source",
   "analyst_consensus": {
     "n_analysts": 12,
     "recommendation": "buy",
@@ -49,7 +42,7 @@
     "implied_hist_p25": 3182.85,
     "implied_hist_p75": 14357.64,
     "implied_hist_upside": 39.9,
-    "peer_pe_median": 14.54,
+    "peer_pe_median": 15.1,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
@@ -62,24 +55,24 @@
       },
       {
         "ticker": "GLW",
-        "pe": 34.51
+        "pe": 36.55
       },
       {
         "ticker": "PRY.MI",
-        "pe": 20.16
+        "pe": 20.9
       },
       {
         "ticker": "6869.HK",
-        "pe": 14.54
+        "pe": 15.1
       }
     ],
-    "implied_peer_median": 4403.29,
-    "implied_peer_upside": -11.1,
+    "implied_peer_median": 4572.88,
+    "implied_peer_upside": -7.7,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-09-19T18:43:12.661672",
-    "age_sec": 258591,
+    "cached_at": "2026-09-22T18:44:32.133028",
+    "age_sec": 1112,
     "stale": false,
     "refreshing": false
   }
