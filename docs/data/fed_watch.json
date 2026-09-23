@@ -5,8 +5,9 @@
       "date": "2026-10-28",
       "days_until": 35,
       "probabilities": {
-        "hold": 42,
-        "hike_25": 58
+        "cut_25": 1,
+        "hold": 46,
+        "hike_25": 53
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -16,72 +17,61 @@
       "days_until": 77,
       "probabilities": {
         "hold": 10,
-        "hike_25": 46,
-        "hike_50": 44
+        "hike_25": 50,
+        "hike_50": 40
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
       "days_until": 126,
       "probabilities": {
-        "hold": 6,
-        "hike_25": 31,
-        "hike_50": 63
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 175,
-      "probabilities": {
-        "hold": 2,
-        "hike_25": 14,
-        "hike_50": 84
+        "hold": 7,
+        "hike_25": 29,
+        "hike_50": 64
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_rate": "4.25-4.50",
   "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-21",
-  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00，Warsh强调通胀仍高；此前8月CPI于9/11公布为+0.4% MoM、+3.4% YoY，8月PPI于9/10公布为+0.4% MoM、+5.4% YoY，强化后续加息定价。",
-  "commentary": "Data snapshot 为2026-09-21收盘，晚于9/16 FOMC和Warsh记者会；过去7天内未发现新的NFP/CPI/PPI发布。热CPI/PPI与FOMC鹰派加息共同推动市场从“暂停/降息”转向继续加息路径；远期会议中hike_50表示相对当前区间累计加息50bp或以上的简化桶。",
+  "data_snapshot_date": "2026-09-23",
+  "recent_event_impact": "2026-09-16 FOMC 已加息25bp至3.75-4.00，Warsh会后强调通胀目标；2026-09-11公布的8月CPI偏热、8月NFP为162K且上修，强化了年内再加息预期。",
+  "commentary": "数据快照为2026-09-23，已反映2026-09-16 FOMC加息和Warsh会后讲话；CME FedWatch被多家当日市场报道引用，显示10月再加息约53%、年内至少再加息接近90%。8月CPI偏热、PPI仍显示成本压力，叠加NFP 162K和劳动力市场韧性，使市场从“单次加息”转向“年内至少一次、可能两次”的鹰派定价。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://pypi.org/project/cme-fedwatch/",
-      "type": "cme_fedwatch_derived_settlement"
+      "url": "https://www.koreatimes.co.kr/world/20260923/us-yields-edge-higher-as-investors-weigh-fed-rate-hike-expectations",
+      "type": "latest_report"
     },
     {
-      "url": "https://quantwave.net/liquidity/",
-      "type": "fed_funds_futures_dashboard"
+      "url": "https://www.insigtx.com/en/news/silver-price-forecast-xag-usd-stays-rangebound-buying-capped-310082/",
+      "type": "latest_report"
+    },
+    {
+      "url": "https://finance.yahoo.com/economy/policy/articles/goldman-sachs-drops-surprise-call-174700113.html",
+      "type": "latest_report"
     },
     {
       "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
       "type": "fomc_statement"
     },
     {
-      "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
-      "type": "cpi_release"
-    },
-    {
-      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
-      "type": "ppi_release"
+      "url": "https://www.bls.gov/news.release/empsit.htm",
+      "type": "nfp"
     }
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-23T02:12:49+00:00",
+  "fetched_at": "2026-09-23T10:14:53+00:00",
   "_meta": {
-    "cached_at": "2026-09-23T11:12:49.954342",
-    "age_sec": 28212,
+    "cached_at": "2026-09-23T19:14:53.910573",
+    "age_sec": 1091,
     "stale": false,
     "refreshing": false
   }
