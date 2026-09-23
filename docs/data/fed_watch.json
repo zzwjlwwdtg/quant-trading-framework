@@ -3,32 +3,43 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 36,
+      "days_until": 35,
       "probabilities": {
-        "hold": 43.5,
-        "hike_25": 56.5
+        "hold": 42,
+        "hike_25": 58
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 78,
+      "days_until": 77,
       "probabilities": {
-        "hold": 10.2,
-        "hike_25": 46.6,
-        "hike_50": 43.2
+        "hold": 10,
+        "hike_25": 46,
+        "hike_50": 44
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean"
     },
     {
       "date": "2027-01-27",
-      "days_until": 127,
+      "days_until": 126,
       "probabilities": {
-        "hold": 6.4,
-        "hike_25": 31.4,
-        "hike_50": 62.3
+        "hold": 6,
+        "hike_25": 31,
+        "hike_50": 63
+      },
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 175,
+      "probabilities": {
+        "hold": 2,
+        "hike_25": 14,
+        "hike_50": 84
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
@@ -36,45 +47,41 @@
   ],
   "implied_terminal_rate": "4.50-4.75",
   "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-22",
-  "recent_event_impact": "2026-09-16 FOMC 加息 25bp 至 3.75%-4.00%；2026-09-10 PPI +0.4% MoM / +5.4% YoY、2026-09-11 CPI +0.4% MoM / +3.4% YoY 且核心 CPI +0.3% MoM，推动市场从降息/按兵不动转向连续加息定价。",
-  "commentary": "Snapshot: 2026-09-22；但远月 Jan 2027 使用的可核验表格为 2026-09-18，存在数据滞后。近两周 PPI/CPI 偏热叠加 2026-09-16 Warsh 主持下的 FOMC 实际加息，使市场把 10月再次加息概率推至约 56%，并把 12月累计至少一次加息概率定价到约 90%。",
+  "data_snapshot_date": "2026-09-21",
+  "recent_event_impact": "9/16 FOMC 加息25bp至3.75-4.00，Warsh强调通胀仍高；此前8月CPI于9/11公布为+0.4% MoM、+3.4% YoY，8月PPI于9/10公布为+0.4% MoM、+5.4% YoY，强化后续加息定价。",
+  "commentary": "Data snapshot 为2026-09-21收盘，晚于9/16 FOMC和Warsh记者会；过去7天内未发现新的NFP/CPI/PPI发布。热CPI/PPI与FOMC鹰派加息共同推动市场从“暂停/降息”转向继续加息路径；远期会议中hike_50表示相对当前区间累计加息50bp或以上的简化桶。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.fdd-global.com/article-hot-news/september-21-international-forex-news.html",
-      "type": "cme_fedwatch_report"
+      "url": "https://pypi.org/project/cme-fedwatch/",
+      "type": "cme_fedwatch_derived_settlement"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "fed_funds_futures_monitor"
-    },
-    {
-      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-      "type": "fomc_calendar"
+      "url": "https://quantwave.net/liquidity/",
+      "type": "fed_funds_futures_dashboard"
     },
     {
       "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
       "type": "fomc_statement"
     },
     {
-      "url": "https://www.cbsnews.com/news/fed-rate-hike-september-likelihood-cpi/",
-      "type": "cpi_impact"
+      "url": "https://www.bls.gov/news.release/archives/cpi_09112026.htm",
+      "type": "cpi_release"
     },
     {
-      "url": "https://www.investing.com/analysis/diesel-shock-sends-fed-ratehike-odds-surging-to-75-200687476",
-      "type": "ppi_impact"
+      "url": "https://www.bls.gov/news.release/archives/ppi_09102026.htm",
+      "type": "ppi_release"
     }
   ],
-  "confidence": "low",
+  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-22T10:09:08+00:00",
+  "fetched_at": "2026-09-23T02:12:49+00:00",
   "_meta": {
-    "cached_at": "2026-09-22T19:09:08.421742",
-    "age_sec": 28436,
+    "cached_at": "2026-09-23T11:12:49.954342",
+    "age_sec": 4812,
     "stale": false,
     "refreshing": false
   }
