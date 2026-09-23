@@ -438,22 +438,53 @@ def stats_from_fills(since_days: int = 30) -> dict:
     }
 
 
-def format_stats(since_days: int = 30) -> str:
-    s = stats(since_days)
-    if s["n"] == 0:
-        return f"过去 {since_days} 天无 closed cohort. (系统尚未积累或数据 stale)"
+def format_stats(since_days: int = 30, prefer_fills: bool = True) -> str:
+    """R02 v4 migration (2026-09-22): 默认优先 fills_replay (broker 权威源).
+    prefer_fills=False → 走旧 cohort ledger stats() (audit trail 保留).
+
+    双源都展示: fills 权威, cohort ledger 参考; 分歧显著时明确 flag.
+    """
+    s_fills = stats_from_fills(since_days)
+    s_ledger = stats(since_days)
     active = all_active_cohorts()
+
+    # 主源: 若 prefer_fills 且 fills 有数据, 用 fills; 否则 fallback ledger
+    primary = s_fills if (prefer_fills and s_fills.get("n_events", 0) > 0) else s_ledger
+    src_label = primary.get("authority", "unknown")
+
     lines = [
-        f"=== Position Cohort Stats · 近 {since_days} 天 ===",
-        f"  已 close cohorts:  {s['n']}   ({s['n_winners']}W / {s['n_losers']}L)",
-        f"  胜率:              {s['win_rate']}%",
-        f"  avg P&L:           {s['avg_pnl_pct']:+.2f}%   median: {s['median_pnl_pct']:+.2f}%",
-        f"  total 实现 P&L:    ${s['total_pnl_usd']:+,.2f}",
-        f"  best / worst:      {s['best_pnl_pct']:+.2f}% / {s['worst_pnl_pct']:+.2f}%",
-        f"  avg 持仓天数:      {s['avg_hold_days']:.1f}d",
-        f"",
-        f"当前 active cohorts: {len(active)}",
+        f"=== Position Stats · 近 {since_days} 天 · 权威源: {src_label} ===",
     ]
+
+    if primary.get("n", 0) == 0 and (primary.get("n_events", 0) == 0):
+        lines.append(f"  近 {since_days} 天无 fill/close 事件.")
+        # 仍展示 active + cohort ledger diff
+    else:
+        if src_label == "fills_replay":
+            lines.append(f"  closed positions:  {s_fills['n']}   "
+                          f"({s_fills['n_winners']}W / {s_fills['n_losers']}L)")
+            lines.append(f"  胜率:              {s_fills['win_rate']}%")
+            lines.append(f"  total 实现 P&L:    ${s_fills['total_pnl_usd']:+,.2f}")
+            lines.append(f"  broker fill events: {s_fills['n_events']} 条 "
+                          f"({s_fills['n_tickers']} tickers)")
+        else:
+            lines.append(f"  已 close cohorts:  {s_ledger['n']}   "
+                          f"({s_ledger.get('n_winners', 0)}W / {s_ledger.get('n_losers', 0)}L)")
+            lines.append(f"  胜率:              {s_ledger.get('win_rate', 0)}%")
+            lines.append(f"  total 实现 P&L:    ${s_ledger.get('total_pnl_usd', 0):+,.2f}")
+
+    # 双源对比 (若两个 authority 都有数据 且 divergent)
+    if (s_fills.get("n", 0) > 0 or s_ledger.get("n", 0) > 0):
+        fills_pnl  = s_fills.get("total_pnl_usd", 0)
+        ledger_pnl = s_ledger.get("total_pnl_usd", 0)
+        if abs(fills_pnl - ledger_pnl) > 100:   # >$100 divergence 值得注意
+            lines.append("")
+            lines.append(f"⚠ 双源分歧: fills_replay=${fills_pnl:+,.2f} vs "
+                          f"cohort_ledger=${ledger_pnl:+,.2f} "
+                          f"(fills 是 broker 权威)")
+
+    lines.append("")
+    lines.append(f"当前 active cohorts: {len(active)}")
     for c in active:
         cur_qty = c.get("current_qty", 0)
         avg_e = c.get("avg_entry_price", 0)

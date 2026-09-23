@@ -185,9 +185,14 @@ class CohortStatsTests(unittest.TestCase):
     def test_stats_empty_no_error(self):
         s = cohort_tracker.stats()
         self.assertEqual(s["n"], 0)
-        # format also handles empty
-        text = cohort_tracker.format_stats()
-        self.assertIn("无 closed cohort", text)
+        # R02 v4 (2026-09-22): format_stats 现在默认 prefer_fills, 用生产 fill_ledger,
+        # 不再自动展示 "无 closed cohort". 若显式 prefer_fills=False + mock fills 空,
+        # 应仍显示无 fill/close.
+        from unittest.mock import patch
+        import fill_ledger
+        with patch.object(fill_ledger, "_load_ledger", return_value=[]):
+            text = cohort_tracker.format_stats(prefer_fills=True)
+            self.assertIn("无 fill/close 事件", text)
 
 
 if __name__ == "__main__":

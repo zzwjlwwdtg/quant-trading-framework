@@ -3200,18 +3200,25 @@ def api_thesis_state(as_of: str | None = None) -> dict:
                 # live → 请求 2020-01-01 返 LIVE_2026, historical_unknown=false.
                 # 现在: 若 archive 空 AND as_of 早于 live thesis created_at, 也 unknown.
                 # 若 archive 有内容, 按 earliest retired_at 判 (原逻辑).
+                # R06 v4 (2026-09-22): timezone-aware compare
                 is_unknown = False
-                if retired_full:
-                    earliest_retired = min(retired_full,
-                                            key=lambda e: e.get("retired_at", ""))
-                    if as_of < earliest_retired.get("retired_at", ""):
+                as_of_dt_check = _parse_datetime_utc(as_of)
+                if retired_full and as_of_dt_check is not None:
+                    earliest_retired_iso = min(
+                        (e.get("retired_at", "") for e in retired_full
+                          if e.get("retired_at")),
+                        default="",
+                    )
+                    earliest_dt = _parse_datetime_utc(earliest_retired_iso)
+                    if earliest_dt is not None and as_of_dt_check < earliest_dt:
                         is_unknown = True
-                else:
-                    # archive 空: 用 live thesis 的 created_at 判
+                elif as_of_dt_check is not None:
+                    # archive 空: 用 live thesis 的 effective_from/created_at 判
                     try:
                         raw = _json.loads(_Path(_CONFIG_PATH).read_text(encoding="utf-8"))
-                        live_created = raw.get("created_at", "")
-                        if live_created and as_of < live_created:
+                        live_ref = raw.get("effective_from") or raw.get("created_at", "")
+                        live_dt = _parse_datetime_utc(live_ref)
+                        if live_dt is not None and as_of_dt_check < live_dt:
                             is_unknown = True
                     except Exception:
                         pass
@@ -3282,32 +3289,74 @@ def api_thesis_state(as_of: str | None = None) -> dict:
         return {"error": str(e)[:200]}
 
 
+def _parse_datetime_utc(value):
+    """R06 audit v4 (2026-09-22): 统一 datetime 解析.
+
+    接受: ISO 字符串 (YYYY-MM-DD / YYYY-MM-DDTHH:MM:SS[±TZ] / Z 后缀),
+    datetime 对象. 返 UTC datetime. 无效返 None.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+    if value is None or value == "":
+        return None
+    if isinstance(value, _dt):
+        return value.astimezone(_tz.utc) if value.tzinfo else value.replace(tzinfo=_tz.utc)
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return None
+        # 只有日期 → assume UTC 00:00
+        if len(s) == 10 and s.count("-") == 2:
+            s = s + "T00:00:00+00:00"
+        # Z suffix
+        s = s.replace("Z", "+00:00")
+        try:
+            dt = _dt.fromisoformat(s)
+        except ValueError:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_tz.utc)
+        return dt.astimezone(_tz.utc)
+    return None
+
+
 def _historical_thesis_at(as_of_iso: str, retired: list[dict]) -> dict | None:
     """从 retired thesis archive 里找 as_of 日期时**当时有效**的 thesis body.
 
     Algorithm: 找 retired_at > as_of 的最早那条 retired entry — 它 retire 时,
-    as_of 那天用的是它的 body (前提: as_of >= 该 thesis 的 created_at).
-    若 as_of 早于该 thesis 的 created_at → 那天该 thesis 还没存在 → 返 None.
-    若都在 as_of 之前 retire → 返 None (live 那时).
+    as_of 那天用的是它的 body (前提: as_of >= 该 thesis 的 effective_from).
 
-    R06 fix (2026-09-20 audit): 之前只看 retired_at, 未验证 created_at, 导致
-    2020-01-01 也返 2026 年 thesis. 现在验证 created_at boundary.
+    R06 v4 fix (2026-09-22 audit): 用 _parse_datetime_utc 统一 timezone-aware
+    比较, 不再字符串 lex compare (避免 "2020-01-01" 与 "2026-01-01T00:00:00Z"
+    比较歧义). 也检查 effective_to: 若 candidate 有 effective_to 且 as_of 晚于
+    它, 说明 candidate 已提前失效 → None.
     """
     if not retired or not as_of_iso:
         return None
-    later = [e for e in retired if e.get("retired_at", "") > as_of_iso]
+    as_of_dt = _parse_datetime_utc(as_of_iso)
+    if as_of_dt is None:
+        return None
+    # Filter to entries whose retired_at is after as_of (timezone-aware)
+    later = []
+    for e in retired:
+        r_dt = _parse_datetime_utc(e.get("retired_at"))
+        if r_dt is not None and r_dt > as_of_dt:
+            later.append((r_dt, e))
     if not later:
         return None
-    later.sort(key=lambda e: e.get("retired_at", ""))
-    candidate = later[0].get("thesis") or None
+    later.sort(key=lambda t: t[0])
+    candidate = later[0][1].get("thesis") or None
     if not candidate:
         return None
-    # R06 v3 fix (2026-09-20 followup): effective_from 优先于 created_at.
-    # created_at 是"何时被创建的", effective_from 是"何时开始生效的"; 两者
-    # 可以不同 (预先创建, 延迟生效). audit: created_at 不能替 effective_time.
-    effective = candidate.get("effective_from") or candidate.get("created_at", "")
-    if effective and as_of_iso < effective:
-        return None   # as_of 早于该 thesis 生效时间 → 那时它还未生效
+    # effective_from 优先; created_at fallback
+    effective_from = _parse_datetime_utc(
+        candidate.get("effective_from") or candidate.get("created_at")
+    )
+    if effective_from is not None and as_of_dt < effective_from:
+        return None
+    # effective_to (若声明): as_of 晚于失效时间 → 这个 candidate 已不生效
+    effective_to = _parse_datetime_utc(candidate.get("effective_to"))
+    if effective_to is not None and as_of_dt >= effective_to:
+        return None
     return candidate
 
 
