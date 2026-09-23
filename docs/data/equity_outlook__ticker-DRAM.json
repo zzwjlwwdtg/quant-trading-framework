@@ -5,20 +5,20 @@
   "analyst_consensus": {
     "n_analysts": 46,
     "recommendation": "strong_buy",
-    "current_price": 1081.39,
+    "current_price": 1096.16,
     "forward_eps": 158.93,
     "trailing_eps": 44.26,
     "eps_growth_pct": 259.1,
-    "forward_pe": 6.8,
-    "trailing_pe": 24.43,
+    "forward_pe": 6.9,
+    "trailing_pe": 24.77,
     "target_mean": 1515.0,
     "target_high": 2200.0,
     "target_low": 361.0,
-    "target_upside_pct": 40.1,
+    "target_upside_pct": 38.2,
     "revenue_growth_pct": 345.7,
     "earnings_growth_pct": 1368.5,
     "next_earnings": "2026-10-01",
-    "implied_pe_hold": 3883.02,
+    "implied_pe_hold": 3936.03,
     "implied_pe_hold_upside": 259.1,
     "peg_fair_price": 41177.84,
     "peg_ratio": 0.03,
@@ -29,8 +29,8 @@
     "implied_hist_median": 8677.38,
     "implied_hist_p25": 1317.5,
     "implied_hist_p75": 21258.0,
-    "implied_hist_upside": 702.4,
-    "peer_pe_median": 9.14,
+    "implied_hist_upside": 691.6,
+    "peer_pe_median": 9.28,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
@@ -47,29 +47,29 @@
       },
       {
         "ticker": "WDC",
-        "pe": 14.37
+        "pe": 14.63
       }
     ],
-    "implied_peer_median": 1452.59,
-    "implied_peer_upside": 34.3,
+    "implied_peer_median": 1474.84,
+    "implied_peer_upside": 34.5,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
         "0q": {
-          "avg": 31.4718,
+          "avg": 31.5003,
           "low": 28.04,
           "high": 37.44,
           "yearAgoEps": 3.03,
-          "numberOfAnalysts": 32.0,
-          "growth": 9.3867
+          "numberOfAnalysts": 33.0,
+          "growth": 9.3961
         },
         "+1q": {
-          "avg": 35.5141,
+          "avg": 35.5928,
           "low": 29.51,
           "high": 47.81,
           "yearAgoEps": 4.78,
-          "numberOfAnalysts": 32.0,
-          "growth": 6.4297
+          "numberOfAnalysts": 33.0,
+          "growth": 6.4462
         },
         "0y": {
           "avg": 73.518,
@@ -124,14 +124,14 @@
       },
       "eps_trend": {
         "0q": {
-          "current": 31.4718,
+          "current": 31.5003,
           "7daysAgo": 31.3312,
           "30daysAgo": 31.3289,
           "60daysAgo": 31.3469,
           "90daysAgo": 24.5505
         },
         "+1q": {
-          "current": 35.5141,
+          "current": 35.5928,
           "7daysAgo": 34.8752,
           "30daysAgo": 34.8421,
           "60daysAgo": 34.8308,
@@ -199,38 +199,38 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 1515.0,
-        "gap_pct": 40.1
+        "gap_pct": 38.2
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 3883.02,
+        "implied_price": 3936.03,
         "gap_pct": 259.1
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 1452.59,
-        "gap_pct": 34.3
+        "implied_price": 1474.84,
+        "gap_pct": 34.5
       }
     ],
-    "median_gap_pct": 40.1,
+    "median_gap_pct": 38.2,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -55.3,
+    "required_eps_growth_pct": -54.6,
     "consensus_eps_growth_pct": 259.1,
-    "growth_cushion_pct": 314.4,
+    "growth_cushion_pct": 313.7,
     "rationale": [
-      "多口径隐含价中位数高于现价 40.1%",
+      "多口径隐含价中位数高于现价 38.2%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -55.3%，共识为 +259.1%"
+      "历史 PE 口径要求 EPS 增长 -54.6%，共识为 +259.1%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-22T17:39:50.847854+00:00",
+  "fetched_at": "2026-09-22T23:40:20.913308+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-23T02:39:50.848855",
-    "age_sec": 21195,
+    "cached_at": "2026-09-23T08:40:20.914370",
+    "age_sec": 6763,
     "stale": false,
     "refreshing": false
   },

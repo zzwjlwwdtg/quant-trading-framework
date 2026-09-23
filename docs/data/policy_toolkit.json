@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-22T22:00:57.161226",
-  "count_total_actions": 549,
+  "as_of": "2026-09-23T10:05:20.365348",
+  "count_total_actions": 551,
   "tools": [
     {
       "tool_key": "fed_hawkish_signal",
@@ -25,9 +25,35 @@
       "yield_reaction_30y": {
         "t0_bp": -3.5,
         "yield_at_close": 5.296,
-        "t1d_bp": -2.3
+        "t1d_bp": 0.7
       },
-      "event_count_180d": 279
+      "event_count_180d": 280
+    },
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "expanded",
+        "date": "2026-09-22",
+        "actor": "Bessent",
+        "amount_desc": "$6B buybacks",
+        "commentary": "长端回购规模未满足市场预期，收益率上行，说明安抚力度不足。",
+        "verbatim": "Bessent Disappoints With $6 Billion in Buybacks. Treasuries Sell Off.",
+        "source": "GoogleNews: Bessent Treasury buyback",
+        "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxNcDBYR2NYLW5wUV81S3BkOVE3UEV0b3dhdXhaM3NNbFQtcHJfeDQyOGF3Tjl3eUQydWFHVXI3ZTdyT1hGdHJodXhWQzFfZkc2UHVhYjlkcV90aEJzR1YwWnRRRWVmUlRSY1Y4TVZoWk54Szh0Mi1iWTZ6WE1CWGdMelA1REpVLXJiNjZRSWNQcU5WZHktTzlnVGEwLUEzMjJGZUJwejhmNnB1NC1uZHMtT2Nn?oc=5",
+        "confidence": 9
+      },
+      "yield_reaction_30y": {
+        "t0_bp": 0.7,
+        "yield_at_close": 5.303
+      },
+      "event_count_180d": 192
     },
     {
       "tool_key": "ycc",
@@ -143,29 +169,6 @@
       },
       "yield_reaction_30y": {},
       "event_count_180d": 41
-    },
-    {
-      "tool_key": "long_end_buyback",
-      "zh": "长端回购扩容",
-      "owner": "Treasury",
-      "feasibility": "high",
-      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
-      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
-      "status": "口头/待发",
-      "last_action": {
-        "tool_key": "long_end_buyback",
-        "action_type": "signaled",
-        "date": "2026-09-21",
-        "actor": "Bessent",
-        "amount_desc": "",
-        "commentary": "财政部买回长债被视为稳市信号，说明收益率压力已触及政策容忍线。",
-        "verbatim": "Scott Bessent's bond plan showed markets what will make the treasury flinch",
-        "source": "GoogleNews: Bessent Treasury buyback",
-        "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNS19YaTFfaERqS25wSjg5cjVrQllva1ZLeE9BYXVrSzExWW0yZWxNSDQ0UEVzYnJUUEdNR2gyMXFTSWV2Z1FZMVdzRXB0YXNIeGlFdmg4dnp2anNFZHdFejNMMWdRUURzYlFlWlA5ckRoRkpfU3pnQTVQNWtGR1J2VU9WZHJycllZUEtLYlduNHE?oc=5",
-        "confidence": 7
-      },
-      "yield_reaction_30y": {},
-      "event_count_180d": 191
     },
     {
       "tool_key": "fed_dovish_signal",
