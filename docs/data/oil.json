@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-23T11:27:48.737153+00:00",
+  "ts": "2026-09-23T12:00:19.011739+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 2,
-      "value": "$90.21 (20d +9.5%)",
+      "value": "$90.57 (20d +10.0%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$5.76 (Brent $95.97 - WTI $90.21)",
+      "value": "$5.61 (Brent $96.18 - WTI $90.57)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -30,16 +30,8 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "100.83 (5d +1.2%)",
+      "value": "100.87 (5d +1.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
-    },
-    {
-      "arrow": "▲",
-      "name": "美国汽油零售价",
-      "direction": "bullish",
-      "weight": 1,
-      "value": "$4.48/gal (4周 +9.6%)",
-      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
     },
     {
       "arrow": "▼",
@@ -58,20 +50,20 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "bullish",
-  "score": 2,
+  "direction": "neutral",
+  "score": 1,
   "notes": [
     "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股",
     "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
   ],
-  "price": 90.21,
-  "pct_5d": -11.93,
-  "pct_20d": 9.53,
+  "price": 90.57,
+  "pct_5d": -11.58,
+  "pct_20d": 9.97,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-23T20:27:50.428341",
-    "age_sec": 311,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-09-23T21:00:28.325489",
+    "age_sec": 158,
+    "stale": false,
+    "refreshing": false
   }
 }
