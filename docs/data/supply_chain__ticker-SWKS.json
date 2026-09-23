@@ -1,0 +1,126 @@
+{
+  "ticker": "SWKS",
+  "sector": "射频前端半导体设计",
+  "business": "Skyworks Solutions 设计和销售用于智能手机、物联网、汽车、宽带和无线基础设施的射频前端芯片、功放、滤波器、开关和连接模组。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "提供部分CMOS、RF-SOI等晶圆代工能力，用于射频开关、控制器及连接芯片",
+      "weight": 35,
+      "confidence": "medium"
+    },
+    {
+      "name": "GlobalFoundries",
+      "ticker": "GFS",
+      "note": "提供RF-SOI等特色工艺晶圆代工，支撑射频前端器件制造",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "WIN Semiconductors",
+      "ticker": "3105.TWO",
+      "note": "提供砷化镓等化合物半导体晶圆代工能力，用于射频功率放大器",
+      "weight": 18,
+      "confidence": "medium"
+    },
+    {
+      "name": "Murata Manufacturing",
+      "ticker": "6981.T",
+      "note": "行业内关键射频滤波器、封装和被动元件供应商，部分器件或材料能力与射频模组供应链相关",
+      "weight": 12,
+      "confidence": "low"
+    },
+    {
+      "name": "ASE Technology",
+      "ticker": "ASX",
+      "note": "提供半导体封装、测试及系统级封装服务",
+      "weight": 10,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "采购射频前端模组、功率放大器、滤波器和连接芯片，用于iPhone、iPad等设备",
+      "weight": 65,
+      "confidence": "high"
+    },
+    {
+      "name": "Samsung Electronics",
+      "ticker": null,
+      "note": "采购射频前端和连接相关芯片，用于智能手机、平板及消费电子设备",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "Google",
+      "ticker": "GOOGL",
+      "note": "采购无线连接和射频相关芯片，用于Pixel、Nest等硬件产品",
+      "weight": 7,
+      "confidence": "medium"
+    },
+    {
+      "name": "Amazon",
+      "ticker": "AMZN",
+      "note": "采购Wi-Fi、蓝牙和物联网连接芯片，用于Echo、Ring等智能设备",
+      "weight": 6,
+      "confidence": "medium"
+    },
+    {
+      "name": "Cisco Systems",
+      "ticker": "CSCO",
+      "note": "采购无线连接和射频组件，用于网络设备和企业无线产品",
+      "weight": 5,
+      "confidence": "medium"
+    },
+    {
+      "name": "汽车及工业客户组合",
+      "ticker": null,
+      "note": "采购车载连接、卫星导航、蜂窝和工业物联网射频芯片",
+      "weight": 4,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Qorvo",
+      "ticker": "QRVO",
+      "note": "在手机射频前端、功放、滤波器和模组市场直接竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Broadcom",
+      "ticker": "AVGO",
+      "note": "在高端智能手机射频滤波器、FBAR/BAW器件和无线连接芯片领域竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Qualcomm",
+      "ticker": "QCOM",
+      "note": "通过 Snapdragon 射频前端、调制解调器绑定方案参与竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Murata Manufacturing",
+      "ticker": "6981.T",
+      "note": "在射频滤波器、前端模组和被动器件领域竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "NXP Semiconductors",
+      "ticker": "NXPI",
+      "note": "在汽车、工业和物联网无线连接芯片领域部分竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-17T13:33:34.016392+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-17T22:33:34.017400",
+    "age_sec": 529173,
+    "stale": false,
+    "refreshing": false
+  }
+}
