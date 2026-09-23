@@ -110,6 +110,19 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
     signal_ctx = signal_ctx or {}
     state = _load_active()
     cohort = state.get(ticker)
+    # F3 followup fix (2026-09-23): idempotent by fired_key. paper_trader passes
+    # signal_ctx.fired_key = "env|acc|oid|cum_dealt" — 若同一 fired_key 已被记录
+    # (crash-recovery 场景 fired_ledger append 失败 + state.clear 导致 refresh
+    # 再次 fire), 幂等 skip 避免 cohort 双计.
+    fired_key = signal_ctx.get("fired_key")
+    if fired_key and cohort:
+        for e in cohort.get("entries", []):
+            if (e.get("tag") if not isinstance(e, dict) else e.get("fired_key")) == fired_key:
+                return cohort   # already recorded, skip
+            # older schema: check nested signal_ctx or plain match
+            ctx_here = e if isinstance(e, dict) else {}
+            if ctx_here.get("fired_key") == fired_key:
+                return cohort
 
     if cohort is None:
         # 新 cohort
@@ -125,10 +138,11 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
             "signal_reason":        signal_ctx.get("reason"),
             "signal_tag":           signal_ctx.get("tag"),
             "entries": [{
-                "ts":     ts,
-                "price":  round(float(exec_price), 4),
-                "qty":    int(exec_qty),
-                "tag":    signal_ctx.get("tag"),
+                "ts":         ts,
+                "price":      round(float(exec_price), 4),
+                "qty":        int(exec_qty),
+                "tag":        signal_ctx.get("tag"),
+                "fired_key":  fired_key,
             }],
             "exits": [],
             "current_qty":          int(exec_qty),
@@ -158,10 +172,11 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
     new_cost = old_cost + add_cost
     new_avg = new_cost / new_qty if new_qty > 0 else 0
     cohort["entries"].append({
-        "ts":    ts,
-        "price": round(float(exec_price), 4),
-        "qty":   int(exec_qty),
-        "tag":   signal_ctx.get("tag"),
+        "ts":         ts,
+        "price":      round(float(exec_price), 4),
+        "qty":        int(exec_qty),
+        "tag":        signal_ctx.get("tag"),
+        "fired_key":  fired_key,
     })
     cohort["current_qty"] = new_qty
     cohort["cost_basis_usd"] = round(new_cost, 2)
@@ -372,69 +387,187 @@ def stats(since_days: int = 30) -> dict:
 
 
 def stats_from_fills(since_days: int = 30) -> dict:
-    """R02 audit followup (2026-09-21): 事件重放 stats — 从 execution_ledger
-    (broker fill 事件) 直接派生, 不依赖 cohort ledger.
+    """R02 event-replay stats. V5-01 audit rewrite (2026-09-23).
 
-    audit 明确: fills 是唯一事实, cohort 是可重建结果. 这是 cohort_ledger 的
-    平行/替代实现: 崩溃/state 丢, 只要 execution_ledger 完整, stats 就能重建.
+    Key semantic fixes from V5-01 audit:
+    - Round-trips (not tickers) are the unit for wins/losses. One ticker
+      that goes flat, then buys again, then goes flat again, counts as 2.
+    - Sells with no matched buy layer (期初 unknown / pre-window buy) are
+      reported as unreconciled_tickers + unreconciled_sells_qty, NOT as
+      losers. realized_pnl for those is not credited.
+    - Buy events BEFORE the window are used to seed cost basis for sells
+      WITHIN the window, so a 40-day-old buy + yesterday's sell counts.
+      Only sell events time-attribute to the window.
+    - Authority label degrades to fills_replay_partial when unreconciled
+      exist, and warning is set explicitly. Never `authority=fills_replay
+      + warning=None` unless everything reconciled.
 
-    与 stats() 的差异:
-    - stats() 从 _LEDGER (每 cohort open/close event) 累计
-    - stats_from_fills() 从 execution_ledger.jsonl (broker fills) FIFO 重建
-      每 ticker 已实现 PnL
-
-    差异 = 数据分歧 → 参考 authority flag 判权威.
+    Return shape (V5-01):
+      n:                     round-trip count in window
+      n_winners / n_losers:  from realized round-trips only
+      total_pnl_usd:         sum of realized round-trip PnL (excludes unknown)
+      unreconciled_tickers:  list of tickers with unmatched sells in window
+      unreconciled_sells_qty: total unmatched sell shares
+      authority:             "fills_replay" (clean) or "fills_replay_partial"
+      warning:               None if clean, else description
     """
     from datetime import datetime as _dt, timedelta as _td, timezone as _tz
     try:
         from fill_ledger import get_fills
     except Exception:
-        return {"n": 0, "since_days": since_days,
-                "authority": "fill_ledger_unavailable",
-                "warning": "fill_ledger import failed"}
-    cutoff = (_dt.now(_tz.utc) - _td(days=since_days)).isoformat()
-    fills = get_fills(since=cutoff, include_partial=True)
-    if not fills:
-        return {"n": 0, "since_days": since_days,
-                "authority": "fills_replay",
-                "warning": None,
-                "n_events": 0}
-    # Group fills by ticker, then FIFO-reduce per ticker
+        return {
+            "n": 0, "since_days": since_days,
+            "authority": "fill_ledger_unavailable",
+            "warning": "fill_ledger import failed",
+            "n_roundtrips": 0, "n_winners": 0, "n_losers": 0,
+            "total_pnl_usd": 0, "n_events": 0,
+            "unreconciled_tickers": [], "unreconciled_sells_qty": 0,
+            "positions": {},
+        }
+    cutoff_dt = _dt.now(_tz.utc) - _td(days=since_days)
+    cutoff_iso = cutoff_dt.isoformat()
+    # V5-01 fix: pre-window BUYs also loaded so we can seed cost basis
+    all_fills = get_fills(include_partial=True)
+    if not all_fills:
+        return {
+            "n": 0, "since_days": since_days,
+            "authority": "fills_replay",
+            "warning": None,
+            "n_roundtrips": 0, "n_winners": 0, "n_losers": 0,
+            "total_pnl_usd": 0, "n_events": 0,
+            "unreconciled_tickers": [], "unreconciled_sells_qty": 0,
+            "positions": {},
+        }
+    # Group by ticker
     from collections import defaultdict as _dd
     by_ticker = _dd(list)
-    for ev in fills:
+    for ev in all_fills:
         tk = ev.get("ticker")
         if tk:
             by_ticker[tk].append(ev)
 
-    # Reuse fill_ledger.get_position's FIFO logic per ticker
-    from fill_ledger import get_position as _get_pos
-    positions = {}
-    for tk in by_ticker:
-        positions[tk] = _get_pos(tk, since=cutoff)
+    # Per-ticker FIFO walk detecting round-trips within window
+    total_realized = 0.0
+    n_wins = 0
+    n_losses = 0
+    n_roundtrips = 0
+    unreconciled_tickers: set[str] = set()
+    unreconciled_sells_qty = 0.0
+    events_in_window = 0
+    positions: dict = {}   # ticker → {qty, avg_cost} for open positions
 
-    # Aggregate closed-position P&L (positions with qty==0 = fully closed)
-    closed_positions = [p for p in positions.values()
-                         if p.get("qty") == 0 and p.get("total_sold", 0) > 0]
-    total_realized = sum(p.get("realized_pnl", 0) or 0 for p in positions.values())
-    n_closed = len(closed_positions)
-    winners = [p for p in closed_positions if (p.get("realized_pnl") or 0) > 0]
-    losers  = [p for p in closed_positions if (p.get("realized_pnl") or 0) <= 0]
+    for tk, tk_events in by_ticker.items():
+        # F1 followup fix (2026-09-23): 之前先按 oid 压成"最终累计"再排序 → 交错成交
+        # (buy partial → 别单 sell → 原 buy 完成) 时 sell 被移到全部 buy 之后,
+        # 后续 per-oid delta 逻辑无法恢复丢掉的中间事件. 与 fill_ledger.get_position
+        # 同款: 直接按原 event ts 排序, 用 per-oid running dealt 计算增量.
+        ordered = sorted(tk_events, key=lambda e: e.get("ts", ""))
+
+        # FIFO layers with round-trip detection
+        layers: list[dict] = []
+        per_oid_prev_dealt: dict[str, float] = {}
+        per_oid_prev_cash:  dict[str, float] = {}
+        rt_realized_current = 0.0   # current in-progress round-trip
+        rt_had_buys = False         # became active after a buy
+        tk_unreconciled_qty = 0.0
+
+        for ev in ordered:
+            ev_ts = ev.get("ts", "")
+            in_window = ev_ts >= cutoff_iso
+            oid = str(ev.get("order_id") or "")
+            side = (ev.get("side") or "").upper()
+            cum_dealt = float(ev.get("dealt_qty") or 0)
+            cum_avg   = float(ev.get("average_fill_price") or 0)
+            if cum_dealt <= 0 or cum_avg <= 0:
+                continue
+            prev_dealt = per_oid_prev_dealt.get(oid, 0.0)
+            prev_cash  = per_oid_prev_cash.get(oid, 0.0)
+            delta_qty  = cum_dealt - prev_dealt
+            if delta_qty <= 0:
+                continue
+            cum_cash = cum_dealt * cum_avg
+            delta_cash = cum_cash - prev_cash
+            delta_price = (delta_cash / delta_qty) if delta_cash > 0 else cum_avg
+            per_oid_prev_dealt[oid] = cum_dealt
+            per_oid_prev_cash[oid]  = cum_cash
+
+            if in_window:
+                events_in_window += 1
+
+            if side == "BUY":
+                # Buy pre-window OR in-window: seeds cost basis (V5-01: pre-window BUY
+                # inherits cost for in-window sells)
+                layers.append({"qty": delta_qty, "price": delta_price})
+                rt_had_buys = True
+            elif side in ("SELL", "SELL_ALL", "REDUCE"):
+                remaining = delta_qty
+                sell_realized = 0.0
+                while remaining > 0 and layers and layers[0]["qty"] > 0:
+                    layer = layers[0]
+                    take = min(remaining, layer["qty"])
+                    sell_realized += take * (delta_price - layer["price"])
+                    layer["qty"] -= take
+                    remaining     -= take
+                    if layer["qty"] <= 1e-9:
+                        layers.pop(0)
+                # V5-01 fix: unmatched sell qty → unreconciled (NOT loser, NOT realized)
+                if remaining > 0:
+                    tk_unreconciled_qty += remaining
+                    unreconciled_sells_qty += remaining
+                # Attribute realized to window based on SELL time
+                if in_window:
+                    total_realized += sell_realized
+                    rt_realized_current += sell_realized
+                # If all layers gone → round-trip closed
+                if not layers or all(l["qty"] <= 1e-9 for l in layers):
+                    if rt_had_buys and in_window:
+                        # Only count round-trip if sell was in-window (audit: 卖出实际时间)
+                        n_roundtrips += 1
+                        if rt_realized_current > 0:
+                            n_wins += 1
+                        elif rt_realized_current < 0:
+                            n_losses += 1
+                        # rt_realized_current == 0 → not counted as loss (V5-01)
+                    rt_realized_current = 0.0
+                    rt_had_buys = False
+
+        if tk_unreconciled_qty > 0:
+            unreconciled_tickers.add(tk)
+        # Backward-compat: expose remaining open layers as position
+        remaining_qty = sum(l["qty"] for l in layers if l["qty"] > 0)
+        if remaining_qty > 0:
+            remaining_cost = sum(l["qty"] * l["price"] for l in layers if l["qty"] > 0)
+            positions[tk] = {
+                "qty":      remaining_qty,
+                "avg_cost": remaining_cost / remaining_qty if remaining_qty > 0 else 0.0,
+            }
+
+    # V5-01: authority degrades when unreconciled exist
+    has_unreconciled = bool(unreconciled_tickers)
+    authority = "fills_replay_partial" if has_unreconciled else "fills_replay"
+    warning = None
+    if has_unreconciled:
+        warning = (f"{len(unreconciled_tickers)} tickers have unreconciled sells "
+                    f"({int(unreconciled_sells_qty)} shares total) — cost basis unknown. "
+                    f"Consumed as pre-window state without matched buys.")
+
+    win_rate = round(n_wins / n_roundtrips * 100, 1) if n_roundtrips else 0.0
 
     return {
-        "n":               n_closed,
-        "since_days":      since_days,
-        "n_winners":       len(winners),
-        "n_losers":        len(losers),
-        "win_rate":        round(len(winners) / n_closed * 100, 1) if n_closed else 0.0,
-        "total_pnl_usd":   round(total_realized, 2),
-        "n_events":        len(fills),
-        "n_tickers":       len(by_ticker),
-        "authority":       "fills_replay",
-        "warning":         None if fills else "no fills in window",
-        "positions":       {tk: {"qty": p["qty"], "avg_cost": p["avg_cost"],
-                                   "realized_pnl": p["realized_pnl"]}
-                              for tk, p in positions.items()},
+        "n":                     n_roundtrips,
+        "n_roundtrips":          n_roundtrips,
+        "since_days":            since_days,
+        "n_winners":             n_wins,
+        "n_losers":              n_losses,
+        "win_rate":              win_rate,
+        "total_pnl_usd":         round(total_realized, 2),
+        "n_events":              events_in_window,
+        "n_tickers":             len(by_ticker),
+        "authority":             authority,
+        "warning":               warning,
+        "unreconciled_tickers":  sorted(unreconciled_tickers),
+        "unreconciled_sells_qty": int(unreconciled_sells_qty),
+        "positions":             positions,
     }
 
 
@@ -460,13 +593,26 @@ def format_stats(since_days: int = 30, prefer_fills: bool = True) -> str:
         lines.append(f"  近 {since_days} 天无 fill/close 事件.")
         # 仍展示 active + cohort ledger diff
     else:
-        if src_label == "fills_replay":
-            lines.append(f"  closed positions:  {s_fills['n']}   "
+        # F2 followup fix (2026-09-23): 之前 render 仅按 exact-match "fills_replay"
+        # 分流, "fills_replay_partial" fallthrough 到旧 ledger 分支 → 标题写新源、
+        # 正文却是旧账本数字. 现在: 按 primary is s_fills 与否, 一律 render primary
+        # 自己的数字, 与 authority 字符串解耦; partial 追加 unreconciled warning.
+        primary_is_fills = primary is s_fills
+        if primary_is_fills:
+            lines.append(f"  closed round-trips:  {s_fills['n']}   "
                           f"({s_fills['n_winners']}W / {s_fills['n_losers']}L)")
-            lines.append(f"  胜率:              {s_fills['win_rate']}%")
-            lines.append(f"  total 实现 P&L:    ${s_fills['total_pnl_usd']:+,.2f}")
-            lines.append(f"  broker fill events: {s_fills['n_events']} 条 "
-                          f"({s_fills['n_tickers']} tickers)")
+            lines.append(f"  胜率:              {s_fills.get('win_rate', 0)}%")
+            lines.append(f"  total 实现 P&L:    ${s_fills.get('total_pnl_usd', 0):+,.2f}")
+            lines.append(f"  broker fill events: {s_fills.get('n_events', 0)} 条 "
+                          f"({s_fills.get('n_tickers', 0)} tickers)")
+            if src_label == "fills_replay_partial":
+                unreco = s_fills.get("unreconciled_tickers") or []
+                unreco_qty = s_fills.get("unreconciled_sells_qty", 0)
+                lines.append(f"  ⚠ partial: {len(unreco)} tickers 有 unreconciled sells "
+                              f"({unreco_qty} 股, cost basis 未知): {', '.join(unreco[:5])}"
+                              + (" ..." if len(unreco) > 5 else ""))
+                if s_fills.get("warning"):
+                    lines.append(f"  ⚠ {s_fills['warning']}")
         else:
             lines.append(f"  已 close cohorts:  {s_ledger['n']}   "
                           f"({s_ledger.get('n_winners', 0)}W / {s_ledger.get('n_losers', 0)}L)")

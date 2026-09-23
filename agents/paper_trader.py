@@ -524,35 +524,118 @@ EXECUTION_LOG_PATH = Path(__file__).parent / "signals" / "execution_ledger.jsonl
 COHORT_FIRED_LEDGER_PATH = Path(__file__).parent / "signals" / "cohort_fired_ledger.jsonl"
 
 
-def _load_cohort_fired_ledger() -> set[str]:
-    """Load already-fired keys as a set. Missing file → empty set."""
+def _load_cohort_fired_ledger() -> dict:
+    """Load fired ledger entries indexed by fired_key.
+
+    F3 followup (2026-09-23): 之前只存 key string, 无法在 state.clear() 后恢复
+    每次 fire 的 delta_qty / delta_cash → 崩溃后 prev_avg 丢失, delta_price
+    fallback 到当次 avg_fill (聚合累计价) → 成本错误. 现在 JSONL, 每条 entry:
+      {"key": "env|acc|oid|cum_dealt", "cum_dealt":10.0,
+       "delta_qty":5.0, "delta_cash":600.0, "ts":..., "ticker":..., "side":...}
+    向后兼容: 旧格式 (单 key 字符串) 仍解析, 无 delta 字段 → prev_cash 退回 0.
+    """
     if not COHORT_FIRED_LEDGER_PATH.exists():
-        return set()
+        return {}
+    out: dict = {}
     try:
-        keys = set()
         with open(COHORT_FIRED_LEDGER_PATH, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line:
-                    keys.add(line)
-        return keys
+                if not line:
+                    continue
+                if line.startswith("{"):
+                    try:
+                        rec = json.loads(line)
+                        key = rec.get("key")
+                        if key:
+                            out[key] = rec
+                    except Exception:
+                        pass
+                else:
+                    # Legacy: plain key string
+                    out[line] = {"key": line}
     except Exception:
-        return set()
+        return {}
+    return out
 
 
-def _append_cohort_fired_ledger(fired_key: str) -> None:
-    """Append single key + newline. flush + fsync for durability."""
-    try:
-        COHORT_FIRED_LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(COHORT_FIRED_LEDGER_PATH, "a", encoding="utf-8") as f:
-            f.write(fired_key + "\n")
-            f.flush()
+def _recover_prev_from_ledger(fired_ledger: dict, env: str,
+                               acc, oid: str) -> tuple[float, float]:
+    """F3 audit fix (2026-09-23): recover (prev_dealt, prev_cash) from ledger.
+
+    state.clear() 后 seen 丢失, 此函数从 append-only ledger 恢复该 oid 已经
+    fire 过的累计 dealt 和累计 cash — 用于 delta_price 计算, 避免 fallback
+    到当次 avg_fill (会把补单实际单价 $120 记成聚合均价 $110).
+    """
+    prefix = f"{env}|{acc}|{oid}|"
+    total_dealt = 0.0
+    total_cash  = 0.0
+    max_cum     = 0.0
+    for key, rec in fired_ledger.items():
+        if not key.startswith(prefix):
+            continue
+        # 优先用结构化字段
+        delta_qty  = float(rec.get("delta_qty", 0) or 0)
+        delta_cash = float(rec.get("delta_cash", 0) or 0)
+        total_dealt += delta_qty
+        total_cash  += delta_cash
+        # 若 legacy 或结构化里含 cum_dealt, 也用它作 max 兜底
+        cum = rec.get("cum_dealt")
+        if cum is None:
+            tail = key[len(prefix):]
             try:
-                os.fsync(f.fileno())
-            except Exception:
-                pass
-    except Exception:
-        pass
+                cum = float(tail)
+            except ValueError:
+                cum = 0.0
+        max_cum = max(max_cum, float(cum))
+    # 若结构化 delta_qty 为 0 (legacy) → 回退到 max_cum
+    if total_dealt <= 0 and max_cum > 0:
+        total_dealt = max_cum
+        total_cash  = 0.0
+    return total_dealt, total_cash
+
+
+def _max_cum_dealt_from_ledger(fired_ledger, env: str,
+                                acc, oid: str) -> float:
+    """Backward-compat wrapper for callers that only need max cum_dealt.
+
+    Accepts either the new dict form or the legacy set form.
+    """
+    if isinstance(fired_ledger, dict):
+        keys_iter = fired_ledger.keys()
+    else:
+        keys_iter = fired_ledger
+    prefix = f"{env}|{acc}|{oid}|"
+    max_dealt = 0.0
+    for key in keys_iter:
+        if not key.startswith(prefix):
+            continue
+        tail = key[len(prefix):]
+        try:
+            v = float(tail)
+        except ValueError:
+            continue
+        if v > max_dealt:
+            max_dealt = v
+    return max_dealt
+
+
+def _append_cohort_fired_ledger(entry) -> None:
+    """Append structured entry (or legacy key str) to fired ledger. fsync.
+
+    F3 audit followup (2026-09-23): accept dict for new format, str for legacy.
+    """
+    COHORT_FIRED_LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(COHORT_FIRED_LEDGER_PATH, "a", encoding="utf-8") as f:
+        if isinstance(entry, dict):
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        else:
+            f.write(str(entry) + "\n")
+        f.flush()
+        try:
+            os.fsync(f.fileno())
+        except Exception:
+            pass
 
 
 # ---------- Trade context (lazy singleton) ----------
@@ -1450,69 +1533,133 @@ def refresh_execution_ledger() -> None:
         # 与 state 完全分离. 崩溃/state 回滚不影响.
         # Key = (env, acc, oid, cum_dealt) — 符合 audit 要求 (env+acc+oid+fill_rev).
         cohort_fired = _load_cohort_fired_ledger()
-        try:
-            base_tag = (base.get("tag") or "").upper() if base.get("tag") else ""
-            # STEP 1: 读旧 prev (仍是上次的 signature)
-            prev_sig = seen.get(oid, "")
-            prev_dealt = 0.0
-            prev_avg   = 0.0
-            if prev_sig:
-                try:
-                    parts = prev_sig.split("|")
-                    prev_dealt = float(parts[1])
-                    prev_avg   = float(parts[2]) if len(parts) > 2 else 0.0
-                except (IndexError, ValueError):
-                    prev_dealt = 0.0
-                    prev_avg   = 0.0
-            # STEP 2: 计算 delta (基于旧 prev)
-            delta_qty = dealt - prev_dealt
-            # STEP 3: 更新 seen + checkpoint (为下次 reconcile 提供正确 prev)
+        base_tag = (base.get("tag") or "").upper() if base.get("tag") else ""
+        # STEP 1: 读旧 prev (仍是上次的 signature)
+        prev_sig = seen.get(oid, "")
+        prev_dealt = 0.0
+        prev_avg   = 0.0
+        if prev_sig:
+            try:
+                parts = prev_sig.split("|")
+                prev_dealt = float(parts[1])
+                prev_avg   = float(parts[2]) if len(parts) > 2 else 0.0
+            except (IndexError, ValueError):
+                prev_dealt = 0.0
+                prev_avg   = 0.0
+        # F3 followup fix (2026-09-23): recover BOTH prev_dealt AND prev_cash from
+        # ledger (structured entries). state.clear() 后 seen 丢, 单靠 max_cum_dealt
+        # 只能恢复数量, prev_avg=0 → delta_price fallback 到当次 avg_fill (聚合均价).
+        # 正确做法: 从 ledger 累加 delta_qty + delta_cash → 反推 prev_avg.
+        prev_dealt_ledger, prev_cash_ledger = _recover_prev_from_ledger(
+            cohort_fired, TRD_ENV, ACC_ID, oid,
+        )
+        if prev_dealt_ledger > prev_dealt:
+            prev_dealt = prev_dealt_ledger
+            # 优先用 ledger 累计 cash 反推 prev_avg
+            prev_avg = (prev_cash_ledger / prev_dealt_ledger) if prev_dealt_ledger > 0 and prev_cash_ledger > 0 else 0.0
+        # STEP 2: 计算 delta (基于旧 prev)
+        delta_qty = dealt - prev_dealt
+        # F3 followup (2026-09-23): 移出 try/except — save/callback/append 分开处理.
+        # 之前一个大 try 把 3 步捆一起, 任一失败静默, 且顺序导致 seen 已前移 →
+        # 回调失败重试跳过. 现在: dedup 先做; 若已 fired → 只前移 seen. 若未 fired →
+        # 尝试 callback + append, 全部成功才前移 seen (retry 可用).
+        fired_key = f"{TRD_ENV}|{ACC_ID}|{oid}|{dealt:.6f}"
+        already_fired = fired_key in cohort_fired
+        should_fire = (event_name in ("partial", "filled") and dealt > 0
+                       and delta_qty > 0 and "REBALANCE" not in base_tag
+                       and not already_fired)
+
+        if not should_fire:
+            # 无需 fire 或已 fire → 直接前移 seen (下次 reconcile 用正确 prev).
             seen[oid] = signature
             state["__execution_reconcile"] = dict(list(seen.items())[-500:])
             _state_save(state)
             dirty = True
-            # R02 event-sourced: 独立 idempotency 检查, key = (env, acc, oid, cum_dealt).
-            # 即使 seen 被回滚 (state.clear()), cohort_fired ledger 独立 append-only,
-            # 保证同一 broker cumulative report 只 fire 一次.
-            fired_key = f"{TRD_ENV}|{ACC_ID}|{oid}|{dealt:.6f}"
-            already_fired = fired_key in cohort_fired
-            # STEP 4: 触发 cohort 回调 (基于 STEP 2 的 delta)
-            if event_name in ("partial", "filled") and dealt > 0 and delta_qty > 0 \
-                    and "REBALANCE" not in base_tag and not already_fired:
-                if prev_dealt > 0 and prev_avg > 0:
-                    delta_cash = dealt * avg_fill - prev_dealt * prev_avg
-                    if delta_cash > 0:
-                        delta_price = delta_cash / delta_qty
-                    else:
-                        delta_price = float(avg_fill)
-                else:
-                    delta_price = float(avg_fill)
-                from cohort_tracker import on_buy, on_sell
-                ticker_full = base.get("ticker") or ""
-                side_norm = str(base.get("side") or "").upper()
-                now_iso = datetime.now(timezone.utc).isoformat()
-                if side_norm == "BUY":
-                    sig_ctx = {
-                        "action":         "BUY_FILL",
-                        "tag":            base.get("tag") or "",
-                        "order_id":       oid,
-                        "requested":      requested,
-                        "dealt":          dealt,
-                        "batch_avg_fill": float(avg_fill),
-                        "delta_price":    round(delta_price, 4),
-                    }
-                    on_buy(ticker_full, float(delta_price), int(delta_qty),
-                            signal_ctx=sig_ctx, ts=now_iso)
-                elif side_norm in ("SELL", "SELL_ALL", "REDUCE"):
-                    on_sell(ticker_full, float(delta_price), int(delta_qty),
-                             exit_reason=(f"{base.get('tag') or ''} "
-                                          f"(fill oid={oid}, delta @${delta_price:.2f})"),
-                             ts=now_iso)
-                # R02 v3: append 到独立 cohort_fired_ledger (不进 state, 崩溃可存活)
-                _append_cohort_fired_ledger(fired_key)
-                cohort_fired.add(fired_key)
+            continue
+
+        # 计算 delta_price (基于恢复的 prev_avg)
+        if prev_dealt > 0 and prev_avg > 0:
+            delta_cash = dealt * avg_fill - prev_dealt * prev_avg
+            if delta_cash > 0:
+                delta_price = delta_cash / delta_qty
+            else:
+                delta_price = float(avg_fill)
+        else:
+            delta_price = float(avg_fill)
+            delta_cash = delta_qty * delta_price
+
+        ticker_full = base.get("ticker") or ""
+        side_norm = str(base.get("side") or "").upper()
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        # F3 followup: 尝试 callback. 失败 → 不前移 seen, 不 append ledger → 下次 retry.
+        callback_ok = False
+        try:
+            from cohort_tracker import on_buy, on_sell
+            if side_norm == "BUY":
+                sig_ctx = {
+                    "action":         "BUY_FILL",
+                    "tag":            base.get("tag") or "",
+                    "order_id":       oid,
+                    "requested":      requested,
+                    "dealt":          dealt,
+                    "batch_avg_fill": float(avg_fill),
+                    "delta_price":    round(delta_price, 4),
+                    "fired_key":      fired_key,   # F3: 让 cohort_tracker 幂等去重
+                }
+                on_buy(ticker_full, float(delta_price), int(delta_qty),
+                        signal_ctx=sig_ctx, ts=now_iso)
+            elif side_norm in ("SELL", "SELL_ALL", "REDUCE"):
+                on_sell(ticker_full, float(delta_price), int(delta_qty),
+                         exit_reason=(f"{base.get('tag') or ''} "
+                                      f"(fill oid={oid}, delta @${delta_price:.2f}) "
+                                      f"[fired_key={fired_key}]"),
+                         ts=now_iso)
+            callback_ok = True
         except Exception:
-            pass   # cohort 失败静默; checkpoint 已存, 不会 double-count
+            try:
+                from notifier import logger as _lg
+                _lg.error(f"[trader] cohort callback failed oid={oid} "
+                          f"delta_qty={delta_qty} @ ${delta_price:.4f}; "
+                          f"will retry on next reconcile")
+            except Exception:
+                pass
+            # 不前移 seen, 不 append ledger → 下次 reconcile 同 signature 会再进 → retry.
+            continue
+
+        # Callback 成功 → append structured ledger entry.
+        # F3 followup (2026-09-23): 若 append 失败也不静默吞. 记为 append_failed;
+        # seen 仍前移 (in-memory 已成功), 但 cohort_fired 内存 set 缺失 →
+        # 下次 reconcile 同 signature 会 dedup by seen (同 session); 若 state.clear,
+        # cohort_tracker 需自己按 fired_key 幂等 (见 signal_ctx.fired_key).
+        try:
+            _append_cohort_fired_ledger({
+                "key":        fired_key,
+                "cum_dealt":  dealt,
+                "delta_qty":  delta_qty,
+                "delta_cash": delta_cash,
+                "ts":         now_iso,
+                "ticker":     ticker_full,
+                "side":       side_norm,
+            })
+            cohort_fired[fired_key] = {
+                "key": fired_key, "cum_dealt": dealt,
+                "delta_qty": delta_qty, "delta_cash": delta_cash,
+            }
+        except Exception:
+            try:
+                from notifier import logger as _lg
+                _lg.error(f"[trader] cohort_fired_ledger append failed key={fired_key}; "
+                          f"cohort_tracker fired_key idempotency is 2nd line of defense")
+            except Exception:
+                pass
+
+        # Callback 成功 → advance seen + checkpoint (append 是否成功都 advance,
+        # 避免同 session 同 signature 再进 loop).
+        seen[oid] = signature
+        state["__execution_reconcile"] = dict(list(seen.items())[-500:])
+        _state_save(state)
+        dirty = True
     if dirty:
         state["__execution_reconcile"] = dict(list(seen.items())[-500:])
         _state_save(state)

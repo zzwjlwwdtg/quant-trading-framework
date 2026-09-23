@@ -44,6 +44,10 @@ def _get_hmm_meta_state() -> str | None:
         hmm = getattr(ctx, "hmm_state", None)
         if hmm is not None:
             return hmm if hmm else None   # empty str → None (explicit unavailable)
+        # V5-03 audit (2026-09-23): backtest context + None field → 不能 fallback
+        # live disk cache (会引入 look-ahead). None 在 backtest 意为 "unavailable".
+        if getattr(ctx, "is_backtest", False):
+            return None
     try:
         from hmm_regime import load as _hmm_load, HMM_STATE_PATH
         import time
@@ -107,6 +111,9 @@ def _get_sector_regime(ticker: str) -> str | None:
                 return None
             # snap 可能是 MappingProxyType, 支持 .get
             return snap.get(ticker) if hasattr(snap, "get") else None
+        # V5-03 audit (2026-09-23): backtest + None → 不 fallback live sector data.
+        if getattr(ctx, "is_backtest", False):
+            return None
     from sector_regime import classify_ticker_sector
     return classify_ticker_sector(ticker, TICKER_TO_SECTOR)
 
@@ -412,6 +419,9 @@ def _load_calibration() -> dict | None:
         if snap is not None:
             # 空 dict {} 明确表示"无校准" (backtest 场景)
             return snap if snap else None
+        # V5-03 audit (2026-09-23): backtest + None → 不读 live calibration file.
+        if getattr(ctx, "is_backtest", False):
+            return None
     if _CALIB_CACHE["loaded"]:
         return _CALIB_CACHE["data"]
     try:
@@ -1416,11 +1426,28 @@ def get_decision(market: dict, events: dict, macro: dict | None = None,
     """
     # R04: set active context for downstream _load_calibration lookup
     _ctx_token = _ACTIVE_CONTEXT.set(context) if context is not None else None
+    # F4 followup fix (2026-09-23): historical context 也要 pin confluence calib,
+    # 否则 confluence.get_confluence 会读今日 _CALIB (module-level) → look-ahead.
+    _cf_token = None
+    if context is not None:
+        try:
+            from confluence import _ACTIVE_CALIB_OVERRIDE as _cf_cv
+            # 有 snapshot → 用 snapshot; snapshot={} 视为显式无校准 (返 None)
+            snap = getattr(context, "calibration_snapshot", None)
+            _cf_token = _cf_cv.set(snap if snap else None)
+        except Exception:
+            _cf_token = None
     try:
         return _get_decision_impl(market, events, macro, confluence, board_regime, context)
     finally:
         if _ctx_token is not None:
             _ACTIVE_CONTEXT.reset(_ctx_token)
+        if _cf_token is not None:
+            try:
+                from confluence import _ACTIVE_CALIB_OVERRIDE as _cf_cv
+                _cf_cv.reset(_cf_token)
+            except Exception:
+                pass
 
 
 def _get_decision_impl(market: dict, events: dict, macro: dict | None,
@@ -1429,10 +1456,15 @@ def _get_decision_impl(market: dict, events: dict, macro: dict | None,
     """Implementation split so get_decision can wrap in contextvar management."""
     macro = macro or {}
     # R04 (2026-09-20 followup): context.board_regime 优先, 避免 live regime cache 泄漏.
-    # 优先级: 显式 board_regime > context.board_regime > live get_today_regime().
+    # 优先级: 显式 board_regime > context.board_regime > (backtest → unavailable / live)
     if board_regime is None:
         if context is not None and context.board_regime is not None:
             board_regime = context.board_regime
+        elif context is not None and getattr(context, "is_backtest", False):
+            # F4 followup fix (2026-09-23): historical context 缺 board_regime 时
+            # 不能 fallback 到 live get_today_regime (今日 regime 会污染历史决策).
+            # 显式 unavailable → 后续 fallback per-ticker get_regime.
+            board_regime = None
         else:
             try:
                 from regime_today import get_today_regime

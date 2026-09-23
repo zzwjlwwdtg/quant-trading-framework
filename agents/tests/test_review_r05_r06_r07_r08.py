@@ -58,11 +58,17 @@ class R06_HistoricalViewFullyIsolated(unittest.TestCase):
                           "R06: historical 模式 soft_blacklist 应从历史 thesis body 读, 不返 live")
 
     def test_historical_calibration_marked_unavailable(self):
+        # F5 audit followup (2026-09-23): 生产 archive 缺 effective_from → 严格
+        # 契约下这些 as_of 请求会返 historical_unknown 而非 historical_unavailable.
+        # unavailable 只在 archive body 成功匹配但 calibration 无冻结快照时出现.
+        # 一旦 archive 迁移补齐 effective_from, 此 case 会切回 unavailable.
         from webui import api_thesis_state
         r = api_thesis_state(as_of="2026-09-01")
-        # calibration 在 historical 模式应标 unavailable, 不是当前 age
         self.assertFalse(r["calibration"].get("exists"))
-        self.assertEqual(r["calibration"].get("note"), "historical_unavailable")
+        self.assertIn(r["calibration"].get("note"),
+                        ("historical_unavailable", "historical_unknown"),
+                        f"F5: 期望 unavailable (post-migration) 或 unknown (migration 前), "
+                        f"actual={r['calibration']}")
 
     def test_pre_thesis_date_returns_historical_unknown(self):
         # 2020-01-01 早于所有 thesis 存在 → historical_unknown=True

@@ -17,14 +17,19 @@ if str(AGENTS_DIR) not in sys.path:
 class HistoricalAsOfTests(unittest.TestCase):
 
     def test_historical_lookup_before_first_retire(self):
+        # V5-04 audit (2026-09-23): 更新为强契约 — 必须有 effective_from 才能返 body,
+        # 否则 unknown (没 effective_from 无法证明 candidate 在 as_of 时生效).
         from webui import _historical_thesis_at
         retired = [
             {"retired_at": "2026-09-11T00:00:00Z",
-             "thesis": {"version": "2026-Q3", "thesis_summary": "orig"}},
+             "thesis": {"version": "2026-Q3",
+                        "effective_from": "2026-07-01",
+                        "thesis_summary": "orig"}},
             {"retired_at": "2026-09-17T00:00:00Z",
-             "thesis": {"version": "2026-Q3.1", "thesis_summary": "cpi_reprice"}},
+             "thesis": {"version": "2026-Q3.1",
+                        "effective_from": "2026-09-11",
+                        "thesis_summary": "cpi_reprice"}},
         ]
-        # 查询 2026-09-01 → 应返 2026-Q3 (first retired 是它, 说明 09-01 那时它 live)
         r = _historical_thesis_at("2026-09-01", retired)
         self.assertIsNotNone(r)
         self.assertEqual(r["version"], "2026-Q3")
@@ -33,9 +38,13 @@ class HistoricalAsOfTests(unittest.TestCase):
         from webui import _historical_thesis_at
         retired = [
             {"retired_at": "2026-09-11T00:00:00Z",
-             "thesis": {"version": "2026-Q3", "thesis_summary": "orig"}},
+             "thesis": {"version": "2026-Q3",
+                        "effective_from": "2026-07-01",
+                        "thesis_summary": "orig"}},
             {"retired_at": "2026-09-17T00:00:00Z",
-             "thesis": {"version": "2026-Q3.1", "thesis_summary": "cpi_reprice"}},
+             "thesis": {"version": "2026-Q3.1",
+                        "effective_from": "2026-09-11",
+                        "thesis_summary": "cpi_reprice"}},
         ]
         # 09-15 是 Q3.1 时代 (它 09-17 才 retire, 所以 09-15 时它 live)
         r = _historical_thesis_at("2026-09-15", retired)

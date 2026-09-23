@@ -3191,43 +3191,29 @@ def api_thesis_state(as_of: str | None = None) -> dict:
         historical_mode = bool(as_of)
         historical_thesis = None
         historical_unknown = False
+        invalid_as_of = False
+        as_of_error = None
         if historical_mode:
-            historical_thesis = _historical_thesis_at(as_of, retired_full)
-            if historical_thesis:
-                cur = _thesis_body_to_summary(historical_thesis)
+            # V5-04 audit (2026-09-23): 之前无法解析的 as_of 会静默 fallback 到
+            # live thesis. 现在: as_of 参数进入历史模式后, 任何找不到都必须显式
+            # 返 unknown/invalid, 绝不 fallback 到 live.
+            as_of_dt_check = _parse_datetime_utc(as_of)
+            if as_of_dt_check is None:
+                invalid_as_of = True
+                as_of_error = f"as_of={as_of!r} 无法解析为日期"
+                cur = {"ok": False, "invalid_as_of": True, "reason": as_of_error}
             else:
-                # R06 followup fix (2026-09-20 audit): 之前 archive 空时静默 fallback
-                # live → 请求 2020-01-01 返 LIVE_2026, historical_unknown=false.
-                # 现在: 若 archive 空 AND as_of 早于 live thesis created_at, 也 unknown.
-                # 若 archive 有内容, 按 earliest retired_at 判 (原逻辑).
-                # R06 v4 (2026-09-22): timezone-aware compare
-                is_unknown = False
-                as_of_dt_check = _parse_datetime_utc(as_of)
-                if retired_full and as_of_dt_check is not None:
-                    earliest_retired_iso = min(
-                        (e.get("retired_at", "") for e in retired_full
-                          if e.get("retired_at")),
-                        default="",
-                    )
-                    earliest_dt = _parse_datetime_utc(earliest_retired_iso)
-                    if earliest_dt is not None and as_of_dt_check < earliest_dt:
-                        is_unknown = True
-                elif as_of_dt_check is not None:
-                    # archive 空: 用 live thesis 的 effective_from/created_at 判
-                    try:
-                        raw = _json.loads(_Path(_CONFIG_PATH).read_text(encoding="utf-8"))
-                        live_ref = raw.get("effective_from") or raw.get("created_at", "")
-                        live_dt = _parse_datetime_utc(live_ref)
-                        if live_dt is not None and as_of_dt_check < live_dt:
-                            is_unknown = True
-                    except Exception:
-                        pass
-                if is_unknown:
+                historical_thesis = _historical_thesis_at(as_of, retired_full)
+                if historical_thesis:
+                    cur = _thesis_body_to_summary(historical_thesis)
+                else:
+                    # V5-04: 历史模式下 archive 找不到匹配 (空档 / effective_to 已过 /
+                    # 无 effective_from 无法证明生效 / 早于所有记录) → 一律 unknown,
+                    # 不 fallback live thesis_summary().
                     historical_unknown = True
                     cur = {"ok": False, "historical_unknown": True,
-                            "reason": f"as_of={as_of} 早于所有已知 thesis 记录; 无历史证据."}
-                else:
-                    cur = thesis_summary()
+                            "reason": f"as_of={as_of} 无对应 thesis "
+                                      "(空档 / 未生效 / 已失效 / 无 effective_from 起点)"}
         else:
             cur = thesis_summary()
         # 减薄 retired: dashboard 不用完整 thesis body, 只需摘要
@@ -3259,8 +3245,10 @@ def api_thesis_state(as_of: str | None = None) -> dict:
                 calib_info = {"exists": False, "note": "historical_unavailable"}
                 next_conj = historical_thesis.get("next_thesis_conjecture")
             else:
+                # V5-04: unknown 或 invalid_as_of 都不读 live
                 soft_bl = {}
-                calib_info = {"exists": False, "note": "historical_unknown"}
+                note = "invalid_as_of" if invalid_as_of else "historical_unknown"
+                calib_info = {"exists": False, "note": note}
                 next_conj = None
         else:
             # Live 模式: 读当前 live 数据 (原行为)
@@ -3279,6 +3267,8 @@ def api_thesis_state(as_of: str | None = None) -> dict:
             "as_of":              as_of,
             "historical_mode":    historical_mode,
             "historical_unknown": historical_unknown,
+            "invalid_as_of":      invalid_as_of,
+            "as_of_error":        as_of_error,
             "current":            cur,
             "soft_blacklist":     soft_bl,
             "retired":            retired_slim,
@@ -3347,11 +3337,14 @@ def _historical_thesis_at(as_of_iso: str, retired: list[dict]) -> dict | None:
     candidate = later[0][1].get("thesis") or None
     if not candidate:
         return None
-    # effective_from 优先; created_at fallback
-    effective_from = _parse_datetime_utc(
-        candidate.get("effective_from") or candidate.get("created_at")
-    )
-    if effective_from is not None and as_of_dt < effective_from:
+    # F5 followup fix (2026-09-23): 严格契约, 只用 effective_from. 之前用
+    # `effective_from or created_at` fallback → created_at 是版本"创建日期",
+    # 不是"生效日期"; 生产两条归档缺 effective_from 会被 created_at 冒名生效.
+    # 无 effective_from → 无法证明版本何时生效 → return None (historical_unknown).
+    effective_from = _parse_datetime_utc(candidate.get("effective_from"))
+    if effective_from is None:
+        return None
+    if as_of_dt < effective_from:
         return None
     # effective_to (若声明): as_of 晚于失效时间 → 这个 candidate 已不生效
     effective_to = _parse_datetime_utc(candidate.get("effective_to"))
