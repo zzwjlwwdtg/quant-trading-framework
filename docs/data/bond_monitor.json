@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-25T06:00",
+  "asof": "2026-09-25T06:17",
   "yields": {
     "10y": {
       "value": 5.162,
@@ -129,6 +129,38 @@
       "name": "3M 短端",
       "source": "yfinance ^IRX"
     },
+    "2y": {
+      "value": 4.85,
+      "chg_1d_bps": 14.0,
+      "chg_5d_bps": 11.0,
+      "chg_20d_bps": 68.0,
+      "z_score_20d": 2.29,
+      "history": [
+        4.85,
+        4.71,
+        4.76,
+        4.76,
+        4.67,
+        4.74,
+        4.67,
+        4.65,
+        4.63,
+        4.56,
+        4.43,
+        4.39,
+        4.37,
+        4.34,
+        4.39,
+        4.39,
+        4.34,
+        4.34,
+        4.2,
+        4.19
+      ],
+      "asof": "2026-09-23",
+      "name": "2Y 国债",
+      "source": "FRED DGS2"
+    },
     "tips_10y": {
       "value": 2.76,
       "chg_1d_bps": 13.0,
@@ -162,7 +194,14 @@
       "source": "FRED DFII10"
     }
   },
-  "spreads": {},
+  "spreads": {
+    "2s10s": {
+      "value": 0.31,
+      "chg_20d_bps": -16.0,
+      "regime": "正常",
+      "asof": "2026-09-24"
+    }
+  },
   "gld_correlation": {
     "vs_10y": -0.234,
     "vs_tips_10y": -0.03,
@@ -170,6 +209,11 @@
     "reason": "相关性 -0.03，对冲关系变弱"
   },
   "anomalies": [
+    {
+      "metric": "2y",
+      "reason": "2Y 国债 单日 +14.0 bps (2.3σ · 上冲)",
+      "severity": "medium"
+    },
     {
       "metric": "tips_10y",
       "reason": "10Y TIPS 实际利率 单日 +13.0 bps (2.6σ · 上冲)",
@@ -213,13 +257,18 @@
       "key": "move_elevated"
     },
     {
+      "level": "info",
+      "msg": "银行准备金 11.4% (< 12% 中性偏紧)",
+      "key": "reserves_neutral"
+    },
+    {
       "level": "warn",
-      "msg": "USDJPY 158.78 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 158.84 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1366.6 韩元明显走弱",
+      "msg": "KRW/USD 1366.3 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -249,6 +298,11 @@
     },
     {
       "level": "info",
+      "msg": "Treasury 一般账户 (TGA) $977.1B (>900B, 债券发行/税收流入抽干流动性)",
+      "key": "tga_high"
+    },
+    {
+      "level": "info",
       "msg": "CPI YoY +3.71% 通胀高于 Fed 目标 2%",
       "key": "cpi_above_target"
     },
@@ -264,6 +318,11 @@
     "spx_eps_yield_pct": 4.02,
     "erp_vs_tips_pct": 1.26,
     "erp_basis": "trailing",
+    "nfci": {
+      "value": -0.555,
+      "asof": "2026-09-18"
+    },
+    "nfci_12w_delta": -0.039,
     "rrp_bn": 0.6,
     "rrp_asof": "2026-09-24",
     "tga_bn": 977.1,
@@ -276,16 +335,19 @@
     "move_20d_delta": 32.7,
     "effr_pct": 3.88,
     "sofr_effr_spread_bps": -1.0,
+    "bank_reserves_bn": 2930.0,
+    "bank_total_assets_bn": 25804.0,
+    "bank_reserves_pct_of_assets": 11.4,
     "sofr_pct": 3.87,
     "iorb_pct": 3.9,
     "sofr_iorb_spread_bps": -3.0,
-    "usdjpy": 158.78,
-    "usdjpy_20d_pct": -0.3,
-    "usdjpy_20d_delta_pct": -0.3,
+    "usdjpy": 158.84,
+    "usdjpy_20d_pct": -0.26,
+    "usdjpy_20d_delta_pct": -0.26,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -3.1,
-    "krw_usd": 1366.6,
-    "krw_20d_pct": -1.22,
+    "usdjpy_pullback_from_60d_high_pct": -3.07,
+    "krw_usd": 1366.3,
+    "krw_20d_pct": -1.24,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 222.2,
@@ -351,31 +413,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7758.25,
-        "chg_pct": -0.18
+        "price": 7759.5,
+        "chg_pct": -0.17
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 30718.5,
-        "chg_pct": -0.15
+        "price": 30736.25,
+        "chg_pct": -0.09
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 94.83,
-        "chg_pct": 2.9
+        "price": 94.76,
+        "chg_pct": 2.82
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4307.6,
-        "chg_pct": -0.25
+        "price": 4310.1,
+        "chg_pct": -0.19
       }
     },
     "oil_uso": 153.09,
     "oil_pct_20d": 20.21,
-    "oil_wti": 94.83,
+    "oil_wti": 94.76,
     "eem_pct_20d": 0.0,
     "eem_vs_spx_20d": -0.39,
     "volume_confirm": {
@@ -454,6 +516,7 @@
     },
     "cpi_yoy_pct": 3.71,
     "cpi_asof": "2026-08-01",
+    "core_cpi_yoy_pct": 2.76,
     "unemployment_pct": 4.1,
     "unemployment_asof": "2026-08-01",
     "stablecoin_total_bn": 258.6,
@@ -469,8 +532,8 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-09-25T06:02:33.891652",
-    "age_sec": 30,
+    "cached_at": "2026-09-25T06:18:07.106426",
+    "age_sec": 895,
     "stale": false,
     "refreshing": false
   }
