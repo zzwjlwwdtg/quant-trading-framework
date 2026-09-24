@@ -89,6 +89,29 @@ def _append_ledger(entry: dict) -> None:
             pass
 
 
+def _fired_key_in_ledger(fired_key: Optional[str]) -> bool:
+    """F3-#3 (2026-09-24): fired_key 是否已写进 cohort ledger.
+
+    active cohort 已关闭 (被 pop) 后, 仅靠 active state 无法识别重放;
+    ledger 事件带 fired_key 字段 → 扫描一次即可. 旧事件无该字段 → 不匹配.
+    """
+    if not fired_key or not _LEDGER.exists():
+        return False
+    try:
+        with open(_LEDGER, encoding="utf-8") as f:
+            for line in f:
+                if fired_key not in line:
+                    continue
+                try:
+                    if json.loads(line).get("fired_key") == fired_key:
+                        return True
+                except Exception:
+                    continue
+    except Exception:
+        return False
+    return False
+
+
 def on_buy(ticker: str, exec_price: float, exec_qty: int,
            signal_ctx: Optional[dict] = None, ts: Optional[str] = None,
            context=None) -> dict:
@@ -115,14 +138,13 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
     # (crash-recovery 场景 fired_ledger append 失败 + state.clear 导致 refresh
     # 再次 fire), 幂等 skip 避免 cohort 双计.
     fired_key = signal_ctx.get("fired_key")
-    if fired_key and cohort:
-        for e in cohort.get("entries", []):
-            if (e.get("tag") if not isinstance(e, dict) else e.get("fired_key")) == fired_key:
-                return cohort   # already recorded, skip
-            # older schema: check nested signal_ctx or plain match
-            ctx_here = e if isinstance(e, dict) else {}
-            if ctx_here.get("fired_key") == fired_key:
-                return cohort
+    if fired_key:
+        if cohort and any(isinstance(e, dict) and e.get("fired_key") == fired_key
+                          for e in cohort.get("entries", [])):
+            return cohort   # already recorded, skip
+        if _fired_key_in_ledger(fired_key):
+            # cohort 已关闭后重放同一 BUY 成交 → 不得开新 cohort
+            return cohort or {}
 
     if cohort is None:
         # 新 cohort
@@ -160,6 +182,7 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
             "cohort_id":   cohort_id,
             "price":       round(float(exec_price), 4),
             "qty":         int(exec_qty),
+            "fired_key":   fired_key,
             "signal_ctx":  signal_ctx,
         })
         return cohort
@@ -192,6 +215,7 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
         "qty":         int(exec_qty),
         "new_qty":     new_qty,
         "new_avg":     round(new_avg, 4),
+        "fired_key":   fired_key,
         "signal_ctx":  signal_ctx,
     })
     return cohort
@@ -199,7 +223,7 @@ def on_buy(ticker: str, exec_price: float, exec_qty: int,
 
 def on_sell(ticker: str, exec_price: float, exec_qty: int,
             exit_reason: str = "", ts: Optional[str] = None,
-            context=None) -> Optional[dict]:
+            context=None, fired_key: Optional[str] = None) -> Optional[dict]:
     """处理 SELL 成交: 部分卖 → 记 exit; 卖到 qty=0 → close cohort + 记 stats.
     返回 closed cohort (若 close 了), 否则 None (仅部分退出).
 
@@ -219,6 +243,16 @@ def on_sell(ticker: str, exec_price: float, exec_qty: int,
         # 无 active cohort → 忽略 (SELL 可能是 REBALANCE / 手工, 不属于 cohort 跟踪)
         return None
 
+    # F3-#3 (2026-09-24): SELL 也按 fired_key 幂等. 之前只有 on_buy 去重,
+    # fired_ledger append 失败 + state 丢失后重放同一 SELL 成交会再卖一次
+    # (部分退出被放大, 甚至误 close cohort).
+    if fired_key:
+        if any(isinstance(x, dict) and x.get("fired_key") == fired_key
+               for x in cohort.get("exits", [])):
+            return None
+        if _fired_key_in_ledger(fired_key):
+            return None
+
     sell_qty = min(int(exec_qty), int(cohort.get("current_qty", 0)))
     if sell_qty <= 0:
         return None
@@ -231,6 +265,7 @@ def on_sell(ticker: str, exec_price: float, exec_qty: int,
         "qty":      sell_qty,
         "reason":   exit_reason,
         "pnl_usd":  round(realized_this, 2),
+        "fired_key": fired_key,
     })
     cohort["current_qty"] = int(cohort.get("current_qty", 0)) - sell_qty
     cohort["realized_pnl_usd"] = round(
@@ -250,6 +285,7 @@ def on_sell(ticker: str, exec_price: float, exec_qty: int,
             "reason":    exit_reason,
             "pnl_usd":   round(realized_this, 2),
             "remain_qty": cohort["current_qty"],
+            "fired_key": fired_key,
         })
         return None
 
@@ -287,6 +323,7 @@ def on_sell(ticker: str, exec_price: float, exec_qty: int,
         "realized_pnl_usd": round(realized, 2),
         "realized_pnl_pct": round(pnl_pct, 3),
         "is_winner":       realized > 0,
+        "fired_key":       fired_key,
         "cohort":          cohort,   # 完整 snapshot 供后续统计追溯
     })
     return cohort
@@ -413,7 +450,7 @@ def stats_from_fills(since_days: int = 30) -> dict:
     """
     from datetime import datetime as _dt, timedelta as _td, timezone as _tz
     try:
-        from fill_ledger import get_fills
+        from fill_ledger import get_fills, fill_increments, apply_split
     except Exception:
         return {
             "n": 0, "since_days": since_days,
@@ -438,13 +475,14 @@ def stats_from_fills(since_days: int = 30) -> dict:
             "unreconciled_tickers": [], "unreconciled_sells_qty": 0,
             "positions": {},
         }
-    # Group by ticker
+    # 2026-09-24: 共用 fill_ledger.fill_increments reducer (与 get_position 同一套
+    # 时序差分 / 价格修订 / canonical ticker), 不再在这里另写一份.
+    increments, reducer_meta = fill_increments(all_fills)
     from collections import defaultdict as _dd
     by_ticker = _dd(list)
-    for ev in all_fills:
-        tk = ev.get("ticker")
-        if tk:
-            by_ticker[tk].append(ev)
+    for inc in increments:
+        if inc["ticker"]:
+            by_ticker[inc["ticker"]].append(inc)
 
     # Per-ticker FIFO walk detecting round-trips within window
     total_realized = 0.0
@@ -455,41 +493,23 @@ def stats_from_fills(since_days: int = 30) -> dict:
     unreconciled_sells_qty = 0.0
     events_in_window = 0
     positions: dict = {}   # ticker → {qty, avg_cost} for open positions
+    pnl_by_origin: dict[str, float] = {}
 
     for tk, tk_events in by_ticker.items():
-        # F1 followup fix (2026-09-23): 之前先按 oid 压成"最终累计"再排序 → 交错成交
-        # (buy partial → 别单 sell → 原 buy 完成) 时 sell 被移到全部 buy 之后,
-        # 后续 per-oid delta 逻辑无法恢复丢掉的中间事件. 与 fill_ledger.get_position
-        # 同款: 直接按原 event ts 排序, 用 per-oid running dealt 计算增量.
-        ordered = sorted(tk_events, key=lambda e: e.get("ts", ""))
-
-        # FIFO layers with round-trip detection
+        # increments 已按 ts 排序且是订单增量 (F1: 不先压缩订单)
         layers: list[dict] = []
-        per_oid_prev_dealt: dict[str, float] = {}
-        per_oid_prev_cash:  dict[str, float] = {}
         rt_realized_current = 0.0   # current in-progress round-trip
         rt_had_buys = False         # became active after a buy
         tk_unreconciled_qty = 0.0
 
-        for ev in ordered:
-            ev_ts = ev.get("ts", "")
-            in_window = ev_ts >= cutoff_iso
-            oid = str(ev.get("order_id") or "")
-            side = (ev.get("side") or "").upper()
-            cum_dealt = float(ev.get("dealt_qty") or 0)
-            cum_avg   = float(ev.get("average_fill_price") or 0)
-            if cum_dealt <= 0 or cum_avg <= 0:
+        for inc in tk_events:
+            if inc["side"] == "SPLIT":
+                apply_split(layers, inc["ratio"])
                 continue
-            prev_dealt = per_oid_prev_dealt.get(oid, 0.0)
-            prev_cash  = per_oid_prev_cash.get(oid, 0.0)
-            delta_qty  = cum_dealt - prev_dealt
-            if delta_qty <= 0:
-                continue
-            cum_cash = cum_dealt * cum_avg
-            delta_cash = cum_cash - prev_cash
-            delta_price = (delta_cash / delta_qty) if delta_cash > 0 else cum_avg
-            per_oid_prev_dealt[oid] = cum_dealt
-            per_oid_prev_cash[oid]  = cum_cash
+            in_window = inc["ts"] >= cutoff_iso
+            side = inc["side"]
+            delta_qty = inc["qty"]
+            delta_price = inc["price"]
 
             if in_window:
                 events_in_window += 1
@@ -497,7 +517,8 @@ def stats_from_fills(since_days: int = 30) -> dict:
             if side == "BUY":
                 # Buy pre-window OR in-window: seeds cost basis (V5-01: pre-window BUY
                 # inherits cost for in-window sells)
-                layers.append({"qty": delta_qty, "price": delta_price})
+                layers.append({"qty": delta_qty, "price": delta_price,
+                               "origin": inc.get("origin", "system")})
                 rt_had_buys = True
             elif side in ("SELL", "SELL_ALL", "REDUCE"):
                 remaining = delta_qty
@@ -505,7 +526,12 @@ def stats_from_fills(since_days: int = 30) -> dict:
                 while remaining > 0 and layers and layers[0]["qty"] > 0:
                     layer = layers[0]
                     take = min(remaining, layer["qty"])
-                    sell_realized += take * (delta_price - layer["price"])
+                    piece = take * (delta_price - layer["price"])
+                    sell_realized += piece
+                    if in_window:
+                        # 谁开的仓算谁的 (2026-09-24): 按被消耗买入层的 origin 归属
+                        o = layer.get("origin", "system")
+                        pnl_by_origin[o] = pnl_by_origin.get(o, 0.0) + piece
                     layer["qty"] -= take
                     remaining     -= take
                     if layer["qty"] <= 1e-9:
@@ -544,12 +570,20 @@ def stats_from_fills(since_days: int = 30) -> dict:
 
     # V5-01: authority degrades when unreconciled exist
     has_unreconciled = bool(unreconciled_tickers)
-    authority = "fills_replay_partial" if has_unreconciled else "fills_replay"
-    warning = None
+    qty_reversals = reducer_meta["qty_reversals"]
+    authority = ("fills_replay_partial" if (has_unreconciled or qty_reversals)
+                 else "fills_replay")
+    warnings = []
     if has_unreconciled:
-        warning = (f"{len(unreconciled_tickers)} tickers have unreconciled sells "
-                    f"({int(unreconciled_sells_qty)} shares total) — cost basis unknown. "
-                    f"Consumed as pre-window state without matched buys.")
+        warnings.append(
+            f"{len(unreconciled_tickers)} tickers have unreconciled sells "
+            f"({int(unreconciled_sells_qty)} shares total) — cost basis unknown. "
+            f"Consumed as pre-window state without matched buys.")
+    if qty_reversals:
+        warnings.append(
+            f"{qty_reversals} broker cumulative-qty reversal(s) (bust/cancel) not "
+            f"auto-reconciled — affected orders keep their pre-reversal fills.")
+    warning = " ".join(warnings) or None
 
     win_rate = round(n_wins / n_roundtrips * 100, 1) if n_roundtrips else 0.0
 
@@ -567,6 +601,10 @@ def stats_from_fills(since_days: int = 30) -> dict:
         "warning":               warning,
         "unreconciled_tickers":  sorted(unreconciled_tickers),
         "unreconciled_sells_qty": int(unreconciled_sells_qty),
+        "price_revisions":       reducer_meta["price_revisions"],
+        "qty_reversals":         qty_reversals,
+        "splits_applied":        reducer_meta.get("splits_applied", 0),
+        "pnl_by_origin":         {k: round(v, 2) for k, v in sorted(pnl_by_origin.items())},
         "positions":             positions,
     }
 
@@ -586,8 +624,11 @@ def format_stats(since_days: int = 30, prefer_fills: bool = True) -> str:
     src_label = primary.get("authority", "unknown")
 
     lines = [
-        f"=== Position Stats · 近 {since_days} 天 · 权威源: {src_label} ===",
+        f"=== Position Stats · 近 {since_days} 天 · 数据源: {src_label} ===",
     ]
+    if primary is s_fills:
+        # V5-01 #3: 本地执行记录重建 ≠ 券商账户级对账 (无期初快照/全历史/费用)
+        lines.append("  (本地成交记录 FIFO 重建估算, 未做账户级对账)")
 
     if primary.get("n", 0) == 0 and (primary.get("n_events", 0) == 0):
         lines.append(f"  近 {since_days} 天无 fill/close 事件.")
@@ -603,8 +644,19 @@ def format_stats(since_days: int = 30, prefer_fills: bool = True) -> str:
                           f"({s_fills['n_winners']}W / {s_fills['n_losers']}L)")
             lines.append(f"  胜率:              {s_fills.get('win_rate', 0)}%")
             lines.append(f"  total 实现 P&L:    ${s_fills.get('total_pnl_usd', 0):+,.2f}")
+            by_o = s_fills.get("pnl_by_origin") or {}
+            if by_o:
+                names = {"system": "系统开仓", "manual": "手动开仓", "unknown": "来源未知"}
+                lines.append("  按开仓来源:        " + " · ".join(
+                    f"{names.get(k, k)} ${v:+,.2f}" for k, v in sorted(by_o.items(),
+                                                                      key=lambda kv: kv[0] != "system")))
             lines.append(f"  broker fill events: {s_fills.get('n_events', 0)} 条 "
                           f"({s_fills.get('n_tickers', 0)} tickers)")
+            n_rev = s_fills.get("price_revisions", 0) or 0
+            n_rvs = s_fills.get("qty_reversals", 0) or 0
+            if n_rev or n_rvs:
+                lines.append(f"  回报修订: 价格修订 {n_rev} 条 (已按修订价回溯), "
+                              f"数量倒退 {n_rvs} 条 (未自动冲回)")
             if src_label == "fills_replay_partial":
                 unreco = s_fills.get("unreconciled_tickers") or []
                 unreco_qty = s_fills.get("unreconciled_sells_qty", 0)
@@ -625,12 +677,14 @@ def format_stats(since_days: int = 30, prefer_fills: bool = True) -> str:
         ledger_pnl = s_ledger.get("total_pnl_usd", 0)
         if abs(fills_pnl - ledger_pnl) > 100:   # >$100 divergence 值得注意
             lines.append("")
+            # V5-01 #5: 两源样本范围不同, 差额不能归因于任一方账本错误.
             lines.append(f"⚠ 双源分歧: fills_replay=${fills_pnl:+,.2f} vs "
                           f"cohort_ledger=${ledger_pnl:+,.2f} "
-                          f"(fills 是 broker 权威)")
+                          f"(口径不同: fills 含仍持仓标的的已实现部分, cohort 只含"
+                          f"已关闭 cohort; 差额不代表任一方错误)")
 
     lines.append("")
-    lines.append(f"当前 active cohorts: {len(active)}")
+    lines.append(f"当前 active cohorts (旧 cohort 投影, 非权威, 仅供对比): {len(active)}")
     for c in active:
         cur_qty = c.get("current_qty", 0)
         avg_e = c.get("avg_entry_price", 0)

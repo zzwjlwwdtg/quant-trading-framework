@@ -1128,6 +1128,15 @@ def _etf_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
 
 # ── 黄金规则引擎 ──────────────────────────────────────────────────────────────
 
+def _gold_buy_reason(rsi: float) -> str:
+    """买入理由标签须与 RSI 一致 (2026-09-24): 旧逻辑 RSI=54.5 也写 "超卖"."""
+    if rsi < 30:
+        return "RSI extreme oversold"
+    if rsi < RSI_OVERSOLD:
+        return "oversold + uptrend"
+    return "uptrend + positive confluence"
+
+
 def _gold_rules(market: dict, events: dict, macro: dict, regime: str = "neutral",
                 confluence: dict | None = None) -> dict:
     rsi      = market.get("rsi_14") or 50
@@ -1223,11 +1232,11 @@ def _gold_rules(market: dict, events: dict, macro: dict, regime: str = "neutral"
                 "entry_ref": price, "stop_ref": support}
     if bull >= 4:
         return {"action": "BUY",  "confidence": bull,
-                "reason": "RSI extreme oversold" if rsi < 30 else "oversold + uptrend",
+                "reason": _gold_buy_reason(rsi),
                 "entry_ref": price, "stop_ref": support}
     if bull >= 3:
         return {"action": "BUY",  "confidence": bull,
-                "reason": "oversold + uptrend",
+                "reason": _gold_buy_reason(rsi),
                 "entry_ref": price, "stop_ref": support}
 
     # 新闻偏向

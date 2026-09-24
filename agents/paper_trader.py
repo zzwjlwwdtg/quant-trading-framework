@@ -429,6 +429,39 @@ PYRAMID_MAX_LAYERS = 3
 PYRAMID_ADD_FRAC   = 0.50
 
 
+def _pyramid_add_qty(pos_qty: float, price: float, size_usd: float,
+                     power: float) -> int:
+    """Pyramid 每层加仓股数 (2026-09-24 修复).
+
+    旧实现 add = size_usd × 50% (整笔目标仓位的一半), 与 "每层加 50% 原仓"
+    设计不符, 且不看已持仓. 2026-06-18 SOXL 持 36 股时一次加 1490 股 (~$37 万).
+
+    现规则:
+      add = floor(当前持仓 × PYRAMID_ADD_FRAC)
+      加仓金额 ≤ size_usd (今日单笔目标, 已含相关性组剩余额度)
+      加仓后总市值 ≤ power × POSITION_FRACTION_MAX
+    """
+    try:
+        pos_qty, price = float(pos_qty), float(price)
+        size_usd, power = float(size_usd), float(power)
+    except (TypeError, ValueError):
+        return 0
+    if pos_qty <= 0 or price <= 0 or size_usd <= 0:
+        return 0
+    want = int(pos_qty * PYRAMID_ADD_FRAC)
+    by_size = int(size_usd // price)
+    room = by_size
+    if power > 0:
+        room = min(room, int(max(0.0, power * POSITION_FRACTION_MAX - pos_qty * price) // price))
+    return max(0, min(want, room))
+
+
+def _account_power_cached() -> float:
+    """加仓用购买力: 读 _get_account_power 的 5 分钟缓存 (同一轮 _position_size_usd
+    刚刷新过), 不额外连 OpenD; 无缓存 → ACCOUNT_POWER_FALLBACK."""
+    return _power_cache if _power_cache else ACCOUNT_POWER_FALLBACK
+
+
 def _leverage_sqrt(ticker: str) -> float:
     """返回 sqrt(leverage) 缩放因子。1x → 1.0, 3x → 1.73"""
     import math
@@ -1614,7 +1647,7 @@ def refresh_execution_ledger() -> None:
                          exit_reason=(f"{base.get('tag') or ''} "
                                       f"(fill oid={oid}, delta @${delta_price:.2f}) "
                                       f"[fired_key={fired_key}]"),
-                         ts=now_iso)
+                         ts=now_iso, fired_key=fired_key)
             callback_ok = True
         except Exception:
             try:
@@ -2125,13 +2158,15 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
 
     if action in BUY_ACTIONS:
         if pos_qty > 0:
-            # #1 Pyramid 加仓: 已持仓时若 conf 比入场 conf 高 ≥1 → 加 50% 原仓
+            # #1 Pyramid 加仓: 已持仓时若 conf 比入场 conf 高 ≥1 → 加 50% 当前仓
+            # (受目标仓位 + 单笔上限约束, 见 _pyramid_add_qty)
             entry_conf = _entry_conf_on_scale(tstate, scale, conf_min)
             layer = int(tstate.get("pyramid_layer") or 1)
             if (conf >= entry_conf + 1
                     and layer < PYRAMID_MAX_LAYERS
                     and size_usd > 0):
-                add_qty = int((size_usd * PYRAMID_ADD_FRAC) // price)
+                add_qty = _pyramid_add_qty(pos_qty, float(price), size_usd,
+                                           _account_power_cached())
                 if add_qty > 0:
                     tag = f"[PYRAMID L{layer+1} (conf {entry_conf}→{conf})]"
                     oid = _place(ticker, TrdSide.BUY, add_qty, float(price), tag=tag,

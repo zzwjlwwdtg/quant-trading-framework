@@ -28,9 +28,46 @@ from typing import Optional
 
 SCRIPT_DIR = Path(__file__).parent
 EXEC_LEDGER_PATH = SCRIPT_DIR / "signals" / "execution_ledger.jsonl"
+# 拆股/合股记录 (人工维护, 每条须带 source). 格式:
+#   {"actions": [{"ticker": "US.MULL", "type": "split", "ratio": 25,
+#                 "effective": "2026-06-26T13:30:00+00:00", "source": "<url>"}]}
+# ratio = 新股数 / 旧股数 (25:1 拆股 → 25; 1:20 合股 → 0.05).
+CORPORATE_ACTIONS_PATH = SCRIPT_DIR / "signals" / "corporate_actions.json"
+# 券商历史基线 (2026-09-24): 本地账本开始前/之外的券商成交, 由
+# _broker_history_reconcile.py --import-baseline 生成. 每行带 origin=system|manual.
+BROKER_HISTORY_PATH = SCRIPT_DIR / "signals" / "broker_history_fills.jsonl"
 
 
-def _load_ledger(path: Path = EXEC_LEDGER_PATH) -> list[dict]:
+def _load_corporate_actions(path: Optional[Path] = None) -> list[dict]:
+    path = path or CORPORATE_ACTIONS_PATH
+    try:
+        if not path.exists():
+            return []
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    acts = data.get("actions", []) if isinstance(data, dict) else data
+    out = []
+    for a in acts or []:
+        try:
+            if str(a.get("type", "split")).lower() != "split":
+                continue
+            r = float(a["ratio"])
+            if r > 0 and a.get("ticker") and a.get("effective"):
+                out.append({**a, "ratio": r})
+        except Exception:
+            continue
+    return out
+
+
+def apply_split(layers: list[dict], ratio: float) -> None:
+    """持仓层按拆股比例换算: 股数 × ratio, 单价 ÷ ratio (成本总额不变)."""
+    for layer in layers:
+        layer["qty"] = layer["qty"] * ratio
+        layer["price"] = layer["price"] / ratio
+
+
+def _read_jsonl(path: Path) -> list[dict]:
     if not path.exists():
         return []
     out = []
@@ -44,6 +81,125 @@ def _load_ledger(path: Path = EXEC_LEDGER_PATH) -> list[dict]:
             except json.JSONDecodeError:
                 continue
     return out
+
+
+def _load_ledger(path: Optional[Path] = None,
+                 include_broker_history: bool = True) -> list[dict]:
+    """读取成交事实.
+
+    path=None (默认): execution_ledger + 券商历史基线 (BROKER_HISTORY_PATH) 中
+    本地账本没有的订单 (2026-09-24). 同一 order_id 以本地账本为准.
+    execution_ledger 本身不被修改 (hash 链不动).
+    显式传 path → 只读该文件, 不合并.
+    """
+    if path is not None:
+        return _read_jsonl(path)
+    rows = _read_jsonl(EXEC_LEDGER_PATH)
+    if not include_broker_history:
+        return rows
+    local_oids = {str(r.get("order_id")) for r in rows
+                  if r.get("event") in ("filled", "partial")}
+    for r in _read_jsonl(BROKER_HISTORY_PATH):
+        if r.get("event") in ("filled", "partial") and str(r.get("order_id")) not in local_oids:
+            rows.append(r)
+    return rows
+
+
+def canonical_ticker(ticker: Optional[str]) -> str:
+    """Instrument identity used for grouping fills (audit v5 遗留项, 2026-09-24).
+
+    与 instrument_registry.normalize 同一规则: 无市场前缀 → US.; 已有
+    US./HK./JP. 前缀保留. 不做"删除所有市场前缀"式合并 (HK.X ≠ US.X).
+    """
+    t = (ticker or "").strip()
+    if not t:
+        return ""
+    try:
+        from instrument_registry import normalize
+        return normalize(t)
+    except Exception:
+        u = t.upper()
+        return u if u.startswith(("US.", "HK.", "JP.")) else f"US.{u}"
+
+
+def fill_increments(events: list[dict],
+                    corporate_actions: Optional[list[dict]] = None) -> tuple[list[dict], dict]:
+    """Shared reducer: broker 累计回报 → 按时间排序的成交增量.
+
+    get_position / stats_from_fills / summary_by_ticker 共用 (F1 followup:
+    "统计与持仓共用 reducer, 不要另写一份").
+
+    输入: filled/partial 事件 (dealt_qty / average_fill_price 为订单累计值).
+    输出: (increments, meta)
+      increments: [{ts, order_id, ticker(canonical), side, qty, price}], ts 升序
+      meta: {n_valid_events, price_revisions, qty_reversals}
+
+    回报修订政策 (明确, 不静默):
+    - 同一订单同一累计数量出现新的累计均价 → 视为券商价格修订, 以最后一次
+      报价为准, 回溯覆盖该成交 (时间仍按首次回报). price_revisions 计数.
+    - 累计数量倒退 (撤销/bust) → 不自动冲回, qty_reversals 计数; 调用方
+      必须据此降级权威标签.
+    """
+    ordered = sorted(
+        (ev for ev in events
+         if float(ev.get("dealt_qty") or 0) > 0
+         and float(ev.get("average_fill_price") or 0) > 0),
+        key=lambda e: e.get("ts", ""))
+    # pass 1: 每 (oid, 累计数量) 的最终均价 → 修订生效
+    final_avg: dict[tuple[str, float], float] = {}
+    first_avg: dict[tuple[str, float], float] = {}
+    for ev in ordered:
+        key = (str(ev.get("order_id") or ""), round(float(ev["dealt_qty"]), 8))
+        avg = float(ev["average_fill_price"])
+        first_avg.setdefault(key, avg)
+        final_avg[key] = avg
+    price_revisions = sum(1 for k in final_avg
+                          if abs(final_avg[k] - first_avg[k]) > 1e-9)
+    # pass 2: 时间顺序差分
+    prev_dealt: dict[str, float] = {}
+    increments: list[dict] = []
+    qty_reversals = 0
+    for ev in ordered:
+        oid = str(ev.get("order_id") or "")
+        cum = float(ev["dealt_qty"])
+        prev = prev_dealt.get(oid, 0.0)
+        delta_qty = cum - prev
+        if delta_qty < -1e-9:
+            qty_reversals += 1
+            continue
+        if delta_qty <= 1e-9:
+            continue   # 重复回报或纯价格修订 (已由 final_avg 处理)
+        cum_cash = cum * final_avg[(oid, round(cum, 8))]
+        prev_cash = prev * final_avg[(oid, round(prev, 8))] if prev > 0 else 0.0
+        delta_cash = cum_cash - prev_cash
+        price = (delta_cash / delta_qty) if delta_cash > 0 else final_avg[(oid, round(cum, 8))]
+        prev_dealt[oid] = cum
+        origin = ev.get("origin") or (
+            "unknown" if ev.get("source") == "broker_history" else "system")
+        increments.append({
+            "ts": ev.get("ts", ""), "order_id": oid,
+            "ticker": canonical_ticker(ev.get("ticker")),
+            "side": (ev.get("side") or "").upper(),
+            "qty": delta_qty, "price": price, "origin": origin,
+        })
+    # 拆股/合股 (2026-09-24): 在生效时点插入 SPLIT 标记, 由 FIFO 消费方换算持仓层.
+    # 只为本批事件涉及的标的插入. 零碎股现金补偿不建模.
+    if corporate_actions is None:
+        corporate_actions = _load_corporate_actions()
+    present = {inc["ticker"] for inc in increments}
+    markers = []
+    for a in corporate_actions or []:
+        tk = canonical_ticker(a.get("ticker"))
+        if tk in present:
+            markers.append({"ts": str(a["effective"]), "order_id": "", "ticker": tk,
+                            "side": "SPLIT", "qty": 0.0, "price": 0.0,
+                            "ratio": float(a["ratio"])})
+    if markers:
+        increments = sorted(increments + markers, key=lambda x: x["ts"])
+    return increments, {"n_valid_events": len(ordered),
+                        "price_revisions": price_revisions,
+                        "qty_reversals": qty_reversals,
+                        "splits_applied": len(markers)}
 
 
 def get_fills(
@@ -64,24 +220,12 @@ def get_fills(
     events = _load_ledger()
     kinds = {"filled", "partial"} if include_partial else {"filled"}
     out = []
-    # normalize ticker to compare against both US.X and X
-    norm_ticker = None
-    if ticker:
-        try:
-            from instrument_registry import normalize
-            norm_ticker = normalize(ticker)
-        except Exception:
-            norm_ticker = f"US.{ticker.upper()}" if not ticker.upper().startswith("US.") else ticker.upper()
+    norm_ticker = canonical_ticker(ticker) if ticker else None
     for ev in events:
         if ev.get("event") not in kinds:
             continue
-        if norm_ticker and ev.get("ticker") != norm_ticker:
-            # also try short form comparison for tolerance
-            evt_ticker = ev.get("ticker", "")
-            evt_stripped = evt_ticker.replace("US.", "")
-            expect_stripped = norm_ticker.replace("US.", "")
-            if evt_stripped != expect_stripped:
-                continue
+        if norm_ticker and canonical_ticker(ev.get("ticker")) != norm_ticker:
+            continue
         if since and ev.get("ts", "") < since:
             continue
         out.append(ev)
@@ -106,44 +250,21 @@ def get_position(ticker: str, since: Optional[str] = None) -> dict:
     Unreconciled sells (无 buy 覆盖) 记 unreconciled_sells, 不当零成本盈利.
     """
     fills = get_fills(ticker=ticker, since=since, include_partial=True)
-    # R03 followup: 全部 events 按 ts 排序 (不压 oid)
-    ordered = sorted(fills, key=lambda e: e.get("ts", ""))
-
-    # Per-oid running cumulative dealt (broker 每 event 里 dealt_qty 是累计, 需转增量)
-    per_oid_prev_dealt: dict[str, float] = {}
-    per_oid_prev_cash:  dict[str, float] = {}
+    # 2026-09-24: 共用 fill_increments reducer (时序差分 + 修订 + canonical ticker)
+    increments, meta = fill_increments(fills)
+    n_events = meta["n_valid_events"]
 
     layers: list[dict] = []
     total_bought_qty  = 0.0
     total_sold_qty    = 0.0
     realized_pnl = 0.0
     unreconciled_sells = 0.0   # sells 无 buy 覆盖 → 无法对账
-    n_events = 0
 
-    for ev in ordered:
-        oid = str(ev.get("order_id") or "")
-        side = (ev.get("side") or "").upper()
-        cum_dealt = float(ev.get("dealt_qty") or 0)
-        cum_avg   = float(ev.get("average_fill_price") or 0)
-        if cum_dealt <= 0 or cum_avg <= 0:
+    for inc in increments:
+        side, delta_qty, delta_price = inc["side"], inc["qty"], inc["price"]
+        if side == "SPLIT":
+            apply_split(layers, inc["ratio"])
             continue
-        n_events += 1
-
-        # Per-oid 增量 = 本次累计 - 上次累计
-        prev_dealt = per_oid_prev_dealt.get(oid, 0.0)
-        prev_cash  = per_oid_prev_cash.get(oid, 0.0)
-        delta_qty  = cum_dealt - prev_dealt
-        if delta_qty <= 0:
-            # broker 回报重复或倒退, 跳过
-            continue
-        cum_cash = cum_dealt * cum_avg
-        delta_cash = cum_cash - prev_cash
-        # Fallback: 若 delta_cash <= 0 (回报异常), 用 cum_avg 保守
-        delta_price = (delta_cash / delta_qty) if delta_cash > 0 else cum_avg
-        # 更新 per-oid state
-        per_oid_prev_dealt[oid] = cum_dealt
-        per_oid_prev_cash[oid]  = cum_cash
-
         if side == "BUY":
             layers.append({"qty": delta_qty, "price": delta_price})
             total_bought_qty += delta_qty
@@ -176,6 +297,9 @@ def get_position(ticker: str, since: Optional[str] = None) -> dict:
         "unreconciled_sells":  int(unreconciled_sells) if abs(unreconciled_sells - round(unreconciled_sells)) < 1e-6 else round(unreconciled_sells, 4),
         "n_events":            n_events,
         "n_fills":             n_events,   # backwards-compat name
+        "price_revisions":     meta["price_revisions"],
+        "qty_reversals":       meta["qty_reversals"],
+        "splits_applied":      meta["splits_applied"],
         "since":               since,
     }
 
@@ -229,7 +353,7 @@ def summary_by_ticker(since: Optional[str] = None) -> dict[str, dict]:
     fills = get_fills(since=since, include_partial=True)
     tickers = set()
     for ev in fills:
-        tk = ev.get("ticker")
+        tk = canonical_ticker(ev.get("ticker"))
         if tk:
             tickers.add(tk)
     return {tk: get_position(tk, since=since) for tk in sorted(tickers)}
