@@ -1,0 +1,126 @@
+{
+  "ticker": "QRVO",
+  "sector": "射频半导体设计与制造",
+  "business": "Qorvo 设计并制造射频前端、滤波器、功率放大器、连接、传感与电源半导体，核心收入来自智能手机射频方案，同时覆盖国防、基础设施、汽车和物联网。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "提供部分外包晶圆代工能力，尤其是硅基射频、混合信号或控制芯片相关工艺。",
+      "weight": 30,
+      "confidence": "medium"
+    },
+    {
+      "name": "GlobalFoundries",
+      "ticker": "GFS",
+      "note": "提供RF SOI等射频晶圆代工平台，是射频前端行业常用上游代工资源。",
+      "weight": 25,
+      "confidence": "medium"
+    },
+    {
+      "name": "Amkor Technology",
+      "ticker": "AMKR",
+      "note": "提供半导体封装与测试服务，支持射频模块和多芯片封装量产。",
+      "weight": 18,
+      "confidence": "medium"
+    },
+    {
+      "name": "Wolfspeed",
+      "ticker": "WOLF",
+      "note": "提供SiC材料或功率半导体生态相关上游能力，对Qorvo功率器件业务具有战略相关性。",
+      "weight": 12,
+      "confidence": "low"
+    },
+    {
+      "name": "AXT",
+      "ticker": "AXTI",
+      "note": "提供砷化镓等化合物半导体衬底，适用于射频功率放大器等器件制造。",
+      "weight": 10,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "采购射频前端、滤波器、天线调谐和连接相关器件，用于iPhone等移动设备；Qorvo披露其为最大终端客户。",
+      "weight": 50,
+      "confidence": "high"
+    },
+    {
+      "name": "Samsung Electronics",
+      "ticker": null,
+      "note": "采购智能手机射频解决方案，用于Galaxy等移动设备；Qorvo披露其约占收入一成。",
+      "weight": 10,
+      "confidence": "high"
+    },
+    {
+      "name": "Xiaomi",
+      "ticker": "1810.HK",
+      "note": "采购或通过代工链使用射频前端模组、PA和滤波器，用于安卓智能手机。",
+      "weight": 6,
+      "confidence": "medium"
+    },
+    {
+      "name": "OPPO",
+      "ticker": null,
+      "note": "采购或通过ODM/EMS链使用射频前端器件，用于中高端安卓手机。",
+      "weight": 5,
+      "confidence": "medium"
+    },
+    {
+      "name": "vivo",
+      "ticker": null,
+      "note": "采购或通过代工链使用射频前端、Wi-Fi和连接器件，用于智能手机。",
+      "weight": 4,
+      "confidence": "medium"
+    },
+    {
+      "name": "Huawei",
+      "ticker": null,
+      "note": "历史上属于重要安卓手机射频客户群之一，但受出口管制和供应链变化影响较大。",
+      "weight": 3,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Skyworks Solutions",
+      "ticker": "SWKS",
+      "note": "核心竞争于手机射频前端、功率放大器、滤波器和模组。",
+      "confidence": "high"
+    },
+    {
+      "name": "Broadcom",
+      "ticker": "AVGO",
+      "note": "在高端手机FBAR/BAW滤波器、Wi-Fi/蓝牙连接芯片和射频前端领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "Murata Manufacturing",
+      "ticker": "6981.T",
+      "note": "在SAW/BAW滤波器、射频模组和被动元件领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "Qualcomm",
+      "ticker": "QCOM",
+      "note": "通过调制解调器绑定射频前端方案，在安卓手机RF FEM市场竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "MACOM Technology Solutions",
+      "ticker": "MTSI",
+      "note": "在射频、微波、毫米波和光通信相关化合物半导体器件上竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-16T13:33:42.041731+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-16T22:33:42.041732",
+    "age_sec": 701963,
+    "stale": false,
+    "refreshing": false
+  }
+}
