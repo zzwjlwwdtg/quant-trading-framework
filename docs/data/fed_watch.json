@@ -3,59 +3,65 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 35,
+      "days_until": 34,
       "probabilities": {
-        "cut_25": 1,
-        "hold": 46,
-        "hike_25": 53
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2026-12-09",
-      "days_until": 77,
-      "probabilities": {
-        "hold": 10,
-        "hike_25": 50,
-        "hike_50": 40
+        "hold": 28.8,
+        "hike_25": 71.2
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-27",
-      "days_until": 126,
+      "date": "2026-12-09",
+      "days_until": 76,
       "probabilities": {
-        "hold": 7,
-        "hike_25": 29,
-        "hike_50": 64
+        "hold": 6.5,
+        "hike_25": 38.3,
+        "hike_50": 55.2
+      },
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 125,
+      "probabilities": {
+        "hold": 3.1,
+        "hike_25": 21.6,
+        "hike_50": 75.3
+      },
+      "most_likely": "hike_50",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 174,
+      "probabilities": {
+        "hold": 1.0,
+        "hike_25": 9.0,
+        "hike_50": 90.0
       },
       "most_likely": "hike_50",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.25-4.50",
-  "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-09-23",
-  "recent_event_impact": "2026-09-16 FOMC 已加息25bp至3.75-4.00，Warsh会后强调通胀目标；2026-09-11公布的8月CPI偏热、8月NFP为162K且上修，强化了年内再加息预期。",
-  "commentary": "数据快照为2026-09-23，已反映2026-09-16 FOMC加息和Warsh会后讲话；CME FedWatch被多家当日市场报道引用，显示10月再加息约53%、年内至少再加息接近90%。8月CPI偏热、PPI仍显示成本压力，叠加NFP 162K和劳动力市场韧性，使市场从“单次加息”转向“年内至少一次、可能两次”的鹰派定价。",
+  "implied_terminal_rate": "4.75-5.00",
+  "implied_terminal_date": "2027-Q3",
+  "data_snapshot_date": "2026-09-24",
+  "recent_event_impact": "9/4 August NFP +162K vs 53K expected, 9/10 August PPI 5.4% y/y, and 9/11 August CPI 3.4% kept inflation/labor data hawkish; 9/16 FOMC then hiked 25bp to 3.75-4.00 and signaled another 2026 hike, lifting hike probabilities.",
+  "commentary": "Data snapshot is 2026-09-24 close from SessionOpen/CME-derived fed funds futures, cross-checked against Investing.com’s 2026-09-23 16:05 EDT CME-based table, so it is after the 9/16 FOMC hike and 9/21 Fed official remarks. The strong August NFP, hot PPI/CPI, and Warsh/FOMC inflation focus are reflected in a hawkish curve pricing about 70-71% odds of another 25bp hike at the 2026-10-28 meeting and a high probability of at least 50bp cumulative tightening by early 2027.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.koreatimes.co.kr/world/20260923/us-yields-edge-higher-as-investors-weigh-fed-rate-hike-expectations",
-      "type": "latest_report"
+      "url": "https://sessionopen.com/fed-watch",
+      "type": "cme_fedwatch_derived"
     },
     {
-      "url": "https://www.insigtx.com/en/news/silver-price-forecast-xag-usd-stays-rangebound-buying-capped-310082/",
-      "type": "latest_report"
-    },
-    {
-      "url": "https://finance.yahoo.com/economy/policy/articles/goldman-sachs-drops-surprise-call-174700113.html",
-      "type": "latest_report"
+      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
+      "type": "cme_fedwatch_derived"
     },
     {
       "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
@@ -68,10 +74,10 @@
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-23T10:14:53+00:00",
+  "fetched_at": "2026-09-24T02:17:21+00:00",
   "_meta": {
-    "cached_at": "2026-09-23T19:14:53.910573",
-    "age_sec": 28090,
+    "cached_at": "2026-09-24T11:17:21.903462",
+    "age_sec": 940,
     "stale": false,
     "refreshing": false
   }
