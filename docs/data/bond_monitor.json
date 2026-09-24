@@ -1,5 +1,5 @@
 {
-  "asof": "2026-09-24T16:29",
+  "asof": "2026-09-24T17:00",
   "yields": {
     "10y": {
       "value": 5.114,
@@ -194,14 +194,7 @@
       "source": "FRED DFII10"
     }
   },
-  "spreads": {
-    "2s10s": {
-      "value": 0.26,
-      "chg_20d_bps": -21.0,
-      "regime": "曲线平坦",
-      "asof": "2026-09-23"
-    }
-  },
+  "spreads": {},
   "gld_correlation": {
     "vs_10y": -0.236,
     "vs_tips_10y": -0.042,
@@ -268,12 +261,12 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 158.35 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 157.46 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
       "level": "warn",
-      "msg": "KRW/USD 1368.2 韩元明显走弱",
+      "msg": "KRW/USD 1365.8 韩元明显走弱",
       "key": "krw_weak"
     },
     {
@@ -333,21 +326,19 @@
     "walcl_12w_delta_bn": 22.0,
     "move_index": 95.4,
     "move_20d_delta": 21.4,
-    "effr_pct": 3.88,
-    "sofr_effr_spread_bps": -1.0,
     "bank_reserves_bn": 3014.0,
     "bank_total_assets_bn": 25804.0,
     "bank_reserves_pct_of_assets": 11.7,
     "sofr_pct": 3.87,
     "iorb_pct": 3.9,
     "sofr_iorb_spread_bps": -3.0,
-    "usdjpy": 158.35,
-    "usdjpy_20d_pct": -0.57,
-    "usdjpy_20d_delta_pct": -0.57,
+    "usdjpy": 157.46,
+    "usdjpy_20d_pct": -1.11,
+    "usdjpy_20d_delta_pct": -1.11,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -3.36,
-    "krw_usd": 1368.2,
-    "krw_20d_pct": -1.11,
+    "usdjpy_pullback_from_60d_high_pct": -3.91,
+    "krw_usd": 1365.8,
+    "krw_20d_pct": -1.28,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 217.4,
@@ -364,9 +355,9 @@
     "kbe_spy_20d_delta_pct": -6.16,
     "cdx_ig_bps": 77.0,
     "cdx_hy_bps": 268.0,
-    "dxy": 101.07,
-    "dxy_pct_20d": 2.17,
-    "dxy_z_60d": 1.02,
+    "dxy": 101.01,
+    "dxy_pct_20d": 2.11,
+    "dxy_z_60d": 0.95,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -379,9 +370,9 @@
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 24759.05,
-        "chg_1d": -0.3,
-        "chg_5d_pct": 0.18,
+        "close": 24771.85,
+        "chg_1d": -0.25,
+        "chg_5d_pct": 0.23,
         "asof": "2026-09-24"
       },
       "SSE": {
@@ -413,31 +404,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7744.5,
-        "chg_pct": -0.36
+        "price": 7743.0,
+        "chg_pct": -0.38
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 30595.75,
-        "chg_pct": -0.55
+        "price": 30604.25,
+        "chg_pct": -0.52
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 92.38,
-        "chg_pct": 0.24
+        "price": 92.29,
+        "chg_pct": 0.14
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4321.8,
-        "chg_pct": 0.08
+        "price": 4317.0,
+        "chg_pct": -0.03
       }
     },
     "oil_uso": 148.83,
     "oil_pct_20d": 17.98,
-    "oil_wti": 92.38,
+    "oil_wti": 92.29,
     "eem_pct_20d": 2.42,
     "eem_vs_spx_20d": 1.92,
     "volume_confirm": {
@@ -522,18 +513,18 @@
     "stablecoin_total_bn": 258.9,
     "usdt_bn": 183.5,
     "usdc_bn": 75.4,
-    "vix": 15.18,
-    "bbi_score": 1.18,
+    "vix": 15.79,
+    "bbi_score": 1.11,
     "bbi_components": {
-      "vix": -0.47,
+      "vix": -0.37,
       "ig": -1.51,
       "hy": -1.21,
       "erp": 1.61
     }
   },
   "_meta": {
-    "cached_at": "2026-09-24T16:29:32.511051",
-    "age_sec": 213,
+    "cached_at": "2026-09-24T17:02:08.789514",
+    "age_sec": 53,
     "stale": false,
     "refreshing": false
   }
