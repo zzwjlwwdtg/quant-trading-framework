@@ -5,22 +5,22 @@
   "analyst_consensus": {
     "n_analysts": 17,
     "recommendation": "hold",
-    "current_price": 87.78,
+    "current_price": 89.59,
     "forward_eps": 4.96,
-    "trailing_eps": 1.85,
-    "eps_growth_pct": 168.3,
-    "forward_pe": 17.69,
-    "trailing_pe": 47.45,
+    "trailing_eps": 1.93,
+    "eps_growth_pct": 157.1,
+    "forward_pe": 18.05,
+    "trailing_pe": 46.42,
     "target_mean": 68.35,
     "target_high": 85.0,
     "target_low": 52.0,
-    "target_upside_pct": -22.1,
+    "target_upside_pct": -23.7,
     "revenue_growth_pct": -3.1,
     "earnings_growth_pct": -68.6,
     "next_earnings": "2026-11-04",
-    "implied_pe_hold": 235.47,
-    "implied_pe_hold_upside": 168.3,
-    "peg_fair_price": 835.21,
+    "implied_pe_hold": 230.36,
+    "implied_pe_hold_upside": 157.1,
+    "peg_fair_price": 779.63,
     "peg_ratio": 0.11,
     "hist_pe_median": 17.68,
     "hist_pe_p25": 14.71,
@@ -29,21 +29,21 @@
     "implied_hist_median": 87.74,
     "implied_hist_p25": 73.0,
     "implied_hist_p75": 102.48,
-    "implied_hist_upside": -0.0,
-    "peer_pe_median": 18.28,
+    "implied_hist_upside": -2.1,
+    "peer_pe_median": 18.15,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "QRVO",
-        "pe": 14.71
+        "pe": 14.94
       },
       {
         "ticker": "AVGO",
-        "pe": 18.28
+        "pe": 18.15
       },
       {
         "ticker": "QCOM",
-        "pe": 19.46
+        "pe": 19.79
       },
       {
         "ticker": "6981.T",
@@ -51,11 +51,11 @@
       },
       {
         "ticker": "NXPI",
-        "pe": 12.94
+        "pe": 13.12
       }
     ],
-    "implied_peer_median": 90.72,
-    "implied_peer_upside": 3.3,
+    "implied_peer_median": 90.07,
+    "implied_peer_upside": 0.5,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -193,9 +193,9 @@
     }
   },
   "pricing": {
-    "classification": "matched",
-    "label": "预期与股价基本匹配",
-    "tone": "muted",
+    "classification": "overpriced",
+    "label": "预期透支",
+    "tone": "bad",
     "confidence": "high",
     "anchor_count": 4,
     "anchors": [
@@ -203,44 +203,44 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 68.35,
-        "gap_pct": -22.1
+        "gap_pct": -23.7
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 235.47,
-        "gap_pct": 168.3
+        "implied_price": 230.36,
+        "gap_pct": 157.1
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 87.74,
-        "gap_pct": -0.0
+        "gap_pct": -2.1
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 90.72,
-        "gap_pct": 3.3
+        "implied_price": 90.07,
+        "gap_pct": 0.5
       }
     ],
-    "median_gap_pct": 1.6,
+    "median_gap_pct": -0.8,
     "revision_signal": "downward",
-    "required_eps_growth_pct": 168.4,
-    "consensus_eps_growth_pct": 168.3,
-    "growth_cushion_pct": -0.1,
+    "required_eps_growth_pct": 162.6,
+    "consensus_eps_growth_pct": 157.1,
+    "growth_cushion_pct": -5.5,
     "rationale": [
-      "多口径隐含价中位数高于现价 1.6%",
+      "多口径隐含价中位数低于现价 0.8%",
       "近 30 天 EPS 共识下修",
-      "历史 PE 口径要求 EPS 增长 +168.4%，共识为 +168.3%"
+      "历史 PE 口径要求 EPS 增长 +162.6%，共识为 +157.1%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-25T13:37:55.107655+00:00",
+  "fetched_at": "2026-09-25T19:38:23.334991+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-25T22:37:55.108655",
-    "age_sec": 21308,
+    "cached_at": "2026-09-26T04:38:23.349744",
+    "age_sec": 1479,
     "stale": false,
     "refreshing": false
   },
