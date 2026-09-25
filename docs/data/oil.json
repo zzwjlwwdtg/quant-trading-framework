@@ -1,12 +1,12 @@
 {
-  "ts": "2026-09-25T19:00:20.830154+00:00",
+  "ts": "2026-09-25T19:27:51.948554+00:00",
   "factors": [
     {
       "arrow": "▲",
       "name": "WTI 油价",
       "direction": "bullish",
       "weight": 2,
-      "value": "$92.12 (20d +10.3%)",
+      "value": "$92.61 (20d +10.9%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "neutral",
       "weight": 1,
-      "value": "$5.12 (Brent $97.24 - WTI $92.12)",
+      "value": "$5.16 (Brent $97.77 - WTI $92.61)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "neutral",
       "weight": 1,
-      "value": "XLE +0.1% vs SPY +0.2% (差 -0.1pp)",
+      "value": "XLE +0.1% vs SPY +0.2% (差 -0.0pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -34,11 +34,19 @@
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
+      "arrow": "▲",
+      "name": "美国汽油零售价",
+      "direction": "bullish",
+      "weight": 1,
+      "value": "$4.48/gal (4周 +9.6%)",
+      "hint": "零售汽油价 = 需求端信号。上涨 3%+ = 需求强劲支撑油价 / 下跌 = 需求疲软利空"
+    },
+    {
       "arrow": "▼",
       "name": "OVX 油价波动率",
       "direction": "bearish",
       "weight": 1,
-      "value": "54.68 · 极高（>45），市场恐慌",
+      "value": "54.59 · 极高（>45），市场恐慌",
       "hint": "OVX = CBOE 原油 ETF 波动率指数（类似 VIX）。低=平稳利多，高=恐慌利空"
     },
     {
@@ -50,20 +58,20 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "neutral",
-  "score": 1,
+  "direction": "bullish",
+  "score": 2,
   "notes": [
     "油价 20d 大涨 → 通胀压力上升，利好油气板块，利空高估值成长股",
     "油价 5d 急跌 → 需求疲软信号 / 或供应过剩"
   ],
-  "price": 92.12,
-  "pct_5d": -8.16,
-  "pct_20d": 10.28,
+  "price": 92.61,
+  "pct_5d": -7.67,
+  "pct_20d": 10.87,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-09-26T04:00:30.717551",
-    "age_sec": 151,
-    "stale": false,
-    "refreshing": false
+    "cached_at": "2026-09-26T04:27:53.389589",
+    "age_sec": 308,
+    "stale": true,
+    "refreshing": true
   }
 }
