@@ -5,23 +5,23 @@
   "analyst_consensus": {
     "n_analysts": 39,
     "recommendation": "buy",
-    "current_price": 337.32,
+    "current_price": 335.92,
     "forward_eps": 9.59,
     "trailing_eps": 8.73,
     "eps_growth_pct": 9.8,
-    "forward_pe": 35.18,
-    "trailing_pe": 38.64,
+    "forward_pe": 35.03,
+    "trailing_pe": 38.48,
     "target_mean": 328.22,
     "target_high": 405.0,
     "target_low": 215.0,
-    "target_upside_pct": -2.7,
+    "target_upside_pct": -2.3,
     "revenue_growth_pct": 16.4,
     "earnings_growth_pct": 28.7,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 370.49,
+    "implied_pe_hold": 368.96,
     "implied_pe_hold_upside": 9.8,
     "peg_fair_price": 93.97,
-    "peg_ratio": 3.59,
+    "peg_ratio": 3.57,
     "hist_pe_median": 33.95,
     "hist_pe_p25": 29.1,
     "hist_pe_p75": 37.2,
@@ -29,7 +29,7 @@
     "implied_hist_median": 325.53,
     "implied_hist_p25": 279.03,
     "implied_hist_p75": 356.7,
-    "implied_hist_upside": -3.5,
+    "implied_hist_upside": -3.1,
     "peer_pe_median": null,
     "peer_pe_n_peers": null,
     "peer_pe_details": null,
@@ -63,12 +63,12 @@
           "growth": 0.1822
         },
         "+1y": {
-          "avg": 9.57,
+          "avg": 9.5815,
           "low": 8.69,
           "high": 10.67,
           "yearAgoEps": 8.8194,
-          "numberOfAnalysts": 39.0,
-          "growth": 0.0851
+          "numberOfAnalysts": 40.0,
+          "growth": 0.0864
         }
       },
       "revenue": {
@@ -97,12 +97,12 @@
           "growth": 0.1482
         },
         "+1y": {
-          "avg": 527841209630.0,
+          "avg": 527971929389.0,
           "low": 497900000000.0,
           "high": 594863000000.0,
           "yearAgoRevenue": 477832817030.0,
-          "numberOfAnalysts": 39.0,
-          "growth": 0.1047
+          "numberOfAnalysts": 40.0,
+          "growth": 0.1049
         }
       },
       "eps_trend": {
@@ -122,13 +122,13 @@
         },
         "0y": {
           "current": 8.8194,
-          "7daysAgo": 8.818,
-          "30daysAgo": 8.8098,
-          "60daysAgo": 8.7676,
+          "7daysAgo": 8.8194,
+          "30daysAgo": 8.8125,
+          "60daysAgo": 8.7669,
           "90daysAgo": 8.7596
         },
         "+1y": {
-          "current": 9.57,
+          "current": 9.5815,
           "7daysAgo": 9.5815,
           "30daysAgo": 9.5313,
           "60daysAgo": 9.7132,
@@ -162,9 +162,9 @@
         "signal": "downward",
         "trend_signal": "flat",
         "breadth_signal": "downward",
-        "eps_current": 9.57,
+        "eps_current": 9.5815,
         "eps_30d_ago": 9.5313,
-        "eps_trend_pct_30d": 0.41,
+        "eps_trend_pct_30d": 0.53,
         "up_30d": 2,
         "down_30d": 7,
         "net_30d": -5
@@ -182,38 +182,38 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 328.22,
-        "gap_pct": -2.7
+        "gap_pct": -2.3
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 370.49,
+        "implied_price": 368.96,
         "gap_pct": 9.8
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 325.53,
-        "gap_pct": -3.5
+        "gap_pct": -3.1
       }
     ],
-    "median_gap_pct": -2.7,
+    "median_gap_pct": -2.3,
     "revision_signal": "downward",
-    "required_eps_growth_pct": 13.8,
+    "required_eps_growth_pct": 13.3,
     "consensus_eps_growth_pct": 9.8,
-    "growth_cushion_pct": -4.0,
+    "growth_cushion_pct": -3.5,
     "rationale": [
-      "多口径隐含价中位数低于现价 2.7%",
+      "多口径隐含价中位数低于现价 2.3%",
       "近 30 天 EPS 共识下修",
-      "历史 PE 口径要求 EPS 增长 +13.8%，共识为 +9.8%"
+      "历史 PE 口径要求 EPS 增长 +13.3%，共识为 +9.8%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-24T17:42:52.260617+00:00",
+  "fetched_at": "2026-09-24T23:43:22.224390+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-25T02:42:52.262149",
-    "age_sec": 21011,
+    "cached_at": "2026-09-25T08:43:22.224894",
+    "age_sec": 1186,
     "stale": false,
     "refreshing": false
   },
