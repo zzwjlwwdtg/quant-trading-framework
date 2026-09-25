@@ -5,8 +5,9 @@
       "date": "2026-10-28",
       "days_until": 33,
       "probabilities": {
-        "hold": 33.4,
-        "hike_25": 66.6
+        "hold": 32.5,
+        "hike_25": 67.5,
+        "hike_50": 0
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish_lean"
@@ -15,49 +16,38 @@
       "date": "2026-12-09",
       "days_until": 75,
       "probabilities": {
-        "hold": 8.7,
-        "hike_25": 42.1,
-        "hike_50": 49.2
+        "hold": 5.2,
+        "hike_25": 38,
+        "hike_50": 56.8
       },
       "most_likely": "hike_50",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
       "days_until": 124,
       "probabilities": {
-        "hold": 4.3,
-        "hike_25": 25.4,
-        "hike_50": 70.3
+        "hold": 2.8,
+        "hike_25": 22.9,
+        "hike_50": 74.3
       },
       "most_likely": "hike_50",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 173,
-      "probabilities": {
-        "hold": 1.5,
-        "hike_25": 11.4,
-        "hike_50": 87.1
-      },
-      "most_likely": "hike_50",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.75-5.00",
-  "implied_terminal_date": "2027-H2",
-  "data_snapshot_date": "2026-09-24",
-  "recent_event_impact": "最近7天内未发现新的NFP/CPI/PPI/FOMC；9/24 FedWatch快照已在9/16 FOMC加息25bp、9/10 PPI和9/11 CPI之后发布。8月CPI同比3.4%、核心CPI同比2.4%，PPI最终需求同比5.4%，叠加Warsh在9/16声明中强调通胀仍高，使10月再加息25bp概率升至66.6%。",
-  "commentary": "数据快照为2026-09-24，距2026-09-25仍在最近1个交易日内；9/16 FOMC已把目标区间上调至3.75-4.00，当前曲线明显偏鹰。8月CPI/PPI仍显示通胀压力，市场定价10月约三分之二概率再加息，12月前至少再加25bp的概率约91.3%。注：hike_50在远期会议中聚合为“较当前至少高50bp”的终点分布。",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-09-25",
+  "recent_event_impact": "最近7天内未发现新的NFP/CPI/PPI发布；关键已反映事件为2026-09-16 FOMC加息25bp至3.75-4.00。此前8月PPI于2026-09-10公布，终值需求PPI环比+0.4%、同比+5.4%；8月CPI于2026-09-11公布，CPI环比+0.4%、同比+3.4%、核心同比+2.4%，强化通胀粘性和后续加息定价。",
+  "commentary": "数据snapshot为2026-09-25，已晚于2026-09-16 FOMC和9月10-11日PPI/CPI数据，因此不判定为滞后。CME/FedWatch表显示市场已从降息路径转为明显鹰派：10月加息25bp概率约67.5%，12月累计至少再加息50bp概率约56.8%，主要受8月CPI/PPI仍高于2%目标及Warsh会后抗通胀表态影响；hike_50在远期会议中按给定标签汇总为“至少累计+50bp”。",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "fedwatch_probability_backup"
+      "url": "https://www.oanda.jp/lab-education/dictionary/fedwatchtool/",
+      "type": "cme_fedwatch_snapshot"
     },
     {
       "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
@@ -74,10 +64,10 @@
   ],
   "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-09-24T18:22:14+00:00",
+  "fetched_at": "2026-09-25T02:24:00+00:00",
   "_meta": {
-    "cached_at": "2026-09-25T03:22:14.262447",
-    "age_sec": 27648,
+    "cached_at": "2026-09-25T11:24:00.420882",
+    "age_sec": 542,
     "stale": false,
     "refreshing": false
   }
