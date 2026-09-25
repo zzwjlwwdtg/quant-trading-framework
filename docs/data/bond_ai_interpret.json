@@ -1,63 +1,63 @@
 {
   "chain_verdict": "谨慎看空",
-  "chain_summary": "高利率没压紧金融条件：企业基本面强压住借钱成本",
+  "chain_summary": "企业盈利压住借钱成本，高利率尚未打到市场",
   "chain_blocked_at": "nfci",
   "nodes": {
     "inflation": {
-      "direction": "hot",
-      "note": "物价还偏热"
+      "direction": "elevated",
+      "note": "物价仍偏高"
     },
     "jobs": {
       "direction": "healthy",
-      "note": "就业没明显坏"
+      "note": "就业还稳"
     },
     "fed": {
       "direction": "tightening",
-      "note": "还不想降息"
+      "note": "还不敢降息"
     },
     "rates": {
       "direction": "extreme",
-      "note": "长债压力很大"
+      "note": "长债很高"
     },
     "real_rates": {
       "direction": "extreme",
-      "note": "真利率很高"
+      "note": "真钱利率很高"
     },
     "dxy": {
       "direction": "strong",
-      "note": "美元近期偏强"
+      "note": "美元偏强"
     },
     "erp": {
-      "direction": "extreme",
-      "note": "股票很贵"
+      "direction": "compressed",
+      "note": "股票偏贵"
     },
     "curve": {
       "direction": "normal",
-      "note": "曲线已转正"
+      "note": "长端更贵"
     },
     "nfci": {
       "direction": "loose",
-      "note": "钱仍不算紧"
+      "note": "借钱环境仍松"
     },
     "credit": {
       "direction": "calm",
-      "note": "借钱成本平稳"
+      "note": "低调放量"
     },
     "stablecoin": {
       "direction": "stable",
-      "note": "资金池很大"
+      "note": "影子美元高位"
     },
     "vol": {
       "direction": "calm",
-      "note": "市场没恐慌"
+      "note": "股市不慌"
     },
     "em": {
-      "direction": "neutral",
-      "note": "新兴市场持平"
+      "direction": "underperforming",
+      "note": "新兴略弱"
     },
     "bbi": {
       "direction": "fear",
-      "note": "散户偏害怕"
+      "note": "散户偏怕"
     },
     "us_equity": {
       "direction": "resilient",
@@ -65,11 +65,11 @@
     },
     "jp_equity": {
       "direction": "resilient",
-      "note": "日股仍很强"
+      "note": "日股很强"
     },
     "kr_equity": {
       "direction": "resilient",
-      "note": "韩股仍很强"
+      "note": "韩股很强"
     },
     "oil": {
       "direction": "surging",
@@ -78,43 +78,43 @@
   },
   "user_thesis_check": {
     "status": "against",
-    "summary": "概率22%（30d从30→22，方向下行）—油价和通胀阻力大",
+    "summary": "概率22% 30d从30→22，方向下行 — 油价和通胀是阻力",
     "supporting_nodes": [
+      "bbi",
+      "em",
       "rates",
-      "real_rates",
-      "bbi"
+      "real_rates"
     ],
     "contradicting_nodes": [
       "inflation",
       "jobs",
       "fed",
+      "oil",
       "dxy",
       "nfci",
       "credit",
       "vol",
-      "em",
       "us_equity",
       "jp_equity",
-      "kr_equity",
-      "oil"
+      "kr_equity"
     ],
     "cut_probability_pct": 22,
     "trend_direction": "falling",
-    "primary_driver": "超高长债和真利率在给市场施压，是唯一像样的降息理由。",
-    "primary_blocker": "油价大涨、通胀偏热、就业不差，让 Fed 很难急着降息。",
-    "action_around_thesis": "10月前别重仓押降息，等信用或就业真正变坏再加码。"
+    "primary_driver": "高利率和高实际利率在给经济施压，但还没传到信用和股市。",
+    "primary_blocker": "油价大涨、通胀偏高、就业未坏，Fed 缺少降息借口。",
+    "action_around_thesis": "10月前别重押降息，等油价回落或就业明显转弱。"
   },
-  "action_hint": "散户先降杠杆、控仓位，别追高估值股票和长债单边行情。",
+  "action_hint": "散户先降杠杆，少追高，等信用或就业真变坏再加仓。",
   "confidence": "medium",
   "verdict": "谨慎看空",
-  "one_liner": "高利率没压紧金融条件：企业基本面强压住借钱成本",
+  "one_liner": "企业盈利压住借钱成本，高利率尚未打到市场",
   "reasoning": "",
   "who_agrees": "",
   "_source": "ai_cli_codex",
-  "generated_at": "2026-09-25T07:23:36+00:00",
+  "generated_at": "2026-09-25T13:24:32+00:00",
   "_meta": {
-    "cached_at": "2026-09-25T16:23:36.579882",
-    "age_sec": 20366,
+    "cached_at": "2026-09-25T22:24:32.050747",
+    "age_sec": 510,
     "stale": false,
     "refreshing": false
   }
