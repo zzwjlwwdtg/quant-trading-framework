@@ -1,78 +1,85 @@
 {
   "ticker": "TDK",
   "source_stock": "6762.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
-  "last_update": null,
+  "direction": "据え置き",
+  "revision_type": "maintained",
+  "magnitude": "小",
+  "last_update": "2026-07-31",
   "next_earnings": "2026-10-30",
-  "guidance_note": "AI 返回 据え置き 但未附可核验来源，已拒收",
-  "revision_reason": null,
-  "market_reaction": "不明",
-  "confidence": "unverified",
+  "guidance_note": "2027年3月期通期見通しは売上高2兆5,800億円（+3.0% YoY）、営業利益2,950億円（+8.3%）、親会社所有者帰属当期利益2,250億円（+15.0%）、EPS 118.54円。",
+  "revision_reason": "7月31日の1Q説明要旨で、1Qは期初想定を大きく上回り2Qも好調を想定する一方、世界情勢・需要・為替を慎重に見極めるため通期見通しを据え置き。数値変化は売上高2兆5,800億円→2兆5,800億円、営業利益2,950億円→2,950億円、純利益2,250億円→2,250億円、EPS 118.54円→118.54円（変化なし）。",
+  "market_reaction": "低",
+  "confidence": "medium",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-09-22T09:43:18.518033+00:00",
-  "ai_error": "no_trusted_source",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-09-25T09:44:20.059446+00:00",
+  "sources": [
+    {
+      "url": "https://www2.jpx.co.jp/disc/67620/140120260427512388.pdf",
+      "type": "TDnet",
+      "title": "2026年3月期 決算短信〔IFRS〕(連結)"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 2845.0,
+    "current_price": 2978.0,
     "forward_eps": 106.88,
-    "trailing_eps": 102.99,
-    "eps_growth_pct": 3.8,
-    "forward_pe": 26.62,
-    "trailing_pe": 27.62,
+    "trailing_eps": 103.11,
+    "eps_growth_pct": 3.7,
+    "forward_pe": 27.86,
+    "trailing_pe": 28.88,
     "target_mean": 4157.81,
     "target_high": 4950.0,
     "target_low": 2575.0,
-    "target_upside_pct": 46.1,
+    "target_upside_pct": 39.6,
     "revenue_growth_pct": 38.3,
     "earnings_growth_pct": 94.3,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 2952.46,
-    "implied_pe_hold_upside": 3.8,
-    "peg_fair_price": 406.14,
-    "peg_ratio": 7.0,
-    "hist_pe_median": 24.48,
-    "hist_pe_p25": 18.94,
-    "hist_pe_p75": 28.43,
-    "hist_pe_n_days": 850,
-    "implied_hist_median": 2616.42,
-    "implied_hist_p25": 2024.31,
-    "implied_hist_p75": 3038.6,
-    "implied_hist_upside": -8.0,
-    "peer_pe_median": 34.29,
+    "implied_pe_hold": 3086.88,
+    "implied_pe_hold_upside": 3.7,
+    "peg_fair_price": 395.46,
+    "peg_ratio": 7.53,
+    "hist_pe_median": 24.49,
+    "hist_pe_p25": 18.96,
+    "hist_pe_p75": 28.47,
+    "hist_pe_n_days": 852,
+    "implied_hist_median": 2617.49,
+    "implied_hist_p25": 2026.44,
+    "implied_hist_p75": 3042.87,
+    "implied_hist_upside": -12.1,
+    "peer_pe_median": 35.45,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "6981.T",
-        "pe": 32.72
+        "pe": 33.81
       },
       {
         "ticker": "6976.T",
-        "pe": 50.06
+        "pe": 48.91
       },
       {
         "ticker": "6971.T",
-        "pe": 40.64
+        "pe": 42.06
       },
       {
         "ticker": "2327.TW",
-        "pe": 18.23
+        "pe": 18.51
       },
       {
         "ticker": "009150.KS",
-        "pe": 34.29
+        "pe": 35.45
       }
     ],
-    "implied_peer_median": 3664.92,
-    "implied_peer_upside": 28.8,
+    "implied_peer_median": 3788.9,
+    "implied_peer_upside": 27.2,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-09-22T18:44:17.184724",
-    "age_sec": 258531,
+    "cached_at": "2026-09-25T18:45:07.653023",
+    "age_sec": 1081,
     "stale": false,
     "refreshing": false
   }
