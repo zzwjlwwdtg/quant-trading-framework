@@ -5,20 +5,20 @@
   "analyst_consensus": {
     "n_analysts": 52,
     "recommendation": "strong_buy",
-    "current_price": 515.91,
+    "current_price": 516.17,
     "forward_eps": 23.68,
     "trailing_eps": 17.93,
     "eps_growth_pct": 32.0,
-    "forward_pe": 21.79,
-    "trailing_pe": 28.77,
+    "forward_pe": 21.8,
+    "trailing_pe": 28.79,
     "target_mean": 577.26,
     "target_high": 870.0,
     "target_low": 440.0,
-    "target_upside_pct": 11.9,
+    "target_upside_pct": 11.8,
     "revenue_growth_pct": 17.7,
     "earnings_growth_pct": 31.7,
     "next_earnings": "2026-10-29",
-    "implied_pe_hold": 681.19,
+    "implied_pe_hold": 681.58,
     "implied_pe_hold_upside": 32.0,
     "peg_fair_price": 757.63,
     "peg_ratio": 0.68,
@@ -29,33 +29,33 @@
     "implied_hist_median": 844.99,
     "implied_hist_p25": 780.12,
     "implied_hist_p75": 906.55,
-    "implied_hist_upside": 63.8,
-    "peer_pe_median": 23.09,
+    "implied_hist_upside": 63.7,
+    "peer_pe_median": 23.08,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "AMZN",
-        "pe": 24.05
+        "pe": 24.03
       },
       {
         "ticker": "GOOGL",
-        "pe": 23.09
+        "pe": 23.08
       },
       {
         "ticker": "AAPL",
-        "pe": 35.48
+        "pe": 35.58
       },
       {
         "ticker": "ORCL",
-        "pe": 12.57
+        "pe": 12.47
       },
       {
         "ticker": "CRM",
-        "pe": 14.66
+        "pe": 14.62
       }
     ],
-    "implied_peer_median": 546.68,
-    "implied_peer_upside": 6.0,
+    "implied_peer_median": 546.44,
+    "implied_peer_upside": 5.9,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -203,44 +203,44 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 577.26,
-        "gap_pct": 11.9
+        "gap_pct": 11.8
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 681.19,
+        "implied_price": 681.58,
         "gap_pct": 32.0
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
         "implied_price": 844.99,
-        "gap_pct": 63.8
+        "gap_pct": 63.7
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 546.68,
-        "gap_pct": 6.0
+        "implied_price": 546.44,
+        "gap_pct": 5.9
       }
     ],
     "median_gap_pct": 21.9,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -19.4,
+    "required_eps_growth_pct": -19.3,
     "consensus_eps_growth_pct": 32.0,
-    "growth_cushion_pct": 51.4,
+    "growth_cushion_pct": 51.3,
     "rationale": [
       "多口径隐含价中位数高于现价 21.9%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -19.4%，共识为 +32.0%"
+      "历史 PE 口径要求 EPS 增长 -19.3%，共识为 +32.0%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-09-25T17:45:22.234756+00:00",
+  "fetched_at": "2026-09-25T23:45:54.760178+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-09-26T02:45:22.235756",
-    "age_sec": 20862,
+    "cached_at": "2026-09-26T08:45:54.760707",
+    "age_sec": 6428,
     "stale": false,
     "refreshing": false
   },
