@@ -3,8 +3,19 @@
   "path": "ai_targets_2026-10-06.json",
   "mtime": "2026-10-06T22:26:13.711626",
   "broker_status": "ok",
-  "pending_count": 0,
-  "pending_orders": [],
+  "pending_count": 1,
+  "pending_orders": [
+    {
+      "order_id": "467620",
+      "ticker": "US.SHY",
+      "side": "SELL",
+      "qty": 3606.0,
+      "dealt_qty": 0.0,
+      "price": 80.71,
+      "status": "SUBMITTED",
+      "system_managed": true
+    }
+  ],
   "manual_pending_count": 0,
   "version": 1,
   "ts": "2026-10-06T09:25",
@@ -22,7 +33,7 @@
       "times": {
         "decision_written_at": "2026-10-07T05:37:08+00:00",
         "market_observed_at": "2026-10-07 14:37",
-        "broker_checked_at": "2026-10-07T12:03:03+00:00",
+        "broker_checked_at": "2026-10-07T12:33:03+00:00",
         "last_fill_at": "2026-09-01T16:03:59.056554+00:00"
       },
       "system_action": "WATCH_BUY",
@@ -50,7 +61,7 @@
       "times": {
         "decision_written_at": "2026-10-07T05:37:09+00:00",
         "market_observed_at": "2026-10-07 14:37",
-        "broker_checked_at": "2026-10-07T12:03:03+00:00",
+        "broker_checked_at": "2026-10-07T12:33:03+00:00",
         "last_fill_at": "2026-09-02T10:06:19.550586+00:00"
       },
       "system_action": "WATCH_BUY",
@@ -78,15 +89,15 @@
       "times": {
         "decision_written_at": "2026-10-07T05:37:10+00:00",
         "market_observed_at": "2026-10-07 14:37",
-        "broker_checked_at": "2026-10-07T12:03:03+00:00",
-        "last_fill_at": "2026-10-06T16:01:07.643564+00:00"
+        "broker_checked_at": "2026-10-07T12:33:03+00:00",
+        "last_fill_at": "2026-10-07T12:32:42.583424+00:00"
       },
       "system_action": "HOLD",
       "system_confidence": 2,
       "system_reason": "no clear signal",
       "system_ts": "2026-10-07T14:37:10.459734",
       "target_outdated": true,
-      "execution_status": "inactive_signal",
+      "execution_status": "filled",
       "effective_entry_ref": null,
       "effective_stop_ref": null,
       "effective_target_ref": null,
@@ -106,15 +117,15 @@
       "times": {
         "decision_written_at": "2026-10-07T05:37:11+00:00",
         "market_observed_at": "2026-10-07 14:37",
-        "broker_checked_at": "2026-10-07T12:03:03+00:00",
-        "last_fill_at": "2026-10-05T13:21:07.040509+00:00"
+        "broker_checked_at": "2026-10-07T12:33:03+00:00",
+        "last_fill_at": "2026-10-07T12:32:42.368464+00:00"
       },
       "system_action": "WATCH_BUY",
       "system_confidence": 2,
       "system_reason": "bullish trend + momentum",
       "system_ts": "2026-10-07T14:37:11.078334",
       "target_outdated": true,
-      "execution_status": "candidate",
+      "execution_status": "filled",
       "effective_entry_ref": 24.45,
       "effective_stop_ref": 23.16,
       "effective_target_ref": null,
@@ -134,7 +145,7 @@
       "times": {
         "decision_written_at": "2026-10-07T05:37:17+00:00",
         "market_observed_at": "2026-10-07 14:37",
-        "broker_checked_at": "2026-10-07T12:03:03+00:00",
+        "broker_checked_at": "2026-10-07T12:33:03+00:00",
         "last_fill_at": null
       },
       "system_action": "HOLD",
@@ -149,6 +160,44 @@
       "effective_price_source": "latest_system_decision",
       "position_qty": 0,
       "pending_orders": []
+    },
+    {
+      "ticker": "US.SHY",
+      "action": "hold",
+      "entry_ref": null,
+      "stop_ref": null,
+      "target_ref": null,
+      "use_limit": false,
+      "notes": "broker 中存在系统订单，但当前 AI 价位文件未包含该标的",
+      "times": {
+        "decision_written_at": "2026-10-07T05:37:23+00:00",
+        "market_observed_at": "2026-10-07 14:37",
+        "broker_checked_at": "2026-10-07T12:33:03+00:00",
+        "last_fill_at": "2026-08-20T13:24:07.659580+00:00"
+      },
+      "system_action": "HOLD",
+      "system_confidence": 1,
+      "system_reason": "no clear signal",
+      "system_ts": "2026-10-07T14:37:23.714389",
+      "target_outdated": true,
+      "execution_status": "submitted",
+      "effective_entry_ref": null,
+      "effective_stop_ref": null,
+      "effective_target_ref": null,
+      "effective_price_source": "latest_system_decision",
+      "position_qty": 7702,
+      "pending_orders": [
+        {
+          "order_id": "467620",
+          "ticker": "US.SHY",
+          "side": "SELL",
+          "qty": 3606.0,
+          "dealt_qty": 0.0,
+          "price": 80.71,
+          "status": "SUBMITTED",
+          "system_managed": true
+        }
+      ]
     }
   ]
 }
