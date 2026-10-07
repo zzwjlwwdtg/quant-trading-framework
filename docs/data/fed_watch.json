@@ -1,70 +1,81 @@
 {
-  "current_target_range": "4.00-4.25",
+  "current_target_range": "3.75-4.00",
   "meetings": [
     {
       "date": "2026-10-28",
       "days_until": 21,
       "probabilities": {
-        "cut_25": 78.2,
-        "hold": 21.8
+        "hold": 80,
+        "hike_25": 20
       },
-      "most_likely": "cut_25",
-      "consensus_direction": "dovish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_tail_risk"
     },
     {
       "date": "2026-12-09",
       "days_until": 63,
       "probabilities": {
-        "cut_25": 14.8,
-        "hold": 67.5,
-        "hike_25": 17.7
+        "hold": 18,
+        "hike_25": 82
       },
-      "most_likely": "hold",
-      "consensus_direction": "neutral"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-27",
       "days_until": 112,
       "probabilities": {
-        "cut_25": 8.4,
-        "hold": 44.9,
-        "hike_25": 39.1,
-        "hike_50": 7.6
+        "hold": 58,
+        "hike_25": 42
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 161,
+      "probabilities": {
+        "hold": 34,
+        "hike_25": 66
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q2",
-  "data_snapshot_date": "2026-10-06 18:05 EDT",
-  "recent_event_impact": "2026-10-02 NFP +29K，低于约84K-90K预期，失业率升至4.2%，且7月/8月合计下修60K；10月会议降息25bp概率从一周前51.8%升至78.2%，维持概率从48.2%降至21.8%。CPI/PPI的9月数据尚未发布，BLS日程显示CPI为2026-10-14、PPI为2026-10-15。",
-  "commentary": "CME FedWatch/Investing.com快照为2026-10-06 18:05 EDT，已晚于2026-10-02就业报告，因此反映了最新NFP冲击。疲弱就业数据明显压低近期加息定价并提高10月降息概率，但远期曲线仍显示2027年初以后重新转向偏鹰，隐含终点区间约为4.50-4.75。",
+  "implied_terminal_date": "2027-Q3",
+  "data_snapshot_date": "2026-10-07",
+  "recent_event_impact": "2026-10-02 September NFP +29K, unemployment 4.2%; weaker-than-expected payrolls sharply reduced October hike odds, with reported CME FedWatch odds falling to about 22.7% from 64.2% one week earlier. September CPI has not yet been released; next CPI is scheduled for 2026-10-14.",
+  "commentary": "Data snapshot is 2026-10-07, after the 2026-10-02 NFP release, so the weak payroll print is reflected in the near-term pricing. The market now mostly expects an October hold, but still prices a strong probability of a December 25bp hike as inflation risk remains relevant ahead of the 2026-10-14 September CPI release.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://www.investing.com/central-banks/fed-rate-monitor",
-      "type": "cme_fedwatch_backup"
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fedwatch_replica_live_zq"
     },
     {
-      "url": "https://www.bls.gov/news.release/empsit.nr0.htm",
-      "type": "recent_event_nfp"
+      "url": "https://www.axios.com/2026/10/02/september-jobs-federal-reserve-trump",
+      "type": "recent_nfp_event"
     },
     {
-      "url": "https://www.bls.gov/schedule/2026/home.htm",
-      "type": "economic_release_calendar"
+      "url": "https://www.kiplinger.com/investing/stocks/nasdaq-adds-319-points-as-rate-hike-odds-ebb-stock-market-today",
+      "type": "fedwatch_event_impact"
+    },
+    {
+      "url": "https://www.bls.gov/news.release/cpi.htm",
+      "type": "cpi_release_schedule"
     }
   ],
-  "confidence": "high",
+  "confidence": "medium",
   "source_via": "codex_cli_websearch",
-  "fetched_at": "2026-10-07T00:34:12+00:00",
+  "fetched_at": "2026-10-07T09:04:04+00:00",
   "_meta": {
-    "cached_at": "2026-10-07T09:34:12.421658",
-    "age_sec": 30531,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-07T18:04:04.909889",
+    "age_sec": 1738,
+    "stale": false,
+    "refreshing": false
   }
 }
