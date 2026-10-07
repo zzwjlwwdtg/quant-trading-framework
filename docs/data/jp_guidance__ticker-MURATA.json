@@ -1,79 +1,86 @@
 {
   "ticker": "MURATA",
   "source_stock": "6981.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
-  "magnitude": "不明",
-  "last_update": null,
+  "direction": "上修",
+  "revision_type": "upward",
+  "magnitude": "中",
+  "last_update": "2026-07-31",
   "next_earnings": "2026-10-30",
-  "guidance_note": "AI 返回 上修 但未附可核验来源，已拒收",
-  "revision_reason": null,
+  "guidance_note": "2027年3月期通期予想は売上収益2兆1,100億円（+15.2% YoY）、営業利益4,300億円（+52.6% YoY）、親会社帰属純利益3,380億円（+44.5% YoY）、EPS 185.68円。",
+  "revision_reason": "前回予想比で売上収益1兆9,600億円→2兆1,100億円（+7.7%）、営業利益3,800億円→4,300億円（+13.2%）、純利益2,930億円→3,380億円（+15.4%）、EPS 160.96円→185.68円へ上修。理由はデータセンター関連需要のさらなる高まり、円安進行、生産高増加に伴う操業度益で、為替前提も1米ドル150円→155円へ変更。",
   "market_reaction": "不明",
-  "confidence": "unverified",
+  "confidence": "high",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-10-04T10:03:08.015550+00:00",
-  "ai_error": "no_trusted_source",
+  "source_status": "codex_cli_websearch",
+  "generated_at": "2026-10-07T10:33:22.058774+00:00",
+  "sources": [
+    {
+      "url": "https://www2.jpx.co.jp/disc/69810/081220260730504039_tse-qcedifsm-69810-20260731369810-ixbrl.htm",
+      "type": "TDnet",
+      "title": "2027年3月期 第1四半期決算短信〔IFRS〕（連結）"
+    }
+  ],
+  "source_via": "codex_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 18,
     "recommendation": "strong_buy",
-    "current_price": 8467.0,
+    "current_price": 8683.0,
     "forward_eps": 237.27,
-    "trailing_eps": 127.85,
-    "eps_growth_pct": 85.6,
-    "forward_pe": 35.69,
-    "trailing_pe": 66.23,
+    "trailing_eps": 127.65,
+    "eps_growth_pct": 85.9,
+    "forward_pe": 36.6,
+    "trailing_pe": 68.02,
     "target_mean": 10413.89,
     "target_high": 17000.0,
     "target_low": 4200.0,
-    "target_upside_pct": 23.0,
+    "target_upside_pct": 19.9,
     "revenue_growth_pct": 20.7,
     "earnings_growth_pct": 66.5,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 15713.45,
-    "implied_pe_hold_upside": 85.6,
-    "peg_fair_price": 20310.31,
-    "peg_ratio": 0.42,
-    "hist_pe_median": 25.69,
+    "implied_pe_hold": 16139.56,
+    "implied_pe_hold_upside": 85.9,
+    "peg_fair_price": 20381.49,
+    "peg_ratio": 0.43,
+    "hist_pe_median": 25.72,
     "hist_pe_p25": 21.21,
-    "hist_pe_p75": 29.83,
-    "hist_pe_n_days": 857,
-    "implied_hist_median": 6095.47,
+    "hist_pe_p75": 29.91,
+    "hist_pe_n_days": 860,
+    "implied_hist_median": 6102.58,
     "implied_hist_p25": 5032.5,
-    "implied_hist_p75": 7077.76,
-    "implied_hist_upside": -28.0,
-    "peer_pe_median": 36.78,
+    "implied_hist_p75": 7096.75,
+    "implied_hist_upside": -29.7,
+    "peer_pe_median": 37.31,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "009150.KS",
-        "pe": 36.78
+        "pe": 37.31
       },
       {
         "ticker": "6976.T",
-        "pe": 53.9
+        "pe": 61.19
       },
       {
         "ticker": "6762.T",
-        "pe": 29.92
+        "pe": 33.03
       },
       {
         "ticker": "2327.TW",
-        "pe": 19.98
+        "pe": 20.67
       },
       {
         "ticker": "6971.T",
-        "pe": 40.98
+        "pe": 42.76
       }
     ],
-    "implied_peer_median": 8726.79,
-    "implied_peer_upside": 3.1,
+    "implied_peer_median": 8852.54,
+    "implied_peer_upside": 2.0,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-10-04T19:03:40.673390",
-    "age_sec": 260981,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-07T19:34:24.224308",
+    "age_sec": 1738,
+    "stale": false,
+    "refreshing": false
   }
 }
