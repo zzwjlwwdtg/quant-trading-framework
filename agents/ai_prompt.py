@@ -1400,6 +1400,9 @@ def get_ai_cli_policy() -> dict[str, str]:
     to the old behavior with ``AI_CLI_PRIMARY=claude`` and
     ``AI_CLI_FALLBACK=codex``, or allow exceptional Claude fallback with
     ``AI_CLI_FALLBACK=claude``.
+
+    2026-10-08 用户决定: 交易进程 (_watchdog ORCH_ENV / run.bat) 设 AI_CLI_FALLBACK=claude,
+    Codex 跑不通时由 Claude 辅助; 30 分钟公开快照 (snap_public.bat) 仍为 none.
     """
     primary = (
         os.environ.get("AI_CLI_PRIMARY")
