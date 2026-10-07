@@ -11,6 +11,9 @@ set "OUTPUT_LANG=ja"
 REM default: LIVE on moomoo SIMULATE account. for dry-run: set TRADER_DRY_RUN=1
 if "%TRADER_DRY_RUN%"=="" set "TRADER_DRY_RUN=0"
 if "%TRADER_SIM_ACTIVE%"=="" set "TRADER_SIM_ACTIVE=1"
+if "%AI_CLI_PRIMARY%"=="" set "AI_CLI_PRIMARY=codex"
+REM 2026-10-08: Codex fails -> Claude assists (30-min public snapshot stays codex-only)
+if "%AI_CLI_FALLBACK%"=="" set "AI_CLI_FALLBACK=claude"
 if "%CLAUDE_DECISION_GATE%"=="" set "CLAUDE_DECISION_GATE=1"
 if "%CLAUDE_DECISION_MODE%"=="" set "CLAUDE_DECISION_MODE=gate"
 if "%CLAUDE_DECISION_TIMEOUT_SEC%"=="" set "CLAUDE_DECISION_TIMEOUT_SEC=180"
@@ -50,7 +53,8 @@ if "%TRADER_DRY_RUN%"=="1" (
 ) else (
     echo  TRADER MODE:  [LIVE]     SIMULATE account real orders
 )
-echo  CLAUDE GATE:  %CLAUDE_DECISION_GATE%  (1=pre-trade approval required)
+echo  AI CLI:       %AI_CLI_PRIMARY%  (fallback=%AI_CLI_FALLBACK%)
+echo  AI GATE:      %CLAUDE_DECISION_GATE%  (legacy env name)
 echo ============================================================
 echo.
 
@@ -59,13 +63,13 @@ if "%OPENAI_API_KEY%"=="" (
 ) else (
     echo [INFO] GPT-4o-mini decision engine active
 )
-echo [INFO] Pre-open: regime -^> SOX picks -^> evolver -^> trader.apply_universe
+echo [INFO] Pre-open: regime -^> SOX picks -^> fixed-pattern backtest -^> trader.apply_universe
 echo [INFO] Tools:    run tools.bat for status / flatten / picks / regime
 echo [INFO] Log file: logs\run_YYYYMMDD.log  UTF-8
-echo [INFO] OUTPUT_LANG=ja  Claude AI analysis output in Japanese
+echo [INFO] OUTPUT_LANG=ja  AI CLI analysis output in Japanese
 echo.
 
-REM AI analysis (Claude CLI) is the heaviest text output - now in Japanese.
+REM AI CLI analysis is the heaviest text output - now in Japanese.
 REM System reports (signal tables, leaderboards) remain Chinese (terse, mostly numbers).
 "%PY%" -X utf8 orchestrator.py
 

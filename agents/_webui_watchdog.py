@@ -74,6 +74,8 @@ JOBS = {
     "flow_history_test": {"bat": "_flow_history_test.bat", "market_quiet": True},
     # 2026-10-07: 信用利差 → 股市预警 预测力检验, 按需触发
     "credit_warning_test": {"bat": "_credit_warning_test.bat", "market_quiet": True},
+    # 2026-10-08: 只读 AI CLI 诊断 (codex / claude 版本与试跑), 按需触发
+    "ai_cli_diag": {"bat": "_ai_cli_diag.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 

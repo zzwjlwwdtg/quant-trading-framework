@@ -35,6 +35,9 @@ ORCH_ENV = {
     "PYTHONUTF8":                    "1",
     "PYTHONIOENCODING":              "utf-8",
     "TRADER_DRY_RUN":                "0",
+    "AI_CLI_PRIMARY":                "codex",
+    # 2026-10-08 用户决定: Codex 跑不通时启用 Claude 辅助 (之前为省 Claude 额度设为 none)
+    "AI_CLI_FALLBACK":               "claude",
     "CLAUDE_DECISION_GATE":          "1",
     "CLAUDE_DECISION_MODE":          "gate",
     "CLAUDE_DECISION_TIMEOUT_SEC":   "180",
