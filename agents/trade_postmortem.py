@@ -125,33 +125,63 @@ def news_from_cache(ticker: str, t: datetime, cache_dir: Path = SIGNALS / "news_
     return out[:20]
 
 
+def news_symbols(ticker: str) -> list[str]:
+    """标的本身 + 它跟踪的底层/板块 (杠杆 ETF 自己几乎没有新闻) + 大盘."""
+    bare = ticker.replace("US.", "")
+    syms = [bare]
+    try:
+        from option_flow import POSITION_PROXY_MAP
+        syms += [p["source"] for p in POSITION_PROXY_MAP.get(bare, [])]
+    except Exception:
+        pass
+    syms += ["QQQ", "SPY"]
+    return list(dict.fromkeys(syms))
+
+
 def news_from_rss(ticker: str, t: datetime) -> list[dict]:
     try:
         from news_analyzer import fetch_yahoo_rss
-        items = fetch_yahoo_rss(ticker.replace("US.", ""))
     except Exception:
         return []
     out = []
-    for it in items:
+    for sym in news_symbols(ticker):
         try:
-            pub = parsedate_to_datetime(it.get("pubDate"))
+            items = fetch_yahoo_rss(sym)
         except Exception:
             continue
-        if t - timedelta(hours=24) <= pub <= t + timedelta(hours=2):
-            out.append({"time_utc": pub.astimezone(timezone.utc).strftime("%m-%d %H:%M"),
-                        "title": it.get("title"), "source": it.get("source")})
-    return out
+        for it in items:
+            try:
+                pub = parsedate_to_datetime(it.get("pubDate"))
+            except Exception:
+                continue
+            if t - timedelta(hours=24) <= pub <= t + timedelta(hours=2):
+                out.append({"time_utc": pub.astimezone(timezone.utc).strftime("%m-%d %H:%M"),
+                            "symbol": sym, "title": it.get("title")})
+    seen, uniq = set(), []
+    for n in out:
+        if n["title"] not in seen:
+            seen.add(n["title"]); uniq.append(n)
+    return uniq[:25]
+
+
+def label_closes(rows: list[dict], sell_date_et: str) -> list[dict]:
+    """给日收盘标上相对卖出日的位置: D-1 / D0 (卖出当天收盘) / D+1 ..."""
+    dates = [r["date"] for r in rows]
+    base = next((i for i, d in enumerate(dates) if d >= sell_date_et), len(dates))
+    return [dict(r, rel=f"D{i - base:+d}" if i != base else "D0") for i, r in enumerate(rows)]
 
 
 def closes_after(ticker: str, t: datetime, n: int = 3) -> list[dict]:
     try:
         import yfinance as yf
-        df = yf.Ticker(ticker.replace("US.", "")).history(start=(t - timedelta(days=2)).date().isoformat(),
+        df = yf.Ticker(ticker.replace("US.", "")).history(start=(t - timedelta(days=4)).date().isoformat(),
                                                            interval="1d", auto_adjust=False)
         rows = [{"date": i.strftime("%Y-%m-%d"), "close": round(float(c), 4)} for i, c in df["Close"].items()]
-        return rows[: n + 3]
     except Exception:
         return []
+    et_date = (t - timedelta(hours=4)).date().isoformat()   # 美东日期 (夏令时近似)
+    labeled = label_closes(rows, et_date)
+    return [r for r in labeled if r["rel"] in ("D-1", "D0") or r["rel"].startswith("D+")][: n + 2]
 
 
 def collect_sells(days: int = LOOKBACK_DAYS) -> list[dict]:
@@ -195,8 +225,8 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 {json.dumps(news, ensure_ascii=False, indent=0) or '(无)'}
 
 ## 事后 (只用于"事后走势"一栏, 不得当作当时的卖出理由)
-log 中卖出后的价格: {chr(10).join(after_log) or '(无)'}
-之后日收盘: {json.dumps(after_closes, ensure_ascii=False)}
+日收盘 (D-1 = 卖出前一天, D0 = 卖出当天, D+1 = 之后一天): {json.dumps(after_closes, ensure_ascii=False)}
+注意: log 里"【标的】价格"是日线参考价 (常是前一交易日收盘), 不是卖出时的实时价.
 
 ## 要求
 1. 概括卖出那个时段的技术面和消息面 (各 1-3 句).
@@ -236,8 +266,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
     rows = load_log_window(t, BEFORE_H, AFTER_H)
     excerpt = select_excerpt(rows, sell["ticker"])
     news = news_from_cache(sell["ticker"], t) + (news_from_rss(sell["ticker"], t) if live_fetch else [])
-    after_rows = load_log_window(t + timedelta(hours=AFTER_H), 0, HINDSIGHT_H)
-    after_log = price_path_after(after_rows, sell["ticker"])
+    after_log: list[str] = []   # 不再用 log 价格做事后走势 (是日线参考价, 易误读)
     after_closes = closes_after(sell["ticker"], t) if live_fetch else []
     prompt = build_prompt(sell, excerpt, news, after_log, after_closes)
     if ai is None:

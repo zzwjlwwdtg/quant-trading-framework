@@ -57,6 +57,12 @@ class Postmortem(unittest.TestCase):
         after = tp.load_log_window(t + tp.timedelta(hours=1), 0, 36, logs_dir=self.td)
         self.assertTrue(any("25.95" in l for l in tp.price_path_after(after, "MULL")))
 
+    def test_label_closes_and_news_symbols(self):
+        rows = [{"date": d, "close": c} for d, c in (("2026-10-05", 1), ("2026-10-06", 2), ("2026-10-07", 3), ("2026-10-08", 4))]
+        self.assertEqual([r["rel"] for r in tp.label_closes(rows, "2026-10-07")], ["D-2", "D-1", "D0", "D+1"])
+        syms = tp.news_symbols("US.MULL")
+        self.assertEqual(syms[:2], ["MULL", "MU"]); self.assertIn("QQQ", syms)
+
     def test_parse_ai_validation(self):
         self.assertEqual(tp.parse_ai("前言 " + json.dumps(GOOD, ensure_ascii=False) + " 结尾")["hindsight"]["verdict"], "不合理")
         bad = dict(GOOD, reasons=GOOD["reasons"][:4])
