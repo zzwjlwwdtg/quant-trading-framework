@@ -3,91 +3,78 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 20,
+      "days_until": 19,
       "probabilities": {
         "hold": 81,
-        "hike_25": 17,
-        "cut_25": 2
+        "hike_25": 18,
+        "cut_25": 1
       },
       "most_likely": "hold",
-      "consensus_direction": "hold_with_hawkish_tail"
+      "consensus_direction": "neutral_hawkish_lean"
     },
     {
       "date": "2026-12-09",
-      "days_until": 62,
+      "days_until": 61,
       "probabilities": {
-        "hold": 33,
         "hike_25": 65,
-        "cut_25": 2
+        "hike_50": 19,
+        "hold": 15,
+        "cut_25": 1
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-27",
+      "date": "2027-01-28",
       "days_until": 111,
       "probabilities": {
-        "hold": 72,
-        "hike_25": 23,
-        "cut_25": 5
+        "hike_25": 60,
+        "hike_50": 25,
+        "hold": 14,
+        "cut_25": 1
       },
-      "most_likely": "hold",
-      "consensus_direction": "hold_leaning_hawkish"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 160,
-      "probabilities": {
-        "hold": 55,
-        "hike_25": 30,
-        "cut_25": 15
-      },
-      "most_likely": "hold",
-      "consensus_direction": "two_sided"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q3",
-  "data_snapshot_date": "2026-10-07",
-  "recent_event_impact": "9/16 Fed +25bps to 3.75-4.00 (first hike since 2023, Warsh chair) → regime shift to tightening; 10/2 Sept NFP +29K (vs ~50K exp), UR 4.2%, wage 3.0% → Oct hike odds collapsed from ~70% to ~19%; 10/7 FOMC Minutes (hawkish, 'most see another hike by year-end') → Dec hike probability lifted to 65-84%; 10/14 Sept CPI pending (consensus 3.7% YoY vs prior 3.4%) is next key reprice risk",
-  "commentary": "Market pricing a two-step hawkish path: October hold (82%) to await 10/14 CPI confirmation, then December hike (65%) to 4.00-4.25% consistent with Sept dot plot median 4.125%. Weak Sept NFP (+29K) was overwhelmed by hawkish Oct 7 minutes — futures now imply market-based terminal ~4.70% by mid-2027, materially above Fed median 4.125%, reflecting Warsh's 'timelier return to 2% inflation' framing. Downside catalyst: hot CPI 10/14 would re-arm October hike odds; dovish miss would push December hike back to Jan 2027.",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-10-08",
+  "recent_event_impact": "10/2 September NFP +29K (far below ~75K consensus) → October hike odds crashed from ~70% to 17-18%; December cumulative hike remains ~84% on sticky inflation + hawkish Sept 15-16 FOMC minutes signaling 'one more hike appropriate by year-end'. Fed Chair Warsh's hawkish stance anchors path.",
+  "commentary": "Market (snapshot 2026-10-08) prices Oct 28 as near-certain hold (81%) after soft Sep NFP (+29K released 10/2 vs ~75K consensus) but keeps Dec 9 (SEP/dot-plot meeting) cumulative hike probability elevated at ~84% as Sept 15-16 FOMC minutes revealed most participants back another 25bp hike by year-end on inflation stickiness. Regime is hawkish-pause into year-end hike, NOT a cutting cycle — terminal rate implied at ~4.00-4.25% by Q1 2027.",
   "sources": [
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
+      "url": "https://www.cnbc.com/2026/10/02/fed-rate-hike-odds-decline-after-september-jobs-report.html",
+      "type": "news_analysis"
+    },
+    {
+      "url": "https://federalreserve.gov/monetarypolicy/fomcminutes20260916.htm",
+      "type": "fed_official"
+    },
+    {
       "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
-      "type": "cme_fedwatch_mirror"
+      "type": "prediction_market_aggregator"
     },
     {
-      "url": "https://rateprobability.com/fed",
-      "type": "cme_fedwatch_mirror"
+      "url": "https://kalshi.com/markets/kxfeddecision/fed-meeting/kxfeddecision-26dec",
+      "type": "kalshi"
     },
     {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "cme_fedwatch_mirror"
-    },
-    {
-      "url": "https://investinglive.com/central-banks/icymi-fed-minutes-most-officials-see-another-hike-by-year-end-after-unanimous-rise-to-3-75-4",
-      "type": "fomc_minutes"
-    },
-    {
-      "url": "https://fxmacrodata.com/articles/september-2026-nfp-jobs-report-why-it-matters",
-      "type": "nfp_release"
-    },
-    {
-      "url": "https://nowflation.com/cpi-release-dates",
-      "type": "cpi_calendar"
+      "url": "https://www.financecalendar.com/event/fomc-rate-decision-december-2026/",
+      "type": "fomc_schedule"
     }
   ],
   "confidence": "high",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-08T10:34:34+00:00",
+  "fetched_at": "2026-10-08T19:04:51+00:00",
   "_meta": {
-    "cached_at": "2026-10-08T19:34:34.282986",
-    "age_sec": 30510,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T04:04:51.579464",
+    "age_sec": 1692,
+    "stale": false,
+    "refreshing": false
   }
 }
