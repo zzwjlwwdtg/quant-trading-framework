@@ -5,49 +5,49 @@
   "analyst_consensus": {
     "n_analysts": 39,
     "recommendation": "buy",
-    "current_price": 336.67,
-    "forward_eps": 9.58,
+    "current_price": 339.63,
+    "forward_eps": 9.59,
     "trailing_eps": 8.72,
     "eps_growth_pct": 9.9,
-    "forward_pe": 35.13,
-    "trailing_pe": 38.61,
+    "forward_pe": 35.42,
+    "trailing_pe": 38.95,
     "target_mean": 328.09,
     "target_high": 405.0,
     "target_low": 215.0,
-    "target_upside_pct": -2.5,
+    "target_upside_pct": -3.4,
     "revenue_growth_pct": 16.4,
     "earnings_growth_pct": 28.7,
     "next_earnings": "2026-11-03",
-    "implied_pe_hold": 369.98,
+    "implied_pe_hold": 373.42,
     "implied_pe_hold_upside": 9.9,
-    "peg_fair_price": 94.87,
-    "peg_ratio": 3.55,
-    "hist_pe_median": 34.07,
+    "peg_fair_price": 94.92,
+    "peg_ratio": 3.58,
+    "hist_pe_median": 34.08,
     "hist_pe_p25": 29.13,
     "hist_pe_p75": 37.3,
-    "hist_pe_n_days": 1008,
-    "implied_hist_median": 326.49,
-    "implied_hist_p25": 279.15,
-    "implied_hist_p75": 357.44,
-    "implied_hist_upside": -3.0,
-    "peer_pe_median": 22.37,
+    "hist_pe_n_days": 1009,
+    "implied_hist_median": 326.74,
+    "implied_hist_p25": 279.28,
+    "implied_hist_p75": 357.61,
+    "implied_hist_upside": -3.8,
+    "peer_pe_median": 22.07,
     "peer_pe_n_peers": 3,
     "peer_pe_details": [
       {
         "ticker": "GOOGL",
-        "pe": 23.26
+        "pe": 23.02
       },
       {
         "ticker": "MSFT",
-        "pe": 22.37
+        "pe": 22.07
       },
       {
         "ticker": "1810.HK",
         "pe": 15.38
       }
     ],
-    "implied_peer_median": 214.37,
-    "implied_peer_upside": -36.3,
+    "implied_peer_median": 211.6,
+    "implied_peer_upside": -37.7,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -195,46 +195,46 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 328.09,
-        "gap_pct": -2.5
+        "gap_pct": -3.4
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 369.98,
+        "implied_price": 373.42,
         "gap_pct": 9.9
       },
       {
         "key": "historical_pe",
         "label": "前瞻 EPS × 五年 PE 中位",
-        "implied_price": 326.49,
-        "gap_pct": -3.0
+        "implied_price": 326.74,
+        "gap_pct": -3.8
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 214.37,
-        "gap_pct": -36.3
+        "implied_price": 211.6,
+        "gap_pct": -37.7
       }
     ],
-    "median_gap_pct": -2.8,
+    "median_gap_pct": -3.6,
     "revision_signal": "upward",
-    "required_eps_growth_pct": 13.3,
+    "required_eps_growth_pct": 14.3,
     "consensus_eps_growth_pct": 9.9,
-    "growth_cushion_pct": -3.4,
+    "growth_cushion_pct": -4.4,
     "rationale": [
-      "多口径隐含价中位数低于现价 2.8%",
+      "多口径隐含价中位数低于现价 3.6%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 +13.3%，共识为 +9.9%"
+      "历史 PE 口径要求 EPS 增长 +14.3%，共识为 +9.9%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-10-08T12:03:24.300052+00:00",
+  "fetched_at": "2026-10-08T18:33:24.732904+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-10-08T21:03:24.302220",
-    "age_sec": 23399,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T03:33:24.733899",
+    "age_sec": 1799,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "AAPL",
   "is_proxy": false
