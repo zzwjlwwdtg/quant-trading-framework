@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T02:59:52.756369+00:00",
+  "generated_at": "2026-10-08T03:19:03.464142+00:00",
   "reviews": [
     {
       "order_id": "467615",
@@ -8,79 +8,78 @@
       "price": 23.14,
       "ts": "2026-10-07T11:00:21.780537+00:00",
       "tag": "[SOFTWARE-STOP trigger $23.29 current $23.25]",
+      "nature": "强制调仓·机械止损",
       "provider": "Claude",
       "status": "ok",
       "ok": true,
       "analysis": {
         "context": {
-          "technical": "日内 MULL 价格 24.45, RSI 66.0, 趋势 up, 价格站上 MA20 (24.45 > 23.88), 均线多排 (MA20 23.88 > MA50 21.50), 弱多头共振 2:0, 置信度 2/5。但 60 分钟入场参考 K 线趋势向下, RSI 25.4, 短周期出现回落。卖出前实时价 $23.19 相对日内参考 $23.25 下跌 0.3%, 触发 software-stop ($23.29 current $23.25)。",
-          "news": "新闻列表为空, 仅有宏观背景: VIX 15.01, F&G 47, T10Y2Y 0.48, FEDFUNDS 3.75; 期权流 MULL mixed 57 (STALE); 6 天后有 CPI Release (2026-10-13)。决策模式为 TECHNICAL_ONLY, 消息面不进决策。"
+          "technical": "MULL 日线参考价 24.45, RSI 66, 量比 0.82, 趋势 up, 价格站上 MA20 (24.45 > 23.88), 均线多排 (MA20 23.88 > MA50 21.50), MACD 零轴上多头 (DIF +1.20 / DEA +1.07), ADX 20.1 弱趋势. 60 分钟入场参考 K 线趋势向下 RSI 25.4. 卖出瞬时实时价 $23.19 vs reference $23.25 (gap -0.3%), 触发 SOFTWARE-STOP ($23.29).",
+          "news": "当时新闻仅 1 条非标的直接相关: 10-06 17:09 QQQ 'Exchange-Traded Funds Mixed, US Equities Rise After Midday'. 期权流 MULL mixed 57 且标注 STALE. 决策模式 TECHNICAL_ONLY, 消息面不进评分."
         },
         "reasons": [
           {
             "type": "技术面",
-            "reason": "触发 software-stop 硬性风控规则",
-            "evidence": "[SOFTWARE-STOP trigger $23.29 current $23.25]; [risk-monitor] software stops submitted: ['US.MULL']"
+            "reason": "触发软件止损阈值, 规则机械执行",
+            "evidence": "[SOFTWARE-STOP trigger $23.29 current $23.25]; [trader-LIVE] SELL 346 US.MULL @ 23.07"
           },
           {
             "type": "技术面",
-            "reason": "实时价较日内参考价回落, 跌破 stop 阈值",
+            "reason": "实时价较参考价出现 -0.3% 下滑, 跌破止损触发线, 日内走弱",
             "evidence": "[trader] US.MULL realtime $23.19 vs reference $23.25 (gap -0.3%)"
           },
           {
             "type": "技术面",
-            "reason": "60 分钟入场参考 K 线短周期转弱, RSI 深度超卖, 与日线多头背离",
+            "reason": "60 分钟级入场参考 K 线趋势向下且 RSI 已跌至 25.4 超卖区, 短周期动能转弱",
             "evidence": "入场参考(60分钟): 最新K线@11:30 趋势:向下 RSI:25.4"
           },
           {
             "type": "技术面",
-            "reason": "日线置信度仅 2/5, 弱多头共振且 ADX 20.1 显示趋势偏弱",
-            "evidence": "信号: 🟡 关注买入 置信度:2/5; [仅观察] ADX 20.1 (弱趋势); 共振: 多头(2) vs 空头(0) → 弱多头共振"
+            "reason": "日线信号虽然多头共振但置信度仅 2/5, ADX 20.1 显示趋势偏弱, 不足以在短线破位时抗跌",
+            "evidence": "信号: 🟡 关注买入 置信度:2/5; ADX 20.1 (弱趋势); 评分: 技术2(加权0.87) + 宏观0 + 事件0 = 原始3"
           },
           {
             "type": "技术面",
-            "reason": "量比低迷显示上行动能不足, 期权流分歧且数据过期",
-            "evidence": "量比:0.82; 期权流: 分歧 57/100 (MU, snapshot, cap=69) [STALE]"
+            "reason": "期权流分歧且数据标注 STALE, 无边际看多支撑",
+            "evidence": "期权流: 分歧 57/100 (MU, snapshot, cap=69) [STALE]; [options-flow] MULL:mixed 57"
           }
         ],
         "limitations": [
           {
-            "limitation": "software-stop 机械触发, 卖出价 $23.07 低于 trigger $23.29 和 current $23.25",
-            "why": "stop 规则在滑点/低流动性时段按市价成交, 实际成交点显著劣于触发点, 无二次确认机制"
+            "limitation": "SOFTWARE-STOP 为固定阈值机械执行, 未考虑日内波动与短期支撑",
+            "why": "触发价 $23.29 与成交价 $23.07 之间已有滑点, 规则在 $23.25 瞬时就触发, 对日线仍为多头多排 (MA20/MA50 上行) 的标的缺乏抗噪能力"
           },
           {
-            "limitation": "只看日线 up 趋势 + 60 分钟向下即触发, 未综合判断",
-            "why": "日线共振多头 2:0 且 MA 多排仍成立, 卖出时未考察短线回踩是否仍在 MA20 支撑上方, 单一指标 (price gap -0.3%) 决定出场过于机械"
+            "limitation": "决策模式 TECHNICAL_ONLY 下消息面完全不进评分, 新闻样本仅 1 条且非 MULL 直接相关, 无法评估基本面是否真正恶化",
+            "why": "若标的本身没有坏消息, 单纯技术破位可能是噪声洗盘而非趋势反转"
           },
           {
-            "limitation": "消息面材料为空且期权流 STALE, 决策信息面残缺",
-            "why": "news 列表为 [], 期权流 snapshot 过期, TECHNICAL_ONLY 模式本身屏蔽新闻, 无法识别可能存在的利好催化 (比如盘后拉升的驱动)"
+            "limitation": "期权流数据 STALE 且日线信号与 60 分钟信号方向相反, 多周期冲突但系统只用止损点一刀切",
+            "why": "日线仍强 (RSI 66, 价格 > MA20 > MA50, MACD 多头) 与 60 分钟超卖 (RSI 25.4) 并存, 机械止损在 60 分钟底部区域卖出存在卖飞风险"
           }
         ],
         "hindsight": {
-          "summary": "卖出后 MULL 当日即反弹至 $24.45, 次日最高 $26.43, 10-07 日收盘 $26.43, 卖在短线低点被反弹甩掉。",
+          "summary": "卖出当天 D0 收盘 $26.43, 较 D-1 的 $24.45 大涨 +8.1%, 卖出价 $23.07 远低于当日收盘, 典型'止损在最低点'卖飞.",
           "verdict": "不合理"
         }
       },
       "material": {
         "excerpt_lines": 23,
-        "news_items": 0,
+        "news_items": 1,
         "after_closes": [
           {
-            "date": "2026-10-05",
-            "close": 25.35
-          },
-          {
             "date": "2026-10-06",
-            "close": 24.45
+            "close": 24.45,
+            "rel": "D-1"
           },
           {
             "date": "2026-10-07",
-            "close": 26.43
+            "close": 26.43,
+            "rel": "D0"
           }
         ]
       },
-      "reviewed_at": "2026-10-08T02:59:26.147839+00:00"
+      "reviewed_at": "2026-10-08T03:09:34.778661+00:00"
     },
     {
       "order_id": "467611",
@@ -89,79 +88,78 @@
       "price": 58.83,
       "ts": "2026-10-07T10:00:21.966833+00:00",
       "tag": "[SOFTWARE-STOP trigger $59.00 current $58.83]",
+      "nature": "强制调仓·机械止损",
       "provider": "Claude",
       "status": "ok",
       "ok": true,
       "analysis": {
         "context": {
-          "technical": "DRAM 日内价格 59.52→58.83，RSI 60.8 中性偏多但趋势标注为 down，MA20=59.76 > MA50=56.34 均线仍多排，MACD 零轴上但出现死叉 ★，ADX 15.8 无趋势，量比 0.86 偏弱。期权流分歧 62/100 且后段标记 [STALE]。",
-          "news": "材料仅两条新闻：Yahoo 报道存储股未跟上大盘反弹；SK Hynix 因盈利谨慎跌 4%，SanDisk 跌 2%，Micron 持稳。整体对 DRAM 板块偏空但非崩盘。"
+          "technical": "DRAM 日线参考价 59.52, RSI 60.8 中性, 趋势 down, 量比 0.86, 均线多排 (MA20=59.76 > MA50=56.34) 但 MACD 出现死叉, ADX 15.8 显示无趋势, 系统信号为持仓观望置信度 2/5。期权流分歧 62/100 后转 STALE。卖出当时实时价 $58.81 已跌破 SOFTWARE-STOP $59.00。",
+          "news": "半导体/内存板块情绪偏弱: 10-06 文章指出 memory 股未跟上大盘上涨, SK Hynix 因盈利警示跌 4%, SanDisk 跌 2%, Micron 持平; 10-07 盘前高债券收益率和原油价格压制美股, 亚欧股市走弱。"
         },
         "reasons": [
           {
             "type": "技术面",
-            "reason": "触发软件止损线",
-            "evidence": "[SOFTWARE-STOP trigger $59.00 current $58.83]，实时价 $58.81 已跌破 $59.00 止损位"
+            "reason": "实时价跌破 SOFTWARE-STOP 阈值, 机械规则强制触发",
+            "evidence": "[trader] US.DRAM realtime $58.81 vs reference $58.83; SELL 282 @ 58.52 [SOFTWARE-STOP trigger $59.00 current $58.83]"
           },
           {
             "type": "技术面",
-            "reason": "日内趋势标注为下行且 MACD 出现死叉",
-            "evidence": "趋势:down；[仅观察] MACD: DIF +1.10 / DEA +1.14 ★死叉"
+            "reason": "日线趋势已为 down, 不是上升趋势中的回踩",
+            "evidence": "【DRAM】价格:59.52  RSI:60.8  量比:0.86  趋势:down"
           },
           {
             "type": "技术面",
-            "reason": "无明确信号 + 弱共振，持仓缺乏多头支撑",
-            "evidence": "信号: ⬜ 持仓观望 置信度:2/5 依据:无明确信号；共振: 多头(1) vs 空头(0) → 弱多头共振 ★"
+            "reason": "MACD 出现死叉 + ADX 15.8 无趋势, 均线多排结构即将受到挑战",
+            "evidence": "[仅观察] MACD: DIF +1.10 / DEA +1.14 (零轴上(多)) · ★死叉  ·  ADX 15.8 (无趋势)"
           },
           {
             "type": "技术面",
-            "reason": "ADX 15.8 显示无趋势 + 量比 0.86 低于 1，上行动能不足",
-            "evidence": "ADX 15.8 (无趋势)；量比:0.86"
+            "reason": "系统自身给出的信号就是观望而非持有加仓, 置信度仅 2/5, 没有多头共振支撑继续承担下行风险",
+            "evidence": "信号: ⬜ 持仓观望  置信度:2/5  依据:无明确信号; 评分: 空0 vs 多1 (无明确方向); 共振: 弱多头共振 ★"
           },
           {
             "type": "消息面",
-            "reason": "存储板块情绪疲弱，SK Hynix -4% 作为同板块领头拖累",
-            "evidence": "\"SK Hynix Falls 4% on Earnings Caution\" + \"Why Memory Stocks Are Sitting Out the Stock Market Rally\" (10-06)"
+            "reason": "内存板块独立于大盘走弱, 板块情绪不支持继续持有",
+            "evidence": "10-06 19:25 \"Why Memory Stocks Are Sitting Out the Stock Market Rally\"; 10-06 16:59 \"SK Hynix Falls 4% on Earnings Caution... SanDisk Slips 2%\""
           }
         ],
         "limitations": [
           {
-            "limitation": "SOFTWARE-STOP 机械触发，未结合价格仅跌破 $0.17 (0.3%) 的轻微幅度做缓冲判断",
-            "why": "止损价 $59.00 与成交 $58.83 几乎贴脸，属于典型的 noise-level 跳动，机械规则容易在震荡区被扫损"
+            "limitation": "SOFTWARE-STOP 是机械规则, 没有结合日内波动率/ATR 判断是否只是正常噪声",
+            "why": "停损阈值 $59.00 与参考价 $58.83 仅差约 0.3%, 这个距离很容易被盘中正常波动触发而非真正破位"
           },
           {
-            "limitation": "决策所用的日级技术面快照 (RSI 60.8, 价 59.52, 趋势 down) 时间戳为 11:37，而卖出发生在 19:00，期权流已 [STALE]，信号严重滞后",
-            "why": "~8 小时的 gap + stale 标记意味着真实卖出时点的技术面可能已经不同，决策基于过期数据"
+            "limitation": "TECHNICAL_ONLY 模式下消息面不进决策, 但本次新闻并未经 Claude CLI 结构化拆解, 只是 banner, 无法反向验证规则触发时是否有基本面恶化支撑",
+            "why": "新闻 pipeline 要求必须先结构化成信号, log 里的新闻只是原文列表, 规则并没有真正消化消息面"
           },
           {
-            "limitation": "TECHNICAL_ONLY 模式下消息面被降级为 banner，但同时又没有独立的板块轮动/相关性过滤",
-            "why": "SK Hynix -4% 这类同板块领头信号既没进 decision_agent，也没通过别的渠道加权，导致止损触发与消息面的因果关系无法在系统里体现"
+            "limitation": "期权流在卖出前已标记 [STALE], 决策链路缺少当下有效的衍生品情绪确认",
+            "why": "14:37 的 options-flow 已过期, 19:00 下单时没有新鲜的 flow 验证空头压力是否真实升级"
           }
         ],
         "hindsight": {
-          "summary": "卖出后当日收盘 $60.01，次日盘中回到 $60.07 并出现 RSI 62/趋势 up 的反转，被止损价扫出后立即反弹约 2%。",
-          "verdict": "不合理"
+          "summary": "D0 收盘 60.01, 高于止损触发价 $59.00 和实际成交价 $58.52, 卖在当日低位附近, 价格随后回升。",
+          "verdict": "难判断"
         }
       },
       "material": {
         "excerpt_lines": 28,
-        "news_items": 2,
+        "news_items": 6,
         "after_closes": [
           {
-            "date": "2026-10-05",
-            "close": 61.67
-          },
-          {
             "date": "2026-10-06",
-            "close": 59.52
+            "close": 59.52,
+            "rel": "D-1"
           },
           {
             "date": "2026-10-07",
-            "close": 60.01
+            "close": 60.01,
+            "rel": "D0"
           }
         ]
       },
-      "reviewed_at": "2026-10-08T02:59:00.931288+00:00"
+      "reviewed_at": "2026-10-08T03:19:03.461631+00:00"
     },
     {
       "order_id": "467612",
@@ -170,79 +168,78 @@
       "price": 173.25,
       "ts": "2026-10-07T10:00:22.946043+00:00",
       "tag": "[SOFTWARE-STOP trigger $175.03 current $173.25]",
+      "nature": "强制调仓·机械止损",
       "provider": "Claude",
       "status": "ok",
       "ok": true,
       "analysis": {
         "context": {
-          "technical": "CBRS 卖出前最后一次技术快照显示价格 177.10、RSI(14) 47.6、量比 1.41、日线趋势 down；60分钟入场参考 K 线 09:00 趋势向下、RSI 27.4，之后 11:30 K 线 RSI 进一步跌到 12.9，短线动能持续走弱。日线评分虽给出 '🟡 关注买入 3/5'，但依据只是 CCI 超卖(-129) 的弱多头共振，MACD DIF -4.31/DEA -1.84 仍在零轴下，ADX 24.5 属弱趋势。",
-          "news": "当时 3 条新闻均为 CBRS 利好或中性 (Gimlet Labs 合作、speed worth billions、顶级投行争抢 AI 芯片)，没有负面催化；但系统明确 [TECHNICAL_ONLY] 模式，消息面仅作参考不进决策。"
+          "technical": "CBRS 日线参考价 177.10，趋势标注 down，RSI(14)=47.6 未超卖；60分钟 K 线趋势向下，RSI 从 27.4 进一步下探至 12.9，短线明显走弱。规则给出的是'🟡 关注买入 置信度 3/5'，依据 CCI 超卖共振，但 MACD 在零轴下、ADX=24.5 为弱趋势。",
+          "news": "材料里 CBRS 相关新闻 10-06 到 10-07 全部偏正面（Gimlet Labs 合作、speed worth billions、华尔街争抢 AI 芯片），没有利空催化。宏观端 VIX 15.0、F&G 47、期货盘小幅高开，无明显风险事件；CPI 释放还在 6 天后。"
         },
         "reasons": [
           {
             "type": "技术面",
-            "reason": "触发软件止损价",
-            "evidence": "[SOFTWARE-STOP trigger $175.03 current $173.25]，实际成交 @172.38"
+            "reason": "触发系统预设的软件止损阈值，规则机械执行。",
+            "evidence": "[SOFTWARE-STOP trigger $175.03 current $173.25]，当前价 173.25 已跌破止损线 175.03。"
           },
           {
             "type": "技术面",
-            "reason": "日线趋势判定为 down，与持仓方向相反",
-            "evidence": "【CBRS】价格:177.10 RSI:47.6 量比:1.41 趋势:down"
+            "reason": "60 分钟级别短线动能急剧恶化，RSI 进入深度超卖并仍在下行。",
+            "evidence": "入场参考(60分钟) 09:00 趋势:向下 RSI:27.4 → 11:30 趋势:向下 RSI:12.9。"
           },
           {
             "type": "技术面",
-            "reason": "60分钟短线 RSI 急速走弱，动能崩塌",
-            "evidence": "入场参考(60分钟) 09:00 RSI:27.4 → 11:30 RSI:12.9，趋势均向下"
+            "reason": "日线趋势标注为 down，MACD 在零轴之下，趋势结构偏空。",
+            "evidence": "【CBRS】趋势:down；MACD: DIF -4.31 / DEA -1.84 (零轴下(空))。"
           },
           {
             "type": "技术面",
-            "reason": "MACD 在零轴下方且距离较深，中期动量仍空",
-            "evidence": "[仅观察] MACD: DIF -4.31 / DEA -1.84 (零轴下(空))"
+            "reason": "日内个股明显弱于大盘：ES/NQ 期货基本持平、WTI 偏强，CBRS 却从 177.10 跌到 173.25 附近，相对强度转弱。",
+            "evidence": "14:37 NQ -0.02% / ES +0.05%，CBRS 当日最终收 175.05（D0），参考价从 D-1 的 177.10 下移。"
           },
           {
             "type": "技术面",
-            "reason": "多头共振仅靠单一 CCI 超卖，依据薄弱，不足以对冲下行",
-            "evidence": "共振: 多头(2) vs 空头(0) 弱多头共振 ★，[多] 两条均来自 CCI 超卖(CCI=-129)"
+            "reason": "虽然 CCI 超卖共振给出'关注买入 3/5'，但置信度未达加仓阈值，且与 MACD/ADX 弱趋势矛盾，系统选择优先执行止损而非逆势抄底。",
+            "evidence": "评分: 技术2(加权0.92) + 宏观0 + 事件0 = 原始2 → 置信度3/5；ADX 24.5 (弱趋势)。"
           }
         ],
         "limitations": [
           {
-            "limitation": "止损机械触发，未结合消息面与基本面",
-            "why": "TECHNICAL_ONLY 模式下 3 条利好新闻 (Gimlet Labs 合作、speed worth billions、投行争抢 AI 芯片) 不进决策，可能在正催化窗口卖飞"
+            "limitation": "止损完全机械，不区分事件/消息面。",
+            "why": "触发时刻消息面全部正面（Gimlet Labs、AI 芯片争抢），规则没有读新闻情绪，可能卖在了基本面利好的回调上。"
           },
           {
-            "limitation": "技术信号内部自相矛盾未被调和",
-            "why": "日线评分给 '🟡 关注买入 3/5 弱多头共振'，而止损系统同时触发卖出，两套子系统输出相反方向却未设仲裁"
+            "limitation": "决策依赖的日线价格是前一日参考价而非实时价。",
+            "why": "log 里【CBRS】价格 177.10 实为 D-1 收盘，系统在 D0 盘中用的技术指标存在滞后，CCI 超卖信号与真实实时位置可能错配。"
           },
           {
-            "limitation": "依赖的下行证据以 60 分钟 RSI 极端值 (12.9) 为主，有短线超卖反弹风险",
-            "why": "RSI 12.9 本身是极度超卖区，机械在此点止损容易卖在短线低点；且 CCI=-129 的超卖信号本应作为多头依据反被忽略"
+            "limitation": "止损档位单一，没有波动率调整。",
+            "why": "175.03 这个绝对价位没有结合 ATR / 当日波动，CBRS 这类高波动 AI 名字很容易被日内噪声扫损，缺少 trail/缓冲判断。"
           }
         ],
         "hindsight": {
-          "summary": "卖出后价格先反弹到 177.10 再回落到 175.05 收盘，次日盘中最高 175.05，没有继续深跌也没有强势反弹。",
+          "summary": "D0 收盘 175.05 高于成交价 173.25，次日收盘数据缺失，仅从 D0 看是被日内低点扫损后当天就反弹收回止损线附近。",
           "verdict": "难判断"
         }
       },
       "material": {
         "excerpt_lines": 28,
-        "news_items": 3,
+        "news_items": 4,
         "after_closes": [
           {
-            "date": "2026-10-05",
-            "close": 181.55
-          },
-          {
             "date": "2026-10-06",
-            "close": 177.1
+            "close": 177.1,
+            "rel": "D-1"
           },
           {
             "date": "2026-10-07",
-            "close": 175.05
+            "close": 175.05,
+            "rel": "D0"
           }
         ]
       },
-      "reviewed_at": "2026-10-08T02:58:31.446612+00:00"
+      "reviewed_at": "2026-10-08T03:18:34.021474+00:00"
     },
     {
       "order_id": "467349",
@@ -251,57 +248,58 @@
       "price": 142.11,
       "ts": "2026-10-06T14:05:46.779526+00:00",
       "tag": "[TRAILING-STOP from high $155.25 → $142.14 (-8.4%)]",
+      "nature": "强制调仓·机械止损",
       "provider": "Claude",
       "status": "ok",
       "ok": true,
       "analysis": {
         "context": {
-          "technical": "USO 价格从高点 $155.25 回落至 $142.14，触发 -8.4% trailing stop；RSI 37.9 偏弱，趋势 down，当日量比仅 0.14 极度萎缩，15m 仅弱金叉无明确方向，MACD 虽零轴上但 DIF(+2.43)已低于 DEA(+4.41) 显示动能衰减。",
-          "news": "WTI 原油期货 CL 连续两日走弱 (10-05 -2.40%, 10-06 盘前 -1.55%~-2.74%)，Yahoo 新闻提示 Trump 的柴油留美政策对油价有'奇怪影响'，另有 Steve Eisman 警告油价和利率将市场推向'断裂点'。"
+          "technical": "USO 当时价格 142.14, RSI 37.9 中性偏弱, 趋势 down, MA20=150.04 > MA50=137.05 均线仍多排但 CCI=-107 跌入超卖, MACD 零轴上 (DIF+2.43/DEA+4.41) 配 ADX 38.6 强趋势, 从高点 $155.25 回撤 -8.4% 触发 trailing stop; CL 原油期货夜盘 -1.55% 到 -2.74% 持续走弱.",
+          "news": "材料里仅两条新闻: Trump 想把美国柴油留在本土对油价有奇怪影响, 以及 Steve Eisman 警告油和利率推市场接近崩溃; 两条都偏空/不确定, 没有直接的利多消息."
         },
         "reasons": [
           {
             "type": "技术面",
-            "reason": "触发系统硬性 trailing stop 规则",
-            "evidence": "[TRAILING-STOP from high $155.25 → $142.14 (-8.4%)]，卖出 @ $141.43"
+            "reason": "触发 -8.4% trailing stop 规则本身",
+            "evidence": "[TRAILING-STOP from high $155.25 → $142.14 (-8.4%)] 从高点回撤达到预设阈值, 规则机械执行"
           },
           {
             "type": "技术面",
-            "reason": "价格趋势明确向下且 RSI 持续走弱",
-            "evidence": "23:05:46 【USO】价格:142.14 RSI:37.9 趋势:down；较 21:37:33 的 143.99 / RSI 39.3 继续走低"
+            "reason": "现货日线趋势已转为 down, 配合强趋势读数, 下跌有延续性风险",
+            "evidence": "【USO】价格:142.14 RSI:37.9 趋势:down · ADX 38.3-38.6 (强趋势)"
           },
           {
             "type": "技术面",
-            "reason": "成交量极度萎缩，缺乏买盘承接",
-            "evidence": "量比:0.14 (卖出前最后一次读数)，较 21:37 的 0.56 明显坍塌"
+            "reason": "原油期货 CL 夜盘到盘前持续显著走弱, 对 USO 构成领先空头压力",
+            "evidence": "CL 期货 USO/XLE 86.98 -2.74% ▼▼ 强势下行 → 87.90 -1.71% ▼ → 88.04 -1.55% ▼; log 标注 '[2026-10-05 CL=F 24h进行中] 跌-1.51~2.40% → 亚欧时段抛售'"
           },
           {
             "type": "技术面",
-            "reason": "多空共振无明确多头方向，当日小跌确认弱势",
-            "evidence": "评分: 空2 vs 多2 (无明确方向)；[空] 当日小跌(-1.3%，<-1%)"
+            "reason": "量比极低 0.14 + 当日已小跌 -1.3%, 买盘承接明显薄弱",
+            "evidence": "量比:0.14 · [空] 当日小跌(-1.3%，<-1%)"
           },
           {
             "type": "消息面",
-            "reason": "原油期货夜盘连续两日强势下行拖累 USO",
-            "evidence": "CL 期货 USO/XLE 86.98 -2.74% ▼▼ 强势下行 (21:36)；[空] [2026-10-05 CL=F 24h进行中] 跌-2.40% → 亚欧时段抛售"
+            "reason": "两条相关新闻都偏空/警示, 无利多对冲, 不足以反驳技术空头",
+            "evidence": "'Trump Wants to Keep America's Diesel at Home: ...Strange Effect on Oil Prices' + Steve Eisman '...Oil, Rates Push the Market Closer to Breaking'"
           }
         ],
         "limitations": [
           {
-            "limitation": "trailing stop 机械触发，未结合 regime 与基本面评估",
-            "why": "系统 regime 为 bull_chop 偏多震荡，CCI=-107 已进入超卖区间，机械 -8.4% 回撤止损可能在局部低点出场"
+            "limitation": "trailing stop 是机械规则, 不看当时的超卖反弹概率",
+            "why": "CCI=-107 已超卖、MACD 仍在零轴上多头、均线多排, 这些反转线索被 -8.4% 阈值一刀切忽略"
           },
           {
-            "limitation": "量比 0.14 条件下的价格信号可信度低",
-            "why": "极低成交量意味着价格可能是噪声或流动性缺口，不能作为趋势确立的可靠证据，卖单本身也可能滑点较大 (ref 142.14 实际成交 141.43)"
+            "limitation": "15 分钟短线出现均线金叉但被忽略",
+            "why": "log 明确记录 '15m 均线金叉(MA5上穿MA20)', 说明盘中有潜在短线转折信号, 规则只看日线回撤未纳入"
           },
           {
-            "limitation": "消息面证据较弱且方向不唯一",
-            "why": "仅 2 条 Yahoo 标题 (Trump 柴油政策、Eisman 警告)，无具体数值或权威宏观数据；Trump 柴油留美政策对油价影响方向在新闻标题中被描述为'strange'，并非明确利空"
+            "limitation": "新闻样本只有 2 条且都是宏观/叙事型, 非实时催化",
+            "why": "两条新闻时间戳是 10-05, 并非卖出当下的催化, 用来佐证空头方向证据薄, 可能把中性消息面当成空头确认"
           }
         ],
         "hindsight": {
-          "summary": "卖出后 USO 反弹至 144.91-145.55 区间 (较卖出价 +2.4% 左右)，但趋势仍为 down 且 RSI 跌至 33 继续走弱，未明确反转。",
+          "summary": "D0 收 144.91 高于卖价 142.11, D+1 回落到 143.91 仍在卖价之上, 短期看卖在小低点附近.",
           "verdict": "难判断"
         }
       },
@@ -311,57 +309,80 @@
         "after_closes": [
           {
             "date": "2026-10-05",
-            "close": 143.99
+            "close": 143.99,
+            "rel": "D-1"
           },
           {
             "date": "2026-10-06",
-            "close": 144.91
+            "close": 144.91,
+            "rel": "D0"
           },
           {
             "date": "2026-10-07",
-            "close": 143.91
+            "close": 143.91,
+            "rel": "D+1"
           }
         ]
       },
-      "reviewed_at": "2026-10-08T02:59:52.754372+00:00"
+      "reviewed_at": "2026-10-08T03:10:04.340185+00:00"
     }
   ],
   "mechanical_cash_sells": [
     {
-      "ts": "2026-10-07T19:45:21.609240+00:00",
+      "order_id": "467747",
       "ticker": "SHY",
       "qty": 202.0,
       "price": 81.145,
+      "ts": "2026-10-07T16:03:37.411962+00:00",
       "tag": "[REBALANCE CASH fund BUY US.DRAM x282]",
-      "order_id": "467747"
+      "nature": "强制调仓·现金纪律",
+      "provider": "rule",
+      "ok": true,
+      "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.DRAM x282)",
+      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
     },
     {
-      "ts": "2026-10-07T19:45:21.588713+00:00",
+      "order_id": "467749",
       "ticker": "SHY",
       "qty": 305.0,
       "price": 81.145,
+      "ts": "2026-10-07T16:03:55.425288+00:00",
       "tag": "[REBALANCE CASH fund BUY US.MULL x317]",
-      "order_id": "467749"
+      "nature": "强制调仓·现金纪律",
+      "provider": "rule",
+      "ok": true,
+      "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.MULL x317)",
+      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
     },
     {
-      "ts": "2026-10-07T15:36:21.662034+00:00",
+      "order_id": "467659",
       "ticker": "SHY",
       "qty": 2.0,
       "price": 81.145,
+      "ts": "2026-10-07T14:02:04.298479+00:00",
       "tag": "[REBALANCE CASH restore cash>=0]",
-      "order_id": "467659"
+      "nature": "强制调仓·现金纪律",
+      "provider": "rule",
+      "ok": true,
+      "reason": "现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)",
+      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
     },
     {
-      "ts": "2026-10-07T14:02:03.940326+00:00",
+      "order_id": "467620",
       "ticker": "SHY",
       "qty": 3606.0,
       "price": 81.08,
+      "ts": "2026-10-07T12:32:43.001944+00:00",
       "tag": "[REBALANCE CASH restore cash>=0]",
-      "order_id": "467620"
+      "nature": "强制调仓·现金纪律",
+      "provider": "rule",
+      "ok": true,
+      "reason": "现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)",
+      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
     }
   ],
   "last_run": {
-    "new": 4,
+    "new": 2,
     "failed": 0
   },
   "exists": true
