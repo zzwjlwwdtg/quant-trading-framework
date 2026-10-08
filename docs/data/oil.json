@@ -1,12 +1,12 @@
 {
-  "ts": "2026-10-08T14:33:03.937663+00:00",
+  "ts": "2026-10-08T15:03:04.112679+00:00",
   "factors": [
     {
       "arrow": "▼",
       "name": "WTI 油价",
       "direction": "bearish",
       "weight": 2,
-      "value": "$92.07 (20d -10.2%)",
+      "value": "$92.7 (20d -9.5%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,7 +14,7 @@
       "name": "Brent-WTI 价差",
       "direction": "bullish",
       "weight": 1,
-      "value": "$12.54 (Brent $104.61 - WTI $92.07)",
+      "value": "$12.70 (Brent $105.4 - WTI $92.7)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
@@ -22,7 +22,7 @@
       "name": "XLE 能源板块",
       "direction": "neutral",
       "weight": 1,
-      "value": "XLE +0.3% vs SPY +2.7% (差 -2.4pp)",
+      "value": "XLE +1.0% vs SPY +2.5% (差 -1.6pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "102.19 (5d +0.1%)",
+      "value": "102.15 (5d +0.1%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -63,12 +63,12 @@
   "notes": [
     "油价 20d 大跌 → 通胀降温，利多科技 / 黄金"
   ],
-  "price": 92.07,
-  "pct_5d": -0.86,
-  "pct_20d": -10.16,
+  "price": 92.7,
+  "pct_5d": -0.18,
+  "pct_20d": -9.54,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-10-08T23:33:06.041012",
+    "cached_at": "2026-10-09T00:03:06.241161",
     "age_sec": 1798,
     "stale": true,
     "refreshing": true
