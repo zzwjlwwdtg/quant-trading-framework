@@ -10,6 +10,10 @@ set "SCRIPT_DIR=%~dp0"
 set "REPO_ROOT=%SCRIPT_DIR%..\"
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
+REM 2026-10-08 user decision: Claude by default, Codex fallback (Codex accounts change often).
+REM AI results are cached in webui, so the 30-minute refresh does not re-query every time.
+set "AI_CLI_PRIMARY=claude"
+set "AI_CLI_FALLBACK=codex"
 
 cd /d "%SCRIPT_DIR%"
 

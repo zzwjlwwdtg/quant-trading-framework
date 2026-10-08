@@ -318,24 +318,29 @@ class ClaudeGateTests(unittest.TestCase):
 
 
 class CliFallbackTests(unittest.TestCase):
-    def test_default_policy_routes_to_codex_without_calling_claude(self):
+    def test_default_policy_routes_to_claude_without_calling_codex(self):
+        # 2026-10-08 用户决定: 默认 Claude 优先
         with patch.dict(os.environ, {}, clear=True), patch.object(
-            ai_prompt, "query_codex_cli", return_value=("codex answer", "ok")
-        ) as codex, patch.object(ai_prompt, "query_claude_cli") as claude:
+            ai_prompt, "query_claude_cli", return_value=("claude answer", "ok")
+        ) as claude, patch.object(ai_prompt, "query_codex_cli") as codex:
             output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
         self.assertEqual((output, status, provider, reason),
-                         ("codex answer", "ok", "Codex", ""))
-        codex.assert_called_once_with("prompt", timeout=7, web_search=False, complexity="medium")
-        claude.assert_not_called()
+                         ("claude answer", "ok", "Claude", ""))
+        claude.assert_called_once_with("prompt", timeout=7)
+        codex.assert_not_called()
 
-    def test_default_codex_failure_does_not_spend_claude_quota(self):
+    def test_default_is_claude_first_with_codex_fallback(self):
+        # 2026-10-08 用户决定: 默认 Claude (Codex 需要经常换账号), Claude 失败/限额 → Codex
         with patch.dict(os.environ, {}, clear=True), patch.object(
-            ai_prompt, "query_codex_cli", return_value=(None, "codex_timeout")
-        ), patch.object(ai_prompt, "query_claude_cli") as claude:
+            ai_prompt, "query_claude_cli", return_value=(None, "quota exceeded")
+        ) as claude, patch.object(
+            ai_prompt, "query_codex_cli", return_value=("codex answer", "ok")
+        ) as codex:
             output, status, provider, reason = ai_prompt.query_ai_cli("prompt")
-        self.assertIsNone(output)
-        self.assertEqual((status, provider, reason), ("codex_timeout", "Codex", ""))
-        claude.assert_not_called()
+        self.assertEqual((output, provider), ("codex answer", "Codex"))
+        self.assertIn("quota exceeded", reason)
+        claude.assert_called_once()
+        codex.assert_called_once()
 
     def test_explicit_claude_fallback_is_supported(self):
         env = {"AI_CLI_PRIMARY": "codex", "AI_CLI_FALLBACK": "claude"}
@@ -415,10 +420,11 @@ class CliFallbackTests(unittest.TestCase):
         args = run.call_args.args[0]
         self.assertLess(args.index("--search"), args.index("exec"))
 
-    def test_public_half_hour_snapshot_disables_claude_fallback(self):
+    def test_public_half_hour_snapshot_uses_claude_first(self):
+        # 2026-10-08 用户决定: 公开快照也默认 Claude, Codex 兜底
         script = (AGENTS_DIR / "snap_public.bat").read_text(encoding="utf-8")
-        self.assertIn('set "AI_CLI_PRIMARY=codex"', script)
-        self.assertIn('set "AI_CLI_FALLBACK=none"', script)
+        self.assertIn('set "AI_CLI_PRIMARY=claude"', script)
+        self.assertIn('set "AI_CLI_FALLBACK=codex"', script)
 
     def test_all_production_callers_use_the_central_router(self):
         direct_call = re.compile(r"\bquery_(?:claude|codex)_cli\s*\(")

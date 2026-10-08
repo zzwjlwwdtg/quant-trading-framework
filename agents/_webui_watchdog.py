@@ -94,6 +94,9 @@ WEBUI_ENV = {
     "PYTHONIOENCODING": "utf-8",
     "WEBUI_HOST":       "127.0.0.1",
     "WEBUI_PORT":       "8080",
+    # 2026-10-08 用户决定: 默认 Claude, Codex 兜底
+    "AI_CLI_PRIMARY":   "claude",
+    "AI_CLI_FALLBACK":  "codex",
 }
 
 

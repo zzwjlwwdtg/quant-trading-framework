@@ -11,9 +11,9 @@ set "OUTPUT_LANG=ja"
 REM default: LIVE on moomoo SIMULATE account. for dry-run: set TRADER_DRY_RUN=1
 if "%TRADER_DRY_RUN%"=="" set "TRADER_DRY_RUN=0"
 if "%TRADER_SIM_ACTIVE%"=="" set "TRADER_SIM_ACTIVE=1"
-if "%AI_CLI_PRIMARY%"=="" set "AI_CLI_PRIMARY=codex"
-REM 2026-10-08: Codex fails -> Claude assists (30-min public snapshot stays codex-only)
-if "%AI_CLI_FALLBACK%"=="" set "AI_CLI_FALLBACK=claude"
+if "%AI_CLI_PRIMARY%"=="" set "AI_CLI_PRIMARY=claude"
+REM 2026-10-08: Claude by default (Codex accounts change often); Codex is the fallback
+if "%AI_CLI_FALLBACK%"=="" set "AI_CLI_FALLBACK=codex"
 if "%CLAUDE_DECISION_GATE%"=="" set "CLAUDE_DECISION_GATE=1"
 if "%CLAUDE_DECISION_MODE%"=="" set "CLAUDE_DECISION_MODE=gate"
 if "%CLAUDE_DECISION_TIMEOUT_SEC%"=="" set "CLAUDE_DECISION_TIMEOUT_SEC=180"

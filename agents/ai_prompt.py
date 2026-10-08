@@ -1401,17 +1401,18 @@ def get_ai_cli_policy() -> dict[str, str]:
     ``AI_CLI_FALLBACK=codex``, or allow exceptional Claude fallback with
     ``AI_CLI_FALLBACK=claude``.
 
-    2026-10-08 用户决定: 交易进程 (_watchdog ORCH_ENV / run.bat) 设 AI_CLI_FALLBACK=claude,
-    Codex 跑不通时由 Claude 辅助; 30 分钟公开快照 (snap_public.bat) 仍为 none.
+    2026-10-08 用户决定: 默认 Claude 优先, Codex 兜底 (Codex 需要经常换账号, 登录易失效).
+    所有启动入口 (_watchdog / _webui_watchdog / run*.bat / snap*.bat / webui.bat) 与本函数默认一致;
+    显式设置环境变量仍可覆盖.
     """
     primary = (
         os.environ.get("AI_CLI_PRIMARY")
         or os.environ.get("AI_CLI_PROVIDER")  # early compatibility name
-        or "codex"
+        or "claude"
     ).strip().lower()
-    fallback = os.environ.get("AI_CLI_FALLBACK", "none").strip().lower()
+    fallback = os.environ.get("AI_CLI_FALLBACK", "codex").strip().lower()
     if primary not in _AI_CLI_PROVIDERS:
-        primary = "codex"
+        primary = "claude"
     if fallback not in _AI_CLI_PROVIDERS or fallback == primary:
         fallback = "none"
     return {"primary": primary, "fallback": fallback}
@@ -1434,10 +1435,9 @@ def query_ai_cli(
     web_search: bool = False,
     complexity: str = "medium",
 ) -> tuple[str | None, str, str, str]:
-    """Query the configured local CLI, Codex-first by default.
+    """Query the configured local CLI (Claude-first by default since 2026-10-08).
 
-    Returns ``(output, status, provider, fallback_reason)``. Claude is never
-    called by the default policy. ``fallback_on_unavailable`` remains as a
+    Returns ``(output, status, provider, fallback_reason)``. ``fallback_on_unavailable`` remains as a
     compatibility escape hatch for callers using an older environment: when
     the primary CLI is missing and no fallback was configured, try the other
     CLI once.
