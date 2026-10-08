@@ -1,9 +1,9 @@
 {
-  "version": "2026-Q3.5_semi_risk_guard",
-  "created_at": "2026-10-05",
-  "last_reviewed_at": "2026-10-05",
+  "version": "2026-Q4.0_strong_usd",
+  "created_at": "2026-10-08",
+  "last_reviewed_at": "2026-10-08",
   "review_interval_days": 30,
-  "thesis_summary": "Cloud long, avoid duration. 2026-10-03 用户解除半导体硬黑名单 (不再 'avoid semi'), 半导体回到常规规则 + 风控. 2026-09-17 Sep FOMC 已加息 +25bps → 3.75-4.00% (unanimous 12-0), dot plot 16/18 members 预期年内再加至少 1 次. 前瞻: continued_hike_regime 用 2Y yield 60d delta bps 追踪市场对后续加息的定价 (>25bps → 打脸 duration 敏感策略). 2026-09-18: 60d 复盘胜率 16.1% -$31k, 扩 blacklist (漏网 semi 追加) + 新增 soft_blacklist (whitelist 移除后仍需高置信度).",
+  "thesis_summary": "主线 (用户 2026-10-08 设定): 强美元。美元走强可能把全球其他地区的流动性抽回美国 (资本回流美元资产、非美市场与非美货币承压、美元融资成本上升)。所有判断围绕这条主线: ① 每日追踪美元强度与扩散 (usd_theme: DXY 20/60 日涨幅及一年百分位、USDJPY、EEM/FXI/EWJ 相对 SPY、亚洲指数); ② 主线落到哪些标的 (白名单 / 提高门槛) 以 2026-10-08 预注册检验 (_usd_regime_test) 结果为准, 不拍脑袋, 结果出来前名单沿用上一版; ③ 下列看错条件任一触发 → 主线降级复核。沿用: 半导体风险开关、现金纪律 (不借保证金)。10-08 读数: DXY 102.2 (20 日 +3.2%), USDJPY 158.2 (20 日 +3.0%), EEM 20 日跑输 SPX 3.8pp, 深证 5 日 -6.7%。上一版 (2026-Q3.5) 的 Cloud long / avoid duration 观点并入: 高利率支撑美元。",
   "blacklist_tickers": [],
   "blacklist_reason": "2026-10-03 用户决定解除半导体硬黑名单 (原 14 只: DRAM, KLAC, AMAT, MULL, SOXL, SOXS, NVDA, MU, LITE, CBRS, QRVO, SWKS, MPWR, STM). 原因: 黑名单是回看式的, 近期半导体走强、规则与 AI 多次给出买入信号均被拦截. 历史记录 (保留供复盘): 系统规则在 2026-06~09 开仓的半导体合计已实现约 -$204k (SOXL 8 月 -$171k), 旧版本完整内容见 thesis_archive.jsonl (2026-Q3.3). 解除后仍受置信度门槛 / 追高保护 / 组合风控约束.",
   "soft_blacklist": {
@@ -33,21 +33,28 @@
   "whitelist_reason": "cloud + defensive hedge. 2026-09-11 trim: 移除 SHY/IEI (Fed hike reprice 直接伤前端债券), 移除 NBIS (高 beta 云基础设施 hawkish 下承压). 保留 MSFT/GOOGL (pricing power) + GLD (uncertainty hedge) + XLV (防御).",
   "invalidation_conditions": [
     {
-      "id": "cpi_hot_reprice",
-      "metric": "cpi_mom_pct",
-      "operator": ">",
-      "threshold": 0.25,
-      "source": "FRED CPIAUCSL",
-      "description": "月度 CPI MoM > 0.25% → 通胀二阶导没如期回落, Fed 降息路径 reprice, bond thesis 被打脸.",
-      "last_triggered": "2026-09-11 (BLS 8月 CPI 0.4% MoM, manual calibration; FRED 未同步)"
+      "id": "usd_reversal",
+      "metric": "dxy_20d_pct",
+      "operator": "<",
+      "threshold": -2.0,
+      "source": "yfinance DX-Y.NYB (usd_theme 每日)",
+      "description": "美元指数 20 日跌超 2% → 美元转弱, 强美元主线被打脸"
     },
     {
-      "id": "capex_upgrade",
-      "metric": "googl_amzn_capex_ttm_upgraded",
-      "operator": "==",
-      "threshold": true,
-      "source": "manual: 财报后 GOOGL/AMZN capex TTM 上调",
-      "description": "云厂商 capex TTM 再上调 → AI 拐点被推迟, avoid semi 逻辑失效, 需重估 blacklist."
+      "id": "row_liquidity_returns",
+      "metric": "eem_vs_spy_20d_pp",
+      "operator": ">",
+      "threshold": 3.0,
+      "source": "yfinance EEM / SPY (usd_theme 每日)",
+      "description": "新兴市场 20 日跑赢美股 3 个百分点以上 → 流动性没有被抽回美国, 反而流向非美"
+    },
+    {
+      "id": "jpy_squeeze",
+      "metric": "usdjpy_pullback_from_60d_high_pct",
+      "operator": "<",
+      "threshold": -5.0,
+      "source": "yfinance JPY=X (usd_theme 每日)",
+      "description": "日元从 60 日低点回升 5% 以上 (日本干预或套息平仓) → 美元对日元的强势失效, 且可能引发全球去杠杆"
     },
     {
       "id": "continued_hike_regime",
@@ -59,7 +66,7 @@
     }
   ],
   "auto_clear_blacklist_on_invalidation": false,
-  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted (hard block → HOLD) 和 is_ticker_soft_blacklisted (soft block → 要求 confidence ≥ min_confidence, 不满足降级 HOLD). 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标). 2026-09-18: 60d 复盘 -$31k 后加 QRVO/SWKS/MPWR/STM 到 hard blacklist, 加 soft_blacklist (SHY/IEI/NBIS) 阻止 whitelist 移除后的低置信度 BUY. 2026-10-03: 用户决定解除全部硬黑名单 (半导体), 版本 2026-Q3.4; soft_blacklist / whitelist 不变. 2026-10-05: 加 semi_risk_guard (3 个看错条件 → 半导体买入门槛自动提高), 版本 2026-Q3.5.",
+  "notes": "读取器: thesis_config.py. decision_agent.get_decision 每次决策时调用 is_ticker_blacklisted (hard block → HOLD) 和 is_ticker_soft_blacklisted (soft block → 要求 confidence ≥ min_confidence, 不满足降级 HOLD). 手动 review 每 30 天 review_interval_days 到期时 dashboard/log warn. 2026-09-11 半自动校准: CPI hot 触发 cpi_hot_reprice, whitelist 精准收缩 (SHY/IEI/NBIS 移除), blacklist 全保留. 2026-09-17: Fed 已确认加息, 新增 continued_hike_regime (2Y 60d delta bps 前瞻指标). 2026-09-18: 60d 复盘 -$31k 后加 QRVO/SWKS/MPWR/STM 到 hard blacklist, 加 soft_blacklist (SHY/IEI/NBIS) 阻止 whitelist 移除后的低置信度 BUY. 2026-10-03: 用户决定解除全部硬黑名单 (半导体), 版本 2026-Q3.4; soft_blacklist / whitelist 不变. 2026-10-05: 加 semi_risk_guard (3 个看错条件 → 半导体买入门槛自动提高), 版本 2026-Q3.5. 2026-10-08: 用户设定交易主线为强美元 → 版本 2026-Q4.0_strong_usd; 看错条件换成美元相关 3 条 + 保留 continued_hike_regime; 移除已触发的 cpi_hot_reprice 和已无对象的 capex_upgrade (半导体黑名单已解除); 白名单/软黑名单待检验结果再定。",
   "next_thesis_conjecture": {
     "conjectured_at": "2026-09-17",
     "candidates": [
@@ -149,6 +156,5 @@
       }
     }
   },
-  "effective_from": "2026-10-05T06:04:59+00:00",
-  "effective_from_basis": "promotion_time"
+  "effective_from": "2026-10-08T07:30:40+00:00"
 }

@@ -1032,6 +1032,15 @@ def generate_ai_prompt(mode: str = "review") -> tuple[Path | None, bool]:
     if ja_mode:
         trimmed = _sanitize_ja_text(trimmed)
 
+    # 2026-10-08 用户设定交易主线 (强美元): 分析围绕主线展开
+    try:
+        from usd_theme import brief as _theme_brief
+        theme_text = _theme_brief()
+        if theme_text:
+            trimmed = f"=== 当前交易主线 ===\n{theme_text}\n=== END 主线 ===\n\n" + trimmed
+    except Exception:
+        pass
+
     # 注入模块准确率报告（历史回测 250 天，1d/5d/10d/20d）
     # 让 AI 判断信号矛盾时知道"该信谁、信什么周期"
     module_acc = _read_module_accuracy()

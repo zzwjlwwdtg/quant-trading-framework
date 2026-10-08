@@ -110,8 +110,15 @@ def _prompt(
         "rule_decision": _jsonable(decision),
     }
     data = json.dumps(payload, ensure_ascii=False, indent=2)
+    try:   # 2026-10-08 用户设定交易主线 (强美元): 只作背景, 不单独构成否决理由
+        from usd_theme import brief as _theme_brief
+        theme = _theme_brief()
+    except Exception:
+        theme = ""
+    theme_block = (f"\nPortfolio theme set by the user (context only; do NOT veto solely because a "
+                   f"trade does not fit the theme):\n{theme}\n") if theme else ""
     return f"""You are the final pre-trade risk gate for this local trading system.
-
+{theme_block}
 Task:
 - Review ONLY the rule_decision below. Do not create a new trade idea.
 - Apply BALANCED judgment. The rule engine has already filtered for confluence;

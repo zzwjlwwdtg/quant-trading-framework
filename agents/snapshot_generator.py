@@ -69,6 +69,7 @@ GLOBAL_ENDPOINTS = [
     "/api/equity_curve",   # 2026-10-06 用户要求: 公开页显示账户收益曲线
     "/api/fills",          # 2026-10-07 用户要求: 交割单置顶公开 (含账户现金)
     "/api/postmortem",     # 2026-10-08 用户要求: 每笔卖出的 AI 复盘
+    "/api/usd_theme",      # 2026-10-08 用户设定交易主线: 强美元
 ]
 
 # Per-ticker endpoints — 迭代 watch list

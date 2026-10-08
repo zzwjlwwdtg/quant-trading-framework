@@ -142,6 +142,21 @@ def main():
     else:
         data_status["us2y_60d_delta_bps"] = "unavailable"
 
+    # 2026-10-08 强美元主线的看错条件 (dxy_20d_pct / eem_vs_spy_20d_pp / usdjpy_pullback_from_60d_high_pct)
+    try:
+        from usd_theme import compute_metrics as _usd_metrics
+        um = _usd_metrics()
+        for k in ("dxy_20d_pct", "eem_vs_spy_20d_pp", "usdjpy_pullback_from_60d_high_pct"):
+            if um.get(k) is not None:
+                macro[k] = um[k]
+                data_status[k] = "ok"
+            else:
+                data_status[k] = "unavailable"
+    except Exception as ex:
+        print(f"  [usd] 美元指标拉取失败: {ex}")
+        for k in ("dxy_20d_pct", "eem_vs_spy_20d_pp", "usdjpy_pullback_from_60d_high_pct"):
+            data_status[k] = "unavailable"
+
     # 若关键数据全 unavailable → 显式 UNKNOWN, 不能说"无触发"
     unavailable_count = sum(1 for v in data_status.values() if v == "unavailable")
     all_unavailable = unavailable_count == len(data_status)

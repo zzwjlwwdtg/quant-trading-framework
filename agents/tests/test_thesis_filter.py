@@ -87,15 +87,16 @@ class ThesisConfigTests(unittest.TestCase):
         self.assertTrue(b1)
 
     def test_invalidation_condition_triggered(self):
-        macro_hot = {"cpi_mom_pct": 0.30, "us2y_60d_delta_bps": 10}
+        # 2026-10-08 thesis 2026-Q4.0_strong_usd: 看错条件换成美元相关 (cpi_hot_reprice 已移除)
+        macro_hot = {"dxy_20d_pct": -2.5, "us2y_60d_delta_bps": 10}
         triggered = thesis_config.check_invalidation(macro_hot)
         ids = {t["id"] for t in triggered}
-        self.assertIn("cpi_hot_reprice", ids)
+        self.assertIn("usd_reversal", ids)
         self.assertNotIn("continued_hike_regime", ids,
                           "10bps 60d 变化在阈值 25 以下, 不该触发")
 
     def test_invalidation_condition_not_triggered(self):
-        macro_cool = {"cpi_mom_pct": 0.10, "us2y_60d_delta_bps": 5}
+        macro_cool = {"dxy_20d_pct": 1.0, "eem_vs_spy_20d_pp": -1.0, "us2y_60d_delta_bps": 5}
         triggered = thesis_config.check_invalidation(macro_cool)
         self.assertEqual(triggered, [])
 

@@ -74,8 +74,9 @@ class HistoricalAsOfTests(unittest.TestCase):
         from webui import api_thesis_state
         r = api_thesis_state()
         self.assertIsNone(r.get("as_of"))
-        # current 版本应含 "Q3" 表明真在返回 live current thesis
-        self.assertIn("Q3", r["current"].get("version", ""))
+        # current 版本应是 live thesis (2026-10-08 起为 2026-Q4.0_strong_usd)
+        from thesis_config import get_thesis_version
+        self.assertEqual(r["current"].get("version"), get_thesis_version())
 
 
 if __name__ == "__main__":

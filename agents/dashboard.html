@@ -194,6 +194,14 @@
 </div>
 </details>
 
+<!-- Row 0-theme: 交易主线 (2026-10-08 用户设定: 强美元) -->
+<div class="grid">
+  <div class="card" style="border-left:4px solid #2ea043">
+    <h2 title="用户设定的交易主线。每日收盘后更新美元强度与扩散读数；看错条件任一触发会标红。主线落到哪些标的以预注册检验结果为准。">💵 交易主线：强美元 <small id="usd-theme-meta">Theme</small></h2>
+    <div id="usd-theme"><small style="color:var(--muted)">加载中...</small></div>
+  </div>
+</div>
+
 <!-- Row 0-top: 持仓置顶 (2026-10-06 用户要求; 公开快照也显示完整持仓) -->
 <div class="grid">
   <div class="card" style="border-left:4px solid #58a6ff">
@@ -4167,6 +4175,36 @@ async function loadPostmortem() {
   }).join('') + ((d.mechanical_cash_sells || []).length ? `<div style="font-size:10.5px; color:var(--muted); margin-top:5px">强制调仓·现金纪律（不调 AI，按规则归档）：${d.mechanical_cash_sells.map(c => `${c.ticker} −${fmt(c.qty)} @ $${fmt(c.price)}（${c.reason || ''}）`).join('；')}</div>` : '');
 }
 
+// 交易主线: 强美元 (2026-10-08)
+async function loadUsdTheme() {
+  const d = await fetchJson('/api/usd_theme');
+  const el = $('usd-theme');
+  if (!el) return;
+  if (!d || !d.exists) { el.innerHTML = '<small style="color:var(--muted)">等待首次计算（每日收盘后）</small>'; return; }
+  const m = d.metrics || {};
+  const pct = v => v == null ? '—' : `${v > 0 ? '+' : ''}${v}%`;
+  const pp = v => v == null ? '—' : `${v > 0 ? '+' : ''}${v}pp`;
+  const cls = v => v == null ? '' : (v >= 0 ? 'ok' : 'bad');
+  const rk = v => v == null ? '' : `<small style="color:var(--muted)">（一年百分位 ${(v * 100).toFixed(0)}%）</small>`;
+  const item = (k, v, c) => `<span><span style="color:var(--muted)">${k}</span> <b class="${c || ''}">${v}</b></span>`;
+  $('usd-theme-meta').textContent = `${d.thesis_version || ''} · 更新 ${(d.generated_at || '').slice(5, 16).replace('T', ' ')} UTC`;
+  const asia = Object.entries(m.asia_5d_pct || {}).map(([k, v]) => `${k} ${pct(v)}`).join(' · ');
+  const inv = d.invalidation_triggered || [];
+  el.innerHTML = `
+    <div style="font-size:12px; margin-bottom:5px">${d.theme || ''}</div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px 18px; font-size:12px">
+      ${item('DXY', m.dxy)} ${item('20日', pct(m.dxy_20d_pct), cls(m.dxy_20d_pct))}${rk(m.dxy_20d_rank_1y)}
+      ${item('60日', pct(m.dxy_60d_pct), cls(m.dxy_60d_pct))}${rk(m.dxy_60d_rank_1y)}
+      ${item('USDJPY', m.usdjpy)} ${item('距60日高点', pct(m.usdjpy_pullback_from_60d_high_pct))}
+      ${item('EEM−SPY 20日', pp(m.eem_vs_spy_20d_pp), cls(-(m.eem_vs_spy_20d_pp || 0)))}
+      ${item('FXI−SPY', pp(m.fxi_vs_spy_20d_pp), cls(-(m.fxi_vs_spy_20d_pp || 0)))}
+      ${item('EWJ−SPY', pp(m.ewj_vs_spy_20d_pp), cls(-(m.ewj_vs_spy_20d_pp || 0)))}
+    </div>
+    <div style="font-size:11px; color:var(--muted); margin-top:4px">亚洲 5 日：${asia || '—'}</div>
+    <div style="font-size:12px; margin-top:5px">判断：<b>${d.strength || '—'}</b>
+      ${inv.length ? `<span class="badge bad" title="${inv.map(t => t.description || '').join('；')}">⚠ 看错条件触发：${inv.map(t => t.id).join(', ')}</span>` : '<span class="badge ok">看错条件未触发</span>'}</div>`;
+}
+
 async function loadAll() {
   const promises = [
     loadHealth(), loadTopPicks(), loadSectors(), loadBanners(),
@@ -4175,6 +4213,7 @@ async function loadAll() {
     loadHmm(),          // 市场大周期是公开信号（非 owner-only）
     loadBondMonitor(),  // 美债 + Fed 政策路径（公开衍生信号）
     loadThesisTimeline(),  // thesis 时间线 + next conjecture (2026-09-18)
+    loadUsdTheme(),        // 2026-10-08: 交易主线 强美元 (公开, 最上方)
     loadPositions(),       // 2026-10-06: 公开快照也显示持仓 (置顶)
     loadFills(),           // 2026-10-07: 交割单 + 现金 (公开, 置顶)
     loadPostmortem(),      // 2026-10-08: 卖出复盘 (公开)

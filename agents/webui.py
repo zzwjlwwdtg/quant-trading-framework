@@ -1323,6 +1323,19 @@ def api_fills(n: int = 40) -> dict:
     return _cached(f"fills_v1_{n}", ttl_sec=300, compute_fn=_compute)
 
 
+def api_usd_theme() -> dict:
+    """强美元主线 (2026-10-08 用户设定): usd_theme 每日生成. 只读文件."""
+    path = SIGNALS_DIR / "usd_theme.json"
+    if not path.exists():
+        return {"exists": False}
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+        d["exists"] = True
+        return d
+    except Exception as e:  # noqa: BLE001
+        return {"exists": False, "error": str(e)}
+
+
 def api_postmortem() -> dict:
     """卖出复盘 (2026-10-08): trade_postmortem 每日收盘后生成的 AI 复盘. 只读文件."""
     path = SIGNALS_DIR / "postmortem" / "latest.json"
@@ -5376,6 +5389,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_fills())
             elif path == "/api/postmortem":
                 self._json(api_postmortem())
+            elif path == "/api/usd_theme":
+                self._json(api_usd_theme())
             elif path == "/api/positions":
                 self._json(api_positions())
             elif path == "/api/institutional":

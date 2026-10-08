@@ -133,7 +133,7 @@ class Postmortem(unittest.TestCase):
         import _webui_watchdog as wd
         self.assertEqual(wd.JOBS["trade_postmortem"].get("auto_every_days"), 1)
         self.assertTrue(wd.JOBS["trade_postmortem"].get("market_quiet"))
-        bat = (AGENTS_DIR / "_trade_postmortem.bat").read_text(encoding="utf-8")
+        bat = (AGENTS_DIR / "_sell_review_ai.bat").read_text(encoding="utf-8")
         self.assertIn('AI_CLI_PRIMARY=claude', bat)
 
 
