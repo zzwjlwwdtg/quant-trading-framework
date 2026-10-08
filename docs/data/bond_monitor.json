@@ -1,5 +1,5 @@
 {
-  "asof": "2026-10-08T11:03",
+  "asof": "2026-10-08T11:33",
   "yields": {
     "10y": {
       "value": 5.277,
@@ -247,7 +247,7 @@
     },
     {
       "level": "warn",
-      "msg": "USDJPY 157.82 进入 155-160 口头干预区间 (JP MoF)",
+      "msg": "USDJPY 158.01 进入 155-160 口头干预区间 (JP MoF)",
       "key": "jpy_verbal_zone"
     },
     {
@@ -264,6 +264,11 @@
       "level": "bad",
       "msg": "KBE/SPY 20d -8.55% 银行明显跑输 (2023-SVB 前 2 周就是这个)",
       "key": "bank_stress_alert"
+    },
+    {
+      "level": "warn",
+      "msg": "Shenzhen Composite (深) -0.2% (5d -5.7%) 明显走弱",
+      "key": "asia_szse_weak"
     },
     {
       "level": "warn",
@@ -315,13 +320,13 @@
     "sofr_pct": 3.9,
     "iorb_pct": 3.9,
     "sofr_iorb_spread_bps": 0.0,
-    "usdjpy": 157.82,
-    "usdjpy_20d_pct": 2.77,
-    "usdjpy_20d_delta_pct": 2.77,
+    "usdjpy": 158.01,
+    "usdjpy_20d_pct": 2.89,
+    "usdjpy_20d_delta_pct": 2.89,
     "usdjpy_60d_high": 163.86,
-    "usdjpy_pullback_from_60d_high_pct": -3.69,
-    "krw_usd": 1337.4,
-    "krw_20d_pct": -0.13,
+    "usdjpy_pullback_from_60d_high_pct": -3.57,
+    "krw_usd": 1337.2,
+    "krw_20d_pct": -0.15,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
     "ust_jgb_spread_bps": 233.7,
@@ -338,22 +343,22 @@
     "kbe_spy_20d_delta_pct": -8.55,
     "cdx_ig_bps": 83.0,
     "cdx_hy_bps": 303.0,
-    "dxy": 102.19,
-    "dxy_pct_20d": 3.46,
-    "dxy_z_60d": 1.84,
+    "dxy": 102.16,
+    "dxy_pct_20d": 3.43,
+    "dxy_z_60d": 1.81,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
         "label": "Nikkei 225 (日)",
-        "close": 69602.0,
-        "chg_1d": -0.62,
-        "chg_5d_pct": 0.94,
+        "close": 69386.83,
+        "chg_1d": -0.93,
+        "chg_5d_pct": 0.62,
         "asof": "2026-10-08"
       },
       "HSI": {
         "symbol": "^HSI",
         "label": "Hang Seng (港)",
-        "close": 24091.59,
+        "close": 24090.77,
         "chg_1d": -0.16,
         "chg_5d_pct": -2.12,
         "asof": "2026-10-08"
@@ -361,25 +366,25 @@
       "SSE": {
         "symbol": "000001.SS",
         "label": "Shanghai Composite (沪)",
-        "close": 3864.12,
-        "chg_1d": 0.57,
-        "chg_5d_pct": -1.84,
+        "close": 3848.62,
+        "chg_1d": 0.17,
+        "chg_5d_pct": -2.23,
         "asof": "2026-10-08"
       },
       "SZSE": {
         "symbol": "399001.SZ",
         "label": "Shenzhen Composite (深)",
-        "close": 12969.07,
-        "chg_1d": 0.63,
-        "chg_5d_pct": -4.89,
+        "close": 12857.42,
+        "chg_1d": -0.23,
+        "chg_5d_pct": -5.71,
         "asof": "2026-10-08"
       },
       "KOSPI": {
         "symbol": "^KS11",
         "label": "KOSPI (韩)",
-        "close": 6778.45,
-        "chg_1d": -0.37,
-        "chg_5d_pct": -0.87,
+        "close": 6754.68,
+        "chg_1d": -0.72,
+        "chg_5d_pct": -1.22,
         "asof": "2026-10-08"
       }
     },
@@ -387,31 +392,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7854.0,
-        "chg_pct": -0.25
+        "price": 7855.75,
+        "chg_pct": -0.23
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 31434.5,
-        "chg_pct": -0.15
+        "price": 31446.25,
+        "chg_pct": -0.12
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 89.56,
-        "chg_pct": 0.13
+        "price": 89.6,
+        "chg_pct": 0.18
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4157.7,
-        "chg_pct": -0.7
+        "price": 4161.3,
+        "chg_pct": -0.62
       }
     },
     "oil_uso": 143.91,
     "oil_pct_20d": -4.04,
-    "oil_wti": 89.56,
+    "oil_wti": 89.6,
     "eem_pct_20d": -1.62,
     "eem_vs_spx_20d": -3.82,
     "volume_confirm": {
@@ -506,7 +511,7 @@
     }
   },
   "_meta": {
-    "cached_at": "2026-10-08T11:03:17.732782",
+    "cached_at": "2026-10-08T11:33:18.933635",
     "age_sec": 1785,
     "stale": true,
     "refreshing": true
