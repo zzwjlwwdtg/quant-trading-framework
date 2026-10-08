@@ -1,12 +1,12 @@
 {
-  "ts": "2026-10-08T13:03:03.409571+00:00",
+  "ts": "2026-10-08T13:33:03.214487+00:00",
   "factors": [
     {
       "arrow": "▼",
       "name": "WTI 油价",
       "direction": "bearish",
       "weight": 2,
-      "value": "$92.51 (20d -9.7%)",
+      "value": "$91.6 (20d -10.6%)",
       "hint": "美国基准油价 20 天大幅涨跌指示供需变化"
     },
     {
@@ -14,15 +14,15 @@
       "name": "Brent-WTI 价差",
       "direction": "bullish",
       "weight": 1,
-      "value": "$12.39 (Brent $104.9 - WTI $92.51)",
+      "value": "$12.52 (Brent $104.12 - WTI $91.6)",
       "hint": "正常 $2-6；>$7 = 供应紧张利多，接近 0 = 美国供应过剩利空"
     },
     {
-      "arrow": "▼",
+      "arrow": "·",
       "name": "XLE 能源板块",
-      "direction": "bearish",
+      "direction": "neutral",
       "weight": 1,
-      "value": "XLE -2.4% vs SPY +2.2% (差 -4.6pp)",
+      "value": "XLE +0.1% vs SPY +2.5% (差 -2.4pp)",
       "hint": "能源股跑赢大盘 = 市场认可油价上行；跑输 = 不信任"
     },
     {
@@ -30,7 +30,7 @@
       "name": "美元指数 DXY",
       "direction": "neutral",
       "weight": 1,
-      "value": "102.37 (5d +0.3%)",
+      "value": "102.34 (5d +0.2%)",
       "hint": "油以美元计价，美元升值 = 油价承压。DXY 5d +2% = 利空油"
     },
     {
@@ -58,18 +58,18 @@
       "hint": "有相关地缘讨论 → 查看 Trump signal / 新闻。此项不计入 score"
     }
   ],
-  "direction": "bearish",
-  "score": -2,
+  "direction": "neutral",
+  "score": -1,
   "notes": [
     "油价 20d 大跌 → 通胀降温，利多科技 / 黄金"
   ],
-  "price": 92.51,
-  "pct_5d": -0.39,
-  "pct_20d": -9.73,
+  "price": 91.6,
+  "pct_5d": -1.37,
+  "pct_20d": -10.62,
   "source": "WTI 期货 (CL=F) 主 + 5 因子",
   "_meta": {
-    "cached_at": "2026-10-08T22:03:07.471164",
-    "age_sec": 1795,
+    "cached_at": "2026-10-08T22:33:07.212504",
+    "age_sec": 1797,
     "stale": true,
     "refreshing": true
   }
