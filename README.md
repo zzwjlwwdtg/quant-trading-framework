@@ -5,18 +5,21 @@
 
 **Language**: **English** · [简体中文](README.zh-CN.md)
 
-Multi-strategy quantitative signals + Codex-first local AI CLI analysis + moomoo paper-trading automation.
+Multi-strategy quantitative signals + Claude-first (Codex fallback) local AI CLI analysis + moomoo paper-trading automation.
 
 Targets leveraged and single-name US equities plus rate-sensitive hedges (**TQQQ / SOXL / DRAM / MULL / GLD / NBIS / SHY / IEI / LITE / CBRS / USO / XLV / NVDA / MSFT / AAPL** + satellite: TSLA / GOOGL / KLAC / AMAT / MU). Daily-candle momentum is the main signal with a 15-min intraday assist, smart-money/options context, Trump Truth Social parsed via CLI, gold macro factors, bond monitoring, and options gamma/GEX/IV/Skew analysis. **Macro layer (v0.4)**: next-45-day event scenario forecasts (Cleveland Fed nowcast + CME FedWatch) with Jinshi-style bond/equity impact labels and concrete asset lists, plus a US bond-rescue policy-toolkit tracker (11 tools × 30Y yield reaction). Actionable decisions flow through `paper_trader` into a moomoo **SIMULATE** account (never live).
+
+> **Current trading thesis — `2026-Q4.0_strong_usd` (set by the owner on 2026-10-08): strong US dollar.** A strengthening dollar may drain liquidity from the rest of the world back into USD assets. The system tracks dollar strength and spillover daily (`usd_theme`: DXY 20/60-day change and 1-year percentile, USDJPY, EEM/FXI/EWJ vs SPY, Asian indices) and flags three invalidation conditions (DXY 20d < −2%, EM beating SPY by > 3pp over 20d, yen rebounding > 5% from its low). How the theme maps to individual tickers is decided only by pre-registered tests, not by intuition.
 
 ## Dashboard Preview
 
 **🌐 Live public snapshot (read-only): https://zzwjlwwdtg.github.io/quant-trading-framework/**
 
 Auto-refreshed every 30 min from local webui via `agents/snapshot_generator.py`.
-Owner-only panels (positions / NAV / trade log) are stripped; all other cards
-(signals, capital flow, options walls, JP guidance, Ichimoku, ToSTNeT verification)
-are visible. Not investment advice — educational demo of the framework.
+From the top: **💵 trading thesis (strong USD)** → **💼 positions** → **🧾 fills statement & cash**
+→ **🔍 AI sell post-mortem** → **📈 equity curve vs SPY** → **🐻 QQQ/SPY large-put watch**
+→ macro, sector and per-ticker cards. Only the raw run log, the decision trade log and the
+institutional risk desk stay owner-only. Not investment advice — educational demo of the framework.
 
 WebUI (`webui.bat` → http://127.0.0.1:8080) — zero-dependency `http.server` + single-page dashboard covering NAV, sector regimes, Trump sentiment, gold/oil macro, event calendar, and per-ticker cards with signals + option walls + AI analysis.
 
@@ -32,7 +35,7 @@ WebUI (`webui.bat` → http://127.0.0.1:8080) — zero-dependency `http.server` 
 6. **⚡ Options verdict** (GEX + IV regime + Skew combined stock verdict) — 3 risks (breakdown / event / chase_high) + 3 opportunities (buy_now / add_more / reduce) + key prices (resistance / pin / support), all mapped to leveraged-ETF prices where applicable
 7. **C/P ratio + wall OI imbalance** — beginner-friendly interpretation distinguishing ATM panic vs OTM insurance, and Put >> Call OI vs Call >> Put OI scenarios
 8. **📅 Earnings badge** — related-earnings stock + T-N days + implied move ± IM%; expiry crossing earnings tagged "spans earnings"
-9. **🤖 Codex-first live analysis** — 3-line structured for all 15+ tickers, cached by data hash
+9. **🤖 AI live analysis (Claude first, Codex fallback)** — 3-line structured for all 15+ tickers, cached by data hash
 10. **🔗 Supply chain** — AI CLI-generated upstream/downstream/peers with confidence marks; optional FMP peers cross-verification; lazy-loaded, 30-day cache
 11. **📊 4-year fundamentals** (or **8 quarters** via toggle) — CROIC / Piotroski F / financial debt / cash conversion cycle from yfinance; 30/15-day cache
 
@@ -84,9 +87,13 @@ Toggle button `📆 4 years · switch to quarterly` / `📅 8 quarters · switch
 
 ## Key features
 
+- **Evidence discipline** (v0.5) — a rule needs a stated logic *and* a pre-registered test (fixed criteria, train / out-of-sample, rotation test). Put/call, short-volume and credit-spread "warnings" failed and are kept as monitoring only
+- **Cash discipline** (v0.5) — no margin borrowing; buys are funded from cash or SHY, negative cash is repaid automatically
+- **Daily AI sell post-mortem** (v0.5) — every sell gets 5 reasons (technical / news, with evidence) and 3 limitations, archived for review; losses never trigger an automatic blacklist
+- **Thesis tracking** (v0.5) — current thesis strong USD, with daily readings and invalidation conditions on the dashboard
 - **Macro forecasting layer** (v0.4 new) — `thesis_forecast` 45-day event scenarios (Cleveland Fed + CME FedWatch + prior) + policy-toolkit tracker (buybacks/YCC/TGA/SLR × 30Y bp reaction) + Trump attribution
 - **Full options-structure interpretation** (v0.4 expansion) — OI-based walls + combined bands + GEX+IV+Skew `stock_verdict` + premium/OI/notional table + leveraged-ETF structural-price mapping
-- **AI news structuring ecosystem** — all RSS / Truth Social first go through the unified AI CLI (Codex by default) into a fixed JSON schema before rules consume them; Google News topic queries serve as the primary macro-news source
+- **AI news structuring ecosystem** — all RSS / Truth Social first go through the unified AI CLI (Claude by default, Codex fallback) into a fixed JSON schema before rules consume them; Google News topic queries serve as the primary macro-news source
 - **Regime as single source** — computed once at pre-open → all modules read the same source; no independent detection allowed
 - **TECHNICAL_ONLY default ON** — decisions look at technicals only; message-side (Trump / breaking_news / event calendar) is banners only and does not enter `decision_agent` scoring
 - **Backtest gate** — any signal or decision change must pass `_backtest_modules_accuracy.py` etc. without hit-rate regression before merging; training-set N ≤ 5 as a hard rule is over-fitting
@@ -160,10 +167,10 @@ weekly.bat     :: Weekend refresh of module_accuracy.md
 webui.bat      :: WebUI dashboard at http://127.0.0.1:8080
 ```
 
-The default policy is `AI_CLI_PRIMARY=codex` and `AI_CLI_FALLBACK=none`, so a
-Codex failure never invokes Claude implicitly. To restore the old behavior for
-an exceptional run, set `AI_CLI_PRIMARY=claude` and `AI_CLI_FALLBACK=codex`
-before launch. `snap_public.bat` always pins Codex with no Claude fallback.
+The default policy (since 2026-10-08) is `AI_CLI_PRIMARY=claude` and `AI_CLI_FALLBACK=codex`:
+Claude answers first and Codex takes over only when Claude fails or hits its limit.
+Set the two variables before launch to change the order (for example
+`AI_CLI_PRIMARY=codex` + `AI_CLI_FALLBACK=none` for Codex only).
 
 ## Config files
 
@@ -218,7 +225,7 @@ before launch. `snap_public.bat` always pins Codex with no Claude fallback.
                   moomoo SIMULATE account
 
    ＊ AI CLI narrative/report layer (out-of-band, separate from the gate):
-     After run_cycle completes, invokes Codex CLI by default to summarize
+     After run_cycle completes, invokes the AI CLI (Claude first) to summarize
      all 11 blocks into a 700-1000 word plain-language report
      + structured JSON price targets. Next cycle, paper_trader
      reads the JSON to adjust limit / stop-loss levels.
@@ -253,7 +260,7 @@ before launch. `snap_public.bat` always pins Codex with no Claude fallback.
 | [`agents/decision_agent.py`](agents/decision_agent.py) | Rule engine: `_etf_rules` / `_gold_rules` → action + conf + stop_ref (both respect confluence calibration) |
 | [`agents/regime_today.py`](agents/regime_today.py) | Regime single source (writes `regime_state.json` at pre-open) |
 | [`agents/paper_trader.py`](agents/paper_trader.py) | moomoo SIMULATE ordering + position sizing + TP/SL |
-| [`agents/ai_prompt.py`](agents/ai_prompt.py) | Central Codex-first AI CLI router + prompt templates + structured JSON parsing |
+| [`agents/ai_prompt.py`](agents/ai_prompt.py) | Central AI CLI router (Claude first, Codex fallback) + prompt templates + structured JSON parsing |
 | [`agents/claude_gate.py`](agents/claude_gate.py) | AI second-opinion gate (legacy filename; pre-trade approval) |
 | [`agents/portfolio_analytics.py`](agents/portfolio_analytics.py) | Portfolio exposure, VaR/ES, stress, correlation, benchmark and attribution analytics |
 | [`agents/leveraged_etf_risk.py`](agents/leveraged_etf_risk.py) | Daily-reset leverage, volatility-decay and path-scenario analysis |
@@ -288,12 +295,41 @@ Output report: `agents/signals/module_accuracy.md` (actual file is gitignored).
 
 - **Paper trading only** — moomoo SIMULATE account, never live
 - DRAM ETF has a shorter price history than the older ETFs, so long-window indicators may have fewer valid samples
-- AI CLI calls normally take 30-60s; the 30-minute public snapshot is pinned to Codex and cannot silently spend Claude quota
-- **No model API key required** — uses the saved local Codex CLI login; Claude is an explicit opt-in provider/fallback
+- AI CLI calls normally take 30-60s; AI results are cached, so the 30-minute public snapshot does not re-query every time
+- **No model API key required** — uses the local Claude Code login first and the saved Codex CLI login as fallback
+- News coverage is thin: Yahoo RSS keeps only the latest headlines per symbol and decisions run `TECHNICAL_ONLY`, so post-mortems often report "not enough news material"
+- Pre-registered tests found no reliable predictive power in put/call ratios, short volume or credit spreads; the related panels are monitoring only
 
 ## Changelog
 
 Each tag's main changes. Full diffs at [GitHub Releases](https://github.com/zzwjlwwdtg/fsi-skills-agents/releases).
+
+### v0.5.0 — 2026-10-08
+
+**Theme**: from "more signals" to **evidence discipline + a transparent account**. Every new rule must state its logic and pass a *pre-registered* test (criteria written before the data is run, train / out-of-sample split, rotation test that preserves clustering). Ideas that fail stay as monitoring only.
+
+**Trading & risk**
+- **Strong-USD thesis** `2026-Q4.0` (owner-set): daily [`usd_theme.py`](agents/usd_theme.py), three dollar invalidation conditions, theme passed to AI prompts as context (the trade gate may not veto on theme alone)
+- **Cash discipline** ([`paper_trader.py`](agents/paper_trader.py)): no margin borrowing. A BUY must be covered by available cash (open buy orders count); shortfall is funded by selling SHY first, otherwise the order shrinks or is skipped; unknown cash fails closed. Negative cash is restored each trading window by selling SHY then IEI. Position sizing now uses NAV instead of margin buying power
+- **Semiconductor risk guard** ([`semi_risk_guard.py`](agents/semi_risk_guard.py)): raises the buy bar for semis when the bull case breaks (mega-cap EPS revisions turn down / 10Y > 5.5% with rising real yields / HY OAS +75bp in 60d). The semiconductor hard blacklist was removed (owner decision)
+- **Supply-shock calendar** ([`supply_calendar.py`](agents/supply_calendar.py)): pauses new buys around secondary offerings (424B), resales and IPO lockups, plus index-rebalance flow days
+- Liquidity-crisis overlay (MOVE / SOFR−IORB / KBE vs SPY), stock–bond correlation gauge, JP/KR rate transmission (BIS CIP), auto-rebalance module
+- **AI CLI routing**: Claude first, Codex fallback (one central router, env-overridable)
+
+**Research — pre-registered tests** (reports under `development/2026-10-0x/`)
+- **Growth-stock EPS screen** (O'Neil C/A, point-in-time SEC data): EPS ≥ 50% + sales ≥ 25% ≈ SPY (14.6% vs 14.7% CAGR); top-4 by EPS growth 20.2% CAGR with −42% drawdown; runs as a shadow watch list
+- **Put/call ratios** (CBOE 2006–2019) and **FINRA short volume** (SPY/QQQ 2018–): no reliable predictive power → the QQQ/SPY large-put watch is display-only
+- **Credit spreads** (BAA10Y, HYG/IEF) → SPY drawdowns: no signal passes; "credit worsens while stocks sit at highs" has no warning value
+- **Strong-dollar regimes**: oil (USO) lags in sustained USD strength; SHY/TLT beat SPY in sharp USD rallies; EM relative weakness appears only after 2015
+
+**Transparency — public dashboard**
+- Positions, **fills statement & cash** (red when negative), **equity curve vs SPY**, **AI sell post-mortem** (each sell: nature, technical/news context, 5 reasons with evidence, 3 limitations, hindsight; archived), strong-USD theme card, QQQ/SPY large-put watch
+- Broker fee import, thesis `effective_from`, model-version tracing, stale-data badges
+
+**Engineering**
+- Two system audits (Sep 19–24): frozen `DecisionContext` for backtests, event-sourced fill ledger, instrument registry, cohort reconciliation, timezone normalization, NYSE holiday calendar
+- Watchdogs for OpenD / orchestrator / WebUI; file-triggered whitelisted background jobs (no remote desktop control needed)
+- ~750 unit tests
 
 ### v0.4.0 — 2026-08-25
 

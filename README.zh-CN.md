@@ -5,11 +5,18 @@
 
 **语言 / Language**：[English](README.md) · **简体中文**
 
-多策略量化信号 + Codex 优先的本地 AI CLI 综合解读 + moomoo 模拟仓自动下单系统。
+多策略量化信号 + Claude 优先（Codex 兜底）的本地 AI CLI 综合解读 + moomoo 模拟仓自动下单系统。
 
 覆盖 **杠杆 ETF + 权重股 + 债券对冲 + 宏观 proxy**（TQQQ / SOXL / DRAM / MULL / GLD / NBIS / SHY / IEI / LITE / CBRS / USO / XLV / NVDA / MSFT / AAPL）+ 卫星单股。以日 K 动量为主信号、15min K 为辅助，结合聪明钱/期权信息、Trump Truth Social CLI 解析、黄金宏观因子、债市监控 + 期权 GEX/IV/Skew 完整解读。**宏观预测层 (v0.4)**：未来 45 天事件场景预测（Cleveland Fed nowcast + CME FedWatch）+ 金十数据风格债/股影响 label + 具体标的清单 + 美债救援政策工具追踪（11 工具 × 30Y 收益率反应）。决策通过 paper_trader 在 moomoo SIMULATE 账户落地（永不实盘）。
 
+> **当前交易主线 — `2026-Q4.0_strong_usd`（所有者 2026-10-08 设定）：强美元。** 美元走强可能把全球其他地区的流动性抽回美元资产。系统每天追踪美元强度与扩散（`usd_theme`：DXY 20/60 日涨幅及一年百分位、USDJPY、EEM/FXI/EWJ 相对 SPY、亚洲指数），并监控 3 个看错条件（DXY 20 日跌超 2%、新兴市场 20 日跑赢 SPY 3 个百分点以上、日元从低点回升 5% 以上）。主线落到哪些标的上，只按预注册检验的结果决定，不拍脑袋。
+
 ## Dashboard 预览
+
+**🌐 公开只读快照：https://zzwjlwwdtg.github.io/quant-trading-framework/**（每 30 分钟由本地 webui 经 `agents/snapshot_generator.py` 刷新）
+
+从上到下：**💵 交易主线（强美元）** → **💼 持仓** → **🧾 交割单与现金** → **🔍 AI 卖出复盘** → **📈 收益曲线 vs SPY**
+→ **🐻 QQQ/SPY 大额看跌监控** → 宏观 / 板块 / 每标的卡片。只有原始运行日志、决策 trade log 和机构风控台仍仅所有者可见。非投资建议，仅为框架演示。
 
 WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单页 dashboard，
 覆盖 NAV / 板块 regime / Trump 情绪 / 黄金+石油宏观 / 事件日历 / 每标的信号 + 期权墙 + AI 分析。
@@ -58,9 +65,13 @@ WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单�
 
 ## 主要特性
 
+- **证据纪律**（v0.5）— 规则既要讲清逻辑，也要通过预注册检验（标准事先写死、训练期 / 样本外、随机平移检验）。put/call、卖空量、信用利差"预警"未通过，只保留为监控
+- **现金纪律**（v0.5）— 不借保证金；买入用现金或卖 SHY 凑钱，现金为负自动补回
+- **每日 AI 卖出复盘**（v0.5）— 每笔卖出给出 5 条理由（技术面 / 消息面，附证据）和 3 条局限性，长期归档；亏损不会触发自动拉黑
+- **主线追踪**（v0.5）— 当前主线为强美元，每日读数与看错条件显示在看板最上方
 - **宏观预测层**（v0.4 新）— thesis_forecast 45 天事件场景（Cleveland Fed + CME FedWatch + prior）+ 政策工具追踪（回购/YCC/TGA/SLR × 30Y 反应）+ Trump 归因
 - **期权结构完整解读**（v0.4 扩展）— OI-based walls + 联合 band + GEX+IV+Skew stock verdict + 保费/OI/名义敞口 + 杠杆 ETF 结构价换算
-- **AI 新闻结构化生态** — 所有 RSS / Truth Social 先调统一 AI CLI（默认 Codex）拆为固定 JSON schema 再供规则消费；Google News 定题搜索作为主信源
+- **AI 新闻结构化生态** — 所有 RSS / Truth Social 先调统一 AI CLI（默认 Claude，Codex 兜底）拆为固定 JSON schema 再供规则消费；Google News 定题搜索作为主信源
 - **Regime 单一源** — pre-open 算定 → 全系统读单一源，禁止多处独立检测
 - **TECHNICAL_ONLY 默认 ON** — 决策只看技术面，消息面（Trump / breaking_news / 事件日历）仅 banner，不进 decision_agent 评分
 - **回测门控** — 任何信号/决策改动必须跑 `_backtest_modules_accuracy.py` 等回测脚本，hit rate 不退化才合并；训练集 N≤5 立 hard rule 是过拟合
@@ -133,10 +144,9 @@ trump.bat      :: Trump signal 单独查
 weekly.bat     :: 周末跑一次模块准确率回测，刷 signals/module_accuracy.md
 ```
 
-AI CLI 默认策略是 `AI_CLI_PRIMARY=codex`、`AI_CLI_FALLBACK=none`。因此 Codex
-失败时不会自动调用 Claude。若临时需要旧行为，可在启动前显式设置
-`AI_CLI_PRIMARY=claude` 与 `AI_CLI_FALLBACK=codex`；`snap_public.bat` 为保护额度，
-始终强制 Codex 且无 Claude fallback。
+AI CLI 默认策略（2026-10-08 起）是 `AI_CLI_PRIMARY=claude`、`AI_CLI_FALLBACK=codex`：
+先用 Claude，Claude 失败或额度用完时才由 Codex 接手。启动前设置这两个变量即可改顺序
+（例如 `AI_CLI_PRIMARY=codex` + `AI_CLI_FALLBACK=none` 只用 Codex）。
 
 ## 配置文件
 
@@ -190,7 +200,7 @@ AI CLI 默认策略是 `AI_CLI_PRIMARY=codex`、`AI_CLI_FALLBACK=none`。因此 
                   moomoo SIMULATE 账户
 
    ＊ AI CLI 报告解读层（不在下单链，与上面的二审 gate 分开）：
-     run_cycle 完成后默认调 Codex CLI 综合 11 个 block
+     run_cycle 完成后默认调 AI CLI（Claude 优先）综合 11 个 block
      输出 700-1000 字人话报告 + 结构化 JSON 目标价
      paper_trader 下一个 cycle 会读 JSON 调整限价/止损
 ```
@@ -218,7 +228,7 @@ AI CLI 默认策略是 `AI_CLI_PRIMARY=codex`、`AI_CLI_FALLBACK=none`。因此 
 | [`agents/decision_agent.py`](agents/decision_agent.py) | 规则引擎：`_etf_rules` / `_gold_rules` 出 action + conf + stop_ref |
 | [`agents/regime_today.py`](agents/regime_today.py) | regime 单一源（pre-open 写 regime_state.json）|
 | [`agents/paper_trader.py`](agents/paper_trader.py) | moomoo SIMULATE 下单 + 仓位管理 + 止盈止损 |
-| [`agents/ai_prompt.py`](agents/ai_prompt.py) | Codex 优先的统一 AI CLI 路由 + prompt 模板 + 结构化 JSON 解析 |
+| [`agents/ai_prompt.py`](agents/ai_prompt.py) | 统一 AI CLI 路由（Claude 优先、Codex 兜底）+ prompt 模板 + 结构化 JSON 解析 |
 | [`agents/claude_gate.py`](agents/claude_gate.py) | AI 二审 gate（保留旧文件名兼容；pre-trade approval）|
 | [`agents/portfolio_analytics.py`](agents/portfolio_analytics.py) | 组合暴露、VaR/ES、压力、相关性、基准与归因 |
 | [`agents/leveraged_etf_risk.py`](agents/leveraged_etf_risk.py) | 日复位杠杆、波动率折损与路径情景 |
@@ -251,12 +261,41 @@ AI CLI 默认策略是 `AI_CLI_PRIMARY=codex`、`AI_CLI_FALLBACK=none`。因此 
 
 - 不提供实盘交易（仅 moomoo SIMULATE 账户）
 - DRAM ETF 历史数据短于老 ETF，长周期指标的有效样本可能较少
-- AI CLI 调用通常延迟 30-60s；半小时公共快照被强制锁定为 Codex，不会静默消耗 Claude 额度
-- 不需要模型 API key — 使用本机 Codex CLI 已保存登录；Claude 仅作为显式选择或显式 fallback
+- AI CLI 调用通常延迟 30-60s；AI 结果有缓存，半小时公开快照不会每次都重新调用
+- 不需要模型 API key — 优先使用本机 Claude Code 登录，Codex CLI 已保存登录作为兜底
+- 新闻覆盖偏薄：Yahoo RSS 每个代码只保留最新几条头条，决策又是 `TECHNICAL_ONLY`，复盘经常写"消息面材料不足"
+- 预注册检验显示 put/call 比、卖空量、信用利差都没有可靠预测力，相关面板只作监控
 
 ## Changelog
 
 每个 tag 对应的主要变更。详细 diff 见 [GitHub Releases](https://github.com/zzwjlwwdtg/fsi-skills-agents/releases)。
+
+### v0.5.0 — 2026-10-08
+
+**主题**：从"加更多信号"转向**证据纪律 + 账户透明**。新规则必须讲清逻辑，并通过**预注册检验**（跑数据之前写死标准、分训练期和样本外、用保留聚集性的随机平移检验）；没通过的想法只保留为监控。
+
+**交易与风控**
+- **强美元主线** `2026-Q4.0`（所有者设定）：每日 [`usd_theme.py`](agents/usd_theme.py)，3 个美元看错条件；主线作为背景注入 AI 提示词（下单复核不得仅因不符合主线而否决）
+- **现金纪律**（[`paper_trader.py`](agents/paper_trader.py)）：不借保证金。买入必须有可用现金覆盖（未成交买单也算占用）；不够先卖 SHY 凑钱，仍不够就缩量或放弃；查不到现金一律不买。现金为负时每个交易窗口依次卖 SHY、IEI 补回。仓位基数改用账户净值，不再用含保证金的购买力
+- **半导体风险开关**（[`semi_risk_guard.py`](agents/semi_risk_guard.py)）：看多半导体的前提被打破时（大盘股 EPS 预期下修 / 10 年期 > 5.5% 且实际利率上行 / 高收益债利差 60 天扩大 75bp）提高半导体买入门槛。半导体硬黑名单已解除（所有者决定）
+- **供给冲击日历**（[`supply_calendar.py`](agents/supply_calendar.py)）：增发（424B）、转售、IPO 解禁窗口以及指数调仓日前后暂停新买入
+- 流动性危机 3 指标（MOVE / SOFR−IORB / KBE 相对 SPY）、股债相关性、日韩利率传导（BIS CIP）、自动再平衡模块
+- **AI CLI 路由**：默认 Claude，Codex 兜底（统一路由，可用环境变量改）
+
+**研究 — 预注册检验**（报告在 `development/2026-10-0x/`）
+- **成长股 EPS 筛选**（O'Neil C/A，SEC 时点数据）：EPS ≥ 50% + 营收 ≥ 25% 与 SPY 相当（年化 14.6% vs 14.7%）；按 EPS 增速取前 4 年化 20.2%，但最大回撤 −42%；以影子观察名单运行
+- **put/call 比**（CBOE 2006–2019）与 **FINRA 卖空量**（SPY/QQQ 2018–）：没有可靠预测力 → QQQ/SPY 大额看跌监控只展示
+- **信用利差**（BAA10Y、HYG/IEF）→ SPY 回撤：没有信号通过；"股市在高位、信用先变差"的背离没有预警价值
+- **强美元阶段**：原油（USO）在美元持续走强时跑输；短债 / 长债在美元急涨时跑赢 SPY；新兴市场相对走弱只在 2015 年后出现
+
+**透明度 — 公开看板**
+- 持仓、**交割单与现金**（为负标红）、**收益曲线 vs SPY**、**AI 卖出复盘**（每笔：性质、技术面/消息面、5 条带证据的理由、3 条局限性、事后走势；长期归档）、强美元主线卡片、QQQ/SPY 大额看跌监控
+- 券商手续费导入、thesis `effective_from`、模型版本追踪、数据过期标记
+
+**工程**
+- 两轮系统审计（9/19–9/24）：回测用冻结的 `DecisionContext`、事件溯源成交账本、标的注册表、cohort 对账、时区统一、NYSE 假日日历
+- OpenD / 交易进程 / WebUI 看门狗；文件触发的白名单后台任务（不需要远程控制电脑）
+- 约 750 个单元测试
 
 ### v0.4.0 — 2026-08-25
 
