@@ -1323,6 +1323,19 @@ def api_fills(n: int = 40) -> dict:
     return _cached(f"fills_v1_{n}", ttl_sec=300, compute_fn=_compute)
 
 
+def api_postmortem() -> dict:
+    """卖出复盘 (2026-10-08): trade_postmortem 每日收盘后生成的 AI 复盘. 只读文件."""
+    path = SIGNALS_DIR / "postmortem" / "latest.json"
+    if not path.exists():
+        return {"exists": False, "reviews": []}
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+        d["exists"] = True
+        return d
+    except Exception as e:  # noqa: BLE001
+        return {"exists": False, "error": str(e), "reviews": []}
+
+
 def api_equity_curve() -> dict:
     """账户收益曲线 (2026-10-06): nav_history 按美东交易日 + SPY 同期对比. 公开."""
     def _compute():
@@ -5361,6 +5374,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_equity_curve())
             elif path == "/api/fills":
                 self._json(api_fills())
+            elif path == "/api/postmortem":
+                self._json(api_postmortem())
             elif path == "/api/positions":
                 self._json(api_positions())
             elif path == "/api/institutional":

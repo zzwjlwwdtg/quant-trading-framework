@@ -211,6 +211,14 @@
   </div>
 </div>
 
+<!-- Row 0-top-1b: 卖出复盘 (2026-10-08 用户要求; 每日收盘后 AI 读 log 复盘每笔卖出) -->
+<div class="grid">
+  <div class="card" style="border-left:4px solid #a371f7">
+    <h2 title="每天美股收盘后，AI 读取卖出前后的 log 和新闻：概括当时技术面/消息面，给出 5 条当时卖出的理由（标注技术面/消息面并附证据）和 3 条局限性；事后走势只作参考。补现金卖单是机械操作，不复盘。">🔍 卖出复盘 <small id="postmortem-meta">AI Post-mortem</small></h2>
+    <div id="postmortem"><small style="color:var(--muted)">加载中...</small></div>
+  </div>
+</div>
+
 <!-- Row 0-top-2: 账户收益曲线 (2026-10-06 用户要求; 公开快照也显示) -->
 <div class="grid">
   <div class="card" style="border-left:4px solid #3fb950">
@@ -4128,6 +4136,36 @@ async function loadIndexWatch() {
   el.innerHTML = blocks + `<div style="font-size:10px; color:var(--muted); line-height:1.45">⚠ ${w.caveat || ''}</div>`;
 }
 
+// 卖出复盘 (2026-10-08): 每笔卖出 5 条理由 + 3 条局限性, 可展开
+async function loadPostmortem() {
+  const d = await fetchJson('/api/postmortem');
+  const el = $('postmortem');
+  if (!el) return;
+  if (!d || !d.exists || !(d.reviews || []).length) {
+    el.innerHTML = '<small style="color:var(--muted)">还没有复盘。每天美股收盘后自动生成。</small>';
+    return;
+  }
+  $('postmortem-meta').textContent = `更新 ${(d.generated_at || '').slice(5, 16).replace('T', ' ')} UTC · ${d.reviews.length} 笔`;
+  const vcls = v => v === '合理' ? 'ok' : (v === '不合理' ? 'bad' : 'warn');
+  el.innerHTML = d.reviews.map((r, i) => {
+    const a = r.analysis || {};
+    const h = a.hindsight || {};
+    const reasons = (a.reasons || []).map(x => `<li><span class="badge ${x.type === '消息面' ? 'info' : ''}">${x.type}</span> ${x.reason}<br><small style="color:var(--muted)">证据：${x.evidence || '—'}</small></li>`).join('');
+    const lims = (a.limitations || []).map(x => `<li><b>${x.limitation}</b><br><small style="color:var(--muted)">${x.why || ''}</small></li>`).join('');
+    return `<details ${i === 0 ? 'open' : ''} style="border-bottom:1px solid var(--border); padding:5px 0">
+      <summary style="cursor:pointer; font-size:12px"><b>${r.ticker}</b> 卖出 ${fmt(r.qty)} 股 @ $${fmt(r.price)}
+        <small style="color:var(--muted)">${new Date(r.ts).toLocaleString('zh-CN', {timeZone: 'Asia/Tokyo', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'})} JST · ${(r.tag || '').slice(0, 40)} · ${r.provider || ''}</small>
+        ${h.verdict ? `<span class="badge ${vcls(h.verdict)}">事后：${h.verdict}</span>` : ''}</summary>
+      <div style="font-size:11.5px; line-height:1.5; margin-top:4px">
+        <div><b>技术面</b>：${(a.context || {}).technical || '—'}</div>
+        <div><b>消息面</b>：${(a.context || {}).news || '—'}</div>
+        <div style="margin-top:4px"><b>当时卖出的 5 条理由</b><ol style="margin:2px 0 4px 18px; padding:0">${reasons}</ol></div>
+        <div><b>3 条局限性</b><ol style="margin:2px 0 4px 18px; padding:0">${lims}</ol></div>
+        <div style="color:var(--muted)">事后走势（仅参考）：${h.summary || '—'}</div>
+      </div></details>`;
+  }).join('');
+}
+
 async function loadAll() {
   const promises = [
     loadHealth(), loadTopPicks(), loadSectors(), loadBanners(),
@@ -4138,6 +4176,7 @@ async function loadAll() {
     loadThesisTimeline(),  // thesis 时间线 + next conjecture (2026-09-18)
     loadPositions(),       // 2026-10-06: 公开快照也显示持仓 (置顶)
     loadFills(),           // 2026-10-07: 交割单 + 现金 (公开, 置顶)
+    loadPostmortem(),      // 2026-10-08: 卖出复盘 (公开)
     loadEquityCurve(),     // 2026-10-06: 账户收益曲线 (公开)
     loadIndexWatch(),      // 2026-10-07: QQQ/SPY 大额看跌监控 (公开, 只展示)
   ];

@@ -76,6 +76,8 @@ JOBS = {
     "credit_warning_test": {"bat": "_credit_warning_test.bat", "market_quiet": True},
     # 2026-10-08: 只读 AI CLI 诊断 (codex / claude 版本与试跑), 按需触发
     "ai_cli_diag": {"bat": "_ai_cli_diag.bat"},
+    # 2026-10-08: 每日收盘后 AI 卖出复盘 (5 条理由 + 3 条局限性)
+    "trade_postmortem": {"bat": "_trade_postmortem.bat", "market_quiet": True, "auto_every_days": 1},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
