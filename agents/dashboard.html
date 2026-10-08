@@ -4155,6 +4155,7 @@ async function loadPostmortem() {
     return `<details ${i === 0 ? 'open' : ''} style="border-bottom:1px solid var(--border); padding:5px 0">
       <summary style="cursor:pointer; font-size:12px"><b>${r.ticker}</b> 卖出 ${fmt(r.qty)} 股 @ $${fmt(r.price)}
         <small style="color:var(--muted)">${new Date(r.ts).toLocaleString('zh-CN', {timeZone: 'Asia/Tokyo', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'})} JST · ${(r.tag || '').slice(0, 40)} · ${r.provider || ''}</small>
+        ${r.nature ? `<span class="badge">${r.nature}</span>` : ''}
         ${h.verdict ? `<span class="badge ${vcls(h.verdict)}">事后：${h.verdict}</span>` : ''}</summary>
       <div style="font-size:11.5px; line-height:1.5; margin-top:4px">
         <div><b>技术面</b>：${(a.context || {}).technical || '—'}</div>
@@ -4163,7 +4164,7 @@ async function loadPostmortem() {
         <div><b>3 条局限性</b><ol style="margin:2px 0 4px 18px; padding:0">${lims}</ol></div>
         <div style="color:var(--muted)">事后走势（仅参考）：${h.summary || '—'}</div>
       </div></details>`;
-  }).join('');
+  }).join('') + ((d.mechanical_cash_sells || []).length ? `<div style="font-size:10.5px; color:var(--muted); margin-top:5px">强制调仓·现金纪律（不调 AI，按规则归档）：${d.mechanical_cash_sells.map(c => `${c.ticker} −${fmt(c.qty)} @ $${fmt(c.price)}（${c.reason || ''}）`).join('；')}</div>` : '');
 }
 
 async function loadAll() {

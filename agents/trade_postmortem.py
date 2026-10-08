@@ -11,7 +11,10 @@
   · logs/run_YYYYMMDD.log (日本时间) 中卖出前 8 小时 ~ 后 1 小时: 该标的信号块 + 大盘/宏观/期权流行
   · signals/news_cache 里 AI 已解析的新闻 + (在 Windows 上运行时) Yahoo RSS 该标的头条
   · 卖出后 36 小时内 log 里的价格 + yfinance 后 3 个交易日收盘
-补现金卖单 (REBALANCE CASH) 是机械操作, 只列出不复盘.
+每笔卖出先按触发标签定性: 强制调仓 (机械止损 / 现金纪律 / 再平衡) 或 信号卖出, 如实写明.
+补现金卖单 (REBALANCE CASH) 不调 AI, 用规则理由归档.
+所有复盘按 order_id 追加到 signals/postmortem/archive.jsonl 长期归档.
+复盘只供人看, 不进交易决策; 也明确要求 AI 不得因亏损建议拉黑标的.
 已复盘的订单记在 signals/postmortem/reviewed.json, 不重复; AI 失败的下次重试.
 不下单, 不改仓位.
 """
@@ -208,6 +211,22 @@ def collect_sells(days: int = LOOKBACK_DAYS) -> list[dict]:
     return sells
 
 
+# ── 卖出性质 (2026-10-08 用户: 机械执行的就如实归为"强制调仓", 但同样要写理由并归档) ─────
+def classify_sell(tag: str, decision: dict | None = None) -> str:
+    t = (tag or "").upper()
+    if "REBALANCE CASH" in t:
+        return "强制调仓·现金纪律"
+    if "STOP" in t:
+        return "强制调仓·机械止损"
+    if "REBALANCE" in t:
+        return "强制调仓·再平衡"
+    if "TAKE-PROFIT" in t:
+        return "规则止盈"
+    if "KICKOUT" in t:
+        return "强制调仓·卫星池剔除"
+    return "信号卖出"
+
+
 # ── AI ───────────────────────────────────────────────────────────────────────
 def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: list[str], after_closes: list[dict]) -> str:
     return f"""你是交易复盘分析师。下面是一个自动交易系统的一笔**卖出**和当时的原始材料。
@@ -216,6 +235,7 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 ## 卖出
 标的 {sell['ticker']} | 卖出 {sell['qty']} 股 @ ${sell['price']} | 下单时间 (UTC) {sell['decision_ts']}
 触发标签: {sell['tag'] or '无'}
+卖出性质: {classify_sell(sell.get('tag'), sell.get('decision'))}{'（规则自动执行, 不是主观判断; 理由要说明规则为什么在那一刻触发, 以及当时的行情是否支持它）' if classify_sell(sell.get('tag')).startswith('强制调仓') else ''}
 系统决策字段: {json.dumps(sell.get('decision') or {}, ensure_ascii=False)}
 
 ## 当时 log 摘录 (日本时间, 卖出前 {BEFORE_H} 小时 ~ 后 {AFTER_H} 小时)
@@ -233,6 +253,7 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 2. 正好 5 条"当时卖出"的理由, 每条标注 "技术面" 或 "消息面", 并给出材料里的证据原文或数值. 消息面材料不足时可以全是技术面, 但要在局限性里说明.
 3. 正好 3 条局限性: 这些理由或这次卖出本身可能错在哪里 (例如流动性、信号滞后、数据缺失、只看单一指标、规则机械).
 4. 事后走势一句话 + 这次卖出事后看是否合理 (合理/不合理/难判断).
+5. 不要建议把这只标的拉黑、永久禁止交易或"以后别碰": 亏损本身不是拉黑的理由 (交易是反人性的, 亏得多恰恰容易情绪化).
 只输出 JSON, 不要任何其他文字:
 {{"context": {{"technical": "...", "news": "..."}},
  "reasons": [{{"type": "技术面|消息面", "reason": "...", "evidence": "..."}}],
@@ -275,10 +296,42 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
     out, status, provider, fb = ai(prompt)
     parsed = parse_ai(out)
     return {"order_id": sell["order_id"], "ticker": sell["ticker"], "qty": sell["qty"], "price": sell["price"],
-            "ts": sell["decision_ts"], "tag": sell["tag"], "provider": provider, "status": status,
+            "ts": sell["decision_ts"], "tag": sell["tag"], "nature": classify_sell(sell["tag"], sell.get("decision")),
+            "provider": provider, "status": status,
             "ok": parsed is not None, "analysis": parsed,
             "material": {"excerpt_lines": len(excerpt), "news_items": len(news), "after_closes": after_closes},
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
+
+
+ARCHIVE = OUT_DIR / "archive.jsonl"
+
+
+def cash_sell_record(s: dict) -> dict:
+    """补现金卖单: 规则机械执行, 不调 AI, 用固定理由归档."""
+    why = s["tag"].strip("[]").replace("REBALANCE CASH", "").strip()
+    reason = ("现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)" if "restore" in why
+              else f"规则 A: 买入前现金不足, 先卖 SHY 凑钱 ({why})")
+    return {"order_id": s["order_id"], "ticker": s["ticker"], "qty": s["qty"], "price": s["price"],
+            "ts": s["decision_ts"], "tag": s["tag"], "nature": "强制调仓·现金纪律", "provider": "rule",
+            "ok": True, "reason": reason, "reviewed_at": datetime.now(timezone.utc).isoformat()}
+
+
+def append_archive(rec: dict, path: Path | None = None) -> bool:
+    """按 order_id 去重追加到长期归档 (latest.json 只保留最近 20 份)."""
+    path = Path(path or ARCHIVE)
+    seen = set()
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                seen.add(str(json.loads(line).get("order_id")))
+            except json.JSONDecodeError:
+                continue
+    if str(rec.get("order_id")) in seen:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return True
 
 
 def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True) -> dict:
@@ -288,7 +341,9 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True) -> dict:
     done, mechanical = [], []
     for s in sells:
         if s["mechanical_cash"]:
-            mechanical.append({k: s[k] for k in ("ts", "ticker", "qty", "price", "tag", "order_id")})
+            rec = cash_sell_record(s)
+            mechanical.append(rec)
+            append_archive(rec, ARCHIVE)
             continue
         if str(s["order_id"]) in reviewed:
             continue
@@ -299,6 +354,7 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True) -> dict:
             (OUT_DIR / f"{day}_{r['ticker'].replace('US.', '')}_{r['order_id']}.json").write_text(
                 json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
             reviewed[str(s["order_id"])] = r["reviewed_at"]
+            append_archive(r, ARCHIVE)
         done.append(r)
     REVIEWED.write_text(json.dumps(reviewed, ensure_ascii=False, indent=1), encoding="utf-8")
     # latest: 最近 20 份成功复盘

@@ -73,11 +73,22 @@ class Postmortem(unittest.TestCase):
         self.assertIsNone(tp.parse_ai(json.dumps(bad3)))
         self.assertIsNone(tp.parse_ai(None))
 
+    def test_classify(self):
+        self.assertEqual(tp.classify_sell("[SOFTWARE-STOP trigger $23.29]"), "强制调仓·机械止损")
+        self.assertEqual(tp.classify_sell("[TRAILING-STOP from high]"), "强制调仓·机械止损")
+        self.assertEqual(tp.classify_sell("[REBALANCE CASH restore cash>=0]"), "强制调仓·现金纪律")
+        self.assertEqual(tp.classify_sell("[REBALANCE drift]"), "强制调仓·再平衡")
+        self.assertEqual(tp.classify_sell("[TAKE-PROFIT tp15]"), "规则止盈")
+        self.assertEqual(tp.classify_sell("[SELL conf=4 win=midday]"), "信号卖出")
+
     def test_prompt_separates_hindsight(self):
         p = tp.build_prompt({"ticker": "MULL", "qty": 1, "price": 1, "decision_ts": "x", "tag": "T"},
                             ["a"], [], ["later 25.95"], [])
         self.assertIn("正好 5 条", p); self.assertIn("正好 3 条局限性", p)
         self.assertIn("不得当作当时的卖出理由", p)
+        self.assertIn("不要建议把这只标的拉黑", p)
+        p2 = tp.build_prompt({"ticker": "MULL", "qty": 1, "price": 1, "decision_ts": "x", "tag": "[SOFTWARE-STOP]"}, [], [], [], [])
+        self.assertIn("强制调仓·机械止损", p2)
 
     def test_run_skips_cash_and_reviewed_and_retries_failures(self):
         sells = [
@@ -95,6 +106,7 @@ class Postmortem(unittest.TestCase):
         out = self.td / "pm"
         with patch.object(tp, "OUT_DIR", out), patch.object(tp, "REVIEWED", out / "reviewed.json"), \
              patch.object(tp, "LATEST", out / "latest.json"), patch.object(tp, "LOGS", self.td), \
+             patch.object(tp, "ARCHIVE", out / "archive.jsonl"), \
              patch.object(tp, "collect_sells", return_value=sells), \
              patch.object(tp, "news_from_cache", return_value=[]):
             r1 = tp.run(ai=ai, live_fetch=False)
@@ -105,6 +117,11 @@ class Postmortem(unittest.TestCase):
             r2 = tp.run(ai=ai, live_fetch=False)
             self.assertEqual(len(calls), 3)                    # MULL 不再复盘, DRAM 重试
             self.assertEqual(r2["last_run"], {"new": 0, "failed": 1})
+            arch = [json.loads(l) for l in (out / "archive.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(sorted(a["ticker"] for a in arch), ["MULL", "SHY"])   # 各一次, 失败的不归档
+            self.assertEqual({a["ticker"]: a["nature"] for a in arch},
+                             {"MULL": "强制调仓·机械止损", "SHY": "强制调仓·现金纪律"})
+            self.assertIn("SHY", next(a["reason"] for a in arch if a["ticker"] == "SHY"))
 
     def test_wiring(self):
         import snapshot_generator as sg
