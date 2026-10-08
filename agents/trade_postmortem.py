@@ -295,6 +295,12 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
         ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex")
     out, status, provider, fb = ai(prompt)
     parsed = parse_ai(out)
+    if parsed is None and out:      # 保留原文便于排查 (下次运行会重试)
+        try:
+            OUT_DIR.mkdir(parents=True, exist_ok=True)
+            (OUT_DIR / f"raw_failed_{sell['order_id']}.txt").write_text(out, encoding="utf-8")
+        except OSError:
+            pass
     return {"order_id": sell["order_id"], "ticker": sell["ticker"], "qty": sell["qty"], "price": sell["price"],
             "ts": sell["decision_ts"], "tag": sell["tag"], "nature": classify_sell(sell["tag"], sell.get("decision")),
             "provider": provider, "status": status,
