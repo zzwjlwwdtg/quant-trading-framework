@@ -8,19 +8,34 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "NOISE": 2,
-      "GEOPOLITICAL": 1,
       "DOMESTIC_POLICY": 2,
-      "MEDIA_ATTACK": 3
+      "GEOPOLITICAL": 1,
+      "NOISE": 4,
+      "MEDIA_ATTACK": 3,
+      "DEAL": 1
     },
-    "breaking": [],
+    "breaking": [
+      {
+        "event_type": "DEAL",
+        "direction": "bullish",
+        "magnitude": "large",
+        "confidence": 8,
+        "tickers": [
+          "SPY",
+          "QQQ"
+        ],
+        "preview": "I have just concluded a highly successful discussion with President Vladimir Putin, of Russia, wherein it was agreed tha",
+        "verbatim": "Russia will immediately supply over 300,000 Tons of Diesel Fuel... Diesel Prices for Americans",
+        "post_time": "2026-10-09T18:46:23.661Z"
+      }
+    ],
     "summary": {
-      "text": "Trump 攻击司法与诺贝尔委员会、力挺共和党候选人，政治喧嚣无实质市场方向，情绪中性偏噪音。",
-      "state": "cached",
+      "text": null,
+      "state": "generating",
       "post_ids": [
-        "117411241255928585",
-        "117411172629254329",
-        "117408959105269388"
+        "117412623263536077",
+        "117412435306815143",
+        "117411241255928585"
       ]
     }
   },
