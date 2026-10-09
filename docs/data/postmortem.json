@@ -1,6 +1,86 @@
 {
-  "generated_at": "2026-10-08T03:19:03.464142+00:00",
+  "generated_at": "2026-10-09T03:18:41.265668+00:00",
   "reviews": [
+    {
+      "order_id": "468109",
+      "ticker": "NBIS",
+      "qty": 50.0,
+      "price": 227.925,
+      "ts": "2026-10-08T14:06:47.482383+00:00",
+      "tag": "[TRAILING-STOP from high $252.70 → $227.98 (-9.8%)]",
+      "nature": "强制调仓·机械止损",
+      "provider": "Claude",
+      "status": "ok",
+      "ok": true,
+      "analysis": {
+        "context": {
+          "technical": "NBIS 日K价格227.98、RSI 60.0 中性、量比0.32 极低、趋势 down，但 MA20=229.59 > MA50=219.66 均线仍多排，MACD DIF+4.43/DEA+4.23 零轴上，ADX 25.5 强趋势；日内从前日高点237.15回落到227.98，距离历史高点$252.70已回撤-9.8%，恰好触发 TRAILING-STOP 阈值。",
+          "news": "宏观偏空：30年期美债收益率升至2002年5月以来最高5.732%，Trump 表态不想要 Iran Deal 推高油价、股指期货盘前走弱，NQ -0.74%/ES -0.31%；NBIS 自身新闻中性偏多（Wall Street分析师看多、CoreWeave/Nebius 对比、纯 AI 投资标的），但 SMH/QQQ 板块新闻偏空（Burry 警告 denial、AI Bubble、Intel/NVDA/AMD 下跌）。"
+        },
+        "reasons": [
+          {
+            "type": "技术面",
+            "reason": "触及移动止损硬阈值，机械规则强制执行",
+            "evidence": "[TRAILING-STOP from high $252.70 → $227.98 (-9.8%)]，接近 -10% 阈值"
+          },
+          {
+            "type": "技术面",
+            "reason": "日内趋势已转向 down，量能萎缩无承接",
+            "evidence": "23:06:47 【NBIS】趋势:down，量比:0.32（远低于1.0，无买盘支撑）"
+          },
+          {
+            "type": "技术面",
+            "reason": "日K信号从早盘的弱多头共振退化为低置信度观望",
+            "evidence": "16:37:33 置信度 3/5 → 23:06:47 置信度 2/5，共振从多头(2)vs空头(0)退化为多头(1)vs空头(0)"
+          },
+          {
+            "type": "技术面",
+            "reason": "盘前跳空低开信号，整体风险偏空",
+            "evidence": "21:34:48 [空] 盘前跌-1.98% → 开盘大概率跳空低开；regime=neutral_chop 中性震荡（提高加仓门槛）"
+          },
+          {
+            "type": "消息面",
+            "reason": "宏观利率+油价双重压制成长股与 AI 板块",
+            "evidence": "30-year bond yield 5.732% 2002年5月以来最高；Trump 不要 Iran Deal → CL +4.29%；S&P/Nasdaq 从历史高点回落 Amid Soaring Treasury Yields"
+          }
+        ],
+        "limitations": [
+          {
+            "limitation": "固定 -9.8% trailing stop 对高波动成长股可能过紧",
+            "why": "NBIS 本身波动极大（距高点-9.8%在该类票算正常回撤），机械规则不区分 regime 和个股波动率，容易在震荡中被洗出"
+          },
+          {
+            "limitation": "卖出时 log 显示的 227.98 是日线参考价（可能是前日收盘），非实时成交价",
+            "why": "材料提示'【标的】价格'常是前一交易日收盘，实际触发点和成交$226.84/$227.925 可能对应盘中更深回撤，决策依据的 RSI/量比等指标存在时间错配"
+          },
+          {
+            "limitation": "消息面证据以板块/宏观为主，缺少 NBIS 公司层面负面催化剂",
+            "why": "NBIS 个股新闻实际中性偏多（分析师看好、纯 AI 标的），止损更多由板块联动驱动；若是单日板块情绪冲击，机械止损可能卖在短期低点"
+          }
+        ],
+        "hindsight": {
+          "summary": "D0 收盘219.71 比卖价$227.925 又跌-3.6%，当日未反弹止损避免了进一步 drawdown。",
+          "verdict": "合理"
+        }
+      },
+      "material": {
+        "excerpt_lines": 79,
+        "news_items": 15,
+        "after_closes": [
+          {
+            "date": "2026-10-07",
+            "close": 237.15,
+            "rel": "D-1"
+          },
+          {
+            "date": "2026-10-08",
+            "close": 219.71,
+            "rel": "D0"
+          }
+        ]
+      },
+      "reviewed_at": "2026-10-09T03:18:41.262669+00:00"
+    },
     {
       "order_id": "467615",
       "ticker": "MULL",
@@ -329,6 +409,19 @@
   ],
   "mechanical_cash_sells": [
     {
+      "order_id": "468181",
+      "ticker": "SHY",
+      "qty": 28.0,
+      "price": 81.125,
+      "ts": "2026-10-08T16:04:55.541989+00:00",
+      "tag": "[REBALANCE CASH fund BUY US.NVDA x143]",
+      "nature": "强制调仓·现金纪律",
+      "provider": "rule",
+      "ok": true,
+      "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.NVDA x143)",
+      "reviewed_at": "2026-10-09T03:18:03.697872+00:00"
+    },
+    {
       "order_id": "467747",
       "ticker": "SHY",
       "qty": 202.0,
@@ -339,7 +432,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.DRAM x282)",
-      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
+      "reviewed_at": "2026-10-09T03:18:41.263668+00:00"
     },
     {
       "order_id": "467749",
@@ -352,7 +445,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.MULL x317)",
-      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
+      "reviewed_at": "2026-10-09T03:18:41.264669+00:00"
     },
     {
       "order_id": "467659",
@@ -365,7 +458,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)",
-      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
+      "reviewed_at": "2026-10-09T03:18:41.264669+00:00"
     },
     {
       "order_id": "467620",
@@ -378,11 +471,11 @@
       "provider": "rule",
       "ok": true,
       "reason": "现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)",
-      "reviewed_at": "2026-10-08T03:18:02.404058+00:00"
+      "reviewed_at": "2026-10-09T03:18:41.264669+00:00"
     }
   ],
   "last_run": {
-    "new": 2,
+    "new": 1,
     "failed": 0
   },
   "exists": true
