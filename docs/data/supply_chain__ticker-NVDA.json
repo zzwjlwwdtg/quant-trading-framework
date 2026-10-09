@@ -1,0 +1,133 @@
+{
+  "ticker": "NVDA",
+  "sector": "半导体设计",
+  "business": "NVIDIA 主要设计并销售用于数据中心 AI 训练与推理、游戏图形、专业可视化、汽车和边缘计算的 GPU、加速器、网络芯片、系统平台与软件生态。",
+  "upstream": [
+    {
+      "name": "Taiwan Semiconductor Manufacturing Company",
+      "ticker": "TSM",
+      "note": "核心晶圆代工与先进制程制造，支撑 GPU、AI 加速器和部分网络芯片量产",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "SK hynix",
+      "ticker": "000660.KS",
+      "note": "供应 HBM 高带宽存储器，是 AI 加速卡性能与供给的关键瓶颈之一",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "Micron Technology",
+      "ticker": "MU",
+      "note": "供应 HBM、GDDR 与其他存储器，用于数据中心 GPU 和游戏显卡",
+      "weight": 72,
+      "confidence": "medium"
+    },
+    {
+      "name": "Samsung Electronics",
+      "ticker": "005930.KS",
+      "note": "晶圆代工与存储器供应商，为部分芯片制造和 HBM/GDDR 供给提供冗余",
+      "weight": 65,
+      "confidence": "high"
+    },
+    {
+      "name": "Amkor Technology",
+      "ticker": "AMKR",
+      "note": "提供先进封装、测试和组装服务，参与高端芯片后段制造链条",
+      "weight": 45,
+      "confidence": "medium"
+    },
+    {
+      "name": "Synopsys",
+      "ticker": "SNPS",
+      "note": "EDA 设计工具和 IP 授权，用于复杂 GPU、SoC 和网络芯片设计流程",
+      "weight": 38,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "采购 NVIDIA GPU、AI 服务器平台和网络产品，用于 Azure 云、OpenAI 相关训练与推理基础设施",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "Amazon",
+      "ticker": "AMZN",
+      "note": "通过 AWS 采购 NVIDIA 加速器和网络方案，用于云端 GPU 实例和生成式 AI 服务",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购 NVIDIA AI 加速器用于 Google Cloud、内部 AI 训练和推理，虽有 TPU 自研芯片但仍是重要客户",
+      "weight": 78,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "大规模采购 NVIDIA GPU 集群用于 Llama 等大模型训练、推荐系统和广告 AI 基础设施",
+      "weight": 76,
+      "confidence": "medium"
+    },
+    {
+      "name": "Oracle",
+      "ticker": "ORCL",
+      "note": "采购 NVIDIA GPU 与系统平台建设 OCI AI 云算力，并向企业和模型公司出租算力",
+      "weight": 58,
+      "confidence": "medium"
+    },
+    {
+      "name": "Dell Technologies",
+      "ticker": "DELL",
+      "note": "采购 NVIDIA GPU、网络和参考平台，集成到 AI 服务器并销售给企业、云厂商和政府客户",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Advanced Micro Devices",
+      "ticker": "AMD",
+      "note": "MI 系列数据中心 GPU、游戏 GPU 和加速计算平台直接竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Intel",
+      "ticker": "INTC",
+      "note": "数据中心 GPU、AI 加速器、CPU 平台和部分网络芯片竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Broadcom",
+      "ticker": "AVGO",
+      "note": "AI 定制 ASIC、以太网交换芯片和加速互连方案与 NVIDIA 部分数据中心业务竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Marvell Technology",
+      "ticker": "MRVL",
+      "note": "数据中心定制芯片、DPU、光互连和网络芯片方向竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "TPU 自研 AI 加速器在 Google Cloud 和内部工作负载中替代部分 NVIDIA GPU 需求",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-27T09:33:25.574675+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-27T18:33:25.588194",
+    "age_sec": 1061995,
+    "stale": false,
+    "refreshing": false
+  }
+}
