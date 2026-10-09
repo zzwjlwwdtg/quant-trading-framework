@@ -1,5 +1,5 @@
 {
-  "asof": "2026-10-09T20:33",
+  "asof": "2026-10-09T21:03",
   "yields": {
     "10y": {
       "value": 5.231,
@@ -252,7 +252,7 @@
     },
     {
       "level": "bad",
-      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.81%) < JGB (2.94%) = JP 投资者会抛售 UST",
+      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.82%) < JGB (2.94%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
     },
     {
@@ -308,13 +308,13 @@
     "move_index": 100.7,
     "move_20d_delta": 18.6,
     "effr_pct": 3.88,
-    "sofr_effr_spread_bps": 0.0,
+    "sofr_effr_spread_bps": -1.0,
     "bank_reserves_bn": 3030.0,
     "bank_total_assets_bn": 25928.0,
     "bank_reserves_pct_of_assets": 11.7,
-    "sofr_pct": 3.88,
+    "sofr_pct": 3.87,
     "iorb_pct": 3.9,
-    "sofr_iorb_spread_bps": -2.0,
+    "sofr_iorb_spread_bps": -3.0,
     "usdjpy": 158.06,
     "usdjpy_20d_pct": 2.92,
     "usdjpy_20d_delta_pct": 2.92,
@@ -329,8 +329,8 @@
     "ktb_10y_pct": 4.29,
     "ktb_asof": "2026-08-01",
     "ust_ktb_spread_bps": 94.1,
-    "hedged_ust_10y_for_jp": 2.81,
-    "hedge_cost_jp": 2.42,
+    "hedged_ust_10y_for_jp": 2.82,
+    "hedge_cost_jp": 2.41,
     "real_yield_gap_us_jp": 1.75,
     "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.47,
@@ -338,9 +338,9 @@
     "kbe_spy_20d_delta_pct": -8.14,
     "cdx_ig_bps": 82.0,
     "cdx_hy_bps": 309.0,
-    "dxy": 102.16,
-    "dxy_pct_20d": 3.07,
-    "dxy_z_60d": 1.74,
+    "dxy": 102.14,
+    "dxy_pct_20d": 3.05,
+    "dxy_z_60d": 1.73,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -387,31 +387,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7846.0,
-        "chg_pct": 0.38
+        "price": 7848.5,
+        "chg_pct": 0.41
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 31207.75,
-        "chg_pct": 0.77
+        "price": 31227.75,
+        "chg_pct": 0.83
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 90.53,
-        "chg_pct": -1.05
+        "price": 90.46,
+        "chg_pct": -1.13
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4208.7,
-        "chg_pct": 1.24
+        "price": 4207.2,
+        "chg_pct": 1.21
       }
     },
     "oil_uso": 147.58,
     "oil_pct_20d": -6.82,
-    "oil_wti": 90.53,
+    "oil_wti": 90.46,
     "eem_pct_20d": -1.34,
     "eem_vs_spx_20d": -3.72,
     "volume_confirm": {
@@ -496,18 +496,18 @@
     "stablecoin_total_bn": 257.1,
     "usdt_bn": 184.1,
     "usdc_bn": 73.0,
-    "vix": 15.24,
-    "bbi_score": 0.6,
+    "vix": 15.17,
+    "bbi_score": 0.61,
     "bbi_components": {
-      "vix": -0.46,
+      "vix": -0.47,
       "ig": -1.37,
       "hy": -0.89,
       "erp": 1.92
     }
   },
   "_meta": {
-    "cached_at": "2026-10-09T20:33:20.261266",
-    "age_sec": 1783,
+    "cached_at": "2026-10-09T21:03:21.153790",
+    "age_sec": 1782,
     "stale": true,
     "refreshing": true
   }

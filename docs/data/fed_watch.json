@@ -10,76 +10,66 @@
         "cut_25": 0
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean_hold"
+      "consensus_direction": "hawkish_hold"
     },
     {
       "date": "2026-12-09",
       "days_until": 61,
       "probabilities": {
-        "hold": 30,
-        "hike_25": 68,
-        "cut_25": 2
+        "hold": 16,
+        "hike_25": 66,
+        "hike_50": 18
       },
       "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "consensus_direction": "hawkish_lean",
+      "note": "cumulative path: 15.8% end at 3.75-4.00, 65.9% at 4.00-4.25, 18.2% at 4.25-4.50"
     },
     {
       "date": "2027-01-27",
       "days_until": 110,
       "probabilities": {
-        "hold": 25,
-        "hike_25": 70,
-        "cut_25": 5
+        "hold": 56,
+        "hike_25": 44
       },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 159,
-      "probabilities": {
-        "hold": 30,
-        "hike_25": 60,
-        "hike_50": 10
-      },
-      "most_likely": "hike_25",
-      "consensus_direction": "hawkish"
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean",
+      "note": "~43.6% probability of another +25bp hike by Jan meeting; path-cumulative shows peak rate 4.00-4.25 as modal"
     }
   ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q3/Q4",
+  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_date": "2026-Q4 to 2027-Q1",
   "data_snapshot_date": "2026-10-08",
-  "recent_event_impact": "10/2 NFP +29K vs 90K consensus (U-rate 4.2%, wages 3.0% YoY) pulled Oct hike odds from ~70% to ~18%; 10/7 FOMC Minutes revealed most officials saw more 2026 hikes likely → Dec hike odds rebounded from 21.6% to 67.9% in 2 days. CPI release 10/14 pending.",
-  "commentary": "Market as of 10/8 prices Oct 28 as near-certain hold (82%) after weak Sep NFP, but Dec 9 reclaims hike bias (~68%) following hawkish Sep FOMC Minutes. Fed under Chair Warsh is in active hiking cycle (hiked to 3.75-4.00% on 9/16 at CPI 3.4%); futures imply ~4.1% by Jan and ~4.7% by Oct 2027. CPI release 10/14 is the next major catalyst and could sharply reprice December.",
+  "recent_event_impact": "Oct 3 NFP (September print) came in very weak at +29K (vs ~50K est) → Oct hike odds collapsed from 37.6% (Sep 30) to 18% (Oct 8); Sep CPI (Oct 14 release) still ahead, could shift distribution",
+  "commentary": "CME FedWatch snapshot 2026-10-08: market is in a HIKING cycle (Fed Chair Warsh delivered +25bp to 3.75-4.00% at Sep 16 FOMC, first hike since 2023). For Oct 27-28 meeting market now prices hawkish hold (82%) after soft Sep NFP (+29K), with cut odds at 0%. By Dec, cumulative +25bp is the modal path (65.9%) — market expects another hike before year-end. Terminal rate pricing centers 4.00-4.25% by Q1 2027. CPI release Oct 14 is the key swing event.",
   "sources": [
     {
       "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
-      "type": "cme_fedwatch_mirror"
+      "type": "cme_fedwatch_derivative"
     },
     {
-      "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
-      "type": "aggregator"
+      "url": "https://finance.yahoo.com/markets/crypto/articles/fed-hike-odds-drop-18-034500528.html",
+      "type": "news_summary"
     },
     {
       "url": "https://financefeeds.com/fed-minutes-show-most-officials-want-another-hike-but-october-odds-fell-to-18",
-      "type": "news_commentary"
+      "type": "news_summary"
     },
     {
-      "url": "https://rateprobability.com/fed",
+      "url": "https://growbeansprout.com/tools/fedwatch",
       "type": "cme_fedwatch_mirror"
     },
     {
-      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch"
+      "url": "https://rateprobability.com/fed",
+      "type": "fed_funds_futures"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-09T03:34:43+00:00",
+  "fetched_at": "2026-10-09T12:05:01+00:00",
   "_meta": {
-    "cached_at": "2026-10-09T12:34:43.063356",
-    "age_sec": 30501,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T21:05:01.068205",
+    "age_sec": 1682,
+    "stale": false,
+    "refreshing": false
   }
 }
