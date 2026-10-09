@@ -5,7 +5,7 @@
   "analyst_consensus": {
     "n_analysts": 59,
     "recommendation": "strong_buy",
-    "current_price": 229.31,
+    "current_price": 229.28,
     "forward_eps": 15.91,
     "trailing_eps": 7.91,
     "eps_growth_pct": 101.2,
@@ -14,11 +14,11 @@
     "target_mean": 328.72,
     "target_high": 515.0,
     "target_low": 180.0,
-    "target_upside_pct": 43.3,
+    "target_upside_pct": 43.4,
     "revenue_growth_pct": 105.9,
     "earnings_growth_pct": 127.8,
     "next_earnings": "2026-11-18",
-    "implied_pe_hold": 461.37,
+    "implied_pe_hold": 461.3,
     "implied_pe_hold_upside": 101.2,
     "peg_fair_price": 1610.56,
     "peg_ratio": 0.14,
@@ -30,32 +30,32 @@
     "implied_hist_p25": 709.0,
     "implied_hist_p75": 1654.32,
     "implied_hist_upside": 331.2,
-    "peer_pe_median": 37.03,
+    "peer_pe_median": 37.8,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "AMD",
-        "pe": 38.79
+        "pe": 38.68
       },
       {
         "ticker": "INTC",
-        "pe": 50.82
+        "pe": 50.27
       },
       {
         "ticker": "AVGO",
-        "pe": 18.7
+        "pe": 18.64
       },
       {
         "ticker": "MRVL",
-        "pe": 37.03
+        "pe": 37.8
       },
       {
         "ticker": "GOOGL",
-        "pe": 23.46
+        "pe": 23.33
       }
     ],
-    "implied_peer_median": 589.32,
-    "implied_peer_upside": 157.0,
+    "implied_peer_median": 601.57,
+    "implied_peer_upside": 162.4,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -203,12 +203,12 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 328.72,
-        "gap_pct": 43.3
+        "gap_pct": 43.4
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 461.37,
+        "implied_price": 461.3,
         "gap_pct": 101.2
       },
       {
@@ -220,29 +220,29 @@
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 589.32,
-        "gap_pct": 157.0
+        "implied_price": 601.57,
+        "gap_pct": 162.4
       }
     ],
-    "median_gap_pct": 129.1,
+    "median_gap_pct": 131.8,
     "revision_signal": "upward",
     "required_eps_growth_pct": -53.3,
     "consensus_eps_growth_pct": 101.2,
     "growth_cushion_pct": 154.5,
     "rationale": [
-      "多口径隐含价中位数高于现价 129.1%",
+      "多口径隐含价中位数高于现价 131.8%",
       "近 30 天 EPS 共识上修",
       "历史 PE 口径要求 EPS 增长 -53.3%，共识为 +101.2%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-10-09T16:03:24.526106+00:00",
+  "fetched_at": "2026-10-09T22:33:23.670726+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-10-10T01:03:24.527098",
-    "age_sec": 23397,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-10T07:33:23.671725",
+    "age_sec": 1797,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "TQQQ",
   "is_proxy": true
