@@ -1,13 +1,14 @@
 {
-  "asof": "2026-10-09T21:33",
+  "asof": "2026-10-09T22:03",
   "yields": {
     "10y": {
-      "value": 5.231,
-      "chg_1d_bps": -4.6,
-      "chg_5d_bps": -0.6,
-      "chg_20d_bps": 28.7,
-      "z_score_20d": -0.93,
+      "value": 5.253,
+      "chg_1d_bps": 2.2,
+      "chg_5d_bps": -2.4,
+      "chg_20d_bps": 27.8,
+      "z_score_20d": 0.45,
       "history": [
+        5.253,
         5.231,
         5.277,
         5.269,
@@ -26,20 +27,20 @@
         4.947,
         5.006,
         4.996,
-        4.961,
-        4.975
+        4.961
       ],
-      "asof": "2026-10-08",
+      "asof": "2026-10-09",
       "name": "10Y 国债名义",
       "source": "yfinance ^TNX"
     },
     "5y": {
-      "value": 4.991,
-      "chg_1d_bps": -3.0,
-      "chg_5d_bps": -1.4,
-      "chg_20d_bps": 25.8,
-      "z_score_20d": -0.58,
+      "value": 5.016,
+      "chg_1d_bps": 2.5,
+      "chg_5d_bps": -3.9,
+      "chg_20d_bps": 22.5,
+      "z_score_20d": 0.48,
       "history": [
+        5.016,
         4.991,
         5.021,
         5.028,
@@ -58,20 +59,20 @@
         4.801,
         4.859,
         4.826,
-        4.79,
-        4.791
+        4.79
       ],
-      "asof": "2026-10-08",
+      "asof": "2026-10-09",
       "name": "5Y 国债",
       "source": "yfinance ^FVX"
     },
     "30y": {
-      "value": 5.606,
-      "chg_1d_bps": -5.5,
-      "chg_5d_bps": 0.3,
-      "chg_20d_bps": 24.5,
-      "z_score_20d": -1.29,
+      "value": 5.623,
+      "chg_1d_bps": 1.7,
+      "chg_5d_bps": -0.7,
+      "chg_20d_bps": 26.9,
+      "z_score_20d": 0.41,
       "history": [
+        5.623,
         5.606,
         5.661,
         5.641,
@@ -90,20 +91,20 @@
         5.296,
         5.349,
         5.364,
-        5.329,
-        5.354
+        5.329
       ],
-      "asof": "2026-10-08",
+      "asof": "2026-10-09",
       "name": "30Y 国债",
       "source": "yfinance ^TYX"
     },
     "3m": {
-      "value": 4.043,
-      "chg_1d_bps": 0.6,
-      "chg_5d_bps": 6.1,
-      "chg_20d_bps": 19.8,
-      "z_score_20d": 0.28,
+      "value": 4.048,
+      "chg_1d_bps": 0.5,
+      "chg_5d_bps": 5.5,
+      "chg_20d_bps": 13.5,
+      "z_score_20d": 0.24,
       "history": [
+        4.048,
         4.043,
         4.037,
         4.037,
@@ -122,10 +123,9 @@
         3.965,
         3.97,
         3.96,
-        3.935,
-        3.913
+        3.935
       ],
-      "asof": "2026-10-08",
+      "asof": "2026-10-09",
       "name": "3M 短端",
       "source": "yfinance ^IRX"
     },
@@ -203,7 +203,7 @@
     }
   },
   "gld_correlation": {
-    "vs_10y": -0.487,
+    "vs_10y": 0.206,
     "vs_tips_10y": 0.217,
     "regime": "aligned",
     "reason": "相关性 0.217，正相关（可能通胀 regime，两者同向）"
@@ -212,7 +212,7 @@
   "warnings": [
     {
       "level": "bad",
-      "msg": "10Y 5.23% 高压区 (>5%)",
+      "msg": "10Y 5.25% 高压区 (>5%)",
       "key": "10y_high"
     },
     {
@@ -222,7 +222,7 @@
     },
     {
       "level": "bad",
-      "msg": "30Y 5.61% 极端高位 (2007 以来罕见)",
+      "msg": "30Y 5.62% 极端高位 (2007 以来罕见)",
       "key": "30y_extreme"
     },
     {
@@ -252,7 +252,7 @@
     },
     {
       "level": "bad",
-      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.82%) < JGB (2.94%) = JP 投资者会抛售 UST",
+      "msg": "BIS CIP: FX 对冲后 UST 10Y (2.84%) < JGB (2.94%) = JP 投资者会抛售 UST",
       "key": "cip_repatriation_signal"
     },
     {
@@ -287,7 +287,7 @@
     }
   ],
   "macro_context": {
-    "term_spread_30_10_bps": 37.5,
+    "term_spread_30_10_bps": 37.0,
     "spx_trailing_pe": 25.02,
     "spx_eps_yield_pct": 4.0,
     "erp_vs_tips_pct": 1.08,
@@ -320,27 +320,27 @@
     "usdjpy_20d_delta_pct": 2.92,
     "usdjpy_60d_high": 163.86,
     "usdjpy_pullback_from_60d_high_pct": -3.54,
-    "krw_usd": 1340.9,
-    "krw_20d_pct": -0.54,
+    "krw_usd": 1342.5,
+    "krw_20d_pct": -0.42,
     "jgb_10y_pct": 2.94,
     "jgb_asof": "2026-08-01",
-    "ust_jgb_spread_bps": 229.1,
+    "ust_jgb_spread_bps": 231.3,
     "ust_jgb_spread_6m_delta_bps": -59.5,
     "ktb_10y_pct": 4.29,
     "ktb_asof": "2026-08-01",
-    "ust_ktb_spread_bps": 94.1,
-    "hedged_ust_10y_for_jp": 2.82,
+    "ust_ktb_spread_bps": 96.3,
+    "hedged_ust_10y_for_jp": 2.84,
     "hedge_cost_jp": 2.41,
-    "real_yield_gap_us_jp": 1.75,
+    "real_yield_gap_us_jp": 1.77,
     "cpi_jp_yoy_pct": 3.17,
     "spy_ief_60d_corr": 0.47,
     "kbe_spy_ratio": 0.08211,
     "kbe_spy_20d_delta_pct": -8.14,
     "cdx_ig_bps": 82.0,
     "cdx_hy_bps": 309.0,
-    "dxy": 102.21,
-    "dxy_pct_20d": 3.12,
-    "dxy_z_60d": 1.79,
+    "dxy": 102.32,
+    "dxy_pct_20d": 3.23,
+    "dxy_z_60d": 1.9,
     "asia_indices": {
       "N225": {
         "symbol": "^N225",
@@ -387,31 +387,31 @@
       "es_f": {
         "symbol": "ES=F",
         "label": "S&P 500 futures",
-        "price": 7847.0,
-        "chg_pct": 0.39
+        "price": 7833.5,
+        "chg_pct": 0.22
       },
       "nq_f": {
         "symbol": "NQ=F",
         "label": "Nasdaq futures",
-        "price": 31210.5,
-        "chg_pct": 0.78
+        "price": 31141.5,
+        "chg_pct": 0.56
       },
       "cl_f": {
         "symbol": "CL=F",
         "label": "WTI crude futures",
-        "price": 90.59,
-        "chg_pct": -0.98
+        "price": 91.67,
+        "chg_pct": 0.2
       },
       "gc_f": {
         "symbol": "GC=F",
         "label": "Gold futures",
-        "price": 4208.5,
-        "chg_pct": 1.24
+        "price": 4197.6,
+        "chg_pct": 0.98
       }
     },
     "oil_uso": 147.58,
     "oil_pct_20d": -6.82,
-    "oil_wti": 90.59,
+    "oil_wti": 91.64,
     "eem_pct_20d": -1.34,
     "eem_vs_spx_20d": -3.72,
     "volume_confirm": {
@@ -496,18 +496,18 @@
     "stablecoin_total_bn": 257.1,
     "usdt_bn": 184.1,
     "usdc_bn": 73.0,
-    "vix": 15.19,
-    "bbi_score": 0.61,
+    "vix": 15.22,
+    "bbi_score": 0.6,
     "bbi_components": {
-      "vix": -0.47,
+      "vix": -0.46,
       "ig": -1.37,
       "hy": -0.89,
       "erp": 1.92
     }
   },
   "_meta": {
-    "cached_at": "2026-10-09T21:33:20.678158",
-    "age_sec": 1782,
+    "cached_at": "2026-10-09T22:03:26.418656",
+    "age_sec": 1776,
     "stale": true,
     "refreshing": true
   }
