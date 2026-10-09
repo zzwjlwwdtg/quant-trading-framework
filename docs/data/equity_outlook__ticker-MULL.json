@@ -5,37 +5,37 @@
   "analyst_consensus": {
     "n_analysts": 46,
     "recommendation": "strong_buy",
-    "current_price": 1045.53,
+    "current_price": 1035.84,
     "forward_eps": 206.33,
     "trailing_eps": 74.33,
     "eps_growth_pct": 177.6,
-    "forward_pe": 5.07,
-    "trailing_pe": 14.07,
+    "forward_pe": 5.02,
+    "trailing_pe": 13.94,
     "target_mean": 1555.13,
     "target_high": 3000.0,
     "target_low": 361.0,
-    "target_upside_pct": 48.7,
+    "target_upside_pct": 50.1,
     "revenue_growth_pct": 379.3,
     "earnings_growth_pct": 1060.1,
     "next_earnings": "2026-12-24",
-    "implied_pe_hold": 2902.28,
+    "implied_pe_hold": 2875.39,
     "implied_pe_hold_upside": 177.6,
     "peg_fair_price": 36644.64,
     "peg_ratio": 0.03,
-    "hist_pe_median": 55.34,
+    "hist_pe_median": 55.26,
     "hist_pe_p25": 8.31,
-    "hist_pe_p75": 135.06,
-    "hist_pe_n_days": 778,
-    "implied_hist_median": 11418.44,
+    "hist_pe_p75": 134.94,
+    "hist_pe_n_days": 777,
+    "implied_hist_median": 11401.93,
     "implied_hist_p25": 1714.62,
-    "implied_hist_p75": 27867.26,
-    "implied_hist_upside": 992.1,
-    "peer_pe_median": 8.0,
+    "implied_hist_p75": 27842.5,
+    "implied_hist_upside": 1000.7,
+    "peer_pe_median": 7.96,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "005930.KS",
-        "pe": 3.65
+        "pe": 3.64
       },
       {
         "ticker": "000660.KS",
@@ -43,15 +43,15 @@
       },
       {
         "ticker": "285A.T",
-        "pe": 17.74
+        "pe": 17.03
       },
       {
         "ticker": "WDC",
-        "pe": 12.34
+        "pe": 12.27
       }
     ],
-    "implied_peer_median": 1650.66,
-    "implied_peer_upside": 57.9,
+    "implied_peer_median": 1642.41,
+    "implied_peer_upside": 58.6,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -106,7 +106,7 @@
           "growth": 1.8068
         },
         "0y": {
-          "avg": 275010403860.0,
+          "avg": 275009650010.0,
           "low": 212417000000.0,
           "high": 307231000000.0,
           "yearAgoRevenue": 133188000000.0,
@@ -114,10 +114,10 @@
           "growth": 1.0648
         },
         "+1y": {
-          "avg": 319096927750.0,
+          "avg": 319097727750.0,
           "low": 224163000000.0,
           "high": 396620000000.0,
-          "yearAgoRevenue": 275010403860.0,
+          "yearAgoRevenue": 275009650010.0,
           "numberOfAnalysts": 42.0,
           "growth": 0.1603
         }
@@ -199,40 +199,40 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 1555.13,
-        "gap_pct": 48.7
+        "gap_pct": 50.1
       },
       {
         "key": "pe_hold",
         "label": "前瞻 EPS × 当前估值",
-        "implied_price": 2902.28,
+        "implied_price": 2875.39,
         "gap_pct": 177.6
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 1650.66,
-        "gap_pct": 57.9
+        "implied_price": 1642.41,
+        "gap_pct": 58.6
       }
     ],
-    "median_gap_pct": 57.9,
+    "median_gap_pct": 58.6,
     "revision_signal": "upward",
-    "required_eps_growth_pct": -74.6,
+    "required_eps_growth_pct": -74.8,
     "consensus_eps_growth_pct": 177.6,
-    "growth_cushion_pct": 252.2,
+    "growth_cushion_pct": 252.4,
     "rationale": [
-      "多口径隐含价中位数高于现价 57.9%",
+      "多口径隐含价中位数高于现价 58.6%",
       "近 30 天 EPS 共识上修",
-      "历史 PE 口径要求 EPS 增长 -74.6%，共识为 +177.6%"
+      "历史 PE 口径要求 EPS 增长 -74.8%，共识为 +177.6%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-10-08T18:33:25.167412+00:00",
+  "fetched_at": "2026-10-09T01:03:24.727994+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-10-09T03:33:25.168411",
-    "age_sec": 23396,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T10:03:24.730993",
+    "age_sec": 1797,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "MULL",
   "is_proxy": true
