@@ -1,10 +1,133 @@
 {
-  "error": "codex codex_error: exit=1 stderr=2026-09-09T03:03:05.008405Z ERROR codex_models_manager::cache: failed to load models cache: unknown variant `max`, expected one of `none`, `minimal`, `low`, `medium`, `high`, `xhigh` at line 29 column 25\n2026-09-09T03:03:05.242624Z ERROR codex_models_manager::manager: failed to refresh available models: stream disconnected before completion: failed to decode models response: unknown variant `max`, expected one of `none`, `minimal`, `low`, `medium`, `high`, `xhigh` at line 1 column 47164; body: {",
   "ticker": "LITE",
+  "sector": "光通信/光模块",
+  "business": "Lumentum 设计制造光学与光子产品，服务云数据中心、电信网络和3D感应应用",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "代工部分光电芯片与激光器驱动IC",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "II-VI/Coherent",
+      "ticker": "COHR",
+      "note": "提供部分化合物半导体衬底与光学材料",
+      "weight": 60,
+      "confidence": "medium"
+    },
+    {
+      "name": "住友电工",
+      "ticker": "5802.T",
+      "note": "提供光纤与光学元件原材料",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "信越化学",
+      "ticker": "4063.T",
+      "note": "供应InP/GaAs等化合物半导体晶圆",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "Applied Materials",
+      "ticker": "AMAT",
+      "note": "提供晶圆制造与薄膜沉积设备",
+      "weight": 50,
+      "confidence": "medium"
+    },
+    {
+      "name": "MACOM Technology",
+      "ticker": "MTSI",
+      "note": "提供部分高速射频/光驱动芯片",
+      "weight": 45,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Ciena",
+      "ticker": "CIEN",
+      "note": "采购相干光模块及可调激光器用于骨干网设备",
+      "weight": 85,
+      "confidence": "high"
+    },
+    {
+      "name": "Cisco Systems",
+      "ticker": "CSCO",
+      "note": "采购数据中心光模块与电信光器件",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "诺基亚",
+      "ticker": "NOK",
+      "note": "采购电信光组件用于路由器与传输设备",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "采购VCSEL激光器用于FaceID/LiDAR 3D感应",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "Google/Alphabet",
+      "ticker": "GOOGL",
+      "note": "数据中心800G/1.6T高速光模块客户",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "Azure数据中心高速光互联采购",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Coherent",
+      "ticker": "COHR",
+      "note": "光通信模块与激光系统全面竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Fabrinet",
+      "ticker": "FN",
+      "note": "光学代工与模块组装竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "InnoLight/中际旭创",
+      "ticker": "300308.SZ",
+      "note": "数据中心800G/1.6T光模块主要竞争对手",
+      "confidence": "high"
+    },
+    {
+      "name": "Marvell Technology",
+      "ticker": "MRVL",
+      "note": "相干DSP及光学互联方案竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "新易盛",
+      "ticker": "300502.SZ",
+      "note": "高速光模块出货竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-09T03:33:42.934139+00:00",
+  "source": "claude",
   "_meta": {
-    "cached_at": "2026-09-09T12:03:29.661921",
-    "age_sec": 2593793,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T12:33:42.934140",
+    "age_sec": 1779,
+    "stale": false,
+    "refreshing": false
   }
 }

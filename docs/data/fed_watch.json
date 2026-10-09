@@ -5,76 +5,81 @@
       "date": "2026-10-28",
       "days_until": 19,
       "probabilities": {
-        "hold": 81,
+        "hold": 82,
         "hike_25": 18,
-        "cut_25": 1
+        "cut_25": 0
       },
       "most_likely": "hold",
-      "consensus_direction": "neutral_hawkish_lean"
+      "consensus_direction": "hawkish_lean_hold"
     },
     {
       "date": "2026-12-09",
       "days_until": 61,
       "probabilities": {
-        "hike_25": 65,
-        "hike_50": 19,
-        "hold": 15,
-        "cut_25": 1
+        "hold": 30,
+        "hike_25": 68,
+        "cut_25": 2
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-28",
-      "days_until": 111,
+      "date": "2027-01-27",
+      "days_until": 110,
       "probabilities": {
+        "hold": 25,
+        "hike_25": 70,
+        "cut_25": 5
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 159,
+      "probabilities": {
+        "hold": 30,
         "hike_25": 60,
-        "hike_50": 25,
-        "hold": 14,
-        "cut_25": 1
+        "hike_50": 10
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
-  "implied_terminal_date": "2027-Q1",
+  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_date": "2027-Q3/Q4",
   "data_snapshot_date": "2026-10-08",
-  "recent_event_impact": "10/2 September NFP +29K (far below ~75K consensus) → October hike odds crashed from ~70% to 17-18%; December cumulative hike remains ~84% on sticky inflation + hawkish Sept 15-16 FOMC minutes signaling 'one more hike appropriate by year-end'. Fed Chair Warsh's hawkish stance anchors path.",
-  "commentary": "Market (snapshot 2026-10-08) prices Oct 28 as near-certain hold (81%) after soft Sep NFP (+29K released 10/2 vs ~75K consensus) but keeps Dec 9 (SEP/dot-plot meeting) cumulative hike probability elevated at ~84% as Sept 15-16 FOMC minutes revealed most participants back another 25bp hike by year-end on inflation stickiness. Regime is hawkish-pause into year-end hike, NOT a cutting cycle — terminal rate implied at ~4.00-4.25% by Q1 2027.",
+  "recent_event_impact": "10/2 NFP +29K vs 90K consensus (U-rate 4.2%, wages 3.0% YoY) pulled Oct hike odds from ~70% to ~18%; 10/7 FOMC Minutes revealed most officials saw more 2026 hikes likely → Dec hike odds rebounded from 21.6% to 67.9% in 2 days. CPI release 10/14 pending.",
+  "commentary": "Market as of 10/8 prices Oct 28 as near-certain hold (82%) after weak Sep NFP, but Dec 9 reclaims hike bias (~68%) following hawkish Sep FOMC Minutes. Fed under Chair Warsh is in active hiking cycle (hiked to 3.75-4.00% on 9/16 at CPI 3.4%); futures imply ~4.1% by Jan and ~4.7% by Oct 2027. CPI release 10/14 is the next major catalyst and could sharply reprice December.",
   "sources": [
     {
-      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
-      "type": "cme_fedwatch"
-    },
-    {
-      "url": "https://www.cnbc.com/2026/10/02/fed-rate-hike-odds-decline-after-september-jobs-report.html",
-      "type": "news_analysis"
-    },
-    {
-      "url": "https://federalreserve.gov/monetarypolicy/fomcminutes20260916.htm",
-      "type": "fed_official"
+      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
+      "type": "cme_fedwatch_mirror"
     },
     {
       "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
-      "type": "prediction_market_aggregator"
+      "type": "aggregator"
     },
     {
-      "url": "https://kalshi.com/markets/kxfeddecision/fed-meeting/kxfeddecision-26dec",
-      "type": "kalshi"
+      "url": "https://financefeeds.com/fed-minutes-show-most-officials-want-another-hike-but-october-odds-fell-to-18",
+      "type": "news_commentary"
     },
     {
-      "url": "https://www.financecalendar.com/event/fomc-rate-decision-december-2026/",
-      "type": "fomc_schedule"
+      "url": "https://rateprobability.com/fed",
+      "type": "cme_fedwatch_mirror"
+    },
+    {
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch"
     }
   ],
-  "confidence": "high",
+  "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-08T19:04:51+00:00",
+  "fetched_at": "2026-10-09T03:34:43+00:00",
   "_meta": {
-    "cached_at": "2026-10-09T04:04:51.579464",
-    "age_sec": 30491,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T12:34:43.063356",
+    "age_sec": 1700,
+    "stale": false,
+    "refreshing": false
   }
 }
