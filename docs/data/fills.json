@@ -1,6 +1,30 @@
 {
   "rows": [
     {
+      "ts": "2026-10-09T12:33:13.096873+00:00",
+      "order_id": "468307",
+      "ticker": "SOXL",
+      "side": "BUY",
+      "qty": 109.0,
+      "price": 139.73,
+      "amount": 15230.57,
+      "fee": null,
+      "status": "FILLED_ALL",
+      "partial": false
+    },
+    {
+      "ts": "2026-10-09T12:33:13.037508+00:00",
+      "order_id": "468306",
+      "ticker": "SHY",
+      "side": "SELL",
+      "qty": 187.0,
+      "price": 81.205,
+      "amount": 15185.33,
+      "fee": null,
+      "status": "FILLED_ALL",
+      "partial": false
+    },
+    {
       "ts": "2026-10-08T19:45:19.936242+00:00",
       "order_id": "468180",
       "ticker": "LITE",
@@ -455,51 +479,27 @@
       "fee": null,
       "status": "FILLED_ALL",
       "partial": false
-    },
-    {
-      "ts": "2026-09-02T19:48:51.208796+00:00",
-      "order_id": "450875",
-      "ticker": "NBIS",
-      "side": "BUY",
-      "qty": 24.0,
-      "price": 200.9,
-      "amount": 4821.6,
-      "fee": null,
-      "status": "FILLED_ALL",
-      "partial": false
-    },
-    {
-      "ts": "2026-09-02T13:23:22.241608+00:00",
-      "order_id": "450698",
-      "ticker": "CBRS",
-      "side": "SELL",
-      "qty": 40.0,
-      "price": 171.11,
-      "amount": 6844.4,
-      "fee": null,
-      "status": "FILLED_ALL",
-      "partial": false
     }
   ],
   "flow_30d": {
-    "gross_out": 737294.23,
-    "gross_in": 734292.55,
-    "net_flow": -3001.68,
-    "n_buys": 17,
+    "gross_out": 752524.8,
+    "gross_in": 747589.7,
+    "net_flow": -4935.1,
+    "n_buys": 18,
     "n_sells": 16,
-    "n_fills_total": 33,
-    "since": "2026-09-09T12:03:20.429859+00:00"
+    "n_fills_total": 34,
+    "since": "2026-09-09T12:33:19.719214+00:00"
   },
   "account": {
     "cash": 131.515,
-    "nav": 1270701.085,
-    "market_val": 1270569.57,
+    "nav": 1269893.843,
+    "market_val": 1269762.328,
     "cash_pct": 0.01
   },
   "note": "券商成交记录 (未成交/撤单不列); 手续费: 券商未提供时显示'未计入'",
   "_meta": {
-    "cached_at": "2026-10-09T21:03:20.446900",
-    "age_sec": 1799,
+    "cached_at": "2026-10-09T21:33:19.734280",
+    "age_sec": 1800,
     "stale": true,
     "refreshing": true
   }

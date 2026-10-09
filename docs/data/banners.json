@@ -8,18 +8,34 @@
     "magnitude": "small",
     "score": 0,
     "event_counts": {
-      "GEOPOLITICAL": 1,
-      "MEDIA_ATTACK": 3,
-      "MARKET": 1
+      "NOISE": 1,
+      "GEOPOLITICAL": 5,
+      "DOMESTIC_POLICY": 3,
+      "MEDIA_ATTACK": 2
     },
-    "breaking": [],
+    "breaking": [
+      {
+        "event_type": "GEOPOLITICAL",
+        "direction": "bullish",
+        "magnitude": "medium",
+        "confidence": 7,
+        "tickers": [
+          "SPY",
+          "QQQ",
+          "GLD"
+        ],
+        "preview": "We are having productive discussions with the Islamic Republic of Iran. I want to make it clear to everybody that, while",
+        "verbatim": "we will not be attacking Iran at any time prior to the Midterm Elections... IRAN WILL NOT HAVE A NUCLEAR WEAPON!",
+        "post_time": "2026-10-08T16:17:11.021Z"
+      }
+    ],
     "summary": {
-      "text": "白宫重定义AI术语+两条抨击民主党候选人；偏中性略避险，科技情绪扰动。",
-      "state": "cached",
+      "text": null,
+      "state": "generating",
       "post_ids": [
-        "117406176604364910",
-        "117403140590234301",
-        "117403103962951852"
+        "117408959105269388",
+        "117408281179466427",
+        "117408228489272278"
       ]
     }
   },
