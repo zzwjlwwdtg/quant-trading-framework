@@ -5,16 +5,16 @@
   "analyst_consensus": {
     "n_analysts": 11,
     "recommendation": "strong_buy",
-    "current_price": 167.92,
+    "current_price": 164.58,
     "forward_eps": 1.27,
     "trailing_eps": -5.14,
     "eps_growth_pct": null,
-    "forward_pe": 131.84,
+    "forward_pe": 129.22,
     "trailing_pe": null,
     "target_mean": 291.64,
     "target_high": 330.0,
     "target_low": 209.0,
-    "target_upside_pct": 73.7,
+    "target_upside_pct": 77.2,
     "revenue_growth_pct": 74.3,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-11",
@@ -30,28 +30,28 @@
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 31.29,
+    "peer_pe_median": 31.21,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "NVDA",
-        "pe": 14.48
+        "pe": 14.51
       },
       {
         "ticker": "AMD",
-        "pe": 39.48
+        "pe": 39.1
       },
       {
         "ticker": "GOOGL",
-        "pe": 23.11
+        "pe": 23.33
       },
       {
         "ticker": "INTC",
-        "pe": 51.41
+        "pe": 50.97
       }
     ],
-    "implied_peer_median": 39.85,
-    "implied_peer_upside": -76.3,
+    "implied_peer_median": 39.75,
+    "implied_peer_upside": -75.8,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -187,33 +187,33 @@
         "key": "analyst_target",
         "label": "分析师目标均值",
         "implied_price": 291.64,
-        "gap_pct": 73.7
+        "gap_pct": 77.2
       },
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 39.85,
-        "gap_pct": -76.3
+        "implied_price": 39.75,
+        "gap_pct": -75.8
       }
     ],
-    "median_gap_pct": -1.3,
+    "median_gap_pct": 0.7,
     "revision_signal": "upward",
     "required_eps_growth_pct": null,
     "consensus_eps_growth_pct": null,
     "growth_cushion_pct": null,
     "rationale": [
-      "多口径隐含价中位数低于现价 1.3%",
+      "多口径隐含价中位数高于现价 0.7%",
       "近 30 天 EPS 共识上修"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-10-09T07:33:25.699746+00:00",
+  "fetched_at": "2026-10-09T14:03:24.357839+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-10-09T16:33:25.699746",
-    "age_sec": 23397,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-09T23:03:24.358898",
+    "age_sec": 1799,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "CBRS",
   "is_proxy": false
