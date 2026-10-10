@@ -3,82 +3,74 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 18,
+      "days_until": 17,
       "probabilities": {
-        "hold": 80,
-        "hike_25": 18,
-        "cut_25": 2
+        "hold": 81,
+        "hike_25": 17,
+        "hike_50": 1,
+        "cut_25": 1
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     },
     {
-      "date": "2026-12-10",
-      "days_until": 61,
+      "date": "2026-12-09",
+      "days_until": 59,
       "probabilities": {
-        "hold": 25,
-        "hike_25": 65,
-        "hike_50": 5,
-        "cut_25": 5
+        "hold": 13,
+        "hike_25": 57,
+        "hike_50": 30
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
       "date": "2027-01-28",
-      "days_until": 110,
+      "days_until": 109,
       "probabilities": {
-        "hold": 55,
-        "hike_25": 33,
-        "hike_50": 9,
-        "cut_25": 3
+        "hold": 9,
+        "hike_25": 46,
+        "hike_50": 35,
+        "hike_75": 10
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
-    },
-    {
-      "date": "2027-03-17",
-      "days_until": 158,
-      "probabilities": {
-        "hold": 91,
-        "hike_25": 4,
-        "hike_50": 4,
-        "cut_25": 1
-      },
-      "most_likely": "hold",
-      "consensus_direction": "neutral"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.25-4.50",
   "implied_terminal_date": "2027-Q1",
-  "data_snapshot_date": "2026-10-08",
-  "recent_event_impact": "9/2026 NFP +29K (released 2026-10-02, sharply below expectations) softened near-term hike odds for Oct 28 (~18% hike vs ~30% pre-NFP); Sept CPI releases 2026-10-14 (not yet reflected). Fed hiked 25bps to 3.75-4.00% at Sept FOMC (first hike since 2023) under new Chair Kevin Warsh with hawkish rhetoric.",
-  "commentary": "Market base case: Oct hold (~80%) given weak Sept NFP, but hawkish Warsh Fed + Sept hike means Dec/Jan still skew hawkish with cumulative ~1 additional hike expected by year-end to 4.00-4.25%. Terminal pricing ~4.25-4.50% by Q1 2027. Oct 14 CPI print is the next catalyst and could materially re-rate Oct meeting odds.",
+  "data_snapshot_date": "2026-10-10",
+  "recent_event_impact": "Sep NFP +29K (far below consensus) released early Oct pushed Oct 28 hike odds down from ~40% to ~17-18%; FOMC Oct 7 minutes showed 'most members' still expect another hike by year-end, keeping Dec hike odds anchored at ~87% cumulative",
+  "commentary": "Market pricing (CME + Kalshi + Polymarket consensus Oct 10) sees Fed holding at 3.75-4.00 in October after Sep's weak +29K payroll print, then delivering a 25bp hike at Dec 9 meeting (57% base case, 30% probability of cumulative +50bps). Chair Warsh's hawkish FOMC under Trump admin + Oct 7 minutes language ('another increase likely appropriate by year end') keep the hike-skew intact despite soft labor data; futures price fed funds at ~4.1% by Jan 2027.",
   "sources": [
-    {
-      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
-      "type": "cme_fedwatch_mirror"
-    },
-    {
-      "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
-      "type": "cme_fedwatch_mirror"
-    },
-    {
-      "url": "https://rateprobability.com/fed",
-      "type": "cme_fedwatch_mirror"
-    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
+    },
+    {
+      "url": "https://admiralmarkets.com/analytics/traders-blog/fed-rate-decision-october-2026",
+      "type": "analyst_summary"
+    },
+    {
+      "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
+      "type": "prediction_market_aggregator"
+    },
+    {
+      "url": "https://centralbank.watch/federal-reserve/",
+      "type": "rate_probability_tracker"
+    },
+    {
+      "url": "https://kalshi.com/markets/kxfeddecision/fed-meeting/kxfeddecision-26oct",
+      "type": "prediction_market"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-10T05:34:31+00:00",
+  "fetched_at": "2026-10-10T15:34:56+00:00",
   "_meta": {
-    "cached_at": "2026-10-10T14:34:31.882526",
-    "age_sec": 35912,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-11T00:34:56.829341",
+    "age_sec": 7086,
+    "stale": false,
+    "refreshing": false
   }
 }
