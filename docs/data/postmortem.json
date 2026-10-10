@@ -1,6 +1,166 @@
 {
-  "generated_at": "2026-10-09T03:18:41.265668+00:00",
+  "generated_at": "2026-10-10T03:24:21.048521+00:00",
   "reviews": [
+    {
+      "order_id": "468552",
+      "ticker": "SOXL",
+      "qty": 27.0,
+      "price": 148.79,
+      "ts": "2026-10-09T12:35:27.869297+00:00",
+      "tag": "[TAKE-PROFIT tp15 (+26.8% from $112.40)]",
+      "nature": "规则止盈",
+      "provider": "Claude",
+      "status": "ok",
+      "ok": true,
+      "analysis": {
+        "context": {
+          "technical": "SOXL 日线参考价 $142.52 (-10.31% 暴跌后), RSI 67.3 中性, MA 多排 (MA20=135.40 > MA50=127.75), PSAR 多头持续, ADX 33.9 强趋势, 量比 1.70 放量; 盘前反弹 +4.44%~+4.86% 至 $148-149, 实时价 $148.78 相对日线参考 gap +4.4%, 距 52 周高 -52.78%, 15m RSI=19 极度超卖。",
+          "news": "CPI Release T-4 (2026-10-13) 临近; OpenAI 营收低于预期拖累芯片股, SOXX/SMH put 机构看空定位 (score 63/62 oi_confirmed); Apple iPhone 18 Pro 组件砍单拖累半导体; Trump 表态不在中期选举前打伊朗, 地缘风险缓和推动夜盘情绪修复。"
+        },
+        "reasons": [
+          {
+            "type": "技术面",
+            "reason": "触发规则止盈 tp15, 从成本 $112.40 到 $148.79 累计 +26.8%, 规则机械执行",
+            "evidence": "[TAKE-PROFIT tp15 (+26.8% from $112.40)] SELL 27 US.SOXL @ 148.03"
+          },
+          {
+            "type": "技术面",
+            "reason": "3x 杠杆 ETF 前一日暴跌 -10.31% 进入 crash zone, 盘前 +4.44% 反弹有 dead-cat 嫌疑, 落袋高位反弹收益",
+            "evidence": "claude-gate: '3x leveraged ETF just dropped -10.31% (crash zone) ... Pre-market +4.44% bounce is dead-cat risk, not confirmation'"
+          },
+          {
+            "type": "技术面",
+            "reason": "实时价 $148.78 vs 日线参考 $142.52 gap +4.4%, 盘前已跳空高开, 止盈价位接近期权墙阻力 SMH C$625 ≈ SOXL $155 一线",
+            "evidence": "[trader] US.SOXL realtime $148.78 vs reference $142.52 (gap +4.4%); SMH Call $625 => SOXL≈$155.00 (+8.8%) vol 3,804"
+          },
+          {
+            "type": "消息面",
+            "reason": "SOXX/SMH 机构 put 定位空头, 期权流分歧 69/100, 半导体板块无一致多头共识",
+            "evidence": "'institutional bearish positioning on SOXX/SMH puts (score 63/62 oi_confirmed)'; options-flow SOXL:mixed 69, KLAC:bearish 55, AMAT:bearish 58"
+          },
+          {
+            "type": "消息面",
+            "reason": "CPI T-4 关键宏观事件临近, 杠杆 ETF 持仓过关前先了结符合风控",
+            "evidence": "'CPI release T-4'; 事件: CPI Release (2026-10-13)（4天后）"
+          }
+        ],
+        "limitations": [
+          {
+            "limitation": "规则机械: tp15 固定百分比止盈不看当下动能质量",
+            "why": "+26.8% 触发即卖, 没结合 MA 多排/ADX 33.9 强趋势/PSAR 多头持续等日线仍健康的信号, 若后续继续冲高则错过利润"
+          },
+          {
+            "limitation": "卖在盘前 gap 高点而非 RTH 价格发现之后",
+            "why": "盘前流动性稀薄, +4.4% gap 可能是情绪定价; AI Brief 也建议'等开盘后 15min 高点确立再进'/判断, 系统却在开盘前 RTHx 已下单"
+          },
+          {
+            "limitation": "只用成本锚定 (+26.8% from $112.40) 判定止盈, 没评估宏观 regime 和事件日历",
+            "why": "当前 REGIME=neutral_chop 中性震荡 + CPI T-4 + Trump 推特地缘缓和都未进入止盈决策, 规则对信号强弱和背景一视同仁"
+          }
+        ],
+        "hindsight": {
+          "summary": "D0 收盘 $139.76 较卖出价 $148.79 回落约 -6.1%, 盘前反弹确实未在 RTH 延续, dead-cat 判断事后看成立。",
+          "verdict": "合理"
+        }
+      },
+      "material": {
+        "excerpt_lines": 100,
+        "news_items": 17,
+        "after_closes": [
+          {
+            "date": "2026-10-08",
+            "close": 142.52,
+            "rel": "D-1"
+          },
+          {
+            "date": "2026-10-09",
+            "close": 139.76,
+            "rel": "D0"
+          }
+        ]
+      },
+      "reviewed_at": "2026-10-10T03:24:21.044522+00:00"
+    },
+    {
+      "order_id": "468658",
+      "ticker": "MULL",
+      "qty": 317.0,
+      "price": 23.45,
+      "ts": "2026-10-09T15:04:25.125162+00:00",
+      "tag": "[SOFTWARE-STOP trigger $23.36 current $23.32]",
+      "nature": "强制调仓·机械止损",
+      "provider": "Claude",
+      "status": "ok",
+      "ok": true,
+      "analysis": {
+        "context": {
+          "technical": "MULL 卖出前日线 RSI 63.5→64.2 中性偏多，MA 多排(MA20=24.04>MA50=21.64)但趋势标 down，MACD 零轴上但 ★死叉, ADX 22 弱趋势; 15min 层面无短线信号, 日内从盘前 +3.73% ($24.77) 回落到卖出区间 $23.32-$23.50, 跌破 software stop $23.36。",
+          "news": "无 MULL/MU 当日利空新闻, Micron 关联消息反而偏多 (OpenAI $70B 营收目标、$3000 目标价、AI trade jitters ease); 宏观面 CPI 10-13 (3-4 天后), VIX 15.17 偏低, F&G 38-42 恐惧, SPY -0.42%, REGIME=neutral_chop。"
+        },
+        "reasons": [
+          {
+            "type": "技术面",
+            "reason": "触发 SOFTWARE-STOP 机械止损规则",
+            "evidence": "[SOFTWARE-STOP trigger $23.36 current $23.32]; [trader] US.MULL realtime $23.50 vs reference $23.32 (gap +0.8%)"
+          },
+          {
+            "type": "技术面",
+            "reason": "期权墙 Max Pain 向下磁吸, C/P ratio 极端 call-heavy 常被视作反向指标",
+            "evidence": "MULL GEX ↓pin C/P=11.99 加权磁吸=-7.87% (strong); MaxP MU $1050.0 => MULL≈$24.53; Put MU $880.0 => MULL≈$16.69 vol 2,288"
+          },
+          {
+            "type": "技术面",
+            "reason": "日线虽均线多排但趋势标注 down + MACD 死叉, 动能转弱",
+            "evidence": "【MULL】价格:23.88 RSI:63.5 量比:1.02 趋势:down; MACD DIF +1.06 / DEA +1.14 ★死叉; ADX 22.4 弱趋势"
+          },
+          {
+            "type": "技术面",
+            "reason": "盘前预演已明确标注 MULL 不碰, 风险大",
+            "evidence": "DRAM/MULL 不碰——DRAM PSAR 刚转空 + MACD 死叉, MULL 期权墙 Max Pain $22 向下磁吸, 追涨风险大 [依据: ③⑥⑦]"
+          },
+          {
+            "type": "技术面",
+            "reason": "REGIME=neutral_chop 中性震荡, VIX 偏低自满, 信号不足以持有高波动 2x 杠杆标的",
+            "evidence": "今日 REGIME = neutral_chop (中性震荡 (提高加仓门槛)); VIX 15.16 偏低, 市场自满情绪需警惕; MULL $23.88 (-9.65%) ⚠⚠ 暴跌(-5%以上) 距52周高点 -45.14%; 信号:⬜持仓观望 置信度:1/5"
+          }
+        ],
+        "limitations": [
+          {
+            "limitation": "机械止损在震荡市容易被噪音触发",
+            "why": "REGIME=neutral_chop + ADX 22 弱趋势环境下价格来回摆动, $23.36 止损位距参考价仅 $0.12 (-0.5%), 盘前已反弹 +3.73% 却被盘中回落的小幅跌破立刻斩掉, 可能是典型的 'stop hunt'"
+          },
+          {
+            "limitation": "消息面证据严重缺失且方向与卖出相反",
+            "why": "当时新闻全部围绕 MU/Micron 偏多 (OpenAI $70B、$3000 目标价、AI 回暖), 没有任何 MULL/MU 具体利空, 止损完全由技术/价格驱动, 可能忽略了基本面支撑"
+          },
+          {
+            "limitation": "期权墙基于 MU proxy 换算 (2.0x), 存在 ETF 跟踪误差和 proxy 失真",
+            "why": "MULL 作为 2x 杠杆 ETF 并非直接 MU, 用 MU 期权链换算的磁吸位和 Max Pain 对 MULL 的指示强度有打折, 用作唯一反向论据可靠性不足"
+          }
+        ],
+        "hindsight": {
+          "summary": "D-1 收 $23.88, D0 收 $23.51, 卖出价 $23.45 接近当日收盘, 短期未出现明显反弹也未深跌。",
+          "verdict": "难判断"
+        }
+      },
+      "material": {
+        "excerpt_lines": 114,
+        "news_items": 21,
+        "after_closes": [
+          {
+            "date": "2026-10-08",
+            "close": 23.88,
+            "rel": "D-1"
+          },
+          {
+            "date": "2026-10-09",
+            "close": 23.51,
+            "rel": "D0"
+          }
+        ]
+      },
+      "reviewed_at": "2026-10-10T03:23:43.041674+00:00"
+    },
     {
       "order_id": "468109",
       "ticker": "NBIS",
@@ -409,6 +569,19 @@
   ],
   "mechanical_cash_sells": [
     {
+      "order_id": "468306",
+      "ticker": "SHY",
+      "qty": 187.0,
+      "price": 81.205,
+      "ts": "2026-10-08T19:46:27.597885+00:00",
+      "tag": "[REBALANCE CASH fund BUY US.SOXL x109]",
+      "nature": "强制调仓·现金纪律",
+      "provider": "rule",
+      "ok": true,
+      "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.SOXL x109)",
+      "reviewed_at": "2026-10-10T03:24:21.045523+00:00"
+    },
+    {
       "order_id": "468181",
       "ticker": "SHY",
       "qty": 28.0,
@@ -419,7 +592,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.NVDA x143)",
-      "reviewed_at": "2026-10-09T03:18:03.697872+00:00"
+      "reviewed_at": "2026-10-10T03:24:21.046523+00:00"
     },
     {
       "order_id": "467747",
@@ -432,7 +605,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.DRAM x282)",
-      "reviewed_at": "2026-10-09T03:18:41.263668+00:00"
+      "reviewed_at": "2026-10-10T03:24:21.046523+00:00"
     },
     {
       "order_id": "467749",
@@ -445,7 +618,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "规则 A: 买入前现金不足, 先卖 SHY 凑钱 (fund BUY US.MULL x317)",
-      "reviewed_at": "2026-10-09T03:18:41.264669+00:00"
+      "reviewed_at": "2026-10-10T03:24:21.046523+00:00"
     },
     {
       "order_id": "467659",
@@ -458,7 +631,7 @@
       "provider": "rule",
       "ok": true,
       "reason": "现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)",
-      "reviewed_at": "2026-10-09T03:18:41.264669+00:00"
+      "reviewed_at": "2026-10-10T03:24:21.047521+00:00"
     },
     {
       "order_id": "467620",
@@ -471,11 +644,11 @@
       "provider": "rule",
       "ok": true,
       "reason": "现金为负, 规则 B 卖 SHY/IEI 把现金补回 ≥0 (不借保证金)",
-      "reviewed_at": "2026-10-09T03:18:41.264669+00:00"
+      "reviewed_at": "2026-10-10T03:24:21.047521+00:00"
     }
   ],
   "last_run": {
-    "new": 1,
+    "new": 2,
     "failed": 0
   },
   "exists": true
