@@ -4,83 +4,93 @@
   "direction": "上修",
   "revision_type": "upward",
   "magnitude": "大",
-  "last_update": "2026-08-07",
+  "last_update": "2026-06-18",
   "next_earnings": "2026-11-06",
-  "guidance_note": "2027年3月期通期予想は売上高1兆7,550億円（+48.4% YoY）、営業利益4,320億円（+128.9% YoY）、純利益3,260億円（+107.4% YoY）、EPS 196.88円。",
-  "revision_reason": "通期予想は売上高1兆4,620億円→1兆7,550億円（+20.0%）、営業利益3,100億円→4,320億円（+39.4%）、純利益2,290億円→3,260億円（+42.4%）、EPS 138.31円→196.88円へ上方修正。理由はデータセンター向け需要拡大を背景に光コンポーネント製品が伸長し、上期修正の反映に加えて需要継続を見込むため。",
-  "market_reaction": "不明",
+  "guidance_note": "FY2027/3通期予想：売上高 1兆7,550億円、営業利益 4,320億円、純利益 3,260億円 (2026-08-07 Q1で営業益1,114億円を計上し、ガイダンス据え置き・進捗順調)",
+  "revision_reason": "AI/データセンター向け光部品の想定外受注とハイパースケーラー発注増。純利予想 2,290億円 → 3,260億円 (+42%)、営業益 3,100億円 → 4,320億円 (+45%)、売上 1兆4,620億円 → 1兆7,550億円。わずか1ヶ月後の異例の再上方修正",
+  "market_reaction": "高",
   "confidence": "medium",
   "source_verified": true,
-  "source_status": "codex_cli_websearch",
-  "generated_at": "2026-10-07T10:33:22.029371+00:00",
+  "source_status": "claude_cli_websearch",
+  "generated_at": "2026-10-10T11:33:23.798006+00:00",
   "sources": [
     {
-      "url": "https://www.fujikura.co.jp/ir/ir-calendar/",
-      "type": "IR",
-      "title": "IRカレンダー"
+      "url": "https://www.nikkei.com/article/DGXZQOUB188830Y6A610C2000000/",
+      "type": "news",
+      "title": "フジクラ一転最高益 27年3月期、想定外の受注獲得で上方修正"
+    },
+    {
+      "url": "https://kabutan.jp/news/?b=k202606180003",
+      "type": "news",
+      "title": "フジクラ【5803】、今期経常を45％上方修正・最高益予想を上乗せ"
+    },
+    {
+      "url": "https://www.nikkei.com/nkd/disclosure/tdnr/20260514532598/",
+      "type": "TDnet",
+      "title": "フジクラ[5803]：2026年３月期 決算短信〔日本基準〕（連結）"
     }
   ],
-  "source_via": "codex_cli_websearch",
+  "source_via": "claude_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 13,
     "recommendation": "buy",
-    "current_price": 5700.0,
+    "current_price": 5413.0,
     "forward_eps": 302.84,
-    "trailing_eps": 99.86,
-    "eps_growth_pct": 203.3,
-    "forward_pe": 18.82,
-    "trailing_pe": 57.08,
+    "trailing_eps": 94.93,
+    "eps_growth_pct": 219.0,
+    "forward_pe": 17.87,
+    "trailing_pe": 57.02,
     "target_mean": 7386.15,
     "target_high": 11700.0,
     "target_low": 3500.0,
-    "target_upside_pct": 29.6,
+    "target_upside_pct": 36.5,
     "revenue_growth_pct": null,
     "earnings_growth_pct": null,
     "next_earnings": "2026-11-10",
-    "implied_pe_hold": 17286.08,
-    "implied_pe_hold_upside": 203.3,
-    "peg_fair_price": 61567.37,
-    "peg_ratio": 0.09,
-    "hist_pe_median": 23.34,
+    "implied_pe_hold": 17268.23,
+    "implied_pe_hold_upside": 219.0,
+    "peg_fair_price": 66321.96,
+    "peg_ratio": 0.08,
+    "hist_pe_median": 23.42,
     "hist_pe_p25": 11.44,
-    "hist_pe_p75": 48.63,
-    "hist_pe_n_days": 860,
-    "implied_hist_median": 7068.29,
+    "hist_pe_p75": 48.75,
+    "hist_pe_n_days": 862,
+    "implied_hist_median": 7092.51,
     "implied_hist_p25": 3464.49,
-    "implied_hist_p75": 14727.11,
-    "implied_hist_upside": 24.0,
-    "peer_pe_median": 14.99,
+    "implied_hist_p75": 14763.45,
+    "implied_hist_upside": 31.0,
+    "peer_pe_median": 13.81,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "5802.T",
-        "pe": 11.23
+        "pe": 10.68
       },
       {
         "ticker": "5801.T",
-        "pe": 14.99
+        "pe": 13.81
       },
       {
         "ticker": "GLW",
-        "pe": 38.68
+        "pe": 35.84
       },
       {
         "ticker": "PRY.MI",
-        "pe": 20.69
+        "pe": 20.06
       },
       {
         "ticker": "6869.HK",
-        "pe": 11.85
+        "pe": 11.1
       }
     ],
-    "implied_peer_median": 4539.57,
-    "implied_peer_upside": -20.4,
+    "implied_peer_median": 4182.22,
+    "implied_peer_upside": -22.7,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-10-07T19:34:31.460520",
-    "age_sec": 262732,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-10T20:34:46.621707",
+    "age_sec": 7116,
+    "stale": false,
+    "refreshing": false
   }
 }

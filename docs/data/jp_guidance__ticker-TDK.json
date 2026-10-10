@@ -1,79 +1,86 @@
 {
   "ticker": "TDK",
   "source_stock": "6762.T",
-  "direction": "待核验",
-  "revision_type": "unverified",
+  "direction": "据え置き",
+  "revision_type": "maintained",
   "magnitude": "不明",
-  "last_update": null,
+  "last_update": "2026-07-31",
   "next_earnings": "2026-10-30",
-  "guidance_note": "AI 返回 据え置き 但未附可核验来源，已拒收",
-  "revision_reason": null,
-  "market_reaction": "不明",
-  "confidence": "unverified",
+  "guidance_note": "通期（FY March 2027）売上 25,800億円 +3.0% YoY、営業利益 2,950億円 +8.3%、純利益 2,250億円 +15.0%、配当 40円/株",
+  "revision_reason": "Q1 FY2027（売上7,410億円 +38.3%, 営業利益863億円 +53.0% で過去最高）が計画超過も、通期予想は据え置き。AIデータセンター需要と新型スマホ向け好調ながら、下期の為替・関税不確実性を考慮し数値据え置き",
+  "market_reaction": "中",
+  "confidence": "medium",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-10-07T10:33:22.006744+00:00",
-  "ai_error": "no_trusted_source",
+  "source_status": "claude_cli_websearch",
+  "generated_at": "2026-10-10T11:33:23.699639+00:00",
+  "sources": [
+    {
+      "url": "https://kabutan.jp/stock/news?code=6762&b=k202602020055",
+      "type": "news",
+      "title": "ＴＤＫ【6762】、今期最終を6％上方修正・最高益予想を上乗せ"
+    }
+  ],
+  "source_via": "claude_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 3530.0,
+    "current_price": 3268.0,
     "forward_eps": 106.88,
-    "trailing_eps": 102.97,
-    "eps_growth_pct": 3.8,
-    "forward_pe": 33.03,
-    "trailing_pe": 34.28,
+    "trailing_eps": 182.17,
+    "eps_growth_pct": -41.3,
+    "forward_pe": 30.58,
+    "trailing_pe": 17.94,
     "target_mean": 4190.62,
     "target_high": 4950.0,
     "target_low": 2900.0,
-    "target_upside_pct": 18.7,
+    "target_upside_pct": 28.2,
     "revenue_growth_pct": 38.3,
     "earnings_growth_pct": 94.3,
     "next_earnings": "2026-10-30",
-    "implied_pe_hold": 3664.04,
-    "implied_pe_hold_upside": 3.8,
-    "peg_fair_price": 406.14,
-    "peg_ratio": 8.69,
-    "hist_pe_median": 24.56,
+    "implied_pe_hold": 1917.35,
+    "implied_pe_hold_upside": -41.3,
+    "peg_fair_price": null,
+    "peg_ratio": null,
+    "hist_pe_median": 24.57,
     "hist_pe_p25": 19.0,
-    "hist_pe_p75": 28.52,
-    "hist_pe_n_days": 860,
-    "implied_hist_median": 2624.97,
+    "hist_pe_p75": 28.54,
+    "hist_pe_n_days": 862,
+    "implied_hist_median": 2626.04,
     "implied_hist_p25": 2030.72,
-    "implied_hist_p75": 3048.22,
-    "implied_hist_upside": -25.6,
-    "peer_pe_median": 37.31,
+    "implied_hist_p75": 3050.36,
+    "implied_hist_upside": -19.6,
+    "peer_pe_median": 35.45,
     "peer_pe_n_peers": 5,
     "peer_pe_details": [
       {
         "ticker": "6981.T",
-        "pe": 36.6
+        "pe": 33.59
       },
       {
         "ticker": "6976.T",
-        "pe": 61.19
+        "pe": 59.45
       },
       {
         "ticker": "6971.T",
-        "pe": 42.76
+        "pe": 41.85
       },
       {
         "ticker": "2327.TW",
-        "pe": 20.67
+        "pe": 20.28
       },
       {
         "ticker": "009150.KS",
-        "pe": 37.31
+        "pe": 35.45
       }
     ],
-    "implied_peer_median": 3987.69,
-    "implied_peer_upside": 13.0,
+    "implied_peer_median": 3788.9,
+    "implied_peer_upside": 15.9,
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-10-07T19:34:02.608901",
-    "age_sec": 262761,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-10T20:34:11.613671",
+    "age_sec": 7151,
+    "stale": false,
+    "refreshing": false
   }
 }

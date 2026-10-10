@@ -4,30 +4,41 @@
   "direction": "待核验",
   "revision_type": "unverified",
   "magnitude": "不明",
-  "last_update": "2026-07-31",
+  "last_update": "2026-02-12",
   "next_earnings": "2026-10-30",
-  "guidance_note": "2026-07-31发布的2027年3月期第1四半期決算短信中，公司仅披露第2四半期累计予想：売上収益 4,157,117百万円、営業利益 3,160,017百万円、親会社所有者帰属中間利益 2,112,165百万円；未找到通期EPS/売上/営業利益/純利益予想。",
-  "revision_reason": "通期業績予想未開示，无法核验通期修正；可核验的中間予想为売上収益 4,157,117百万円、営業利益 3,160,017百万円、親会社所有者帰属中間利益 2,112,165百万円，前回通期→今回通期的具体数值变化不明。",
+  "guidance_note": "最近确认的通期予想为 2026-02-12 公告: FY2026(2026/3期) 純利 4,537–5,137 億円 (前期比 +77.6% 中値)、売上 21,798–22,698 億円。FY2027 通期予想在 90 日窗口内未检索到明确公告。",
+  "revision_reason": "2026-02-12 由非開示改为给出区间指引: 純利 非開示→4,537–5,137 億円 (初次具体化)。该事件在 90 日窗口 (2026-07-12 以后) 之外, 窗口内未检出通期予想修正公告。",
   "market_reaction": "不明",
   "confidence": "low",
   "source_verified": true,
-  "source_status": "analyst_only",
-  "generated_at": "2026-10-07T10:33:22.020862+00:00",
-  "sources": [],
-  "source_via": "codex_cli_websearch",
+  "source_status": "claude_cli_websearch",
+  "generated_at": "2026-10-10T11:33:23.766745+00:00",
+  "sources": [
+    {
+      "url": "https://kabutan.jp/news/?b=k202602120374",
+      "type": "news",
+      "title": "キオクシアホールディングス【285A】、非開示だった今期最終は4537億～5137億円へ"
+    },
+    {
+      "url": "https://s.kabutan.jp/stocks/285A/finance/",
+      "type": "news",
+      "title": "キオクシアホールディングス【285A】の最新決算発表、業績修正"
+    }
+  ],
+  "source_via": "claude_cli_websearch",
   "analyst_consensus": {
     "n_analysts": 16,
     "recommendation": "buy",
-    "current_price": 17900.0,
+    "current_price": 17505.0,
     "forward_eps": null,
-    "trailing_eps": 1009.14,
+    "trailing_eps": 833.5,
     "eps_growth_pct": null,
     "forward_pe": null,
-    "trailing_pe": 17.74,
+    "trailing_pe": 21.0,
     "target_mean": 37470.94,
     "target_high": 66666.66,
     "target_low": 16333.33,
-    "target_upside_pct": 109.3,
+    "target_upside_pct": 114.1,
     "revenue_growth_pct": 415.5,
     "earnings_growth_pct": 4418.8,
     "next_earnings": "2026-10-30",
@@ -35,32 +46,32 @@
     "implied_pe_hold_upside": null,
     "peg_fair_price": null,
     "peg_ratio": null,
-    "hist_pe_median": 13.52,
+    "hist_pe_median": 13.62,
     "hist_pe_p25": 7.22,
     "hist_pe_p75": 17.85,
-    "hist_pe_n_days": 253,
+    "hist_pe_n_days": 255,
     "implied_hist_median": null,
     "implied_hist_p25": null,
     "implied_hist_p75": null,
     "implied_hist_upside": null,
-    "peer_pe_median": 4.42,
+    "peer_pe_median": 4.32,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "005930.KS",
-        "pe": 3.78
+        "pe": 3.64
       },
       {
         "ticker": "000660.KS",
-        "pe": 3.66
+        "pe": 3.57
       },
       {
         "ticker": "MU",
-        "pe": 5.07
+        "pe": 4.99
       },
       {
         "ticker": "WDC",
-        "pe": 12.93
+        "pe": 12.4
       }
     ],
     "implied_peer_median": null,
@@ -68,9 +79,9 @@
     "source": "yfinance analyst aggregation"
   },
   "_meta": {
-    "cached_at": "2026-10-07T19:34:07.495652",
-    "age_sec": 262756,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-10T20:34:06.088511",
+    "age_sec": 7157,
+    "stale": false,
+    "refreshing": false
   }
 }
