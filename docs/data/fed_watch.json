@@ -5,31 +5,33 @@
       "date": "2026-10-28",
       "days_until": 18,
       "probabilities": {
-        "hold": 82,
-        "hike_25": 17,
-        "cut_25": 1
+        "hold": 80,
+        "hike_25": 18,
+        "cut_25": 2
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
     },
     {
-      "date": "2026-12-09",
-      "days_until": 60,
+      "date": "2026-12-10",
+      "days_until": 61,
       "probabilities": {
-        "hold": 55,
-        "hike_25": 40,
+        "hold": 25,
+        "hike_25": 65,
+        "hike_50": 5,
         "cut_25": 5
       },
-      "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-27",
-      "days_until": 109,
+      "date": "2027-01-28",
+      "days_until": 110,
       "probabilities": {
-        "hold": 50,
-        "hike_25": 42,
-        "cut_25": 8
+        "hold": 55,
+        "hike_25": 33,
+        "hike_50": 9,
+        "cut_25": 3
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_lean"
@@ -38,49 +40,45 @@
       "date": "2027-03-17",
       "days_until": 158,
       "probabilities": {
-        "hold": 45,
-        "hike_25": 40,
-        "hike_50": 5,
-        "cut_25": 10
+        "hold": 91,
+        "hike_25": 4,
+        "hike_50": 4,
+        "cut_25": 1
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "neutral"
     }
   ],
-  "implied_terminal_rate": "4.00-4.25",
+  "implied_terminal_rate": "4.25-4.50",
   "implied_terminal_date": "2027-Q1",
   "data_snapshot_date": "2026-10-08",
-  "recent_event_impact": "10/2 Sep NFP +29K (大幅低于预期 +89K, 前值下修 -60K), U-rate 4.1% 不变, wage YoY 3.1% → 10月hold概率从 ~77% 升至 ~82%; 10/14 Sep CPI 未发布, 为下一个关键 catalyst",
-  "commentary": "数据 snapshot 为 2026-10-08 (今日 2026-10-10, 滞后 2 日, 期间无 tier-1 data release). 9月 Fed 刚加息至 3.75-4.00 (Warsh 首次主席会议后首次加息), 10月弱 NFP (29K vs 89K) 已反映但 wage sticky 3.1% + Warsh 鹰派立场让市场维持 10月 hold / 12月再加息路径; 市场 cumulative pricing 到 Dec 有 ~80% 概率 rate > 当前, 隐含 terminal 4.00-4.25. 下周 10/14 Sep CPI 若回落可能快速 shift dovish.",
+  "recent_event_impact": "9/2026 NFP +29K (released 2026-10-02, sharply below expectations) softened near-term hike odds for Oct 28 (~18% hike vs ~30% pre-NFP); Sept CPI releases 2026-10-14 (not yet reflected). Fed hiked 25bps to 3.75-4.00% at Sept FOMC (first hike since 2023) under new Chair Kevin Warsh with hawkish rhetoric.",
+  "commentary": "Market base case: Oct hold (~80%) given weak Sept NFP, but hawkish Warsh Fed + Sept hike means Dec/Jan still skew hawkish with cumulative ~1 additional hike expected by year-end to 4.00-4.25%. Terminal pricing ~4.25-4.50% by Q1 2027. Oct 14 CPI print is the next catalyst and could materially re-rate Oct meeting odds.",
   "sources": [
     {
-      "url": "https://growbeansprout.com/tools/fedwatch",
-      "type": "cme_fedwatch"
+      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
+      "type": "cme_fedwatch_mirror"
     },
     {
       "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
-      "type": "prediction_market_aggregator"
+      "type": "cme_fedwatch_mirror"
     },
     {
-      "url": "https://centralbank.watch/federal-reserve/",
-      "type": "fed_funds_futures"
+      "url": "https://rateprobability.com/fed",
+      "type": "cme_fedwatch_mirror"
     },
     {
-      "url": "https://kalshi.com/markets/kxfeddecision/fed-meeting/kxfeddecision-26oct",
-      "type": "prediction_market"
-    },
-    {
-      "url": "https://fxmacrodata.com/articles/september-2026-nfp-jobs-report-why-it-matters",
-      "type": "nfp_recap"
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-09T20:34:21+00:00",
+  "fetched_at": "2026-10-10T05:34:31+00:00",
   "_meta": {
-    "cached_at": "2026-10-10T05:34:21.704228",
-    "age_sec": 32321,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-10T14:34:31.882526",
+    "age_sec": 7111,
+    "stale": false,
+    "refreshing": false
   }
 }
