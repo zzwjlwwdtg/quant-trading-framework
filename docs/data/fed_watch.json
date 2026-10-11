@@ -5,72 +5,85 @@
       "date": "2026-10-28",
       "days_until": 17,
       "probabilities": {
-        "hold": 81,
+        "hold": 82,
         "hike_25": 17,
-        "hike_50": 1,
         "cut_25": 1
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_lean"
+      "consensus_direction": "hawkish_hold"
     },
     {
       "date": "2026-12-09",
       "days_until": 59,
       "probabilities": {
-        "hold": 13,
-        "hike_25": 57,
-        "hike_50": 30
+        "hold": 30,
+        "hike_25": 68,
+        "cut_25": 2
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-28",
-      "days_until": 109,
+      "date": "2027-01-27",
+      "days_until": 108,
       "probabilities": {
-        "hold": 9,
-        "hike_25": 46,
-        "hike_50": 35,
-        "hike_75": 10
+        "hold": 55,
+        "hike_25": 43,
+        "cut_25": 2
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 157,
+      "probabilities": {
+        "hold": 27,
+        "hike_25": 68,
+        "cut_25": 5
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     }
   ],
   "implied_terminal_rate": "4.25-4.50",
-  "implied_terminal_date": "2027-Q1",
+  "implied_terminal_date": "2027-Q4",
   "data_snapshot_date": "2026-10-10",
-  "recent_event_impact": "Sep NFP +29K (far below consensus) released early Oct pushed Oct 28 hike odds down from ~40% to ~17-18%; FOMC Oct 7 minutes showed 'most members' still expect another hike by year-end, keeping Dec hike odds anchored at ~87% cumulative",
-  "commentary": "Market pricing (CME + Kalshi + Polymarket consensus Oct 10) sees Fed holding at 3.75-4.00 in October after Sep's weak +29K payroll print, then delivering a 25bp hike at Dec 9 meeting (57% base case, 30% probability of cumulative +50bps). Chair Warsh's hawkish FOMC under Trump admin + Oct 7 minutes language ('another increase likely appropriate by year end') keep the hike-skew intact despite soft labor data; futures price fed funds at ~4.1% by Jan 2027.",
+  "recent_event_impact": "9/16 Fed hiked +25bp to 3.75-4.00% (Warsh's first hike as Chair). 10/2 Sept NFP shocked at +29K vs +84K exp, U-rate 4.2%, wage growth slipped → Oct 28 hold probability jumped to 82%. Sept CPI due 10/14 — key risk; Cleveland Fed nowcast 3.60% headline / 2.39% core.",
+  "commentary": "Market prices a near-certain Oct 28 hold despite Warsh's hawkish rhetoric, driven by the surprisingly weak Sept NFP (+29K). However, cumulative Fed funds futures still imply ~1 more hike priced by Dec 9 (68% hike prob) and terminal near 4.25-4.50% by late 2027, reflecting sticky core inflation concerns and Warsh's 'underlying trends haven't improved' framing. The Oct 14 CPI print is the critical swing factor — a hot core print could flip Oct 28 odds materially.",
   "sources": [
+    {
+      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
+      "type": "prediction_market_aggregator"
+    },
     {
       "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
       "type": "cme_fedwatch"
     },
     {
-      "url": "https://admiralmarkets.com/analytics/traders-blog/fed-rate-decision-october-2026",
-      "type": "analyst_summary"
-    },
-    {
-      "url": "https://defirate.com/prediction-markets/fed-decision-odds/",
-      "type": "prediction_market_aggregator"
-    },
-    {
       "url": "https://centralbank.watch/federal-reserve/",
-      "type": "rate_probability_tracker"
+      "type": "fed_funds_futures"
     },
     {
-      "url": "https://kalshi.com/markets/kxfeddecision/fed-meeting/kxfeddecision-26oct",
-      "type": "prediction_market"
+      "url": "https://rateprobability.com/fed",
+      "type": "fed_funds_futures"
+    },
+    {
+      "url": "https://streetstats.finance/rates/fedfunds",
+      "type": "futures_forecast"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/10/02/jobs-report-september-2026.html",
+      "type": "nfp_report"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-10T15:34:56+00:00",
+  "fetched_at": "2026-10-11T01:34:46+00:00",
   "_meta": {
-    "cached_at": "2026-10-11T00:34:56.829341",
-    "age_sec": 35891,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-11T10:34:46.958332",
+    "age_sec": 7096,
+    "stale": false,
+    "refreshing": false
   }
 }
