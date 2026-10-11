@@ -3,28 +3,29 @@
   "meetings": [
     {
       "date": "2026-10-28",
-      "days_until": 17,
+      "days_until": 16,
       "probabilities": {
-        "hold": 82,
+        "hold": 80,
         "hike_25": 18,
-        "cut_25": 0
+        "cut_25": 2
       },
       "most_likely": "hold",
       "consensus_direction": "hawkish_hold"
     },
     {
       "date": "2026-12-09",
-      "days_until": 59,
+      "days_until": 58,
       "probabilities": {
-        "hold": 30,
-        "hike_25": 65,
-        "hike_50": 5
+        "hold": 12,
+        "hike_25": 60,
+        "hike_50": 26,
+        "hike_75": 2
       },
       "most_likely": "hike_25",
       "consensus_direction": "hawkish"
     },
     {
-      "date": "2027-01-27",
+      "date": "2027-01-28",
       "days_until": 108,
       "probabilities": {
         "hold": 88,
@@ -32,43 +33,58 @@
         "cut_25": 2
       },
       "most_likely": "hold",
-      "consensus_direction": "hawkish_hold"
-    }
-  ],
-  "implied_terminal_rate": "4.50-4.75",
-  "implied_terminal_date": "2027-Q4",
-  "data_snapshot_date": "2026-10-10",
-  "recent_event_impact": "10/2 September NFP (weak) 把 10月加息概率从 ~54% 砍到 ~18%，但 12月累计加息概率仍 ~84%；下一关键数据是 10/14 CPI (预期 headline 3.7% YoY, core +0.2% MoM)，若 hot 则 12月加息概率上冲、若 cool 则 Dec hike 降至 50% 以下",
-  "commentary": "数据 snapshot 2026-10-10，CME FedWatch 定价 Warsh Fed 为 hawkish-hold-then-hike 路径：10/28 大概率按兵不动在 3.75-4.00% (82%)，但 12/9 市场定价一次 25bps 加息至 4.00-4.25% (约 65% 单次概率，累计 ~84%)，1/27 2027 再次 hawkish hold。10/2 弱 NFP 已让 10月加息概率从 54% 回落到 18%，但未改变 12月加息路径。隐含终点利率约 4.50-4.75% 于 2027Q4，比 Fed Sept dot plot (median 4.1% YE2026) 更鹰派。10/14 CPI 为下一关键数据点，尚未发布",
-  "sources": [
-    {
-      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
-      "type": "cme_fedwatch"
+      "consensus_direction": "hawkish_lean"
     },
     {
+      "date": "2027-03-18",
+      "days_until": 157,
+      "probabilities": {
+        "hold": 78,
+        "hike_25": 20,
+        "cut_25": 2
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    }
+  ],
+  "implied_terminal_rate": "4.25-4.50",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-10-10",
+  "recent_event_impact": "10/2 Sept NFP +29K vs +84K expected (unemployment 4.2%, wage growth lowest since May 2021) → killed Oct hike odds (fell from ~54% to ~18%) but Dec cumulative hike probability still ~88%. 9/16 FOMC hiked +25bps to 3.75-4.00% (first hike since 2023) citing core PCE ~3.4% + energy from US-Iran conflict. Sept CPI releases 10/14 — key near-term pivot not yet in pricing.",
+  "commentary": "Market pricing hawkish hold under Chair Warsh for Oct 28 (~80% hold) then Dec hike base case (~86-88% cumulative hike probability, hike_25 the mode). Sept NFP miss (+29K vs +84K) on 10/2 removed Oct hike risk but Dec remains firmly priced for another +25bps given entrenched core inflation; 10/14 CPI print could reshape Dec path materially.",
+  "sources": [
+    {
       "url": "https://www.cnbc.com/2026/10/02/fed-rate-hike-odds-decline-after-september-jobs-report.html",
-      "type": "news"
+      "type": "cnbc_report"
     },
     {
       "url": "https://admiralmarkets.com/analytics/traders-blog/fed-rate-decision-october-2026",
-      "type": "analysis"
+      "type": "cme_fedwatch_snapshot"
     },
     {
-      "url": "https://mitrade.com/insights/more/inflation/us-cpi-preview-december-fed-hike-20261010J1122",
-      "type": "analysis"
+      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026",
+      "type": "prediction_market_aggregate"
     },
     {
-      "url": "https://www.ishares.com/us/insights/portfolio-insights/fed-outlook-rates-kevin-warsh-fixed-income-2026",
-      "type": "research"
+      "url": "https://phemex.com/news/article/cme-fedwatch-779-probability-fed-holds-rates-in-october-98766",
+      "type": "cme_fedwatch_snapshot"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/09/16/fed-rate-decision-september-2026.html",
+      "type": "fomc_decision"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm",
+      "type": "fed_chair_speech"
     }
   ],
   "confidence": "medium",
   "source_via": "claude_cli_websearch",
-  "fetched_at": "2026-10-11T11:34:37+00:00",
+  "fetched_at": "2026-10-11T21:34:40+00:00",
   "_meta": {
-    "cached_at": "2026-10-11T20:34:37.206898",
-    "age_sec": 35908,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-12T06:34:40.058582",
+    "age_sec": 7103,
+    "stale": false,
+    "refreshing": false
   }
 }
