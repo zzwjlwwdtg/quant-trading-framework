@@ -1,119 +1,119 @@
 {
   "ticker": "USO",
-  "sector": "原油期货ETF/大宗商品投资",
-  "business": "USO 是追踪近月 WTI 原油期货价格表现的交易所交易基金，主要为投资者提供原油价格敞口而非直接经营油气业务。",
+  "sector": "大宗商品ETF/原油期货",
+  "business": "美国石油基金，通过持有WTI原油近月期货合约追踪WTI原油现货价格表现的商品型ETF",
   "upstream": [
     {
       "name": "CME Group",
       "ticker": "CME",
-      "note": "提供 NYMEX WTI 原油期货交易与清算基础设施，是 USO 获取原油期货敞口的核心市场平台",
-      "weight": 90,
+      "note": "WTI原油期货合约交易所，提供NYMEX期货合约",
+      "weight": 35,
       "confidence": "high"
     },
     {
-      "name": "Exxon Mobil",
-      "ticker": "XOM",
-      "note": "大型美国油气生产商，WTI 原油供给和美国原油市场定价的重要参与者",
-      "weight": 70,
+      "name": "RBC Capital Markets",
+      "ticker": "RY",
+      "note": "期货经纪与清算服务商",
+      "weight": 20,
       "confidence": "medium"
     },
     {
-      "name": "Chevron",
-      "ticker": "CVX",
-      "note": "大型综合油气公司，参与美国原油生产并影响基础原油供给环境",
-      "weight": 65,
+      "name": "BNY Mellon",
+      "ticker": "BK",
+      "note": "ETF托管与基金行政管理",
+      "weight": 15,
+      "confidence": "high"
+    },
+    {
+      "name": "ICE Futures",
+      "ticker": "ICE",
+      "note": "Brent原油及部分能源衍生品交易平台",
+      "weight": 15,
       "confidence": "medium"
     },
     {
-      "name": "ConocoPhillips",
-      "ticker": "COP",
-      "note": "美国上游油气生产商，对页岩油和 WTI 相关供应具有较高影响",
-      "weight": 60,
-      "confidence": "medium"
-    },
-    {
-      "name": "EOG Resources",
-      "ticker": "EOG",
-      "note": "美国页岩油生产商，提供 WTI 相关轻质原油供给",
-      "weight": 55,
-      "confidence": "medium"
+      "name": "USCF Investments",
+      "ticker": null,
+      "note": "ETF发行人与基金管理人",
+      "weight": 15,
+      "confidence": "high"
     }
   ],
   "downstream": [
     {
-      "name": "Valero Energy",
-      "ticker": "VLO",
-      "note": "炼油企业，采购 WTI 及相关原油作为炼厂原料，原油价格影响其裂解价差和库存价值",
-      "weight": 80,
+      "name": "散户投资者",
+      "ticker": null,
+      "note": "通过经纪账户买入作为原油价格敞口工具",
+      "weight": 35,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金",
+      "ticker": null,
+      "note": "用于短期油价投机或对冲能源敞口",
+      "weight": 25,
       "confidence": "medium"
     },
     {
-      "name": "Marathon Petroleum",
-      "ticker": "MPC",
-      "note": "大型炼油和成品油销售企业，原油采购成本与 WTI 价格高度相关",
-      "weight": 75,
-      "confidence": "medium"
+      "name": "Charles Schwab",
+      "ticker": "SCHW",
+      "note": "主要券商平台分销USO份额",
+      "weight": 15,
+      "confidence": "high"
     },
     {
-      "name": "Phillips 66",
-      "ticker": "PSX",
-      "note": "综合炼油和中游企业，使用原油生产汽油、柴油、航煤等成品油",
-      "weight": 70,
-      "confidence": "medium"
+      "name": "Interactive Brokers",
+      "ticker": "IBKR",
+      "note": "券商平台提供USO交易通道",
+      "weight": 10,
+      "confidence": "high"
     },
     {
-      "name": "HF Sinclair",
-      "ticker": "DINO",
-      "note": "美国炼油企业，采购原油并加工为成品油，受 WTI 价格与区域价差影响",
-      "weight": 58,
+      "name": "商品CTA基金",
+      "ticker": null,
+      "note": "趋势跟踪策略配置原油敞口",
+      "weight": 15,
       "confidence": "medium"
-    },
-    {
-      "name": "Delta Air Lines",
-      "ticker": "DAL",
-      "note": "航空公司通过航油采购间接受原油价格影响，是终端能源消费方代表",
-      "weight": 45,
-      "confidence": "low"
     }
   ],
   "peers": [
     {
-      "name": "United States 12 Month Oil Fund",
-      "ticker": "USL",
-      "note": "同属原油期货ETF，但分散持有较长期限 WTI 合约以降低近月展期影响",
-      "confidence": "high"
-    },
-    {
       "name": "Invesco DB Oil Fund",
       "ticker": "DBO",
-      "note": "原油期货ETF，采用规则化合约选择以追踪原油价格",
-      "confidence": "medium"
-    },
-    {
-      "name": "ProShares Ultra Bloomberg Crude Oil",
-      "ticker": "UCO",
-      "note": "提供原油价格杠杆敞口，面向短期交易型投资者",
-      "confidence": "medium"
+      "note": "同为WTI原油期货ETF，采用optimum yield策略减少contango损耗",
+      "confidence": "high"
     },
     {
       "name": "United States Brent Oil Fund",
       "ticker": "BNO",
-      "note": "追踪 Brent 原油期货，与 USO 在全球原油价格敞口产品上竞争",
-      "confidence": "medium"
+      "note": "同一发行人USCF的Brent原油ETF",
+      "confidence": "high"
     },
     {
-      "name": "ProShares UltraShort Bloomberg Crude Oil",
-      "ticker": "SCO",
-      "note": "提供原油价格反向杠杆敞口，与 USO 同属原油交易型产品生态",
+      "name": "ProShares Ultra Bloomberg Crude Oil",
+      "ticker": "UCO",
+      "note": "2倍杠杆WTI原油ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "United States 12 Month Oil Fund",
+      "ticker": "USL",
+      "note": "持有12个月期货分散contango风险",
+      "confidence": "high"
+    },
+    {
+      "name": "iPath Series B S&P GSCI Crude Oil ETN",
+      "ticker": "OIL",
+      "note": "追踪S&P GSCI原油指数的ETN",
       "confidence": "medium"
     }
   ],
-  "generated_at": "2026-09-11T07:33:30.632119+00:00",
-  "source": "codex",
+  "generated_at": "2026-10-11T09:33:42.466392+00:00",
+  "source": "claude",
   "_meta": {
-    "cached_at": "2026-09-11T16:33:30.637685",
-    "age_sec": 2599193,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-11T18:33:42.467382",
+    "age_sec": 7180,
+    "stale": false,
+    "refreshing": false
   }
 }
