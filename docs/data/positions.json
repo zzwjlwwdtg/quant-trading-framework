@@ -1,6 +1,26 @@
 {
   "positions": [
     {
+      "ticker": "US.SOXL",
+      "qty": 82,
+      "cost_price": 136.75,
+      "current_price": 139.76,
+      "market_val": 11460.32,
+      "pl_val": 247.15,
+      "pl_ratio": 0.022,
+      "last_action": "TP_tp15",
+      "last_side": "BUY",
+      "last_qty": 27,
+      "last_price": 142.52,
+      "last_time_utc": "2026-10-09T12:35:27.914650+00:00",
+      "is_core": true,
+      "pyramid_layer": 1,
+      "entry_conf": 5,
+      "entry_price": 112.4037,
+      "entry_high": 142.52,
+      "source": "moomoo_live"
+    },
+    {
       "ticker": "US.NVDA",
       "qty": 143,
       "cost_price": 235.2,
@@ -18,6 +38,26 @@
       "entry_conf": 3,
       "entry_price": 235.18,
       "entry_high": 235.18,
+      "source": "moomoo_live"
+    },
+    {
+      "ticker": "US.MSFT",
+      "qty": 91,
+      "cost_price": 497.07,
+      "current_price": 535.07,
+      "market_val": 48691.37,
+      "pl_val": 3457.82,
+      "pl_ratio": 0.0764,
+      "last_action": "PYRAMID",
+      "last_side": "BUY",
+      "last_qty": 34,
+      "last_price": 501.61,
+      "last_time_utc": "2026-09-22T12:37:08.988603+00:00",
+      "is_core": false,
+      "pyramid_layer": 3,
+      "entry_conf": 5,
+      "entry_price": 504.55,
+      "entry_high": 535.19,
       "source": "moomoo_live"
     },
     {
@@ -81,26 +121,6 @@
       "source": "moomoo_live"
     },
     {
-      "ticker": "US.SOXL",
-      "qty": 82,
-      "cost_price": 136.75,
-      "current_price": 139.76,
-      "market_val": 11460.32,
-      "pl_val": 247.15,
-      "pl_ratio": 0.022,
-      "last_action": "TP_tp15",
-      "last_side": "BUY",
-      "last_qty": 27,
-      "last_price": 142.52,
-      "last_time_utc": "2026-10-09T12:35:27.914650+00:00",
-      "is_core": true,
-      "pyramid_layer": 1,
-      "entry_conf": 5,
-      "entry_price": 112.4037,
-      "entry_high": 142.52,
-      "source": "moomoo_live"
-    },
-    {
       "ticker": "US.SHY",
       "qty": 3372,
       "cost_price": 82.99,
@@ -138,26 +158,6 @@
       "entry_conf": 3,
       "entry_price": 1067.74,
       "entry_high": 1110.9,
-      "source": "moomoo_live"
-    },
-    {
-      "ticker": "US.MSFT",
-      "qty": 91,
-      "cost_price": 497.07,
-      "current_price": 535.07,
-      "market_val": 48691.37,
-      "pl_val": 3457.82,
-      "pl_ratio": 0.0764,
-      "last_action": "PYRAMID",
-      "last_side": "BUY",
-      "last_qty": 34,
-      "last_price": 501.61,
-      "last_time_utc": "2026-09-22T12:37:08.988603+00:00",
-      "is_core": false,
-      "pyramid_layer": 3,
-      "entry_conf": 5,
-      "entry_price": 504.55,
-      "entry_high": 535.19,
       "source": "moomoo_live"
     },
     {
@@ -206,7 +206,7 @@
   "sync_source": "moomoo_live",
   "moomoo_ok": true,
   "_meta": {
-    "cached_at": "2026-10-12T02:33:03.382951",
+    "cached_at": "2026-10-12T04:33:03.315334",
     "age_sec": 14,
     "stale": false,
     "refreshing": false
