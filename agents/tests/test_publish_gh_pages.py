@@ -68,6 +68,9 @@ class PublishGhPages(unittest.TestCase):
         self.assertIn("_publish_gh_pages.py", bat)
         self.assertIn(".pages_gh_only", bat)
         self.assertLess(bat.index("_publish_gh_pages.py"), bat.index("git push origin main"))
+        gh_only = bat[bat.index('if exist "%SCRIPT_DIR%.pages_gh_only"'):]
+        self.assertLess(gh_only.index("git push origin main"), gh_only.index("goto :end"))   # 代码提交照常推送
+        self.assertTrue((AGENTS_DIR / ".pages_gh_only").exists())
 
 
 if __name__ == "__main__":

@@ -28,9 +28,13 @@ REM 2. Publish docs/ to the gh-pages branch as ONE commit, force-pushed (old sna
 REM    2026-10-11 user decision: old page snapshots are meaningless, keep them out of history.
 "%PY%" -X utf8 -u _publish_gh_pages.py >> "%SCRIPT_DIR%logs\gh_pages_publish.log" 2>&1
 
-REM 3. Transition: still commit docs/ to main until GitHub Pages is switched to gh-pages.
-REM    After the switch, create agents\.pages_gh_only to stop committing snapshots to main.
-if exist "%SCRIPT_DIR%.pages_gh_only" goto :end
+REM 3. GitHub Pages serves gh-pages since 2026-10-12 (agents\.pages_gh_only exists):
+REM    no snapshot commits on main; just push any code commits waiting on main.
+if exist "%SCRIPT_DIR%.pages_gh_only" (
+  cd /d "%REPO_ROOT%"
+  git push origin main
+  goto :end
+)
 cd /d "%REPO_ROOT%"
 git add docs/
 git diff --cached --quiet
