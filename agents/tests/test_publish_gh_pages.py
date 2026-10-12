@@ -49,6 +49,20 @@ class PublishGhPages(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 gp.build_commit("x")
 
+    def test_restore_from_gh_pages_when_new_payload_is_empty(self):
+        import snapshot_generator as sg
+        # gh-pages 上有一份健康的旧快照
+        with patch.object(gp, "REPO", self.repo), patch.object(gp, "DOCS", self.repo / "docs"):
+            (self.repo / "docs" / "data" / "positions.json").write_text('{"positions": [' + '1,' * 400 + '1]}', encoding="utf-8")
+            commit, _ = gp.build_commit("x")
+        git(self.repo, "update-ref", "refs/heads/gh-pages", commit)
+        (self.repo / "docs" / "data" / "positions.json").unlink()
+        with patch.object(sg, "REPO_ROOT", self.repo), patch.object(sg, "DATA_DIR", self.repo / "docs" / "data"), \
+             patch.object(sg, "_PRE_SNAPSHOT_SIZES", {"positions.json": 2000}):
+            r = sg._save("/api/positions", {"error": "backend down"})
+        self.assertIsNone(r)
+        self.assertIn('"positions": [1,', (self.repo / "docs" / "data" / "positions.json").read_text(encoding="utf-8"))
+
     def test_snap_public_publishes_and_has_transition_switch(self):
         bat = (AGENTS_DIR / "snap_public.bat").read_text(encoding="utf-8")
         self.assertIn("_publish_gh_pages.py", bat)

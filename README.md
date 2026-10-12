@@ -15,7 +15,7 @@ Targets leveraged and single-name US equities plus rate-sensitive hedges (**TQQQ
 
 **🌐 Live public snapshot (read-only): https://zzwjlwwdtg.github.io/quant-trading-framework/**
 
-Auto-refreshed every 30 min from local webui via `agents/snapshot_generator.py`.
+Auto-refreshed every 30 min from local webui via `agents/snapshot_generator.py` and published to the `gh-pages` branch as a single force-pushed commit (only the latest snapshot is kept; `main` holds code only).
 From the top: **💵 trading thesis (strong USD)** → **💼 positions** → **🧾 fills statement & cash**
 → **🔍 AI sell post-mortem** → **📈 equity curve vs SPY** → **🐻 QQQ/SPY large-put watch**
 → macro, sector and per-ticker cards. Only the raw run log, the decision trade log and the

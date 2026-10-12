@@ -6,6 +6,7 @@
 不碰工作区, 不碰 main 的 index.
 
 用法: python _publish_gh_pages.py [--dry-run]   (--dry-run 只建提交不推送)
+2026-10-12 起 GitHub Pages 从 gh-pages 发布; main 不再跟踪 docs/index.html 和 docs/data/.
 """
 from __future__ import annotations
 
@@ -64,6 +65,8 @@ def main(argv) -> int:
         print("[gh-pages] dry-run: not pushed")
         return 0
     _git(["push", "-f", "origin", f"{commit}:refs/heads/{BRANCH}"])
+    # 本地也指向同一提交: snapshot_generator 在数据异常时从这里恢复上一版
+    _git(["update-ref", f"refs/heads/{BRANCH}", commit])
     print(f"[gh-pages] pushed to {BRANCH}")
     return 0
 

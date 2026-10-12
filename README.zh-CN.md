@@ -13,7 +13,7 @@
 
 ## Dashboard 预览
 
-**🌐 公开只读快照：https://zzwjlwwdtg.github.io/quant-trading-framework/**（每 30 分钟由本地 webui 经 `agents/snapshot_generator.py` 刷新）
+**🌐 公开只读快照：https://zzwjlwwdtg.github.io/quant-trading-framework/**（每 30 分钟由本地 webui 经 `agents/snapshot_generator.py` 刷新，发布到 `gh-pages` 分支并整体覆盖，只保留最新一版；`main` 只放代码）
 
 从上到下：**💵 交易主线（强美元）** → **💼 持仓** → **🧾 交割单与现金** → **🔍 AI 卖出复盘** → **📈 收益曲线 vs SPY**
 → **🐻 QQQ/SPY 大额看跌监控** → 宏观 / 板块 / 每标的卡片。只有原始运行日志、决策 trade log 和机构风控台仍仅所有者可见。非投资建议，仅为框架演示。

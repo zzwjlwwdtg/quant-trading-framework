@@ -261,17 +261,25 @@ def _save(url: str, data: dict) -> Path | None:
         old_size = _PRE_SNAPSHOT_SIZES.get(fname) or (out.stat().st_size if out.exists() else 0)
         if old_size > len(new_bytes) * 5 and old_size > 500:
             print(f"  ⚠ SKIP overwrite {fname}: new empty ({len(new_bytes)}B) vs pre-snapshot ({old_size}B) — 试图恢复旧快照")
-            # 如果 full-refresh 清空了目录，从 git HEAD 恢复
+            # 如果 full-refresh 清空了目录，从上一版已发布的快照恢复.
+            # 2026-10-12 起快照只发布到 gh-pages (main 不再跟踪 docs/data), 所以从本地
+            # gh-pages 分支取 (由 _publish_gh_pages.py 维护); 取不到再退回 main 的 HEAD.
             if not out.exists():
-                try:
-                    import subprocess
-                    subprocess.run(
-                        ["git", "checkout", "HEAD", "--", str(out.relative_to(REPO_ROOT))],
-                        cwd=str(REPO_ROOT), check=True, capture_output=True, timeout=10,
-                    )
-                    print(f"    ✓ 从 git HEAD 恢复 {fname}")
-                except Exception as e:
-                    print(f"    ✗ git restore 失败: {e}")
+                import subprocess
+                rel = out.relative_to(DATA_DIR.parent).as_posix()      # data/<fname>
+                restored = False
+                for ref, path in (("gh-pages", rel), ("HEAD", str(out.relative_to(REPO_ROOT).as_posix()))):
+                    try:
+                        blob = subprocess.run(["git", "show", f"{ref}:{path}"], cwd=str(REPO_ROOT),
+                                              check=True, capture_output=True, timeout=10).stdout
+                        out.write_bytes(blob)
+                        print(f"    ✓ 从 {ref} 恢复 {fname}")
+                        restored = True
+                        break
+                    except Exception:
+                        continue
+                if not restored:
+                    print(f"    ✗ 无法恢复 {fname} (gh-pages / HEAD 都没有)")
             return None
     out.write_text(new_bytes, encoding="utf-8")
     return out
