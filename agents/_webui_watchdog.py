@@ -82,6 +82,9 @@ JOBS = {
     "usd_regime_test": {"bat": "_usd_regime_test.bat", "market_quiet": True},
     # 2026-10-08: 强美元主线每日读数 + 看错条件
     "usd_theme": {"bat": "_usd_theme.bat", "market_quiet": True, "auto_every_days": 1},
+    # 2026-10-12: 系统自我进化. 提案每日收盘后自动; 开发/合并只在用户批准后 (批准时写 job 请求)
+    "evo_propose": {"bat": "_evolution_propose.bat", "market_quiet": True, "auto_every_days": 1},
+    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 

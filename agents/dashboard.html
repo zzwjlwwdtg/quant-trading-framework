@@ -227,6 +227,15 @@
   </div>
 </div>
 
+<!-- Row 0-top-1c: 系统自我进化 (2026-10-12; 提案需所有者批准, 本机看板才有按钮) -->
+<div class="grid">
+  <div class="card" style="border-left:4px solid #1f6feb">
+    <h2 title="每天收盘后, 本机 Claude Code 根据卖出复盘、日志报错、数据质量并对照彭博机构级量化体系提出改进提案。只有所有者批准后才开发; 开发在隔离副本里进行并跑全量测试; 改到交易相关文件还要再确认一次才上线。">🧬 系统自我进化 <small id="evo-meta">Proposals</small></h2>
+    <div id="evo-summary" style="font-size:12px; margin-bottom:5px"></div>
+    <div id="evo"><small style="color:var(--muted)">加载中...</small></div>
+  </div>
+</div>
+
 <!-- Row 0-top-2: 账户收益曲线 (2026-10-06 用户要求; 公开快照也显示) -->
 <div class="grid">
   <div class="card" style="border-left:4px solid #3fb950">
@@ -407,7 +416,7 @@ async function fetchJson(url) {
   if (window.STATIC_SNAPSHOT_MODE) {
     // 私人 endpoint 直接返 null（面板会显示 owner-only 或直接空）
     // 2026-10-06: 用户决定公开页完整显示持仓 → /api/positions 不再是私有
-    const PRIVATE = ['/api/trades', '/api/log', '/api/nav', '/api/trump_verify', '/api/institutional'];
+    const PRIVATE = ['/api/trades', '/api/log', '/api/nav', '/api/trump_verify', '/api/institutional', '/api/evolution_token', '/api/evolution_action'];
     if (PRIVATE.some(p => url.startsWith(p))) return { error: 'owner_only' };
     // /api/xxx?ticker=Y&days=Z → data/xxx__Y__d10.json
     let path = url.replace(/^\//, '');
@@ -4205,6 +4214,50 @@ async function loadUsdTheme() {
       ${inv.length ? `<span class="badge bad" title="${inv.map(t => t.description || '').join('；')}">⚠ 看错条件触发：${inv.map(t => t.id).join(', ')}</span>` : '<span class="badge ok">看错条件未触发</span>'}</div>`;
 }
 
+// 系统自我进化 (2026-10-12): 提案列表; 本机看板 (非公开快照) 显示批准/拒绝/上线按钮
+const EVO_STATUS_ZH = {proposed: '待批准', approved: '已批准·排队开发', rejected: '已拒绝', developing: '开发中',
+  dev_failed: '开发失败', blocked: '护栏拦截', ready_for_review: '待确认上线', merge_approved: '已确认·排队合并',
+  merged: '已上线', merge_failed: '合并失败', merge_rejected: '不上线'};
+async function evoAct(id, action) {
+  const note = (action === 'reject' || action === 'reject_merge') ? (prompt('拒绝理由（可空，系统下次提案会参考）') || '') : '';
+  const t = await fetchJson('/api/evolution_token');
+  const r = await fetchJson(`/api/evolution_action?id=${encodeURIComponent(id)}&action=${action}&token=${encodeURIComponent((t || {}).token || '')}&note=${encodeURIComponent(note)}`);
+  if (r && r.ok) loadEvolution(); else alert((r && r.error) || '操作失败');
+}
+async function loadEvolution() {
+  const d = await fetchJson('/api/evolution');
+  const el = $('evo');
+  if (!el) return;
+  if (!d || d.error) { el.innerHTML = `<small style="color:var(--muted)">${(d && d.error) || '暂不可用'}</small>`; return; }
+  const ps = d.proposals || [];
+  $('evo-meta').textContent = `${d.enabled ? '运行中' : '⏸ 已暂停 (.evolution_off)'} · ${ps.length} 条提案`;
+  const rs = d.review_summary || {};
+  $('evo-summary').innerHTML = rs.summary ? `<b>复盘总结</b>（${(rs.ts || '').slice(5, 16).replace('T', ' ')} UTC）：${rs.summary}` : '';
+  if (!ps.length) { el.innerHTML = '<small style="color:var(--muted)">还没有提案。每天美股收盘后生成。</small>'; return; }
+  const owner = !window.STATIC_SNAPSHOT_MODE;
+  el.innerHTML = ps.map((p, i) => {
+    const st = EVO_STATUS_ZH[p.status] || p.status;
+    const btn = (a, label, cls) => `<button onclick="evoAct('${p.id}','${a}')" style="margin-right:6px; padding:2px 10px; border:1px solid var(--${cls}); color:var(--${cls}); background:transparent; border-radius:3px; cursor:pointer; font-size:11px">${label}</button>`;
+    const buttons = !owner ? '' : (p.status === 'proposed' ? btn('approve', '批准开发', 'ok') + btn('reject', '拒绝', 'bad')
+      : p.status === 'ready_for_review' ? btn('approve_merge', '确认上线', 'ok') + btn('reject_merge', '不上线', 'bad') : '');
+    const rep = p.dev_report || {};
+    return `<details ${i === 0 ? 'open' : ''} style="border-bottom:1px solid var(--border); padding:5px 0">
+      <summary style="cursor:pointer; font-size:12px"><b>${p.id}</b> ${p.title}
+        <span class="badge">${p.category || ''}</span> <span class="badge ${p.status === 'merged' ? 'ok' : (['dev_failed', 'blocked', 'merge_failed'].includes(p.status) ? 'bad' : 'warn')}">${st}</span></summary>
+      <div style="font-size:11.5px; line-height:1.5; margin-top:4px">
+        <div><b>问题</b>：${p.problem || ''}</div>
+        <div><b>证据</b>：${(p.evidence || []).join('；')}</div>
+        <div><b>逻辑</b>：${p.logic || ''}</div>
+        <div><b>参考彭博</b>：${p.bloomberg_ref || '—'}</div>
+        <div><b>改动</b>：${((p.change || {}).files || []).join(', ')} — ${(p.change || {}).description || ''}</div>
+        <div><b>检验</b>：${p.test_plan || ''}</div>
+        <div><b>风险</b>：${p.risk || ''} · 工作量 ${p.effort || '?'}</div>
+        ${rep.changed_files ? `<div style="color:var(--muted)">开发结果：改了 ${rep.changed_files.join(', ')}；测试 ${rep.tests_after} 项，新增失败 ${(rep.new_failures || []).length}${rep.violations ? '；护栏：' + rep.violations.slice(0, 2).join('；') : ''}</div>` : ''}
+        <div style="margin-top:4px">${buttons}</div>
+      </div></details>`;
+  }).join('');
+}
+
 async function loadAll() {
   const promises = [
     loadHealth(), loadTopPicks(), loadSectors(), loadBanners(),
@@ -4217,6 +4270,7 @@ async function loadAll() {
     loadPositions(),       // 2026-10-06: 公开快照也显示持仓 (置顶)
     loadFills(),           // 2026-10-07: 交割单 + 现金 (公开, 置顶)
     loadPostmortem(),      // 2026-10-08: 卖出复盘 (公开)
+    loadEvolution(),       // 2026-10-12: 系统自我进化提案 (公开只展示, 本机可操作)
     loadEquityCurve(),     // 2026-10-06: 账户收益曲线 (公开)
     loadIndexWatch(),      // 2026-10-07: QQQ/SPY 大额看跌监控 (公开, 只展示)
   ];

@@ -70,6 +70,7 @@ GLOBAL_ENDPOINTS = [
     "/api/fills",          # 2026-10-07 用户要求: 交割单置顶公开 (含账户现金)
     "/api/postmortem",     # 2026-10-08 用户要求: 每笔卖出的 AI 复盘
     "/api/usd_theme",      # 2026-10-08 用户设定交易主线: 强美元
+    "/api/evolution",      # 2026-10-12 系统自我进化提案 (只展示; 操作口令接口不公开)
 ]
 
 # Per-ticker endpoints — 迭代 watch list

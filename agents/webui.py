@@ -1323,6 +1323,35 @@ def api_fills(n: int = 40) -> dict:
     return _cached(f"fills_v1_{n}", ttl_sec=300, compute_fn=_compute)
 
 
+def api_evolution() -> dict:
+    """系统自我进化 (2026-10-12): 提案列表 + 状态. 公开快照可见 (不含操作口令)."""
+    try:
+        import evolution
+        items = evolution.load()
+        summ = {}
+        try:
+            summ = json.loads((evolution.EVO_DIR / "last_review_summary.json").read_text(encoding="utf-8"))
+        except Exception:
+            pass
+        return {"enabled": evolution.enabled(), "proposals": list(reversed(items[-30:])),
+                "review_summary": summ, "weekly_cap": evolution.WEEKLY_PROPOSAL_CAP}
+    except Exception as e:  # noqa: BLE001
+        return {"enabled": False, "error": str(e), "proposals": []}
+
+
+def api_evolution_token() -> dict:
+    """本机看板按钮用的口令. 只在本机 WebUI 提供, 不进公开快照."""
+    import evolution
+    return {"token": evolution.token()}
+
+
+def api_evolution_action(pid: str, action: str, tok: str, note: str = "") -> dict:
+    import evolution
+    if not tok or tok != evolution.token():
+        return {"ok": False, "error": "口令不对 (只能在本机看板上操作)"}
+    return evolution.act(pid, action, by="dashboard", note=note)
+
+
 def api_usd_theme() -> dict:
     """强美元主线 (2026-10-08 用户设定): usd_theme 每日生成. 只读文件."""
     path = SIGNALS_DIR / "usd_theme.json"
@@ -5391,6 +5420,13 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_postmortem())
             elif path == "/api/usd_theme":
                 self._json(api_usd_theme())
+            elif path == "/api/evolution":
+                self._json(api_evolution())
+            elif path == "/api/evolution_token":
+                self._json(api_evolution_token())
+            elif path == "/api/evolution_action":
+                self._json(api_evolution_action(qs.get("id", [""])[0], qs.get("action", [""])[0],
+                                                qs.get("token", [""])[0], qs.get("note", [""])[0]))
             elif path == "/api/positions":
                 self._json(api_positions())
             elif path == "/api/institutional":

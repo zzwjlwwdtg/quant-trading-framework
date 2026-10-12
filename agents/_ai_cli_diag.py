@@ -56,7 +56,7 @@ def main():
            "selected_codex": ai_prompt._find_codex_cli(),
            "selected_claude": ai_prompt._find_claude_cli(),
            "codex": [], "claude": None}
-    for exe in codex_candidates():
+    for exe in (codex_candidates() if os.environ.get("DIAG_SKIP_CODEX") != "1" else []):
         item = {"path": exe, "version": _run([exe, "--version"], timeout=30)}
         with tempfile.TemporaryDirectory(prefix="codex_diag_") as d:
             out = Path(d) / "last.txt"
@@ -71,6 +71,14 @@ def main():
         res["codex"].append(item)
     cl = ai_prompt._find_claude_cli()
     if cl:
+        res["claude_help"] = _run([cl, "--help"], timeout=30)   # 2026-10-12: 自我进化需要确认可用参数
+        try:   # _run 只保留尾部 3000 字符；完整 help 另存一份供核对参数
+            _h = subprocess.run([cl, "--help"], capture_output=True, text=True, timeout=30,
+                                encoding="utf-8", errors="replace")
+            (Path(__file__).parent / "logs" / "claude_help_full.txt").write_text(
+                (_h.stdout or "") + "\n--- stderr ---\n" + (_h.stderr or ""), encoding="utf-8")
+        except Exception as _e:
+            res["claude_help_full_error"] = str(_e)
         res["claude"] = {"path": cl, "version": _run([cl, "--version"], timeout=30),
                          "exec": _run([cl, "-p"], input_text=PROMPT, timeout=180)}
     OUT.parent.mkdir(parents=True, exist_ok=True)
