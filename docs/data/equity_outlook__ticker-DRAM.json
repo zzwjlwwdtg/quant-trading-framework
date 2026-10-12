@@ -30,16 +30,16 @@
     "implied_hist_p25": 1714.62,
     "implied_hist_p75": 27918.84,
     "implied_hist_upside": 1011.1,
-    "peer_pe_median": 8.02,
+    "peer_pe_median": 7.97,
     "peer_pe_n_peers": 4,
     "peer_pe_details": [
       {
         "ticker": "005930.KS",
-        "pe": 3.64
+        "pe": 3.55
       },
       {
         "ticker": "000660.KS",
-        "pe": 3.57
+        "pe": 3.44
       },
       {
         "ticker": "285A.T",
@@ -50,8 +50,8 @@
         "pe": 12.4
       }
     ],
-    "implied_peer_median": 1654.79,
-    "implied_peer_upside": 60.8,
+    "implied_peer_median": 1644.47,
+    "implied_peer_upside": 59.8,
     "source": "yfinance analyst aggregation",
     "forward_estimates": {
       "earnings": {
@@ -210,29 +210,29 @@
       {
         "key": "peer_pe",
         "label": "前瞻 EPS × 同行 PE 中位",
-        "implied_price": 1654.79,
-        "gap_pct": 60.8
+        "implied_price": 1644.47,
+        "gap_pct": 59.8
       }
     ],
-    "median_gap_pct": 60.8,
+    "median_gap_pct": 59.8,
     "revision_signal": "upward",
     "required_eps_growth_pct": -75.0,
     "consensus_eps_growth_pct": 177.6,
     "growth_cushion_pct": 252.6,
     "rationale": [
-      "多口径隐含价中位数高于现价 60.8%",
+      "多口径隐含价中位数高于现价 59.8%",
       "近 30 天 EPS 共识上修",
       "历史 PE 口径要求 EPS 增长 -75.0%，共识为 +177.6%"
     ]
   },
   "official_guidance_status": "not_connected",
-  "fetched_at": "2026-10-11T17:33:23.345479+00:00",
+  "fetched_at": "2026-10-12T01:33:24.675759+00:00",
   "source": "yfinance analyst aggregation",
   "_meta": {
-    "cached_at": "2026-10-12T02:33:23.346480",
-    "age_sec": 28798,
-    "stale": true,
-    "refreshing": true
+    "cached_at": "2026-10-12T10:33:24.675759",
+    "age_sec": 7196,
+    "stale": false,
+    "refreshing": false
   },
   "ticker": "DRAM",
   "is_proxy": true
