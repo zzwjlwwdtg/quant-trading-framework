@@ -166,6 +166,31 @@ class Develop(Base):
         self.assertEqual(called, [])
 
 
+class QuotaAndWip(Develop):
+    """2026-10-13: 额度用完不算失败 (退回 approved 等重试); 失败的改动保留在分支上便于汇报."""
+    def test_quota_failure_returns_to_approved_without_requeue(self):
+        self._approve()
+        quota = lambda wt, prompt: (False, "You've hit your limit · resets 2:30pm (Asia/Tokyo)")
+        with patch.object(ev, "_claude_dev", quota), patch.object(ev, "run_tests", self._tests()):
+            res = ev.work()
+        self.assertEqual(ev.get(ev.load(), "EVO-1")["status"], "approved")
+        self.assertNotIn({"requeued": True}, res)            # 不会立刻死循环重排
+
+    def test_failed_dev_kept_on_branch_and_retry(self):
+        self._approve()
+        r = ev.develop("EVO-1", dev=self._dev("agents/dashboard.html", "<b>x</b>\n"), tests=self._tests(fail_after=True))
+        self.assertEqual(r["status"], "dev_failed")
+        self.assertIn("[evo-wip]", git(self.td, "log", "-1", "--format=%s", "evo/EVO-1"))
+        self.assertEqual((self.agents / "dashboard.html").read_text(), "<html></html>\n")   # main 未变
+        self.assertIn("test_tail", ev.get(ev.load(), "EVO-1")["dev_report"])
+        self.assertTrue(ev.act("EVO-1", "retry")["ok"])
+        self.assertEqual(ev.get(ev.load(), "EVO-1")["status"], "approved")
+
+    def test_worker_job_has_fallback_schedule(self):
+        import _webui_watchdog as w
+        self.assertTrue(w.JOBS["evo_worker"].get("auto_every_days"))
+
+
 class WorkQueue(Base):
     """2026-10-13: 一次批准多条 → worker 开发完一条后自动再排下一次, 卡住时不无限重排."""
     def _items(self, n):
@@ -203,7 +228,9 @@ class Wiring(unittest.TestCase):
         import _webui_watchdog as wd
         import snapshot_generator as sg
         self.assertTrue(wd.JOBS["evo_propose"]["market_quiet"])
-        self.assertNotIn("auto_every_days", wd.JOBS["evo_worker"])       # 开发只由批准唤起
+        # 2026-10-13: worker 有 6 小时兜底 (额度恢复后重试); 只开发 approved, 见 test_unapproved_never_developed
+        self.assertLessEqual(wd.JOBS["evo_worker"]["auto_every_days"], 0.5)
+        self.assertTrue(wd.JOBS["evo_worker"]["market_quiet"])
         self.assertIn("/api/evolution", sg.GLOBAL_ENDPOINTS)
         self.assertNotIn("/api/evolution_token", sg.GLOBAL_ENDPOINTS)
         html = (AGENTS_DIR / "dashboard.html").read_text(encoding="utf-8")

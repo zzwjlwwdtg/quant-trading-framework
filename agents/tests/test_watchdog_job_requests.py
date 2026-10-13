@@ -77,6 +77,8 @@ class JobRequests(unittest.TestCase):
         rc, launch = self.run_main()
         launch.assert_not_called()
         self.assertIn("job_already_running", self.events())
+        # 2026-10-13: 请求不再被吞掉, 保留到任务结束后再启动
+        self.assertTrue((self.td / "job_request_eps_growth_backtest.json").exists())
         old = time.time() - wd.JOB_STALE_HOURS * 3600 - 60
         import os
         os.utime(self.td / "job_eps_growth_backtest.running", (old, old))

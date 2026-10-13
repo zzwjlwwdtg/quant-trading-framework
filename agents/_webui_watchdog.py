@@ -84,7 +84,8 @@ JOBS = {
     "usd_theme": {"bat": "_usd_theme.bat", "market_quiet": True, "auto_every_days": 1},
     # 2026-10-12: 系统自我进化. 提案每日收盘后自动; 开发/合并只在用户批准后 (批准时写 job 请求)
     "evo_propose": {"bat": "_evolution_propose.bat", "market_quiet": True, "auto_every_days": 1},
-    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True},
+    # 每 6 小时兜底跑一次 (Claude 额度用完退回 approved 的提案会在额度恢复后自动重试; 无待办时秒退)
+    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True, "auto_every_days": 0.25},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
@@ -315,6 +316,11 @@ def _process_job_requests() -> None:
         name = req.stem[len("job_request_"):]
         if name in JOBS and JOBS[name].get("market_quiet") and _in_us_market_window():
             continue          # 保留请求, 收盘后的下一轮再启动
+        _run_flag = JOB_DIR / f"job_{name}.running"
+        if (name in JOBS and _run_flag.exists()
+                and (time.time() - _run_flag.stat().st_mtime) < JOB_STALE_HOURS * 3600):
+            _log("job_already_running", f"{name}: request kept until it finishes")
+            continue          # 2026-10-13: 任务还在跑 → 请求保留到它结束 (以前会被消费掉然后丢弃)
         try:
             os.replace(req, req.with_suffix(".done"))
         except OSError as e:

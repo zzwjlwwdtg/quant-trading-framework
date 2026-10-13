@@ -130,7 +130,17 @@ ACTIONS = {
     "reject": (("proposed",), "rejected", False),
     "approve_merge": (("ready_for_review",), "merge_approved", True),
     "reject_merge": (("ready_for_review",), "merge_rejected", False),
+    # 2026-10-13: 失败后由用户 (或额度恢复后) 重新开发; 仍然不会自动上线交易代码
+    "retry": (("dev_failed", "blocked", "merge_failed"), "approved", True),
 }
+
+# Claude 额度/限流导致的失败不是代码问题: 退回 approved, 由 evo_worker 定时任务稍后重试
+QUOTA_MARKERS = ("hit your limit", "usage limit", "rate limit", "rate_limit", "quota", "overloaded", " 429")
+
+
+def _quota_hit(text: str) -> bool:
+    t = (text or "").lower()
+    return any(m in t for m in QUOTA_MARKERS)
 
 
 def act(pid: str, action: str, by: str = "user", note: str = "") -> dict:
@@ -417,14 +427,23 @@ def develop(pid: str, dev=None, tests=None) -> dict:
         return _finish(pid, "dev_failed", f"worktree 失败: {r.stderr[:300]}")
     base = tests(wt / "agents")
     ok, out = dev(wt, build_dev_prompt(p))
+    if not ok and _quota_hit(out):
+        return _finish(pid, "approved", f"Claude 额度用完, 稍后自动重试: {out[-160:]}", cleanup=wt)
     if not ok:
         return _finish(pid, "dev_failed", f"开发失败: {out[-300:]}", cleanup=wt)
     after = tests(wt / "agents")
     new_fail = sorted(set(after["failed"]) - set(base["failed"]))
+    first_tail = after.get("tail", "")
     if new_fail:                                  # 给一次修复机会
-        dev(wt, build_dev_prompt(p, after["tail"]))
+        ok2, out2 = dev(wt, build_dev_prompt(p, after["tail"]))
+        if not ok2 and _quota_hit(out2):
+            _keep_wip(pid, wt, "fix round hit quota")
+            return _finish(pid, "approved", f"修复轮 Claude 额度用完, 稍后自动重试: {out2[-160:]}", cleanup=wt)
+        out = out + "\n--- 修复轮 ---\n" + (out2 or "")
         after = tests(wt / "agents")
         new_fail = sorted(set(after["failed"]) - set(base["failed"]))
+    # 测试运行会改写被跟踪的运行时数据 (agents/signals/*.json), 不属于开发改动
+    _git(["checkout", "--", "agents/signals"], cwd=wt)
     _git(["add", "-A"], cwd=wt)
     changed = [f for f in _git(["diff", "--cached", "--name-only"], cwd=wt).stdout.splitlines() if f]
     diff = _git(["diff", "--cached"], cwd=wt, timeout=60).stdout
@@ -432,13 +451,16 @@ def develop(pid: str, dev=None, tests=None) -> dict:
         return _finish(pid, "dev_failed", "没有产生任何改动", cleanup=wt)
     report = {"changed_files": changed, "tests_before": base["ran"], "tests_after": after["ran"],
               "new_failures": new_fail, "dev_summary": out[-1500:],
-              "diffstat": _git(["diff", "--cached", "--stat"], cwd=wt).stdout[-2000:]}
+              "diffstat": _git(["diff", "--cached", "--stat"], cwd=wt).stdout[-2000:],
+              "test_tail": (after.get("tail") or first_tail or "")[-2500:]}
     items = load(); p = get(items, pid); p["dev_report"] = report; save(items)
     if new_fail:
-        return _finish(pid, "dev_failed", f"新增测试失败 {len(new_fail)} 个", cleanup=wt)
+        _keep_wip(pid, wt, f"{len(new_fail)} new test failures")
+        return _finish(pid, "dev_failed", f"新增测试失败 {len(new_fail)} 个 (改动保留在分支 evo/{pid}, 未合并)", cleanup=wt)
     violations = guard_diff(changed, diff)
     if violations:
         items = load(); p = get(items, pid); p["dev_report"]["violations"] = violations; save(items)
+        _keep_wip(pid, wt, "guard violations")
         return _finish(pid, "blocked", "; ".join(violations[:3]), cleanup=wt)
     msg = (f"[evo] {pid}: {p.get('title')}\n\n{p.get('problem', '')[:400]}\n\n"
            f"Approved by owner; developed by local Claude Code (evolution worker); "
@@ -449,6 +471,13 @@ def develop(pid: str, dev=None, tests=None) -> dict:
     if needs_review(changed):
         return _finish(pid, "ready_for_review", "改动涉及交易相关文件, 等待用户确认上线")
     return merge(pid)
+
+
+def _keep_wip(pid: str, wt: Path, why: str) -> None:
+    """失败的开发也提交到 evo/<id> 分支 (不合并), 便于汇报时查看到底改了什么."""
+    _git(["checkout", "--", "agents/signals"], cwd=wt)
+    _git(["add", "-A"], cwd=wt)
+    _git(["commit", "-q", "--allow-empty", "-m", f"[evo-wip] {pid}: NOT MERGED ({why})"], cwd=wt)
 
 
 def merge(pid: str) -> dict:
@@ -486,7 +515,9 @@ def work() -> list[dict]:
     for p in [x for x in load() if x.get("status") == "merge_approved"]:
         done.append(merge(p["id"]))
     progressed = True
-    for p in [x for x in load() if x.get("status") == "approved"][:1]:
+    queue = sorted([x for x in load() if x.get("status") == "approved"],   # 先批准的先开发
+                   key=lambda x: ((x.get("history") or [{}])[-1].get("ts", ""), x["id"]))
+    for p in queue[:1]:
         done.append(develop(p["id"]))
         progressed = next((x.get("status") for x in load() if x["id"] == p["id"]), "") != "approved"
     # 一次只开发 1 条 (单次任务时长可控); 还有已批准/已确认的 → 再排一次 worker

@@ -4250,7 +4250,8 @@ async function loadEvolution() {
     const st = EVO_STATUS_ZH[p.status] || p.status;
     const btn = (a, label, cls) => `<button onclick="evoAct('${p.id}','${a}')" style="margin-right:6px; padding:2px 10px; border:1px solid var(--${cls}); color:var(--${cls}); background:transparent; border-radius:3px; cursor:pointer; font-size:11px">${label}</button>`;
     const buttons = !owner ? '' : (p.status === 'proposed' ? btn('approve', '批准开发', 'ok') + btn('reject', '拒绝', 'bad')
-      : p.status === 'ready_for_review' ? btn('approve_merge', '确认上线', 'ok') + btn('reject_merge', '不上线', 'bad') : '');
+      : p.status === 'ready_for_review' ? btn('approve_merge', '确认上线', 'ok') + btn('reject_merge', '不上线', 'bad')
+      : ['dev_failed', 'blocked', 'merge_failed'].includes(p.status) ? btn('retry', '重新开发', 'warn') : '');
     const rep = p.dev_report || {};
     return `<details ${i === 0 ? 'open' : ''} style="border-bottom:1px solid var(--border); padding:5px 0">
       <summary style="cursor:pointer; font-size:12px"><b>${p.id}</b> ${p.title}
