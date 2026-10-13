@@ -3674,6 +3674,22 @@ def api_fed_watch() -> dict:
                    first_call_placeholder=placeholder)
 
 
+def api_premarket_wrap() -> dict:
+    """彭博风格盘前快讯：美东盘前时段每个交易日由 AI CLI 生成一次，其余时间返回最近一期。"""
+    placeholder = {"edition": None, "status": "computing", "sections": [], "watch_today": []}
+    def _compute():
+        try:
+            from premarket_wrap import get_premarket_wrap
+            return get_premarket_wrap()
+        except Exception as e:
+            return {"edition": None, "status": "error", "error": str(e)[:200], "sections": [], "watch_today": []}
+    # 10 min TTL 只决定多久检查一次；真正的生成每个交易日最多一次（失败 20 分钟后重试）
+    return _cached("premarket_wrap", ttl_sec=10 * 60,
+                   compute_fn=_compute,
+                   first_call_async=True,
+                   first_call_placeholder=placeholder)
+
+
 def api_capital_flow(ticker: str) -> dict:
     """大单/散户资金流向。US → moomoo super/big/mid/small；JP → yfinance 5min 量能异常代理。
 
@@ -5525,6 +5541,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_thesis_history(days=_days))
             elif path == "/api/fed_watch":
                 self._json(api_fed_watch())
+            elif path == "/api/premarket_wrap":
+                self._json(api_premarket_wrap())
             elif path == "/api/policy_toolkit":
                 self._json(api_policy_toolkit())
             elif path == "/api/liquidity_history":

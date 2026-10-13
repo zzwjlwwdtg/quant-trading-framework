@@ -57,6 +57,7 @@ GLOBAL_ENDPOINTS = [
     "/api/policy_toolkit",     # 美债救援政策工具追踪 (回购/YCC/TGA/... × 30Y 反应)
     "/api/liquidity_history",  # 26 年流动性历史 (MOVE + funding + bank, monthly)
     "/api/fed_watch",     # CME FedWatch 加息预期 (AI CLI + live web search)
+    "/api/premarket_wrap",  # 盘前快讯 (新闻标题 → AI CLI 中文汇总, 每交易日一期; 秘书 QQ 推送读取)
     "/api/ai_analysis",
     "/api/ai_targets",    # AI CLI 结构化交易目标 (paper_trader 用来挂 GTC 限价 + SELL STOP)
     "/api/ticker_options",
