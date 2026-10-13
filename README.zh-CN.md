@@ -21,7 +21,7 @@
 WebUI（`webui.bat` → http://127.0.0.1:8080）— 零依赖 http.server + 单页 dashboard，
 覆盖 NAV / 板块 regime / Trump 情绪 / 黄金+石油宏观 / 事件日历 / 每标的信号 + 期权墙 + AI 分析。
 
-![Dashboard 全景](docs/dashboard-full.png)
+![Dashboard 全景（2026-10-13 快照）](docs/dashboard-full.png)
 
 **每张标的卡包含**：多空共振条 + 建议动作/置信度 → 迷你 **期权墙 SVG**（call/put 成交分布 + spot 虚线 + Max Pain）→
 **攻防位表格**（strike / 保费 / OI 仓位 / 名义敞口）→ **挤压风险**（gamma_up / put_break / max_pain_gravity）→

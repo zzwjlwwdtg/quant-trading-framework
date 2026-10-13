@@ -23,7 +23,7 @@ institutional risk desk stay owner-only. Not investment advice — educational d
 
 WebUI (`webui.bat` → http://127.0.0.1:8080) — zero-dependency `http.server` + single-page dashboard covering NAV, sector regimes, Trump sentiment, gold/oil macro, event calendar, and per-ticker cards with signals + option walls + AI analysis.
 
-![Dashboard overview](docs/dashboard-full.png)
+![Dashboard overview (snapshot 2026-10-13)](docs/dashboard-full.png)
 
 ### Per-ticker card contents
 

@@ -125,6 +125,8 @@
   <h1>FSI Trading Dashboard</h1>
   <div><small id="update-ts">加载中...</small> · <a href="#" onclick="loadAll();return false" style="color:var(--blue)">🔄 刷新</a></div>
 </div>
+<!-- 2026-10-13: 有待批准的进化提案时置顶提醒 (卡片在页面中部, 容易漏看) -->
+<div id="evo-pending" style="display:none; margin:6px 0 10px; padding:8px 12px; border:1px solid #1f6feb; border-radius:6px; background:rgba(31,111,235,.12); font-size:13px"></div>
 
 <!-- 术语速查（可折叠） -->
 <details class="glossary">
@@ -229,7 +231,7 @@
 
 <!-- Row 0-top-1c: 系统自我进化 (2026-10-12; 提案需所有者批准, 本机看板才有按钮) -->
 <div class="grid">
-  <div class="card" style="border-left:4px solid #1f6feb">
+  <div class="card" id="evo-card" style="border-left:4px solid #1f6feb">
     <h2 title="每天收盘后, 本机 Claude Code 根据卖出复盘、日志报错、数据质量并对照彭博机构级量化体系提出改进提案。只有所有者批准后才开发; 开发在隔离副本里进行并跑全量测试; 改到交易相关文件还要再确认一次才上线。">🧬 系统自我进化 <small id="evo-meta">Proposals</small></h2>
     <div id="evo-summary" style="font-size:12px; margin-bottom:5px"></div>
     <div id="evo"><small style="color:var(--muted)">加载中...</small></div>
@@ -4233,6 +4235,15 @@ async function loadEvolution() {
   $('evo-meta').textContent = `${d.enabled ? '运行中' : '⏸ 已暂停 (.evolution_off)'} · ${ps.length} 条提案`;
   const rs = d.review_summary || {};
   $('evo-summary').innerHTML = rs.summary ? `<b>复盘总结</b>（${(rs.ts || '').slice(5, 16).replace('T', ' ')} UTC）：${rs.summary}` : '';
+  const pend = ps.filter(p => p.status === 'proposed').length, rev = ps.filter(p => p.status === 'ready_for_review').length;
+  const pb = $('evo-pending');
+  if (pb) {
+    const parts = [];
+    if (pend) parts.push(`<b>${pend}</b> 条提案待批准开发`);
+    if (rev) parts.push(`<b>${rev}</b> 条改动待确认上线`);
+    pb.style.display = parts.length ? 'block' : 'none';
+    pb.innerHTML = parts.length ? `🧬 系统自我进化：${parts.join('，')} → <a href="#evo-card" style="color:var(--blue)">去查看</a>` : '';
+  }
   if (!ps.length) { el.innerHTML = '<small style="color:var(--muted)">还没有提案。每天美股收盘后生成。</small>'; return; }
   const owner = !window.STATIC_SNAPSHOT_MODE;
   el.innerHTML = ps.map((p, i) => {
