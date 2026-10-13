@@ -443,7 +443,7 @@ def develop(pid: str, dev=None, tests=None) -> dict:
         after = tests(wt / "agents")
         new_fail = sorted(set(after["failed"]) - set(base["failed"]))
     # 测试运行会改写被跟踪的运行时数据 (agents/signals/*.json), 不属于开发改动
-    _git(["checkout", "--", "agents/signals"], cwd=wt)
+    _git(["checkout", "--", "agents/signals"], cwd=wt); _git(["clean", "-fq", "--", "agents/signals"], cwd=wt)
     _git(["add", "-A"], cwd=wt)
     changed = [f for f in _git(["diff", "--cached", "--name-only"], cwd=wt).stdout.splitlines() if f]
     diff = _git(["diff", "--cached"], cwd=wt, timeout=60).stdout
@@ -475,7 +475,7 @@ def develop(pid: str, dev=None, tests=None) -> dict:
 
 def _keep_wip(pid: str, wt: Path, why: str) -> None:
     """失败的开发也提交到 evo/<id> 分支 (不合并), 便于汇报时查看到底改了什么."""
-    _git(["checkout", "--", "agents/signals"], cwd=wt)
+    _git(["checkout", "--", "agents/signals"], cwd=wt); _git(["clean", "-fq", "--", "agents/signals"], cwd=wt)
     _git(["add", "-A"], cwd=wt)
     _git(["commit", "-q", "--allow-empty", "-m", f"[evo-wip] {pid}: NOT MERGED ({why})"], cwd=wt)
 
