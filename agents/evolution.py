@@ -485,8 +485,15 @@ def work() -> list[dict]:
     done = []
     for p in [x for x in load() if x.get("status") == "merge_approved"]:
         done.append(merge(p["id"]))
+    progressed = True
     for p in [x for x in load() if x.get("status") == "approved"][:1]:
         done.append(develop(p["id"]))
+        progressed = next((x.get("status") for x in load() if x["id"] == p["id"]), "") != "approved"
+    # 一次只开发 1 条 (单次任务时长可控); 还有已批准/已确认的 → 再排一次 worker
+    # (只在本次确有进展时才重排, 防止卡在同一条上无限循环)
+    if progressed and any(x.get("status") in ("approved", "merge_approved") for x in load()):
+        _request_worker()
+        done.append({"requeued": True})
     return done
 
 

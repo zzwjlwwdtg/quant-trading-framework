@@ -166,6 +166,38 @@ class Develop(Base):
         self.assertEqual(called, [])
 
 
+class WorkQueue(Base):
+    """2026-10-13: 一次批准多条 → worker 开发完一条后自动再排下一次, 卡住时不无限重排."""
+    def _items(self, n):
+        ev.save([{"id": f"EVO-{i}", "title": "t", "created_at": ev._now(), "status": "approved", "history": []}
+                 for i in range(1, n + 1)])
+
+    def _req(self):
+        return self.agents / "signals" / "job_request_evo_worker.json"
+
+    def test_requeues_when_more_approved(self):
+        self._items(2)
+        def fake_dev(pid):
+            ps = ev.load()
+            for x in ps:
+                if x["id"] == pid:
+                    x["status"] = "merged"
+            ev.save(ps)
+            return {"id": pid, "status": "merged"}
+        with patch.object(ev, "develop", side_effect=fake_dev):
+            res = ev.work()
+        self.assertEqual(res[0]["id"], "EVO-1")
+        self.assertIn({"requeued": True}, res)
+        self.assertTrue(self._req().exists())
+
+    def test_no_requeue_when_stuck_or_done(self):
+        self._items(2)
+        with patch.object(ev, "develop", return_value={"id": "EVO-1", "status": "approved"}):
+            res = ev.work()
+        self.assertNotIn({"requeued": True}, res)
+        self.assertFalse(self._req().exists())
+
+
 class Wiring(unittest.TestCase):
     def test_jobs_and_dashboard(self):
         import _webui_watchdog as wd
