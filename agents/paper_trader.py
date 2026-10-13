@@ -1417,12 +1417,50 @@ def _get_realtime_price(code: str, fallback: float) -> float:
     return fallback
 
 
+def _capture_live_quote(code: str, fallback: float) -> dict:
+    """EVO-20261013-2 (2026-10-13): 单次 live quote 调用 + 元数据.
+
+    返回 {price, source, staleness_sec}. 内部复用 _get_realtime_price 保证
+    测试 patch 面兼容; 失败回退到 fallback (= 日 K 参考价).
+    staleness_sec 需要独立抓一次 tick 时间, 失败则 None (schema 稳定, 数据
+    best-effort). 价格 == fallback 视为未成功抓到 live quote, source 标
+    'fallback_daily'.
+    """
+    price_val = _get_realtime_price(code, fallback)
+    if price_val == fallback:
+        return {"price": fallback, "source": "fallback_daily",
+                 "staleness_sec": None}
+    staleness = None
+    try:
+        import yfinance as yf
+        import pandas as pd
+        symbol = code.replace("US.", "")
+        df = yf.Ticker(symbol).history(period="1d", interval="1m", prepost=True)
+        if df is not None and not df.empty:
+            tsv = pd.Timestamp(df.index[-1])
+            tsv = tsv.tz_convert("UTC") if tsv.tz is not None else tsv.tz_localize("UTC")
+            staleness = (datetime.now(timezone.utc) - tsv.to_pydatetime()).total_seconds()
+            if staleness < 0:   # 时钟微偏
+                staleness = 0.0
+    except Exception:
+        staleness = None
+    return {"price": price_val, "source": "yfinance_1m_prepost",
+             "staleness_sec": staleness}
+
+
 def _log_trade(ticker: str, side: str, qty: int, price: float,
                 order_id: str | None, tag: str, decision: dict | None = None,
                 mkt: dict | None = None, window: str | None = None,
-                extra: dict | None = None) -> None:
+                extra: dict | None = None,
+                price_snapshot: dict | None = None) -> None:
     """每笔成功成交（或 dry-run）追加到 signals/trade_log.jsonl，给复盘归因用。
-    永不影响主流程；任何异常吞掉。"""
+    永不影响主流程；任何异常吞掉。
+
+    EVO-20261013-2: 新增 price_snapshot (由 decision_agent.build_price_snapshot
+    生成), 展平到 entry 顶层字段 ref_price / live_quote / divergence_pct /
+    divergence_flag / quote_source / staleness_sec, 让 postmortem 与 dashboard
+    trade-log 列可以直接读. entry["price"] 保持原语义 = 下单 trigger (order_price).
+    """
     try:
         from pathlib import Path
         path = Path(__file__).parent / "signals" / "trade_log.jsonl"
@@ -1439,6 +1477,14 @@ def _log_trade(ticker: str, side: str, qty: int, price: float,
             "tag":      tag,
             "window":   window,
             "dry_run":  DRY_RUN,
+            # EVO-20261013-2 三端价差: snapshot=None 时字段为 None (兼容老记录)
+            "ref_price":       (price_snapshot or {}).get("ref_price"),
+            "live_quote":      (price_snapshot or {}).get("live_quote"),
+            "quote_source":    (price_snapshot or {}).get("quote_source"),
+            "staleness_sec":   (price_snapshot or {}).get("staleness_sec"),
+            "divergence_pct":  (price_snapshot or {}).get("divergence_pct"),
+            "divergence_flag": (price_snapshot or {}).get("divergence_flag"),
+            "trigger_price":   round(float(price), 2),   # 等价于 entry["price"], 显式命名方便复盘
             "decision": {
                 "action":     decision.get("action"),
                 "confidence": decision.get("confidence"),
@@ -1552,9 +1598,16 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
             return None
     # 盘前普通订单以实时价为基准，但正向跳空超过上限时不追价。
     # 明确低于市价的 AI resting limit 保留原限价，不受此门禁影响。
+    #
+    # EVO-20261013-2 (2026-10-13): 旁路抓 live quote 做三端价差快照
+    # (daily ref vs live quote). 走 _get_realtime_price 单一入口, 测试 patch
+    # 面不变. 规则/下单口径均不改, 仅额外在 extra / trade_log / execution_ledger
+    # 落多三栏 (ref/live/trigger).
     ref_price = price
+    rt_live: float | None = None
     if fill_outside_rth:
         rt = _get_realtime_price(code, price)
+        rt_live = rt   # EVO-20261013-2: 盘前 rt 已拿到, 直接作为 live_quote
         gap_pct = (rt - price) / price
         if (
             side == TrdSide.BUY
@@ -1574,6 +1627,37 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
                     f"(gap {gap_pct*100:+.1f}%)"
                 )
             ref_price = rt
+    elif not DRY_RUN:
+        # EVO-20261013-2: RTH 真实下单路径额外抓一次 live quote 做旁路价差,
+        # 不改 order_price 口径; DRY_RUN 跳过, 避免测试触发真实 yf 请求.
+        try:
+            rt_live = _get_realtime_price(code, price)
+        except Exception:
+            rt_live = None
+
+    live_quote_val: float | None = rt_live
+    if live_quote_val is None or live_quote_val <= 0 or live_quote_val == price:
+        live_source = "fallback_daily"
+        live_staleness: float | None = None
+    else:
+        live_source = "yfinance_1m_prepost"
+        live_staleness = None
+    try:
+        from decision_agent import build_price_snapshot
+        price_snapshot = build_price_snapshot(
+            ref_price=price, live_quote=live_quote_val,
+            quote_source=live_source, staleness_sec=live_staleness,
+        )
+    except Exception:
+        price_snapshot = None
+    if price_snapshot and price_snapshot.get("divergence_flag") == "PRICE_DIVERGENCE":
+        logger.warning(
+            f"[trader] PRICE_DIVERGENCE {code}: ref ${price:.2f} vs "
+            f"live ${live_quote_val:.2f} "
+            f"({(price_snapshot.get('divergence_pct') or 0)*100:+.2f}%)"
+        )
+    extra["price_snapshot"] = price_snapshot
+
     if side == TrdSide.BUY:
         order_price = round(ref_price * (1 + buffer), 2)
     else:
@@ -1596,7 +1680,8 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     if DRY_RUN:
         logger.info(f"[trader-DRY ] {side_label} {qty:>5} {code:<8} @ {order_price:>8.2f} ({ref_label}) {rth_label} {tag}")
         _log_trade(code, side_label.strip(), qty, order_price, "DRY", tag,
-                   decision=decision, mkt=mkt, window=window, extra=extra)
+                   decision=decision, mkt=mkt, window=window, extra=extra,
+                   price_snapshot=price_snapshot)
         modeled_qty = int(execution_plan.get("modeled_fill_qty") or 0)
         modeled_price = float(execution_plan.get("expected_fill_price") or order_price)
         append_execution_event(EXECUTION_LOG_PATH, {
@@ -1605,6 +1690,14 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
             "ticker": code,
             "side": side_label.strip(),
             "plan": execution_plan,
+            # EVO-20261013-2: dry-run 也带三端价差快照, 便于影子期统计
+            "trigger_price": order_price,
+            "ref_price": price,
+            "live_quote": live_quote_val,
+            "quote_source": live_source,
+            "staleness_sec": live_staleness,
+            "divergence_pct": (price_snapshot or {}).get("divergence_pct"),
+            "divergence_flag": (price_snapshot or {}).get("divergence_flag"),
             "quality": actual_execution_quality(
                 side=side_label.strip(), requested_qty=qty, dealt_qty=modeled_qty,
                 reference_price=ref_price, average_fill_price=modeled_price,
@@ -1632,7 +1725,8 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     oid = info.iloc[0]["order_id"]
     logger.info(f"[trader-LIVE] {side_label} {qty:>5} {code:<8} @ {order_price:>8.2f} ({ref_label}) {rth_label} order={oid} {tag}")
     _log_trade(code, side_label.strip(), qty, order_price, str(oid), tag,
-               decision=decision, mkt=mkt, window=window, extra=extra)
+               decision=decision, mkt=mkt, window=window, extra=extra,
+               price_snapshot=price_snapshot)
     append_execution_event(EXECUTION_LOG_PATH, {
         "event": "submitted",
         "order_id": str(oid),
@@ -1643,6 +1737,15 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         "requested_qty": qty,
         "order_price": order_price,
         "reference_price": ref_price,
+        # EVO-20261013-2 三端价差: trigger / ref(日 K) / live_quote 独立字段,
+        # fill_ledger.get_order_price_trio 读, dashboard trade log 列展示
+        "trigger_price": order_price,
+        "ref_price": price,
+        "live_quote": live_quote_val,
+        "quote_source": live_source,
+        "staleness_sec": live_staleness,
+        "divergence_pct": (price_snapshot or {}).get("divergence_pct"),
+        "divergence_flag": (price_snapshot or {}).get("divergence_flag"),
         "plan": execution_plan,
     })
     # 主动推送 trade（Telegram/Discord，如已配置）

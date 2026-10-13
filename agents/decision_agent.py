@@ -1720,3 +1720,41 @@ def _get_gold_decision_impl(market: dict, events: dict, macro: dict | None,
     # WP04: 传 context 让 gold 决策也能走 snapshot thesis (backtest 用)
     result = _apply_thesis_filter(result, market.get("ticker", ""), context=context)
     return _attach_model_versions(result, context)
+
+
+# EVO-20261013-2 (2026-10-13): 决策/日志/成交三端价差快照辅助.
+# 不改规则下单口径; 调用方 (paper_trader 等) 在抓到 live quote 后生成一份
+# 标准 snapshot, 写入 trade_log / execution_ledger / dashboard trade-log 列,
+# 让复盘能还原真实触发点, data_quality 能统计 PRICE_DIVERGENCE 频率.
+def build_price_snapshot(ref_price, live_quote,
+                          quote_source: str | None = None,
+                          staleness_sec: float | None = None) -> dict:
+    """构造标准三端快照. 字段固定, 便于下游 schema 稳定.
+
+    参数:
+      ref_price      日 K / 盘前参考价 (规则引擎实际消费的 price)
+      live_quote     决策时点的实时报价 (旁路, 不进规则)
+      quote_source   报价来源标签 (如 'yfinance_1m_prepost', 'fallback_daily')
+      staleness_sec  live_quote 与现在相差秒数 (越小越新)
+
+    返回: {ref_price, live_quote, quote_source, staleness_sec,
+            divergence_pct, divergence_flag, threshold}.
+    divergence_flag = 'PRICE_DIVERGENCE' 当 |divergence_pct| ≥ 阈值, 否则 None.
+    """
+    from decision_context import compute_price_divergence, PRICE_DIVERGENCE_THRESHOLD
+    pct = compute_price_divergence(ref_price, live_quote)
+    flagged = pct is not None and abs(pct) >= PRICE_DIVERGENCE_THRESHOLD
+    def _rp(x, nd):
+        try:
+            return None if x is None else round(float(x), nd)
+        except (TypeError, ValueError):
+            return None
+    return {
+        "ref_price":       _rp(ref_price, 4),
+        "live_quote":      _rp(live_quote, 4),
+        "quote_source":    quote_source,
+        "staleness_sec":   _rp(staleness_sec, 2),
+        "divergence_pct":  None if pct is None else round(pct, 6),
+        "divergence_flag": "PRICE_DIVERGENCE" if flagged else None,
+        "threshold":       PRICE_DIVERGENCE_THRESHOLD,
+    }

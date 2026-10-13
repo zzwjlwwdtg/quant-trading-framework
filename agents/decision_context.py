@@ -36,6 +36,31 @@ from types import MappingProxyType
 from typing import Any, Optional
 
 
+# EVO-20261013-2 (2026-10-13): 决策/日志/成交三端价差阈值.
+# |live_quote - ref_price| / ref_price 超过该阈值 → log/dashboard 打
+# PRICE_DIVERGENCE 标. 不改规则下单口径, 仅做基础设施级一致性校验.
+PRICE_DIVERGENCE_THRESHOLD = 0.006   # 0.6%
+
+
+def compute_price_divergence(ref_price, live_quote) -> Optional[float]:
+    """返回 (live_quote - ref_price) / ref_price. 任一无效或 ≤0 → None."""
+    try:
+        r = float(ref_price) if ref_price is not None else 0.0
+        q = float(live_quote) if live_quote is not None else 0.0
+    except (TypeError, ValueError):
+        return None
+    if r <= 0 or q <= 0:
+        return None
+    return (q - r) / r
+
+
+def is_price_diverged(ref_price, live_quote,
+                      threshold: float = PRICE_DIVERGENCE_THRESHOLD) -> bool:
+    """便捷判断: 超阈值 True; 任一无效 False."""
+    pct = compute_price_divergence(ref_price, live_quote)
+    return pct is not None and abs(pct) >= threshold
+
+
 def _to_immutable(value):
     """R04: deep copy first (isolate from source), then recursively wrap
     dict → MappingProxyType, list → tuple. Result: reads work like dict/list,
@@ -113,6 +138,12 @@ class DecisionContext:
     data_version:             str                   = "unknown"
     is_backtest:              bool                  = False
     builder:                  str                   = "explicit"
+    # EVO-20261013-2: 决策时点的实时报价快照 (与 market.price 可能对不齐).
+    # 规则引擎仍用 market.price (日 K / 盘前参考); 这里只是旁路存证, 便于日志
+    # 和复盘脚本还原真实触发价差. 任一字段 None = 当时未成功抓到 live quote.
+    live_quote:               Optional[float]       = None
+    quote_source:             Optional[str]         = None
+    staleness_sec:            Optional[float]       = None
 
     def __post_init__(self):
         # R04: deep-immutable wrap for dict/list-like fields.
@@ -145,9 +176,47 @@ class DecisionContext:
             "data_version":           self.data_version,
             "is_backtest":            self.is_backtest,
             "builder":                self.builder,
+            "live_quote":             self.live_quote,
+            "quote_source":           self.quote_source,
+            "staleness_sec":          self.staleness_sec,
         }
         base.update(kwargs)
         return DecisionContext(**base)
+
+    # EVO-20261013-2: 三端价差辅助 ────────────────────────────────────────
+    def ref_price(self) -> Optional[float]:
+        """从 market 快照里取当前使用的参考价 (日 K / 盘前参考)."""
+        if not self.market:
+            return None
+        try:
+            p = self.market.get("price") if hasattr(self.market, "get") else None
+            return float(p) if p is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    def price_divergence_pct(self) -> Optional[float]:
+        """ref_price 与 live_quote 的相对价差. 任一缺失 → None."""
+        return compute_price_divergence(self.ref_price(), self.live_quote)
+
+    def is_price_diverged(self,
+                          threshold: float = PRICE_DIVERGENCE_THRESHOLD) -> bool:
+        pct = self.price_divergence_pct()
+        return pct is not None and abs(pct) >= threshold
+
+    def price_snapshot(self) -> dict:
+        """三端一致性校验的标准输出 (log / dashboard / postmortem 共用)."""
+        ref = self.ref_price()
+        pct = compute_price_divergence(ref, self.live_quote)
+        flagged = pct is not None and abs(pct) >= PRICE_DIVERGENCE_THRESHOLD
+        return {
+            "ref_price":       None if ref is None else round(float(ref), 4),
+            "live_quote":      None if self.live_quote is None else round(float(self.live_quote), 4),
+            "quote_source":    self.quote_source,
+            "staleness_sec":   None if self.staleness_sec is None else round(float(self.staleness_sec), 2),
+            "divergence_pct":  None if pct is None else round(pct, 6),
+            "divergence_flag": "PRICE_DIVERGENCE" if flagged else None,
+            "threshold":       PRICE_DIVERGENCE_THRESHOLD,
+        }
 
     def is_ticker_blacklisted(self, ticker: str) -> tuple[bool, str]:
         """Read blacklist from thesis_snapshot (if provided) instead of live.
@@ -219,6 +288,9 @@ def from_live_now(
     events: Optional[dict] = None,
     macro: Optional[dict] = None,
     board_regime: Optional[str] = None,
+    live_quote: Optional[float] = None,
+    quote_source: Optional[str] = None,
+    staleness_sec: Optional[float] = None,
 ) -> DecisionContext:
     """Build a live-mode context from current module state.
 
@@ -266,6 +338,9 @@ def from_live_now(
         data_version="live",
         is_backtest=False,
         builder="live",
+        live_quote=live_quote,
+        quote_source=quote_source,
+        staleness_sec=staleness_sec,
     )
 
 
@@ -277,6 +352,9 @@ def from_snapshot(
     thesis_snapshot: Optional[dict] = None,
     board_regime: Optional[str] = None,
     strategy_version: str = "historical",
+    live_quote: Optional[float] = None,
+    quote_source: Optional[str] = None,
+    staleness_sec: Optional[float] = None,
 ) -> DecisionContext:
     """Build a backtest-mode context. thesis_snapshot={} 表示无 thesis 干预,
     避免历史 backtest 被今日 thesis 污染."""
@@ -292,4 +370,7 @@ def from_snapshot(
         data_version=as_of.strftime("%Y%m%d"),
         is_backtest=True,
         builder="snapshot",
+        live_quote=live_quote,
+        quote_source=quote_source,
+        staleness_sec=staleness_sec,
     )
