@@ -507,13 +507,28 @@ def _finish(pid: str, status: str, note: str, cleanup: Path | None = None, delet
     return {"ok": status in ("merged", "ready_for_review"), "id": pid, "status": status, "note": note}
 
 
-def work() -> list[dict]:
-    """evo_worker 任务: 先合并已确认上线的, 再开发 1 条已批准的."""
+# 2026-10-14: 开发会大量消耗本机 Claude 额度, 而交易链路 (claude_gate) 也靠同一账号.
+# 只在美股收盘后的窗口开发 (UTC 20:00-02:59 = 日本 05:00-11:59), 额度 5 小时滚动恢复,
+# 保证下一个交易时段 (UTC 13:30 起) 前额度已恢复. 合并不调用 Claude, 不受此限.
+DEV_WINDOW_UTC_HOURS = (20, 21, 22, 23, 0, 1, 2)
+
+
+def in_dev_window(now: datetime | None = None) -> bool:
+    now = now or datetime.now(timezone.utc)
+    return now.hour in DEV_WINDOW_UTC_HOURS
+
+
+def work(now: datetime | None = None) -> list[dict]:
+    """evo_worker 任务: 先合并已确认上线的, 再 (仅开发窗口内) 开发 1 条已批准的."""
     if not enabled():
         return [{"skipped": "kill switch"}]
     done = []
     for p in [x for x in load() if x.get("status") == "merge_approved"]:
         done.append(merge(p["id"]))
+    if not in_dev_window(now):
+        if any(x.get("status") == "approved" for x in load()):
+            done.append({"deferred": "outside dev window (UTC 20-03), protects trading Claude quota"})
+        return done
     progressed = True
     queue = sorted([x for x in load() if x.get("status") == "approved"],   # 先批准的先开发
                    key=lambda x: ((x.get("history") or [{}])[-1].get("ts", ""), x["id"]))

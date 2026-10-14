@@ -39,7 +39,8 @@ class Base(unittest.TestCase):
                   patch.object(ev, "EVO_DIR", evo), patch.object(ev, "PROPOSALS", evo / "proposals.json"),
                   patch.object(ev, "LOG", evo / "log.jsonl"), patch.object(ev, "TOKEN", evo / ".token"),
                   patch.object(ev, "KILL_SWITCH", self.agents / ".evolution_off"),
-                  patch.object(ev, "WORKTREES", self.td / ".evo_worktrees")]
+                  patch.object(ev, "WORKTREES", self.td / ".evo_worktrees"),
+                  patch.object(ev, "in_dev_window", return_value=True)]
         for x in self.p:
             x.start()
 
@@ -221,6 +222,27 @@ class WorkQueue(Base):
             res = ev.work()
         self.assertNotIn({"requeued": True}, res)
         self.assertFalse(self._req().exists())
+
+
+class DevWindow(Base):
+    """2026-10-14: 开发只在美股收盘后窗口进行 (保护交易链路的 Claude 额度); 合并不受限."""
+    def test_outside_window_defers_dev_but_merges(self):
+        from datetime import datetime, timezone
+        ev.save([{"id": "EVO-1", "title": "t", "created_at": ev._now(), "status": "approved", "history": []},
+                 {"id": "EVO-2", "title": "m", "created_at": ev._now(), "status": "merge_approved", "history": []}])
+        with patch.object(ev, "in_dev_window", return_value=False), \
+             patch.object(ev, "develop") as dev, patch.object(ev, "merge", return_value={"id": "EVO-2", "status": "merged"}) as mg:
+            res = ev.work()
+        dev.assert_not_called()
+        mg.assert_called_once_with("EVO-2")
+        self.assertTrue(any("deferred" in r for r in res))
+        self.assertFalse((self.agents / "signals" / "job_request_evo_worker.json").exists())
+
+    def test_window_hours(self):
+        from datetime import datetime, timezone
+        real = ev.__dict__.get("DEV_WINDOW_UTC_HOURS")
+        self.assertIn(21, real); self.assertIn(1, real)
+        self.assertNotIn(13, real); self.assertNotIn(10, real)   # 交易时段前 3 小时也不开发
 
 
 class Wiring(unittest.TestCase):
