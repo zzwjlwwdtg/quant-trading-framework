@@ -40,9 +40,26 @@ def load_log() -> list:
     return out
 
 
+def _extract_prices(ev: dict) -> dict:
+    """EVO-20261013-2: 从 trade_log 条目抽三端价差字段 (老记录全 None 兼容)."""
+    return {
+        "ref_price":       ev.get("ref_price"),
+        "live_quote":      ev.get("live_quote"),
+        "trigger_price":   ev.get("trigger_price") or ev.get("price"),
+        "divergence_pct":  ev.get("divergence_pct"),
+        "divergence_flag": ev.get("divergence_flag"),
+        "quote_source":    ev.get("quote_source"),
+        "staleness_sec":   ev.get("staleness_sec"),
+    }
+
+
 def pair_trades(events: list) -> list[dict]:
     """把同 ticker 的 BUY -> SELL 配对（FIFO）。
-    PYRAMID 算追加仓位（加权平均 entry_price），TRAILING/TP/SELL 都算退出事件。"""
+    PYRAMID 算追加仓位（加权平均 entry_price），TRAILING/TP/SELL 都算退出事件。
+
+    EVO-20261013-2: 为每笔配对交易展开 entry/exit 两端的 price_snapshot
+    (ref_price / live_quote / trigger_price / divergence_pct / divergence_flag),
+    让 report() 能直接按价差分桶归因."""
     open_positions = defaultdict(list)   # ticker -> [{qty, price, ts, decision, mkt}]
     closed_trades = []
 
@@ -59,6 +76,7 @@ def pair_trades(events: list) -> list[dict]:
                 "qty": qty, "price": price, "ts": ts,
                 "decision": ev.get("decision", {}), "mkt": ev.get("market", {}),
                 "tag": ev.get("tag", ""),
+                "price_snapshot": _extract_prices(ev),
             })
         elif side == "SELL":
             remaining = qty
@@ -69,6 +87,8 @@ def pair_trades(events: list) -> list[dict]:
                 exit_dt  = datetime.fromisoformat(ts.replace("Z", "+00:00"))
                 hold_days = (exit_dt - entry_dt).total_seconds() / 86400
                 pnl_pct = (price - pos["price"]) / pos["price"] * 100
+                entry_prices = pos.get("price_snapshot") or {}
+                exit_prices  = _extract_prices(ev)
                 closed_trades.append({
                     "ticker":     ticker,
                     "entry_ts":   pos["ts"],
@@ -87,6 +107,17 @@ def pair_trades(events: list) -> list[dict]:
                     "entry_rsi":    pos["mkt"].get("rsi"),
                     "entry_cci":    pos["mkt"].get("cci"),
                     "entry_trend":  pos["mkt"].get("trend"),
+                    # EVO-20261013-2 三端价差: 老记录字段为 None, 不影响归因主流程
+                    "entry_ref_price":       entry_prices.get("ref_price"),
+                    "entry_live_quote":      entry_prices.get("live_quote"),
+                    "entry_trigger_price":   entry_prices.get("trigger_price"),
+                    "entry_divergence_pct":  entry_prices.get("divergence_pct"),
+                    "entry_divergence_flag": entry_prices.get("divergence_flag"),
+                    "exit_ref_price":        exit_prices.get("ref_price"),
+                    "exit_live_quote":       exit_prices.get("live_quote"),
+                    "exit_trigger_price":    exit_prices.get("trigger_price"),
+                    "exit_divergence_pct":   exit_prices.get("divergence_pct"),
+                    "exit_divergence_flag":  exit_prices.get("divergence_flag"),
                 })
                 pos["qty"] -= close_qty
                 if pos["qty"] <= 0:
@@ -159,6 +190,25 @@ def report(trades: list[dict]):
         avg = sum(t["pnl_pct"] for t in ts) / len(ts)
         usd = sum(t["pnl_usd"] for t in ts)
         print(f"    {tk:<12} n={len(ts):>3}  胜{wr:>3.0f}%  avg{avg:>+6.2f}%  ${usd:+,.0f}")
+
+    # EVO-20261013-2: 三端价差 (入场 ref vs live) 分布 + 影响
+    print(f"\n  ── 入场三端价差 (ref vs live) ──")
+    with_div = [t for t in trades if t.get("entry_divergence_pct") is not None]
+    if not with_div:
+        print("    (老记录无 price_snapshot 字段, 影子期上线后开始累计)")
+    else:
+        flagged = [t for t in with_div if t.get("entry_divergence_flag") == "PRICE_DIVERGENCE"]
+        n_all = len(with_div)
+        rate = len(flagged) / n_all * 100 if n_all else 0.0
+        print(f"    样本 n={n_all}, PRICE_DIVERGENCE={len(flagged)} ({rate:.1f}%)")
+        if flagged:
+            avg_div = sum(abs(t["entry_divergence_pct"]) for t in flagged) / len(flagged) * 100
+            avg_pnl = sum(t["pnl_pct"] for t in flagged) / len(flagged)
+            print(f"    超阈值样本 avg|divergence|={avg_div:.2f}%  avg_pnl={avg_pnl:+.2f}%")
+            for t in sorted(flagged, key=lambda x: -abs(x["entry_divergence_pct"]))[:5]:
+                print(f"      {t['ticker']:<10} entry {t['entry_ts'][:10]}  "
+                      f"ref=${t['entry_ref_price']}  live=${t['entry_live_quote']}  "
+                      f"div={t['entry_divergence_pct']*100:+.2f}%  pnl={t['pnl_pct']:+.2f}%")
 
 
 def main():

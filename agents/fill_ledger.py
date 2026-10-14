@@ -380,6 +380,57 @@ def summary_by_ticker(since: Optional[str] = None) -> dict[str, dict]:
     return {tk: get_position(tk, since=since) for tk in sorted(tickers)}
 
 
+def get_order_price_trio(order_id: str,
+                          path: Optional[Path] = None) -> dict:
+    """EVO-20261013-2 (2026-10-13): 单笔订单的三端价.
+
+    读 execution_ledger 中该 order_id 的所有事件:
+      · submitted → trigger_price (= 下单限价) + ref_price (日 K 参考) +
+                     live_quote + quote_source + staleness_sec + divergence_*
+      · filled/partial → fill_price (= 最后一次 average_fill_price)
+    任一事件缺失 → 对应字段 None (dry-run / 影子期 / 旧记录都兼容).
+
+    返回键固定, 便于 _trade_postmortem / dashboard 直接按列读.
+    """
+    rows = _read_jsonl(Path(path) if path is not None else EXEC_LEDGER_PATH)
+    out = {
+        "order_id":        str(order_id),
+        "trigger_price":   None,
+        "ref_price":       None,
+        "live_quote":      None,
+        "fill_price":      None,
+        "quote_source":    None,
+        "staleness_sec":   None,
+        "divergence_pct":  None,
+        "divergence_flag": None,
+    }
+    last_fill_ts = ""
+    target = str(order_id)
+    for r in rows:
+        if str(r.get("order_id") or "") != target:
+            continue
+        ev = r.get("event")
+        if ev == "submitted":
+            out["trigger_price"]   = r.get("trigger_price") or r.get("order_price")
+            out["ref_price"]       = r.get("ref_price") or r.get("reference_price")
+            out["live_quote"]      = r.get("live_quote")
+            out["quote_source"]    = r.get("quote_source")
+            out["staleness_sec"]   = r.get("staleness_sec")
+            out["divergence_pct"]  = r.get("divergence_pct")
+            out["divergence_flag"] = r.get("divergence_flag")
+        elif ev in ("filled", "partial"):
+            ts = str(r.get("ts") or "")
+            # 保留最后一次 (累计 avg)
+            if ts >= last_fill_ts:
+                last_fill_ts = ts
+                afp = r.get("average_fill_price")
+                try:
+                    out["fill_price"] = float(afp) if afp is not None else out["fill_price"]
+                except (TypeError, ValueError):
+                    pass
+    return out
+
+
 def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
     """交割单 (2026-10-07): 按订单聚合的券商成交, 最新在前.
 
@@ -394,6 +445,39 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
         if prev is None or str(ev.get("ts", "")) > str(prev.get("ts", "")):
             final_by_oid[oid] = ev
     fees = load_order_fees()
+    # EVO-20261013-2: 一次性拉 execution_ledger, 构造 oid → 三端价差 lookup,
+    # 避免每行调一次 get_order_price_trio 反复读文件.
+    exec_rows = _read_jsonl(EXEC_LEDGER_PATH)
+    trio_by_oid: dict[str, dict] = {}
+    last_fill_ts: dict[str, str] = {}
+    for r in exec_rows:
+        oid_r = str(r.get("order_id") or "")
+        if not oid_r:
+            continue
+        trio_r = trio_by_oid.setdefault(oid_r, {
+            "trigger_price": None, "ref_price": None, "live_quote": None,
+            "fill_price": None, "quote_source": None, "staleness_sec": None,
+            "divergence_pct": None, "divergence_flag": None,
+        })
+        ev_name = r.get("event")
+        if ev_name == "submitted":
+            trio_r["trigger_price"]   = r.get("trigger_price") or r.get("order_price")
+            trio_r["ref_price"]       = r.get("ref_price") or r.get("reference_price")
+            trio_r["live_quote"]      = r.get("live_quote")
+            trio_r["quote_source"]    = r.get("quote_source")
+            trio_r["staleness_sec"]   = r.get("staleness_sec")
+            trio_r["divergence_pct"]  = r.get("divergence_pct")
+            trio_r["divergence_flag"] = r.get("divergence_flag")
+        elif ev_name in ("filled", "partial"):
+            ts_r = str(r.get("ts") or "")
+            if ts_r >= last_fill_ts.get(oid_r, ""):
+                last_fill_ts[oid_r] = ts_r
+                afp = r.get("average_fill_price")
+                try:
+                    if afp is not None:
+                        trio_r["fill_price"] = float(afp)
+                except (TypeError, ValueError):
+                    pass
     rows = []
     for oid, ev in final_by_oid.items():
         dealt = float(ev.get("dealt_qty") or 0)
@@ -401,6 +485,7 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
         if dealt <= 0 or avg <= 0:
             continue
         side = (ev.get("side") or "").upper()
+        trio = trio_by_oid.get(oid, {})
         rows.append({
             "ts": ev.get("ts"),
             "order_id": oid,
@@ -412,6 +497,13 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
             "fee": fees.get(oid),
             "status": ev.get("broker_status") or ev.get("event"),
             "partial": ev.get("event") == "partial",
+            # EVO-20261013-2: dashboard trade log 列用, 老订单无 trigger/live → None
+            "trigger_price":   trio.get("trigger_price"),
+            "ref_price":       trio.get("ref_price"),
+            "live_quote":      trio.get("live_quote"),
+            "fill_price":      round(avg, 4),
+            "divergence_pct":  trio.get("divergence_pct"),
+            "divergence_flag": trio.get("divergence_flag"),
         })
     rows.sort(key=lambda r: str(r["ts"] or ""), reverse=True)
     return rows[:n]
