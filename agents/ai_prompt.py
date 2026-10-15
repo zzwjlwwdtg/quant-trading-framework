@@ -1131,7 +1131,18 @@ def _find_claude_cli() -> str | None:
 
 
 def _find_codex_cli() -> str | None:
-    """Windows: codex.exe / codex.cmd / codex；按优先级查 PATH。"""
+    """Windows: codex.exe / codex.cmd / codex；按优先级查 PATH。
+
+    2026-10-15: AppData\\Local\\OpenAI\\Codex\\bin\\codex.exe (0.130 alpha) 已过旧, 读不了服务端
+    模型列表 (unknown variant `max`) 每次 exit=1. 现由 watchdog 任务 codex_update 用 npm 装最新版,
+    优先用 CODEX_CLI_PATH 指定 → npm 全局安装 (%APPDATA%\\npm\\codex.cmd) → 旧的独立版 → PATH.
+    """
+    override = os.environ.get("CODEX_CLI_PATH", "").strip()
+    if override and Path(override).exists():
+        return override
+    npm_cmd = Path(os.environ.get("APPDATA", "")) / "npm" / "codex.cmd"
+    if os.environ.get("APPDATA") and npm_cmd.exists():
+        return str(npm_cmd)
     known = Path.home() / "AppData" / "Local" / "OpenAI" / "Codex" / "bin" / "codex.exe"
     if known.exists():
         return str(known)
