@@ -508,9 +508,9 @@ def _finish(pid: str, status: str, note: str, cleanup: Path | None = None, delet
 
 
 # 2026-10-14: 开发会大量消耗本机 Claude 额度, 而交易链路 (claude_gate) 也靠同一账号.
-# 只在美股收盘后的窗口开发 (UTC 20:00-02:59 = 日本 05:00-11:59), 额度 5 小时滚动恢复,
+# 只在美股收盘后的窗口开发 (UTC 20:00-04:59 = 日本 05:00-13:59), 额度 5 小时滚动恢复,
 # 保证下一个交易时段 (UTC 13:30 起) 前额度已恢复. 合并不调用 Claude, 不受此限.
-DEV_WINDOW_UTC_HOURS = (20, 21, 22, 23, 0, 1, 2)
+DEV_WINDOW_UTC_HOURS = (20, 21, 22, 23, 0, 1, 2, 3, 4)
 
 
 def in_dev_window(now: datetime | None = None) -> bool:

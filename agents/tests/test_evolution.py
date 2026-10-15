@@ -242,7 +242,8 @@ class DevWindow(Base):
         from datetime import datetime, timezone
         real = ev.__dict__.get("DEV_WINDOW_UTC_HOURS")
         self.assertIn(21, real); self.assertIn(1, real)
-        self.assertNotIn(13, real); self.assertNotIn(10, real)   # 交易时段前 3 小时也不开发
+        self.assertIn(4, real)
+        self.assertNotIn(13, real); self.assertNotIn(10, real); self.assertNotIn(5, real)   # 交易前 8 小时起不开发
 
 
 class Wiring(unittest.TestCase):

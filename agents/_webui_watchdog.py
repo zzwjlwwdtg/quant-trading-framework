@@ -84,8 +84,9 @@ JOBS = {
     "usd_theme": {"bat": "_usd_theme.bat", "market_quiet": True, "auto_every_days": 1},
     # 2026-10-12: 系统自我进化. 提案每日收盘后自动; 开发/合并只在用户批准后 (批准时写 job 请求)
     "evo_propose": {"bat": "_evolution_propose.bat", "market_quiet": True, "auto_every_days": 1},
-    # 每 6 小时兜底跑一次 (Claude 额度用完退回 approved 的提案会在额度恢复后自动重试; 无待办时秒退)
-    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True, "auto_every_days": 0.25},
+    # 2026-10-15: 每小时兜底跑一次. 额度用完退回 approved 的提案在额度恢复后 (下一个整点) 自动重试;
+    # 窗口外/无待办时秒退, 不调用 Claude. (原 6 小时会错过开发窗口, 拖到第二天)
+    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True, "auto_every_days": 1 / 24},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
