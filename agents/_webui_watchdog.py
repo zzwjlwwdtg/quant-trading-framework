@@ -76,6 +76,8 @@ JOBS = {
     "credit_warning_test": {"bat": "_credit_warning_test.bat", "market_quiet": True},
     # 2026-10-08: 只读 AI CLI 诊断 (codex / claude 版本与试跑), 按需触发
     "ai_cli_diag": {"bat": "_ai_cli_diag.bat"},
+    # 2026-10-15: 用户同意交易 AI 用 Codex 作备选 → npm 升级过旧的 Codex CLI (只装 @openai/codex)
+    "codex_update": {"bat": "_codex_update.bat"},
     # 2026-10-08: 每日收盘后 AI 卖出复盘 (5 条理由 + 3 条局限性)
     "trade_postmortem": {"bat": "_sell_review_ai.bat", "market_quiet": True, "auto_every_days": 1},
     # 2026-10-08: 强美元阶段资产表现 预注册检验, 按需触发
