@@ -13,6 +13,8 @@ if str(AGENTS_DIR) not in sys.path:
 
 import evolution as ev
 
+_REAL_IN_DEV_WINDOW = ev.in_dev_window
+
 
 def git(cwd, *a):
     return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=True).stdout
@@ -244,6 +246,54 @@ class DevWindow(Base):
         self.assertIn(21, real); self.assertIn(1, real)
         self.assertIn(4, real)
         self.assertNotIn(13, real); self.assertNotIn(10, real); self.assertNotIn(5, real)   # 交易前 8 小时起不开发
+
+
+class ResumeAndVerdicts(Develop):
+    """2026-10-18: 重试时续做 [evo-wip]; 预注册 verdict 不被当运行时文件清掉; 修复轮拿到真 traceback."""
+    def test_retry_resumes_from_wip_without_fresh_dev(self):
+        self._approve()
+        r = ev.develop("EVO-1", dev=self._dev("agents/dashboard.html", "<html>wip</html>\n"),
+                       tests=self._tests(fail_after=True))
+        self.assertEqual(r["status"], "dev_failed")
+        self.assertTrue(ev.act("EVO-1", "retry")["ok"])
+        calls = []
+        r2 = ev.develop("EVO-1", dev=lambda wt, prompt: (calls.append(prompt), (True, ""))[1], tests=self._tests())
+        self.assertEqual(calls, [])                          # 没有新增失败 → 不再调用 Claude
+        self.assertEqual(r2["status"], "merged")
+        self.assertIn("wip", (self.agents / "dashboard.html").read_text())
+        self.assertTrue(ev.get(ev.load(), "EVO-1")["dev_report"]["resumed_from_wip"])
+
+    def test_preregistered_verdict_kept_runtime_dropped(self):
+        (self.td / ".gitignore").write_text(".evo_worktrees/\n")
+        git(self.td, "add", "-A"); git(self.td, "commit", "-qm", "unignore signals")
+        self._approve()
+        def d(wt, prompt):
+            (Path(wt) / "agents/signals/backtest_verdicts").mkdir(parents=True, exist_ok=True)
+            (Path(wt) / "agents/signals/backtest_verdicts/v.json").write_text("{}")
+            (Path(wt) / "agents/signals/runtime_state.json").write_text("{}")
+            (Path(wt) / "agents/dashboard.html").write_text("<html>v</html>\n")
+            return True, "ok"
+        r = ev.develop("EVO-1", dev=d, tests=self._tests())
+        self.assertEqual(r["status"], "merged")
+        files = git(self.td, "ls-files", "agents/signals")
+        self.assertIn("backtest_verdicts/v.json", files)
+        self.assertNotIn("runtime_state.json", files)
+
+    def test_failure_details_extracts_traceback(self):
+        t = ("noise\n" + "=" * 70 + "\nERROR: tests.test_a (unittest.loader._FailedTest.tests.test_a)\n" + "-" * 70 +
+             "\nImportError: cannot import name 'X'\n\n" + "=" * 70 + "\nFAIL: test_b (tests.test_b.T)\nboom\n")
+        out = ev.failure_details(t, ["tests.test_a (unittest.loader._FailedTest.tests.test_a)"])
+        self.assertIn("ImportError", out)
+        self.assertNotIn("boom", out)
+
+
+class WeekendWindow(unittest.TestCase):
+    def test_weekend_always_open_weekday_respects_window(self):
+        from datetime import datetime, timezone
+        self.assertTrue(_REAL_IN_DEV_WINDOW(datetime(2026, 10, 18, 15, tzinfo=timezone.utc)))   # 周日
+        self.assertTrue(_REAL_IN_DEV_WINDOW(datetime(2026, 10, 17, 9, tzinfo=timezone.utc)))    # 周六
+        self.assertFalse(_REAL_IN_DEV_WINDOW(datetime(2026, 10, 20, 15, tzinfo=timezone.utc)))  # 周二交易时段
+        self.assertTrue(_REAL_IN_DEV_WINDOW(datetime(2026, 10, 20, 22, tzinfo=timezone.utc)))   # 周二收盘后
 
 
 class Wiring(unittest.TestCase):
