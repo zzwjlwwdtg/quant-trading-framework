@@ -38,7 +38,8 @@ import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 from config import SIGNALS_DIR
@@ -331,6 +332,76 @@ def _fetch_rss(url: str, source: str, timeout: int = 8,
         return items
     except Exception:
         return []
+
+
+# ── 卖出复盘用: ±window_hours 候选新闻批量结构化 (EVO-20261014-2) ────────────
+def collect_news_structured(symbols: list[str], t: datetime, *,
+                             window_hours: float = 48.0,
+                             max_items: int = 15,
+                             source_label: str = "postmortem",
+                             cli_timeout: int = 90,
+                             fetch_rss=None) -> dict:
+    """为卖出复盘收集 ±window_hours 内的候选 RSS, 批量调一次 Claude CLI 做结构化拆解.
+
+    严守两条铁律 (feedback_news_pipeline + feedback_technical_only_mode):
+      · 原始 RSS 文本不直接返回, 必须经 analyze_rss_items 拆成固定 schema
+      · 结果仅供 postmortem 归档, 决策链路零接触 (调用方不会把它灌回 decision_agent)
+
+    每次卖出复盘最多调一次 CLI (≤2 CLI 调用预算里的那 1 次; 另一次留给 5 条理由 AI).
+    """
+    fetch = fetch_rss or fetch_yahoo_rss
+    start = t - timedelta(hours=window_hours)
+    end   = t + timedelta(hours=window_hours)
+    candidates, seen_titles = [], set()
+    for sym in symbols:
+        try:
+            items = fetch(sym)
+        except Exception:
+            continue
+        for it in items:
+            title = (it.get("title") or "").strip()
+            if not title or title in seen_titles:
+                continue
+            try:
+                pub = parsedate_to_datetime(it.get("pubDate") or "")
+            except Exception:
+                continue
+            if pub is None:
+                continue
+            if pub.tzinfo is None:
+                pub = pub.replace(tzinfo=timezone.utc)
+            if not (start <= pub <= end):
+                continue
+            seen_titles.add(title)
+            candidates.append({
+                "title":   title,
+                "desc":    it.get("desc") or "",
+                "pub_utc": pub.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M"),
+                "symbol":  sym,
+            })
+    if not candidates:
+        return {"items": [], "fetched": 0, "window_hours": window_hours,
+                "symbols": list(symbols), "fallback": False,
+                "source": source_label}
+    candidates = candidates[:max_items]
+    parsed = analyze_rss_items(candidates, source=source_label,
+                                watched_tickers=list(symbols)[:6],
+                                cli_timeout=cli_timeout)
+    items = parsed.get("items") or []
+    # 回挂 pub_utc / symbol / 原标题, 复盘人能顺着查原文
+    merged = []
+    for i, it in enumerate(items):
+        meta = candidates[i] if i < len(candidates) else {}
+        merged.append(dict(it,
+                           pub_utc=meta.get("pub_utc", ""),
+                           symbol=meta.get("symbol", ""),
+                           title=meta.get("title", "")))
+    return {"items":        merged,
+            "fetched":      len(candidates),
+            "window_hours": window_hours,
+            "symbols":      list(symbols),
+            "fallback":     bool(parsed.get("fallback")),
+            "source":       source_label}
 
 
 # ── 高级查询：基于结构化信号回答业务问题 ─────────────────────────────────────
