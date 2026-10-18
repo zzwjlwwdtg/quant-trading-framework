@@ -57,6 +57,22 @@ def get_quote_ctx(retries: int = 5, delay: float = 2.0) -> OpenQuoteContext:
         )
 
 
+def is_symbol_retired(symbol: str) -> bool:
+    """EVO-20261014-3: 数据层单一入口 — 若 symbol 已被标 retired
+    (退市/长期 404 proxy, 如 6488.TW / 3688.T), 调用方应主动跳过 quote /
+    kline 等请求, 避免同样的 404 每天继续刷日志污染健康报告.
+
+    _data_source_health 不可用时降级为 False (保持向前兼容).
+    """
+    if not symbol:
+        return False
+    try:
+        from _data_source_health import is_retired
+        return bool(is_retired(symbol))
+    except Exception:
+        return False
+
+
 @atexit.register
 def _cleanup():
     global _ctx

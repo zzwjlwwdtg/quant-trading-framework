@@ -58,18 +58,37 @@ SOX_THEME = {
 
 
 def fetch_returns(tickers: list[str] = SOX_TICKERS,
-                  period: str = "2y") -> Optional[pd.DataFrame]:
+                  period: str = "2y",
+                  *,
+                  min_assets: int = 5) -> Optional[pd.DataFrame]:
     """
     用 yfinance 批量拉日 K 收盘价，转 log return 矩阵 (T × N)。
     成功的 ticker 才保留；任何错误返回 None。
+
+    EVO-20261014-3 (2026-10-19): 退市/长期 404 的 proxy 符号 (如 6488.TW /
+    3688.T) 从 retired list 剔除后再拉, 不再因为个别死票整轮跳过; 剔除后
+    仍 ≥ min_assets (默认 5) 就继续用 N-k 维跑, 否则才返回 None.
     """
     try:
         import yfinance as yf
     except ImportError:
         return None
+
+    # 先读 retired list, 过滤掉已退市/长期 404 的符号
+    try:
+        from _data_source_health import list_retired, record_fetch_result
+        retired = set(list_retired())
+    except Exception:
+        retired = set()
+        record_fetch_result = None  # noqa: F841
+
+    live_tickers = [tk for tk in tickers if tk not in retired]
+    if len(live_tickers) < min_assets:
+        return None
+
     try:
         data = yf.download(
-            tickers, period=period, interval="1d",
+            live_tickers, period=period, interval="1d",
             auto_adjust=True, progress=False, group_by="ticker",
             threads=True,
         )
@@ -78,22 +97,38 @@ def fetch_returns(tickers: list[str] = SOX_TICKERS,
     if data is None or data.empty:
         return None
 
-    closes = {}
-    for tk in tickers:
+    closes: dict[str, pd.Series] = {}
+    missing: list[str] = []
+    for tk in live_tickers:
         try:
             # yfinance 多 ticker 时是 MultiIndex columns
             col = data[tk]["Close"] if (tk, "Close") in data.columns else data["Close"][tk]
             if col is None or col.empty:
+                missing.append(tk)
                 continue
             closes[tk] = col.dropna()
         except (KeyError, AttributeError):
             try:
                 col = data["Close"][tk]
-                if col is None or col.empty: continue
+                if col is None or col.empty:
+                    missing.append(tk)
+                    continue
                 closes[tk] = col.dropna()
             except Exception:
+                missing.append(tk)
                 continue
-    if len(closes) < 10:
+
+    # 登记本轮每只票的拉取结果; 连续失败 N 天自动 retire, 不再刷日志
+    try:
+        from _data_source_health import record_fetch_result as _rec
+        for tk in closes:
+            _rec(tk, True)
+        for tk in missing:
+            _rec(tk, False, reason="yfinance_empty")
+    except Exception:
+        pass
+
+    if len(closes) < min_assets:
         return None
 
     px = pd.DataFrame(closes).dropna()
@@ -444,6 +479,18 @@ def format_pca_report() -> list[str]:
     """生成可直接传给 logger 的多行 PCA 报告。"""
     returns = fetch_returns()
     if returns is None or returns.empty:
+        # EVO-20261014-3: 加上 retired 列表, 让"剔除后仍不够样本"与"全部跌掉"可区分
+        try:
+            from _data_source_health import list_retired
+            retired = list_retired()
+        except Exception:
+            retired = []
+        if retired:
+            tail = "，".join(retired[:8])
+            return [t(
+                f"  [PCA] 剔除 retired ({tail}) 后 feature matrix < 最小样本, 跳过本轮分析",
+                f"  [PCA] retired 除外 ({tail}) 後サンプル不足、本ラウンド分析スキップ",
+            )]
         return [t("  [PCA] 数据拉取失败，跳过本轮分析",
                   "  [PCA] データ取得失敗、本ラウンドの分析スキップ")]
 

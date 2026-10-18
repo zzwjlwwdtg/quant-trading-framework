@@ -249,12 +249,48 @@ def price_divergence_rate(
     }
 
 
+def _ticker_from_signal_filename(name: str) -> str:
+    """`US.NVDA_latest.json` → `US.NVDA`; `6488.TW_latest.json` → `6488.TW`."""
+    stem = name
+    if stem.endswith("_latest.json"):
+        stem = stem[: -len("_latest.json")]
+    return stem
+
+
 def audit_latest_signal_files(signals_dir: Path, max_age_hours: float = 36.0) -> dict:
+    """审计 signals/*_latest.json 的新鲜度 / 字段完整度.
+
+    EVO-20261014-3 (2026-10-19): retired 符号 (退市 / 长期 404 的 proxy) 的
+    stale snapshot 不再计入 critical_files, 单独放到 retired_files, 让
+    critical_files 回归到真正需要修的问题.
+    """
     now = datetime.now(timezone.utc).astimezone()
-    files = []
+
+    # 读 retired list — 不可用时降级为空集, 行为向前兼容
+    try:
+        from _data_source_health import list_retired
+        retired_set = set(list_retired())
+    except Exception:
+        retired_set = set()
+
+    files: list[dict] = []
     critical = 0
     warning = 0
+    retired_count = 0
     for path in sorted(Path(signals_dir).glob("*_latest.json")):
+        ticker = _ticker_from_signal_filename(path.name)
+        if ticker in retired_set:
+            files.append({
+                "file": path.name,
+                "status": "retired",
+                "allow_new_risk": False,
+                "issues": [{
+                    "level": "info", "code": "retired",
+                    "message": f"{ticker} 已 retired (退市/长期 404), 不计入 critical",
+                }],
+            })
+            retired_count += 1
+            continue
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             quality = assess_market_snapshot(data.get("market") or {}, now=now, max_age_hours=max_age_hours)
@@ -270,11 +306,12 @@ def audit_latest_signal_files(signals_dir: Path, max_age_hours: float = 36.0) ->
             warning += 1
         files.append({"file": path.name, **quality})
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": now.isoformat(),
         "status": "critical" if critical else ("warning" if warning else "ok"),
         "critical_files": critical,
         "warning_files": warning,
+        "retired_files": retired_count,
         "checked_files": len(files),
         "files": files,
     }
