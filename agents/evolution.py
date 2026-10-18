@@ -454,7 +454,15 @@ def develop(pid: str, dev=None, tests=None) -> dict:
         base = tests(wt_base / "agents")
         _git(["worktree", "remove", "--force", str(wt_base)])
         r = _git(["worktree", "add", str(wt), branch])
-    else:
+        if r.returncode == 0:
+            # 先把最新 main 合进来 (例如 2026-10-18 补提交的 portfolio_analytics 等模块), 冲突则放弃续做
+            m = _git(["merge", "--no-edit", "-q", "main"], cwd=wt)
+            if m.returncode != 0:
+                _git(["merge", "--abort"], cwd=wt)
+                _git(["worktree", "remove", "--force", str(wt)])
+                resumed = False
+                r = _git(["worktree", "add", "-B", branch, str(wt), "main"])
+    if not resumed and not (wt / ".git").exists():
         r = _git(["worktree", "add", "-B", branch, str(wt), "main"])
     if r.returncode != 0:
         return _finish(pid, "dev_failed", f"worktree 失败: {r.stderr[:300]}")

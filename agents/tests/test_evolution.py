@@ -263,6 +263,20 @@ class ResumeAndVerdicts(Develop):
         self.assertIn("wip", (self.agents / "dashboard.html").read_text())
         self.assertTrue(ev.get(ev.load(), "EVO-1")["dev_report"]["resumed_from_wip"])
 
+    def test_resume_merges_latest_main_first(self):
+        self._approve()
+        ev.develop("EVO-1", dev=self._dev("agents/dashboard.html", "<html>wip</html>\n"), tests=self._tests(fail_after=True))
+        (self.agents / "portfolio_analytics.py").write_text("X = 1\n")          # main 上后补的模块
+        git(self.td, "add", "-A"); git(self.td, "commit", "-qm", "add module")
+        ev.act("EVO-1", "retry")
+        seen = {}
+        def t(agents_dir):
+            seen.setdefault("has_module", []).append((Path(agents_dir) / "portfolio_analytics.py").exists())
+            return {"failed": [], "ran": 1, "ok": True, "tail": "", "text": ""}
+        r = ev.develop("EVO-1", dev=lambda wt, pr: (True, ""), tests=t)
+        self.assertEqual(r["status"], "merged")
+        self.assertTrue(all(seen["has_module"]))
+
     def test_preregistered_verdict_kept_runtime_dropped(self):
         (self.td / ".gitignore").write_text(".evo_worktrees/\n")
         git(self.td, "add", "-A"); git(self.td, "commit", "-qm", "unignore signals")
