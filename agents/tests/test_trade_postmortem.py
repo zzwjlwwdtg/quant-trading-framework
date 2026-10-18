@@ -123,6 +123,50 @@ class Postmortem(unittest.TestCase):
                              {"MULL": "强制调仓·机械止损", "SHY": "强制调仓·现金纪律"})
             self.assertIn("SHY", next(a["reason"] for a in arch if a["ticker"] == "SHY"))
 
+    def test_review_one_attaches_news_structured(self):
+        """EVO-20261014-2: live_fetch=True 时 ±48h 候选新闻结构化拆解结果挂到 news_structured;
+        live_fetch=False 时不调 CLI, 只落占位. 决策链路不读这个字段 (postmortem-only)."""
+        sell = {"order_id": "99", "ticker": "US.MULL", "qty": 1, "price": 1,
+                "ts": "2026-10-07T11:00:21+00:00",
+                "decision_ts": "2026-10-07T11:00:21+00:00",
+                "tag": "[SOFTWARE-STOP]", "decision": {}}
+        def ai(_):
+            return (json.dumps(GOOD, ensure_ascii=False), "ok", "Claude", "")
+        fake_ns = {"items": [{"event_type": "BREAKING", "direction": "bearish",
+                              "confidence": 7, "verbatim_evidence": "fraud report",
+                              "pub_utc": "2026-10-06 14:00", "symbol": "MULL",
+                              "title": "MULL plunges on fraud report"}],
+                   "fetched": 3, "fallback": False, "window_hours": 48}
+        with patch.object(tp, "LOGS", self.td), \
+             patch.object(tp, "news_from_cache", return_value=[]), \
+             patch.object(tp, "news_from_rss", return_value=[]), \
+             patch.object(tp, "closes_after", return_value=[]), \
+             patch.object(tp, "collect_news_structured_for", return_value=fake_ns) as mock_cns:
+            r = tp.review_one(sell, ai=ai, live_fetch=True)
+        mock_cns.assert_called_once()
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["news_structured"]["fetched"], 3)
+        self.assertEqual(r["news_structured"]["items"][0]["event_type"], "BREAKING")
+        # live_fetch=False → 不调 CLI, 只写占位
+        with patch.object(tp, "LOGS", self.td), \
+             patch.object(tp, "news_from_cache", return_value=[]), \
+             patch.object(tp, "collect_news_structured_for") as mock_skip:
+            r2 = tp.review_one(sell, ai=ai, live_fetch=False)
+        mock_skip.assert_not_called()
+        self.assertEqual(r2["news_structured"]["items"], [])
+        self.assertEqual(r2["news_structured"].get("skipped"), "live_fetch=False")
+
+    def test_collect_news_structured_for_isolates_errors(self):
+        """news_analyzer 挂了也不能把 review_one 拖崩 — 返回 fallback 字典, 决策链路不受影响."""
+        sell = {"order_id": "77", "ticker": "US.MULL"}
+        t = datetime(2026, 10, 7, 11, 0, tzinfo=timezone.utc)
+        with patch("news_analyzer.collect_news_structured",
+                   side_effect=RuntimeError("CLI timeout")):
+            ns = tp.collect_news_structured_for(sell, t)
+        self.assertTrue(ns["fallback"])
+        self.assertEqual(ns["items"], [])
+        self.assertIn("CLI timeout", ns["error"])
+
     def test_wiring(self):
         import snapshot_generator as sg
         self.assertIn("/api/postmortem", sg.GLOBAL_ENDPOINTS)
