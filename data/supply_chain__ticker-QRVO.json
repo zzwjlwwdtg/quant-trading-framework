@@ -1,0 +1,133 @@
+{
+  "ticker": "QRVO",
+  "sector": "半导体设计（射频前端/RF）",
+  "business": "设计射频前端模组、滤波器、功率放大器和连接解决方案，主要用于智能手机、物联网、国防及基础设施市场",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "GaAs/SOI/CMOS 先进制程代工",
+      "weight": 35,
+      "confidence": "high"
+    },
+    {
+      "name": "格芯 GlobalFoundries",
+      "ticker": "GFS",
+      "note": "SOI 工艺射频芯片代工",
+      "weight": 20,
+      "confidence": "high"
+    },
+    {
+      "name": "安靠科技 Amkor",
+      "ticker": "AMKR",
+      "note": "OSAT 封装测试服务",
+      "weight": 15,
+      "confidence": "high"
+    },
+    {
+      "name": "日月光 ASE",
+      "ticker": "ASX",
+      "note": "模组封装测试",
+      "weight": 12,
+      "confidence": "medium"
+    },
+    {
+      "name": "住友电工",
+      "ticker": "5802.T",
+      "note": "化合物半导体衬底/GaN 材料",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "信越化学",
+      "ticker": "4063.T",
+      "note": "硅晶圆及光刻胶等材料",
+      "weight": 8,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "iPhone 射频前端模组（历史占营收 40%+）",
+      "weight": 45,
+      "confidence": "high"
+    },
+    {
+      "name": "三星电子",
+      "ticker": "005930.KS",
+      "note": "Galaxy 系列手机射频模组",
+      "weight": 15,
+      "confidence": "high"
+    },
+    {
+      "name": "小米",
+      "ticker": "1810.HK",
+      "note": "安卓中高端手机 RF 组件",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "OPPO/vivo（未上市）",
+      "ticker": null,
+      "note": "安卓手机射频前端",
+      "weight": 8,
+      "confidence": "medium"
+    },
+    {
+      "name": "霍尼韦尔",
+      "ticker": "HON",
+      "note": "国防/航天射频器件",
+      "weight": 7,
+      "confidence": "medium"
+    },
+    {
+      "name": "思科",
+      "ticker": "CSCO",
+      "note": "Wi-Fi/基础设施连接芯片",
+      "weight": 6,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "思佳讯 Skyworks",
+      "ticker": "SWKS",
+      "note": "射频前端模组直接竞争对手",
+      "confidence": "high"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "FBAR 滤波器及射频前端",
+      "confidence": "high"
+    },
+    {
+      "name": "科沃 Qualcomm",
+      "ticker": "QCOM",
+      "note": "集成式 RF 前端挤压份额",
+      "confidence": "high"
+    },
+    {
+      "name": "村田制作所",
+      "ticker": "6981.T",
+      "note": "SAW 滤波器及 RF 模组",
+      "confidence": "high"
+    },
+    {
+      "name": "恩智浦",
+      "ticker": "NXPI",
+      "note": "RF 功率放大器及连接芯片",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-16T14:03:42.708563+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-10-16T23:03:42.708563",
+    "age_sec": 120579,
+    "stale": false,
+    "refreshing": false
+  }
+}

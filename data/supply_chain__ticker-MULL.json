@@ -1,0 +1,133 @@
+{
+  "ticker": "MULL",
+  "sector": "半导体存储器（DRAM/NAND/HBM）；MULL 为 2 倍做多 Micron Technology（MU）的单股杠杆 ETF，按底层标的 MU 分析",
+  "business": "Micron 设计、制造并销售 DRAM、NAND、HBM、SSD 等存储与存储系统产品，主要服务数据中心、AI、PC、手机、汽车和工业市场。",
+  "upstream": [
+    {
+      "name": "ASML Holding",
+      "ticker": "ASML",
+      "note": "提供先进光刻设备，支撑 DRAM 与 NAND 制程迭代，是晶圆厂扩产和节点升级的关键设备来源",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "Applied Materials",
+      "ticker": "AMAT",
+      "note": "提供沉积、刻蚀、离子注入、量测等半导体制造设备，用于 Micron 存储芯片产线",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "Lam Research",
+      "ticker": "LRCX",
+      "note": "提供刻蚀和薄膜沉积设备，尤其对 3D NAND 高层数堆叠和 DRAM 复杂制程重要",
+      "weight": 84,
+      "confidence": "medium"
+    },
+    {
+      "name": "Tokyo Electron",
+      "ticker": "8035.T",
+      "note": "提供涂胶显影、刻蚀、清洗和沉积设备，服务存储晶圆制造环节",
+      "weight": 76,
+      "confidence": "medium"
+    },
+    {
+      "name": "KLA",
+      "ticker": "KLAC",
+      "note": "提供过程控制、缺陷检测和量测设备，帮助提高良率和先进节点稳定性",
+      "weight": 68,
+      "confidence": "medium"
+    },
+    {
+      "name": "Entegris",
+      "ticker": "ENTG",
+      "note": "提供高纯材料、过滤、化学品和晶圆厂污染控制解决方案",
+      "weight": 55,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "在 AI GPU/加速平台中采用 Micron HBM、LPDDR 和高性能存储，属于战略价值最高的下游方向",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "Dell Technologies",
+      "ticker": "DELL",
+      "note": "采购或集成服务器、AI 服务器、企业 SSD 和内存模组，用于数据中心与企业客户系统",
+      "weight": 78,
+      "confidence": "medium"
+    },
+    {
+      "name": "Lenovo Group",
+      "ticker": "0992.HK",
+      "note": "在 PC、工作站和服务器产品中使用 DRAM、NAND、SSD 等存储产品",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "HP Inc.",
+      "ticker": "HPQ",
+      "note": "在个人电脑和商用终端中使用客户端 DRAM、NAND 与 SSD 存储",
+      "weight": 62,
+      "confidence": "medium"
+    },
+    {
+      "name": "Super Micro Computer",
+      "ticker": "SMCI",
+      "note": "在 AI 服务器和高密度计算平台中集成内存、SSD 与相关存储组件",
+      "weight": 58,
+      "confidence": "medium"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "在移动设备、Mac 和消费电子产品中需要 LPDDR、NAND 等高端存储器，具体采购份额未充分披露",
+      "weight": 50,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Samsung Electronics",
+      "ticker": null,
+      "note": "全球 DRAM、NAND 与 HBM 龙头之一，与 Micron 在数据中心、手机、PC 和企业存储市场全面竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "SK hynix",
+      "ticker": null,
+      "note": "DRAM 与 HBM 核心竞争者，尤其在 AI HBM 供应链中竞争强度高",
+      "confidence": "high"
+    },
+    {
+      "name": "Western Digital",
+      "ticker": "WDC",
+      "note": "主要在 NAND、SSD 和存储解决方案方向与 Micron 竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Kioxia Holdings",
+      "ticker": "285A.T",
+      "note": "NAND 闪存供应商，在企业 SSD、移动存储和消费级存储市场与 Micron 竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "Yangtze Memory Technologies",
+      "ticker": null,
+      "note": "中国 NAND 供应商，在部分消费与本土化存储市场形成竞争压力",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-27T09:33:50.185487+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-27T18:33:50.185487",
+    "age_sec": 1778372,
+    "stale": false,
+    "refreshing": false
+  }
+}

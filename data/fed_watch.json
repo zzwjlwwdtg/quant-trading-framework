@@ -1,0 +1,93 @@
+{
+  "current_target_range": "3.75-4.00",
+  "meetings": [
+    {
+      "date": "2026-10-28",
+      "days_until": 11,
+      "probabilities": {
+        "hold": 84,
+        "hike_25": 16,
+        "cut_25": 0
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2026-12-09",
+      "days_until": 53,
+      "probabilities": {
+        "hold": 30,
+        "hike_25": 68,
+        "hike_50": 2
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 102,
+      "probabilities": {
+        "hold": 60,
+        "hike_25": 39,
+        "cut_25": 1
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 151,
+      "probabilities": {
+        "hold": 55,
+        "hike_25": 40,
+        "cut_25": 5
+      },
+      "most_likely": "hold",
+      "consensus_direction": "hawkish_lean"
+    }
+  ],
+  "implied_terminal_rate": "4.25-4.50",
+  "implied_terminal_date": "2027-Q2",
+  "data_snapshot_date": "2026-10-17",
+  "recent_event_impact": "10/14 September CPI +0.6% MoM / 3.7% YoY (headline), core 2.6% — both hot (above consensus); 10/16 Fed Chair Warsh (Bangkok IMF fireside) declined to prejudge October → Oct hike odds compressed from ~28% to ~15%, Dec hike pricing stayed firm (~70%). Fed hiked 25bps on 2026-09-16 to 3.75-4.00%, FOMC minutes (10/7) showed majority view another hike by year-end likely appropriate.",
+  "commentary": "Market has shifted from October-hike bias to December-hike bias after Warsh's non-signaling Bangkok speech, despite hot September CPI (3.7% YoY). Base case: hold Oct 28, hike 25bps Dec 9 to 4.00-4.25%, terminal 4.25-4.50% by mid-2027; no cuts priced in through Q1 2027.",
+  "sources": [
+    {
+      "url": "https://www.forbes.com/sites/digital-assets/2026/10/14/fed-66-likely-to-hold-rates-steady-following-high-inflation-data/",
+      "type": "cme_fedwatch_analysis"
+    },
+    {
+      "url": "https://predictionmarketspicks.com/tools/fed-rate-tracker/october-2026/2026-10-14",
+      "type": "prediction_markets"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/10/16/kevin-warsh-fed-october-rate-hike-interest-rates-markets.html",
+      "type": "fed_chair_commentary"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/10/14/cpi-inflation-breakdown-september-2026.html",
+      "type": "cpi_data"
+    },
+    {
+      "url": "https://phemex.com/news/article/cme-fedwatch-542-probability-of-rate-hike-at-october-meeting-97512",
+      "type": "cme_fedwatch"
+    },
+    {
+      "url": "https://finance.yahoo.com/economy/policy/articles/warsh-signals-steady-fed-outlook-102529600.html",
+      "type": "fed_chair_commentary"
+    },
+    {
+      "url": "https://www.ishares.com/us/insights/portfolio-insights/fed-outlook-rates-kevin-warsh-fixed-income-2026",
+      "type": "terminal_rate_outlook"
+    }
+  ],
+  "confidence": "high",
+  "source_via": "claude_cli_websearch",
+  "fetched_at": "2026-10-17T13:34:39+00:00",
+  "_meta": {
+    "cached_at": "2026-10-17T22:34:40.212051",
+    "age_sec": 35903,
+    "stale": true,
+    "refreshing": true
+  }
+}

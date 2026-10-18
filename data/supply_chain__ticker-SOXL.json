@@ -1,0 +1,113 @@
+{
+  "ticker": "SOXL",
+  "sector": "半导体产业链杠杆ETF",
+  "business": "SOXL 是提供半导体行业指数单日约 3 倍杠杆敞口的交易型产品，经济暴露主要来自美国上市半导体设计、制造、设备与EDA公司。",
+  "upstream": [
+    {
+      "name": "ASML Holding",
+      "ticker": "ASML",
+      "note": "为先进制程芯片制造提供EUV/DUV光刻设备，是高端半导体产能扩张的关键瓶颈环节",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "Applied Materials",
+      "ticker": "AMAT",
+      "note": "提供沉积、刻蚀、离子注入、检测等晶圆制造设备，影响逻辑与存储产能建设",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "Lam Research",
+      "ticker": "LRCX",
+      "note": "提供刻蚀和薄膜沉积设备，服务晶圆厂先进制程与存储制造",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "KLA",
+      "ticker": "KLAC",
+      "note": "提供过程控制、良率管理和检测量测设备，是晶圆制造良率提升的重要供应商",
+      "weight": 76,
+      "confidence": "medium"
+    },
+    {
+      "name": "Synopsys",
+      "ticker": "SNPS",
+      "note": "提供EDA软件和芯片IP，支持半导体设计公司完成复杂芯片开发",
+      "weight": 68,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "采购GPU、AI加速器和服务器芯片用于Azure云计算与AI训练推理基础设施",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "Amazon",
+      "ticker": "AMZN",
+      "note": "采购CPU、GPU、网络芯片及自研云芯片用于AWS数据中心",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "采购先进制程SoC、存储、射频和电源管理芯片用于iPhone、Mac、iPad等终端",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购和自研AI加速器、服务器芯片与网络芯片用于Google Cloud和搜索广告基础设施",
+      "weight": 84,
+      "confidence": "medium"
+    },
+    {
+      "name": "Tesla",
+      "ticker": "TSLA",
+      "note": "采购车规MCU、功率半导体、自动驾驶芯片和AI训练芯片用于电动车与自动驾驶系统",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "iShares Semiconductor ETF",
+      "ticker": "SOXX",
+      "note": "非杠杆半导体ETF，覆盖美国上市半导体龙头，投资方向与SOXL底层行业相近",
+      "confidence": "high"
+    },
+    {
+      "name": "VanEck Semiconductor ETF",
+      "ticker": "SMH",
+      "note": "非杠杆半导体ETF，较集中配置英伟达、台积电、博通等全球半导体龙头",
+      "confidence": "high"
+    },
+    {
+      "name": "ProShares Ultra Semiconductors",
+      "ticker": "USD",
+      "note": "提供半导体行业约2倍杠杆敞口，与SOXL在杠杆半导体交易需求上竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR S&P Semiconductor ETF",
+      "ticker": "XSD",
+      "note": "等权风格半导体ETF，覆盖更广泛的半导体设计、设备和制造公司",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-09-27T09:33:28.762132+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-27T18:33:28.779691",
+    "age_sec": 1778394,
+    "stale": false,
+    "refreshing": false
+  }
+}
