@@ -97,9 +97,12 @@ JOBS = {
     # 不设 market_quiet: 21:00 JST 的晚间时段在美股时段内, 且 tick 很轻 (只读、无事时秒退)
     "cn_brief_tick": {"bat": "_cn_brief_tick.bat", "auto_every_days": 4 / 1440},
     "cn_brief_now": {"bat": "_cn_brief_now.bat"},
+    "cn_brief_morning": {"bat": "_cn_brief_morning.bat"},
     # 2026-10-19: A股研报信号/经济数据意外 回测 (只读)
     "ashare_bt_reports": {"bat": "_ashare_bt_reports.bat"},
     "ashare_bt_econ": {"bat": "_ashare_bt_econ.bat"},
+    # 2026-10-19: 外围隔夜指标 → A股开盘/日内 预注册回测 (只读)
+    "overnight_bt": {"bat": "_overnight_bt.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 

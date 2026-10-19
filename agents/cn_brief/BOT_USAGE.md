@@ -61,7 +61,7 @@ python -m cn_brief run --slot {morning|close|evening|now} [--json] [--no-ai] [--
 | 参数 | 说明 |
 |---|---|
 | `--slot now` | 即时版：上一个交易日到今天的研报 + 过去 24 小时已公布的数据 + 未来 24 小时将公布的数据 |
-| `--slot morning` | 同上，按盘前的口径 |
+| `--slot morning` | **盘前定调（精简版，约 10 秒，不用 AI）**：一句话定调 + 今日关键时刻 + 外围隔夜（附按回测推算的开盘幅度）+ 风险名单 + 特殊日。见第 4.1 节 |
 | `--slot close` | 只看**今天**新出的研报 + 过去/未来 24 小时数据 |
 | `--slot evening` | 不含研报；只列今晚到明早 14 小时内将公布的中美日重大数据 |
 | `--json` | 输出完整 JSON（结构见第 4 节） |
@@ -104,6 +104,7 @@ python -m cn_brief tick [--dry-run]
 | `/本周日历` | `python -m cn_brief calendar --days 7` |
 | `/今晚` | `python -m cn_brief run --slot evening --no-ai` |
 | `/盘前` `/收盘` | 直接读 `latest_morning.md` / `latest_close.md`（不重新生成，秒回） |
+| `/定调` | `python -m cn_brief run --slot morning`（重新生成盘前定调，约 10 秒） |
 
 消息长度：Discord 单条上限 2000 字、Telegram 4096 字。完整汇报常在 2000–4000 字，**请按换行切分后分段发送**（`cn_brief.push.chunk(text, limit)` 可以直接用）。
 
@@ -147,6 +148,35 @@ python -m cn_brief tick [--dry-run]
 - `star` = 百度的重要性星级（1–5）
 - `link` = 东方财富研报详情页
 
+### 4.1 盘前定调 `--slot morning` 的 JSON（另有字段）
+
+```jsonc
+{
+  "headline": "10:00 有中国重大数据；外围指向低开 0.1–0.4%",   // 一句话定调，适合做消息标题
+  "key_events": [ ...今天到明早 6:00 将公布的重大数据，结构同 events... ],
+  "overnight": {
+    "last_a_close": "2026-10-16",                               // 隔夜 = 这个 A 股收盘以来
+    "items": [ {"ticker": "^GSPC", "name": "标普500", "symbol": "^GSPC", "level": 6000.1,
+                "change": -0.0109, "kind": "pct", "as_of": "2026-10-16"} ]   // ^TNX 为 kind=diff（收益率差值）
+  },
+  "implied_open": {                                             // 只用回测通过的指标；没通过时为 null
+    "low": -0.0039, "high": -0.0009, "hit_range": [0.65, 0.66],
+    "parts": [ {"driver": "标普500", "implied_gap": -0.0026, "r": 0.386, "hit": 0.649, "n": 1256} ]
+  },
+  "risk": {
+    "watchlist": ["600487"],                                    // 空 = 显示全市场前 5
+    "downgrades": [ {"code","name","org","from","to","date"} ], // 近 7 天评级调低
+    "crowded":    [ {"code","name","n_orgs","industry"} ],      // 近 7 天 ≥3 家机构扎堆覆盖
+    "down_note": "样本外20日平均 -2.27%，跑赢比例 32%", "crowded_note": "..."
+  },
+  "special_days": ["今天是股指期货/期权交割日（...）"]
+}
+```
+
+- **自选股**：在 `agents\cn_brief\watchlist.txt` 每行写一个 6 位代码（`#` 后为注释），风险名单就只看这些股票
+- 盘前里所有"历史上…"的数字都来自预注册回测的结论文件（`signals\backtest_verdicts\overnight_ashare.json`、`ashare_econ_surprise.json`、`ashare_report_signals.json`）；没通过检验的不附统计
+- 回测结论（2016–2026）：标普 / 纳指 / 中概（KWEB）的隔夜涨跌对 A 股**开盘跳空**有预测力（样本外相关 0.38–0.46，方向命中 65–66%），对开盘后的**日内走势没有**；美债收益率、美元指数、人民币汇率没有预测力
+
 "重大数据"的筛选规则：中国、美国、日本三地；CPI / 非农 / GDP / PCE / 利率决议 / LPR / 社融 / 央行 等头部数据一律保留；其余关键指标要求 ≥2 星，或任意 ≥3 星；油气库存、国债竞拍、钻井数、能源进出口量等噪声剔除。
 
 ---
@@ -157,7 +187,7 @@ python -m cn_brief tick [--dry-run]
 
 | 时间（JST） | 内容 | 日期 |
 |---|---|---|
-| 09:00 | 盘前：研报精选 + AI 要点 + 昨夜已公布 + 今天将公布 | 工作日 |
+| 09:00 | 盘前定调：一句话 + 今日关键时刻 + 外围隔夜（推算开盘幅度）+ 风险名单 + 特殊日 | 工作日 |
 | 16:30 | 收盘后：今日研报 + 今天已公布数据（公布值 vs 预期）+ 今晚预告 | 工作日 |
 | 21:00 | 晚间：今晚到明早的中美日重大数据 | 工作日 |
 | 公布前 30 分钟 | "⏰ 30 分钟后公布"：同一时刻的多条数据合并成一条 | 每天 |

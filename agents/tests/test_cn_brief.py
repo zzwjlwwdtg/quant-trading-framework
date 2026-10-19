@@ -177,3 +177,77 @@ class BuildAndTick(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MorningConcise(unittest.TestCase):
+    """2026-10-19: 9:00 盘前精简版 (一句话定调 + 关键时刻 + 外围 + 风险名单 + 特殊日)."""
+
+    def setUp(self):
+        from cn_brief import morning as M, overseas as O
+        self.M, self.O = M, O
+        self.now = datetime(2026, 10, 16, 9, 0, tzinfo=JST)          # 周五, 第三个周五
+        self.gdp = dict(ev("中国", "中国第三季度GDP年率-单季度(%)", datetime(2026, 10, 16, 11, 0, tzinfo=JST), exp="4.4"),
+                        important=True, id="gdp")
+        self.econ_v = {"conclusion": '{"cn_growth": true, "us": false}',
+                       "metrics": {"cn_growth": {"beat": {"n": 77, "mean_pct": 0.458}, "miss": {"n": 56, "mean_pct": -0.229}, "diff_t": 2.45}}}
+        self.on_v = {"metrics": {"results": {"510300.SS": {"^GSPC": {"verdict": {"gap": "useful"},
+                                                                       "oos": {"gap": {"beta": 0.24, "r": 0.386, "hit": 0.649, "n": 1256}}}}},
+                                 "gap_vs_intraday": {"510300.SS": {"train": {"r": 0.07, "t_r": 2.7}, "oos": {"r": -0.02, "t_r": -0.8}}}}}
+        self.rep = [rep("600001", "甲", "A", "中性", "买入"), rep("600002", "乙", "A", "买入", "买入"),
+                    rep("600002", "乙", "B", "买入", "买入"), rep("600002", "乙", "C", "增持", "增持")]
+        self.overnight = {"items": [{"ticker": "^GSPC", "name": "标普500", "level": 6000, "change": 0.01, "kind": "pct", "symbol": "^GSPC"},
+                                    {"ticker": "^TNX", "name": "美10年期", "level": 4.1, "change": 0.03, "kind": "diff", "symbol": "^TNX"}],
+                          "errors": [], "last_a_close": "2026-10-15"}
+
+    def _run(self, watch=None, overnight=None, on_v=None):
+        M, O = self.M, self.O
+        vmap = {"ashare_econ_surprise": self.econ_v, "ashare_report_signals": {}}
+        with patch.object(B, "important_events", return_value=([self.gdp], [])), \
+             patch.object(M.sources, "stock_reports", return_value=self.rep), \
+             patch.object(O, "overnight", return_value=overnight or self.overnight), \
+             patch.object(O, "load_verdict", return_value=self.on_v if on_v is None else on_v), \
+             patch.object(M, "_verdict", side_effect=lambda n: vmap.get(n, {})), \
+             patch.object(M, "load_watchlist", return_value=watch or []):
+            return M.build(self.now)
+
+    def test_headline_and_sections(self):
+        data, md, errs = self._run()
+        text = "\n".join(md)
+        self.assertIn("11:00 有中国重大数据", data["headline"])
+        self.assertIn("外围指向高开 0.2%", data["headline"])         # 0.24 × 1% = 0.24%
+        self.assertIn("对开盘后的日内走势没有预测力", text)
+        self.assertIn("期指交割日", data["headline"])
+        self.assertIn("好于预期当天沪深300ETF平均 +0.46%", text)
+        self.assertIn("美10年期 4.10%（+3bp）", text)
+        self.assertIn("评级调低", text)
+        self.assertIn("乙(600002) 3家", text)
+        self.assertNotIn("倾向", text)                                    # 跳空后延续/回落 两期不一致 → 不说
+        self.assertEqual(errs, [])
+
+    def test_unproven_overnight_has_no_estimate(self):
+        data, md, _ = self._run(on_v={"metrics": {"results": {}}})
+        self.assertIsNone(data.get("implied_open"))
+        self.assertIn("未证明", "\n".join(md))
+
+    def test_watchlist_filters_risk(self):
+        data, md, _ = self._run(watch=["600002"])
+        self.assertEqual(data["risk"]["downgrades"], [])
+        self.assertEqual([x["code"] for x in data["risk"]["crowded"]], ["600002"])
+        self.assertIn("自选股风险 1 只", data["headline"])
+
+    def test_third_friday(self):
+        self.assertEqual(self.M.third_friday(datetime(2026, 10, 1).date()).day, 16)
+        self.assertEqual(self.M.special_days(datetime(2026, 10, 14).date()), ["10/16（周五）股指期货交割日"])
+        self.assertEqual(self.M.special_days(datetime(2026, 10, 20).date()), [])
+
+    def test_overnight_alignment_live(self):
+        import pandas as pd
+        O = self.O
+        a = pd.DataFrame({"Close": [1, 1, 1]}, index=pd.to_datetime(["2026-10-14", "2026-10-15", "2026-10-16"]))
+        spx = pd.DataFrame({"Close": [100, 101, 103, 104]}, index=pd.to_datetime(["2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16"]))
+        with patch.object(O, "_hist", side_effect=lambda tk, days=20: a if tk == O.A_PROXY else (spx if tk == "^GSPC" else spx.iloc[:0])):
+            on = O.overnight(datetime(2026, 10, 16).date())
+        # 今天 10/16 开盘前: 上个 A 股收盘 10/15 → 外围从 10/14 收盘 (101) 到 10/15 收盘 (103)
+        it = next(i for i in on["items"] if i["ticker"] == "^GSPC")
+        self.assertAlmostEqual(it["change"], 103 / 101 - 1)
+        self.assertEqual(on["last_a_close"], "2026-10-15")

@@ -24,7 +24,7 @@ JST = timezone(timedelta(hours=9))
 BJT = timezone(timedelta(hours=8))
 OUT_DIR = Path(__file__).resolve().parents[1] / "signals" / "cn_brief"
 SLOTS = ("morning", "close", "evening", "now")
-SLOT_TITLES = {"morning": "A股盘前研报 & 今日数据", "close": "A股收盘后研报 & 数据回顾",
+SLOT_TITLES = {"morning": "A股盘前定调", "close": "A股收盘后研报 & 数据回顾",
                "evening": "今晚重大经济数据提醒", "now": "A股研报 & 经济数据 (即时)"}
 
 # ── 研报精选 ──────────────────────────────────────────────────────────────
@@ -227,6 +227,15 @@ def build_brief(slot: str = "now", now: datetime | None = None, use_ai: bool = T
     today_bjt = now.astimezone(BJT).date()
     out = {"slot": slot, "title": SLOT_TITLES[slot], "generated_at": now.isoformat(timespec="seconds"),
            "errors": [], "reports": None, "events": {}}
+    if slot == "morning":           # 2026-10-19: 盘前改为精简定调版 (见 morning.py)
+        from . import morning
+        data, md_lines, errs = morning.build(now)
+        out.update(data)
+        out["errors"] += errs
+        out["markdown"] = "\n".join(md_lines)
+        if write_files:
+            save(out)
+        return out
     md = [f"## {SLOT_TITLES[slot]}  ·  {now.strftime('%Y-%m-%d %H:%M')} JST"]
 
     # 研报
