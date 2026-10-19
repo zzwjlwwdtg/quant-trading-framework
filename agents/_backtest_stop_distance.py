@@ -630,7 +630,7 @@ def run_atr_candidates():
     if not survivors:
         verdict_val = "keep_baseline"
         should_int = False
-        recommendation = "keep TRAILING_STOP_BASE_PCT=0.08 (ATR 候选未同时通过 train+OOS)"
+        recommendation = "keep 现行固定 8% trailing stop (ATR 候选未同时通过 train+OOS)"
         best = None
         print(f"  → **保持 trail_8**. ATR 候选无一同时通过训练期和 OOS")
     else:
