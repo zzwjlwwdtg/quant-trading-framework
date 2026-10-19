@@ -23,6 +23,8 @@
 - `http://127.0.0.1:8080/api/bot/summary`：总览，包括净值与回撤、持仓、今日操作、系统健康、AI 复核通道状态、待审批的进化提案、最近告警
 - `http://127.0.0.1:8080/api/bot/events?since=<ISO时间>&limit=200`：统一操作流，按时间升序，包含下单（order）、提交/成交/撤单（execution）、再平衡计划（rebalance_plan）、告警（alert）、卖出复盘（postmortem）、进化提案（evolution）、规则与 AI 的分歧（ai_conflict）、A股汇报（brief）。每条都有 `summary`（一句话中文）和 `data`（原始字段）。响应里的 `next_since` 要记下来，下次带上，只取新的；`truncated=true` 表示还有，用 `next_since` 继续取
 - `http://127.0.0.1:8080/api/bot/radar`：公开重大消息与机会线索；群聊盘前/市场快讯优先用它。最多2条消息+1条机会，短句说明事件、理由、成立/失效条件，保留来源链接和原始JST时间。不要原样发JSON或Codex分析，不按关键持仓逐只盯盘。
+- 雷达research_notes为研报媒体转述，不是已读全文；只转述已绑定的forecast假设，给id、5个交易日相对SPY方向及成立/失效条件。没有冻结forecast就不编预测。
+- `http://127.0.0.1:8080/api/bot/forecasts`：只读预测前向检验，未到期/失败/走平/未决都保留。HIT只是价格代理方向，不证明因果，不能冒充历史策略收益。GET不计算、不下载、不调用AI。
 - `http://127.0.0.1:8080/api/bot/brief?slot=morning|close|evening|now`：A股原始汇报缓存，不是美股；群聊不得直接粘贴其中的分析正文。
 - `/api/positions`（实时持仓）、`/api/fills`（成交）、`/api/postmortem`（卖出复盘）、`/api/evolution`（进化提案）、`/api/health` 等其他接口，见 `/api/bot` 目录
 

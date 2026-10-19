@@ -68,7 +68,9 @@ def build(batches, *, now, analyze):
                 published = parsedate_to_datetime(raw.get("pubDate", ""))
             except (ValueError, TypeError, IndexError):
                 continue
-            if not published or not published.tzinfo or not timedelta(0) <= now - published <= timedelta(hours=6):
+            age = now - published if published and published.tzinfo else None
+            report_hint = re.search(r"研报|评级|目标价|analyst|research|upgrade|downgrade|price target", raw.get("title", ""), re.I)
+            if age is None or age < timedelta(0) or age > timedelta(hours=72) or age > timedelta(hours=6) and not report_hint:
                 continue
             title, url = _text(raw.get("title"), 200), _url(raw.get("url", ""))
             key = re.sub(r"\W+", "", title.casefold())
@@ -84,7 +86,7 @@ def build(batches, *, now, analyze):
                      events_calendar=[], cli_timeout=90, radar_mode=True) if candidates else {"items": [], "fallback": False}
     classified = parsed.get("items", [])
     valid_batch = not parsed.get("fallback") and isinstance(classified, list) and len(classified) == len(candidates)
-    accepted, rejected = [], 0
+    accepted, notes, rejected = [], [], 0
     if valid_batch:
         for raw, item in zip(candidates, classified):
             if not isinstance(item, dict):
@@ -98,19 +100,31 @@ def build(batches, *, now, analyze):
                     or not isinstance(confidence, (int, float)) or not 7 <= confidence <= 10):
                 rejected += 1
                 continue
-            if kind in RELEASES:
+            if kind == "RESEARCH_NOTE":
+                qualifies = True
+            elif now - datetime.fromisoformat(raw["published_at"]) > timedelta(hours=6):
+                continue
+            elif kind in RELEASES:
                 qualifies = (item.get("is_landed") is True and bool(item.get("period"))
                              and bool(item.get("value")))
             else:
                 qualifies = kind in {"BREAKING", "EARNINGS"} and item.get("magnitude") in {"large", "extreme"}
             if not qualifies:
                 continue
-            accepted.append({"id": hashlib.sha256((raw["url"] + raw["title"]).encode()).hexdigest()[:24],
+            entry = {"id": hashlib.sha256((raw["url"] + raw["title"]).encode()).hexdigest()[:24],
                              "title": raw["title"], "source": raw["source"], "url": raw["url"],
                              "published_at": raw["published_at"], "evidence": quote, "event_type": kind,
                              "assessment": {"direction": item.get("direction", "neutral"),
                                             "confidence": confidence, "not_market_fact": True},
-                             "themes": [t for t in item.get("tickers_affected", []) if t in THEMES][:3]})
+                             "themes": [t for t in item.get("tickers_affected", []) if t in THEMES][:3]}
+            if kind == "RESEARCH_NOTE":
+                institution = _text(item.get("institution"), 80)
+                entry.update({"institution": institution if institution and institution in available else "原文未注明",
+                              "scope": "SECONDARY_EXCERPT_NOT_FULL_REPORT",
+                              "hypothesis": item.get("radar_hypothesis") if isinstance(item.get("radar_hypothesis"), dict) else {}})
+                notes.append(entry)
+            else:
+                accepted.append(entry)
     accepted = accepted[:6]
     themes = []
     for ticker, label in THEMES.items():
@@ -125,7 +139,8 @@ def build(batches, *, now, analyze):
             "expires_at": (now + timedelta(minutes=35)).astimezone(JST).isoformat(),
             "status": "OK" if complete else "PARTIAL", "coverage": coverage,
             "classification": "OK" if valid_batch else "UNAVAILABLE_OR_MISALIGNED",
-            "rejected_evidence": rejected, "news": accepted[:6], "opportunity_candidates": themes[:2],
+            "rejected_evidence": rejected, "news": accepted[:6], "research_notes": notes[:2],
+            "opportunity_candidates": themes[:2],
             "warning": "仅已覆盖来源的公开消息；不是内幕或未定价证明，不是实时报价，不读取关键持仓。"}
 
 
@@ -175,10 +190,21 @@ def refresh(*, path=None, now=None, fetch=None, analyze=None):
         with ThreadPoolExecutor(max_workers=6) as pool:
             batches = list(pool.map(collect, FEEDS))
         data = build(batches, now=now, analyze=analyze or analyze_rss_items)
+        from research_forecasts import register, review_due
+        try:
+            for note in data["research_notes"]:
+                note["forecast"] = register(note, now=now, path=target.parent / "research_forecasts.sqlite3")
+                note.pop("hypothesis", None)
+            data["forecast_review"] = review_due(path=target.parent / "research_forecasts.sqlite3", now=now)
+        except Exception:
+            for note in data["research_notes"]:
+                note["forecast"] = None
+                note.pop("hypothesis", None)
+            data["forecast_review"] = {"status": "UNAVAILABLE"}
         tmp = target.with_suffix(".tmp")
         tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         tmp.replace(target)
-        return {"status": data["status"], "news": len(data["news"]),
+        return {"status": data["status"], "news": len(data["news"]), "research_notes": len(data["research_notes"]),
                 "candidates": len(data["opportunity_candidates"]), "classification": data["classification"]}
     finally:
         os.close(fd)

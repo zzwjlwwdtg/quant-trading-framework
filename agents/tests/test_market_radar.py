@@ -25,6 +25,27 @@ def item(**extra):
 
 
 class Radar(unittest.TestCase):
+    def test_refresh_registers_frozen_forecast_before_exposing_it_and_removes_untracked_draft(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/"market_radar.json"
+            hypothesis={"proxy":"QQQ","stance":"OUTPERFORM","thesis":"demand improves","condition":"orders materialize","invalidation":"orders weaken"}
+            analyze=Mock(return_value={"items":[item(event_type="RESEARCH_NOTE",radar_hypothesis=hypothesis)]})
+            result=r.refresh(path=path,now=NOW,fetch=lambda *a,**kw:[rss()],analyze=analyze)
+            self.assertEqual(result["research_notes"],1)
+            note=r.read(path=path,now=NOW)["research_notes"][0]
+            self.assertNotIn("hypothesis",note)
+            self.assertEqual(note["forecast"]["horizon_sessions"],5)
+            self.assertEqual(note["forecast"]["evidence_quote"],"Actual decision announced")
+            self.assertEqual(note["forecast"]["broadcast_status"],"NOT_AUTOMATICALLY_SENT")
+            self.assertTrue((Path(tmp)/"research_forecasts.sqlite3").exists())
+
+    def test_research_is_not_breaking_and_unverified_institution_is_not_invented(self):
+        data, _ = self.build([rss("Broker upgrades sector", pubDate="Sun, 18 Oct 2026 12:30:00 +0000")],
+                             {"items": [item(event_type="RESEARCH_NOTE", institution="invented broker", magnitude="small")]})
+        self.assertEqual(data["news"], [])
+        self.assertEqual(data["research_notes"][0]["scope"], "SECONDARY_EXCERPT_NOT_FULL_REPORT")
+        self.assertEqual(data["research_notes"][0]["institution"], "原文未注明")
+
     def build(self, rows=None, parsed=None):
         cli = Mock(return_value=parsed or {"fallback": False, "items": [item()]})
         result = r.build([("test", rows or [rss()])], now=NOW, analyze=cli)

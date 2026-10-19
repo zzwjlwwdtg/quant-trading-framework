@@ -11,6 +11,13 @@ import ai_prompt
 
 
 class Mode(unittest.TestCase):
+    def test_research_type_and_hypothesis_exist_only_in_opted_in_parser(self):
+        raw={"event_type":"RESEARCH_NOTE","institution":"Broker","radar_hypothesis":{"proxy":"SMH","stance":"OUTPERFORM","thesis":"source-based"}}
+        self.assertEqual(na._normalize_item(raw,"s")["event_type"],"NOISE")
+        result=na._normalize_item(raw,"s",radar_mode=True)
+        self.assertEqual(result["event_type"],"RESEARCH_NOTE")
+        self.assertEqual(result["radar_hypothesis"]["proxy"],"SMH")
+
     def test_default_unchanged_and_radar_cache_isolated(self):
         prompts = []
         keys = []
