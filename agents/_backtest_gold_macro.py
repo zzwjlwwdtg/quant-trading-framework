@@ -40,9 +40,6 @@ FAKE_EVENTS_BASE = {
     "trump_signal": {"fallback": True},
 }
 FAKE_MACRO = {"vix": 18, "fg_score": 55, "t10y2y": 0.4}
-QUANT_ZERO = {"buy_score": 0, "sell_score": 0, "n_rules": 0,
-              "buy_hits": [], "sell_hits": []}
-
 from config import FRED_API_KEY
 
 # 复用 gold_macro 的子函数（避免重新实现 trend 判定）
@@ -211,9 +208,9 @@ def backtest_gld(days: int = DAYS) -> dict:
             # _gold_rules 通过 get_gold_decision 调用
             from decision_agent import get_gold_decision
             dec_new = get_gold_decision(mkt, events_new, FAKE_MACRO,
-                                         board_regime="neutral", quant=QUANT_ZERO)
+                                         board_regime="neutral")
             dec_leg = get_gold_decision(mkt, events_legacy, FAKE_MACRO,
-                                         board_regime="neutral", quant=QUANT_ZERO)
+                                         board_regime="neutral")
         except Exception as e:
             continue
 

@@ -33,9 +33,6 @@ FAKE_EVENTS = {"breaking_news": False, "days_to_event": 99, "risk_level": "norma
                "next_event_impact": "moderate", "gold_bias": "neutral",
                "trump_signal": {"fallback": True}}
 FAKE_MACRO  = {"vix": 18, "fg_score": 50, "t10y2y": 0.27, "fedfunds": 3.63}
-FAKE_QUANT  = {"buy_score": 0, "sell_score": 0}
-
-
 def _enrich_market(row, ticker_full: str) -> dict:
     """build_mkt 不带 cum_5d / cum_10d / dist_from_ma20 / vol_20d，这里补上。"""
     mkt = build_mkt(ticker_full, row)
@@ -70,7 +67,7 @@ def replay_ticker(ticker: str, days: int = 250) -> pd.DataFrame:
         # 计算 confluence + 决策（带 A+B）
         cf = get_confluence(mkt)
         d = _etf_rules(mkt, FAKE_EVENTS, FAKE_MACRO,
-                       get_regime(FAKE_MACRO, mkt), cf, FAKE_QUANT)
+                       get_regime(FAKE_MACRO, mkt), cf)
         # 仅查询 A+B 的两层是否会触发（用于报告）
         is_caution, c_reason = _caution_check(mkt)
         is_oh, o_reason = _is_overheated(mkt)

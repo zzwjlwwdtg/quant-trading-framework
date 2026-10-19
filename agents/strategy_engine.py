@@ -16,6 +16,7 @@ from pathlib import Path
 
 from config import OPEND_HOST, OPEND_PORT, SIGNALS_DIR
 from i18n import t
+from research_validation import evaluate_rule_walk_forward
 
 # ── 候选规则库 ─────────────────────────────────────────────────────────────────
 # conditions: [(field, op, value), ...]  可用字段: rsi_14, vol_ratio, trend, ma_stack, is_new_52w_high
@@ -365,11 +366,9 @@ def backtest_rule(rule: dict, df: pd.DataFrame, split: float = 0.8) -> dict:
 
 # ── 全规则回测入口 ────────────────────────────────────────────────────────────
 
-def run_strategy_backtest(ticker: str, is_gold: bool = False,
-                          include_evolved: bool = True) -> list[dict]:
+def run_strategy_backtest(ticker: str, is_gold: bool = False) -> list[dict]:
     """
-    对 ticker 运行所有候选规则，返回按 combined 排序的结果列表。
-    include_evolved=True 时同时合并已进化的存活规则。
+    对 ticker 运行固定、可解释的候选规则，返回按 combined 排序的结果列表。
     """
     df = fetch_kline_history(ticker)
     if df is None or len(df) < 80:
@@ -377,39 +376,29 @@ def run_strategy_backtest(ticker: str, is_gold: bool = False,
 
     # 手工规则回测
     rules = GOLD_RULES if is_gold else ETF_RULES
-    results = [backtest_rule(r, df) for r in rules]
+    results = []
+    for rule in rules:
+        result = backtest_rule(rule, df)
+        result["walk_forward"] = evaluate_rule_walk_forward(rule, df, check_rule)
+        # 固定规则不需要用训练集挑参数；排名优先依据真正的滚动样本外结果。
+        wf = result["walk_forward"]
+        result["oos_gate"] = "pass" if wf["passed"] else "insufficient_or_unstable"
+        result["institutional_score"] = round(
+            wf["oos_win_rate"] * min(1.0, wf["oos_n"] / 10.0) *
+            (0.5 + 0.5 * wf["fold_stability"]),
+            1,
+        )
+        results.append(result)
     results = [r for r in results if r["train_n"] >= 3]
 
-    # 合并进化规则（若存在）
-    if include_evolved:
-        try:
-            from strategy_evolver import load_evolved_rules
-            evolved = load_evolved_rules(ticker)
-            evo_ids = {r["id"] for r in results}
-            for er in evolved:
-                # 转换为 backtest_rule 相同格式
-                if er["id"] not in evo_ids:
-                    results.append({
-                        "id":          er["id"],
-                        "name":        f"[进化]{er['name']}",   # 保留完整名字
-                        "conditions":  er.get("conditions", []),  # 供今日触发评估
-                        "action":      er["action"],
-                        "hold":        er["hold"],
-                        "train_n":     er["train_n"],
-                        "train_wr":    er["train_wr"],
-                        "train_ret":   er.get("train_avg", 0),
-                        "test_n":      er["test_n"],
-                        "test_wr":     er["test_wr"],
-                        "test_ret":    er.get("test_avg", 0),
-                        "test_sharpe": 0,
-                        "combined":    er["combined"],
-                        "recent":      [],
-                    })
-                    evo_ids.add(er["id"])
-        except Exception:
-            pass
-
-    results.sort(key=lambda x: x["combined"], reverse=True)
+    results.sort(
+        key=lambda x: (
+            bool((x.get("walk_forward") or {}).get("passed")),
+            x.get("institutional_score", 0),
+            x["combined"],
+        ),
+        reverse=True,
+    )
     path = Path(SIGNALS_DIR) / f"backtest_{ticker.replace('.','-')}.json"
     path.write_text(json.dumps({"ts": datetime.now().isoformat(), "ticker": ticker,
                                 "results": results}, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -422,7 +411,7 @@ def generate_pattern_leaderboard(etf_tickers: list, gold_ticker: str = "US.GLD")
     """
     日K技术形态胜率排行。
     胜率 = 触发后持有 N 天，收益方向正确的次数 / 触发总次数。
-    同一形态取最优持仓周期的胜率，合并手工规则 + 进化规则。
+    同一固定技术形态取最优持仓周期的胜率。
     """
     W   = 92
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -686,7 +675,11 @@ def generate_today_signals(market_signals: dict) -> str:
             if p.exists():
                 try:
                     data = json.loads(p.read_text(encoding="utf-8"))
-                    candidates = data.get("results", [])
+                    candidates = [
+                        r for r in data.get("results", [])
+                        if not str(r.get("name", "")).startswith("[进化]")
+                        and not str(r.get("id", "")).startswith("E")
+                    ]
                     break
                 except Exception:
                     pass
@@ -694,6 +687,9 @@ def generate_today_signals(market_signals: dict) -> str:
         triggered_buy, triggered_sell = [], []
         for r in candidates:
             if r.get("test_n", 0) < 3 or r.get("test_wr", 0) < 55:
+                continue
+            walk_forward = r.get("walk_forward") or {}
+            if walk_forward and not walk_forward.get("passed"):
                 continue
             if not _eval_today(mkt, r):
                 continue
@@ -780,8 +776,8 @@ def generate_today_signals(market_signals: dict) -> str:
 
     lines += [
         "=" * W,
-        t("  说明: 规则由进化引擎从历史日K中挖掘；触发≠保证。结合共振+宏观综合判断。",
-          "  注: ルールは進化エンジンが日足から発掘。発火≠保証。共振+マクロと併せて判断。"),
+        t("  说明: 仅使用固定、可解释的技术规则；触发≠保证。结合共振+宏观综合判断。",
+          "  注: 固定された説明可能なテクニカルルールのみ使用。発火≠保証。共振+マクロと併せて判断。"),
         "=" * W,
     ]
     return "\n".join(lines)
