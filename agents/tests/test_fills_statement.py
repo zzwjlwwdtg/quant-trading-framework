@@ -43,5 +43,36 @@ class Statement(unittest.TestCase):
         self.assertIn("loadFills()", promises)
 
 
+
+class FillTimeSource(unittest.TestCase):
+    """2026-10-19: 成交时间不能用对账时刻 (10/16 TQQQ 12:02 买 / 14:58 卖 被显示成 15:45 同一分钟)."""
+
+    def test_broker_time_conversion(self):
+        from execution_analytics import broker_time_to_utc_iso as b
+        self.assertEqual(b("2026-10-16 12:02:39.120"), "2026-10-16T16:02:39.120000+00:00")   # 夏令时 -4
+        self.assertEqual(b("2026-01-15 10:00:00"), "2026-01-15T15:00:00+00:00")              # 冬令时 -5
+        self.assertEqual(b(""), "")
+        self.assertEqual(b("garbage"), "")
+
+
+class StatementFillTime(unittest.TestCase):
+    def test_row_ts_prefers_broker_then_submitted(self):
+        fills = [{"event": "filled", "order_id": "A", "ticker": "US.TQQQ", "side": "BUY", "dealt_qty": 286,
+                  "average_fill_price": 70.02, "ts": "2026-10-16T19:45:24+00:00"},
+                 {"event": "filled", "order_id": "B", "ticker": "US.TQQQ", "side": "SELL", "dealt_qty": 286,
+                  "average_fill_price": 67.915, "ts": "2026-10-16T19:45:24+00:00", "broker_time": "2026-10-16T18:58:30+00:00"},
+                 {"event": "filled", "order_id": "C", "ticker": "US.X", "side": "BUY", "dealt_qty": 1,
+                  "average_fill_price": 1.0, "ts": "2026-10-16T19:45:25+00:00"}]
+        submitted = [{"event": "submitted", "order_id": "A", "ts": "2026-10-16T16:02:38+00:00"},
+                     {"event": "submitted", "order_id": "B", "ts": "2026-10-16T18:58:24+00:00"}]
+        with patch.object(fl, "get_fills", return_value=fills), patch.object(fl, "load_order_fees", return_value={}), \
+             patch.object(fl, "_read_jsonl", return_value=submitted + fills):
+            rows = {r["order_id"]: r for r in fl.statement_rows(n=10)}
+        self.assertEqual((rows["A"]["ts"], rows["A"]["time_source"]), ("2026-10-16T16:02:38+00:00", "submitted"))
+        self.assertEqual((rows["B"]["ts"], rows["B"]["time_source"]), ("2026-10-16T18:58:30+00:00", "broker"))
+        self.assertEqual(rows["C"]["time_source"], "recorded")
+        self.assertEqual(rows["A"]["recorded_ts"], "2026-10-16T19:45:24+00:00")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -52,6 +52,7 @@ from execution_analytics import (
     actual_execution_quality,
     append_execution_event,
     estimate_execution,
+    broker_time_to_utc_iso,
 )
 from portfolio_analytics import pretrade_portfolio_gate
 from trading_contracts import (
@@ -1827,6 +1828,10 @@ def refresh_execution_ledger() -> None:
             "dealt_qty": dealt,
             "average_fill_price": avg_fill,
             "quality": quality,
+            # 2026-10-19: ts 是对账记录时刻 (可能比实际成交晚几小时, 例: 10/16 TQQQ 12:02 买 / 14:58 卖,
+            # 都在 15:45 对账时才记 → 看板显示成同一分钟). 另存券商时间, ts 语义不变 (哈希链兼容).
+            "broker_time": broker_time_to_utc_iso(row.get("updated_time") or row.get("create_time")),
+            "broker_time_raw": str(row.get("updated_time") or row.get("create_time") or ""),
         })
         # R01/R02 CRITICAL FIX (2026-09-20 followup audit):
         # 上轮把 seen[oid]=signature 移到 cohort 回调之前, 导致 cohort 读 prev_sig

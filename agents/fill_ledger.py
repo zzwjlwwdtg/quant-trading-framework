@@ -450,6 +450,7 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
     exec_rows = _read_jsonl(EXEC_LEDGER_PATH)
     trio_by_oid: dict[str, dict] = {}
     last_fill_ts: dict[str, str] = {}
+    submitted_ts: dict[str, str] = {}     # 2026-10-19: 旧成交记录没有券商时间时, 用下单时间代替对账时刻
     for r in exec_rows:
         oid_r = str(r.get("order_id") or "")
         if not oid_r:
@@ -461,6 +462,7 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
         })
         ev_name = r.get("event")
         if ev_name == "submitted":
+            submitted_ts.setdefault(oid_r, str(r.get("ts") or ""))
             trio_r["trigger_price"]   = r.get("trigger_price") or r.get("order_price")
             trio_r["ref_price"]       = r.get("ref_price") or r.get("reference_price")
             trio_r["live_quote"]      = r.get("live_quote")
@@ -486,8 +488,17 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
             continue
         side = (ev.get("side") or "").upper()
         trio = trio_by_oid.get(oid, {})
+        # 2026-10-19: ts = 券商成交时间 > 下单时间 > 对账记录时间 (对账可能晚几小时, 不能当成交时间)
+        if ev.get("broker_time"):
+            row_ts, src = ev.get("broker_time"), "broker"
+        elif submitted_ts.get(oid):
+            row_ts, src = submitted_ts[oid], "submitted"
+        else:
+            row_ts, src = ev.get("ts"), "recorded"
         rows.append({
-            "ts": ev.get("ts"),
+            "ts": row_ts,
+            "time_source": src,
+            "recorded_ts": ev.get("ts"),
             "order_id": oid,
             "ticker": canonical_ticker(ev.get("ticker")).replace("US.", ""),
             "side": "SELL" if side in ("SELL", "SELL_ALL", "REDUCE") else side,

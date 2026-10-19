@@ -41,6 +41,8 @@ class Gateway(unittest.TestCase):
         r = g.events()
         kinds = [e["kind"] for e in r["events"]]
         self.assertEqual(kinds, ["execution", "execution", "order", "rebalance_plan", "evolution", "alert"])
+        ex_events = [e["data"]["event"] for e in r["events"] if e["kind"] == "execution"]
+        self.assertEqual(ex_events, ["submitted", "filled"])                      # 同一秒: 提交在前
         self.assertTrue(all(e["ts"].endswith("+09:00") for e in r["events"]))
         reb = next(e for e in r["events"] if e["kind"] == "rebalance_plan")
         self.assertEqual(reb["ts"], "2026-10-17T04:50:29+09:00")                  # 无时区按日本时间
@@ -48,6 +50,20 @@ class Gateway(unittest.TestCase):
         self.assertNotIn("plan", ex["data"])                                       # 大字段剔除
         self.assertIn("下单 BUY US.NVDA 152 股", next(e for e in r["events"] if e["kind"] == "order")["summary"])
         self.assertNotIn("\n", next(e for e in r["events"] if e["kind"] == "alert")["summary"])
+
+    def test_fill_time_prefers_broker_then_submitted(self):
+        rows = [{"ts": "2026-10-16T16:02:38+00:00", "event": "submitted", "order_id": "A", "ticker": "US.TQQQ", "side": "BUY", "requested_qty": 1},
+                {"ts": "2026-10-16T19:45:24+00:00", "event": "filled", "order_id": "A", "ticker": "US.TQQQ", "side": "BUY",
+                 "requested_qty": 1, "dealt_qty": 1, "average_fill_price": 70.02},
+                {"ts": "2026-10-16T18:58:24+00:00", "event": "submitted", "order_id": "B", "ticker": "US.TQQQ", "side": "SELL", "requested_qty": 1},
+                {"ts": "2026-10-16T19:45:24+00:00", "event": "filled", "order_id": "B", "ticker": "US.TQQQ", "side": "SELL",
+                 "requested_qty": 1, "dealt_qty": 1, "average_fill_price": 67.9, "broker_time": "2026-10-16T18:58:30+00:00"}]
+        (self.tmp / "execution_ledger.jsonl").write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+        ev = {e["data"]["order_id"] + e["data"]["event"]: e for e in g.events(kinds=["execution"])["events"]}
+        self.assertEqual(ev["Afilled"]["ts"], "2026-10-17T01:02:38+09:00")          # 旧记录: 用下单时间
+        self.assertEqual(ev["Afilled"]["time_source"], "submitted")
+        self.assertEqual(ev["Bfilled"]["ts"], "2026-10-17T03:58:30+09:00")          # 有券商时间: 用券商时间
+        self.assertEqual(ev["Bfilled"]["time_source"], "broker")
 
     def test_paging_no_loss_no_dup_on_same_second(self):
         full = [e["id"] for e in g.events()["events"]]

@@ -105,6 +105,18 @@ def events(since: str | None = None, kinds: list[str] | None = None, limit: int 
     t1 = _ts(until, JST).replace(microsecond=0) if until and _ts(until, JST) else None
     want = set(kinds or KINDS)
     out, errors = [], []
+    # 2026-10-19: 成交/撤单记录的 ts 是对账时刻 (可能晚几小时). 有券商时间用券商时间, 否则用下单时间.
+    submitted_at = {}
+    try:
+        for line in (SIGNALS / "execution_ledger.jsonl").read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                d = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if d.get("event") == "submitted" and d.get("order_id"):
+                submitted_at.setdefault(str(d["order_id"]), d.get("ts"))
+    except OSError:
+        pass
     for kind, rel, key, ntz, summ, drop in SOURCES:
         if kind not in want:
             continue
@@ -121,15 +133,27 @@ def events(since: str | None = None, kinds: list[str] | None = None, limit: int 
                 d = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            t = _ts(d.get(key), ntz)
+            raw_ts, time_source = d.get(key), None
+            if kind == "execution" and d.get("event") != "submitted":
+                if d.get("broker_time"):
+                    raw_ts, time_source = d["broker_time"], "broker"
+                elif submitted_at.get(str(d.get("order_id"))):
+                    raw_ts, time_source = submitted_at[str(d.get("order_id"))], "submitted"
+                else:
+                    time_source = "recorded"
+            t = _ts(raw_ts, ntz)
             if t is not None:
                 t = t.replace(microsecond=0)        # 输出精确到秒, 比较也必须按秒, 否则分页会重复
             if t is None or (t0 and t <= t0) or (t1 and t > t1):
                 continue
             data = {k: v for k, v in d.items() if not drop or k not in drop}
-            out.append({"id": f"{kind}:{hashlib.sha1(line.encode('utf-8')).hexdigest()[:16]}", "kind": kind,
-                        "ts": t.astimezone(JST).isoformat(timespec="seconds"), "summary": summ(d), "data": data})
-    out.sort(key=lambda e: (e["ts"], e["kind"], e["id"]))
+            ev = {"id": f"{kind}:{hashlib.sha1(line.encode('utf-8')).hexdigest()[:16]}", "kind": kind,
+                  "ts": t.astimezone(JST).isoformat(timespec="seconds"), "summary": summ(d), "data": data}
+            if time_source:
+                ev["time_source"] = time_source     # broker=券商成交时间 / submitted=按下单时间 / recorded=对账时刻
+            out.append(ev)
+    _rank = {"submitted": 0}           # 同一秒内: 提交排在成交/撤单前面
+    out.sort(key=lambda e: (e["ts"], e["kind"], _rank.get(e["data"].get("event"), 1), e["id"]))
     truncated = len(out) > limit
     if truncated:
         # 截断点上同一秒的事件要么全给要么全不给, 否则下次 since=next_since (严格大于) 会漏掉
