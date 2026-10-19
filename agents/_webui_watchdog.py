@@ -102,7 +102,8 @@ JOBS = {
     "bot_feed_tick": {"bat": "_bot_feed_tick.bat", "auto_every_days": 4 / 1440},
     "bot_selftest": {"bat": "_bot_selftest.bat"},
     # Public news only; one bounded cached classifier batch per ~30 minutes. No QQ pushes/trading.
-    "market_radar_tick": {"bat": "_market_radar_tick.bat", "auto_every_days": 30 / 1440},
+    "market_radar_tick": {"bat": "_market_radar_tick.bat", "auto_every_days": 30 / 1440,
+                          "stale_hours": 0.1},
     # 2026-10-19: A股研报信号/经济数据意外 回测 (只读)
     "ashare_bt_reports": {"bat": "_ashare_bt_reports.bat"},
     "ashare_bt_econ": {"bat": "_ashare_bt_econ.bat"},
@@ -305,6 +306,16 @@ def _handle_restart_request(reason: str) -> int:
 def _launch_job(name: str) -> int | None:
     """隐藏窗口、脱离父进程启动白名单 .bat; 不等待."""
     try:
+        if name == "market_radar_tick":
+            # This small new worker needs no command shell/AutoRun or console. Keep all
+            # existing job launch paths unchanged, and capture actual worker completion.
+            (SCRIPT_DIR / "logs").mkdir(parents=True, exist_ok=True)
+            with open(SCRIPT_DIR / "logs" / "market_radar_last.log", "w", encoding="utf-8") as out:
+                proc = subprocess.Popen(
+                    [sys.executable, "-X", "utf8", str(SCRIPT_DIR / "market_radar.py"), "tick"],
+                    cwd=str(SCRIPT_DIR), stdin=subprocess.DEVNULL, stdout=out, stderr=out,
+                    creationflags=0x00000200 | 0x08000000, close_fds=True)
+            return proc.pid
         proc = subprocess.Popen(
             ["cmd.exe", "/c", str(SCRIPT_DIR / JOBS[name]["bat"])], cwd=str(SCRIPT_DIR),
             creationflags=0x00000008 | 0x00000200 | 0x08000000,
@@ -339,8 +350,9 @@ def _process_job_requests() -> None:
         if name in JOBS and JOBS[name].get("market_quiet") and _in_us_market_window():
             continue          # 保留请求, 收盘后的下一轮再启动
         _run_flag = JOB_DIR / f"job_{name}.running"
+        stale_hours = JOBS.get(name, {}).get("stale_hours", JOB_STALE_HOURS)
         if (name in JOBS and _run_flag.exists()
-                and (time.time() - _run_flag.stat().st_mtime) < JOB_STALE_HOURS * 3600):
+                and (time.time() - _run_flag.stat().st_mtime) < stale_hours * 3600):
             _log("job_already_running", f"{name}: request kept until it finishes")
             continue          # 2026-10-13: 任务还在跑 → 请求保留到它结束 (以前会被消费掉然后丢弃)
         try:
@@ -352,7 +364,7 @@ def _process_job_requests() -> None:
             _log("job_rejected", f"{name}: not in whitelist")
             continue
         running = JOB_DIR / f"job_{name}.running"
-        if running.exists() and (time.time() - running.stat().st_mtime) < JOB_STALE_HOURS * 3600:
+        if running.exists() and (time.time() - running.stat().st_mtime) < stale_hours * 3600:
             _log("job_already_running", name)
             continue
         pid = _launch_job(name)
