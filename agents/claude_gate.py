@@ -445,11 +445,35 @@ def _sim_active_probe(decision: dict, market: dict | None, audit: dict) -> dict 
     return out
 
 
+def split_cli_failures(status: str, provider: str, fallback_reason: str = "") -> list[tuple[str, str]]:
+    """把 ai_prompt.query_ai_cli 的结果拆成逐通道的 (provider, status).
+
+    2026-10-19 用户要求: Claude 没额度时先看 Codex, 两边都不行才如实回报.
+    query_ai_cli 在主通道失败、备用也失败时, status = "<主>: <主状态>; <备>=<备状态>",
+    fallback_reason = "<主>: <主状态>". 以前只按备用通道记一笔, 且用合并字符串分类
+    (例如 Codex 协议错误被 "claude: quota" 关键词误判成 quota). 这里逐通道拆开.
+    """
+    status = str(status or "")
+    fb = str(fallback_reason or "").strip()
+    if not fb or ":" not in fb:
+        return [(provider, status)]
+    prefix, rest = fb.split(":", 1)
+    if prefix.strip().lower() in ("claude", "codex"):
+        primary, primary_status = prefix.strip(), rest.strip()
+    else:   # 格式不带通道名: 主通道就是另一边
+        primary = "claude" if str(provider or "").strip().lower() == "codex" else "codex"
+        primary_status = fb
+    marker = f"; {str(provider or '').strip().lower()}="
+    fallback_status = status.split(marker, 1)[1] if marker in status else status
+    return [(primary, primary_status), (provider, fallback_status.strip())]
+
+
 def _fail_decision(
     decision: dict,
     status: str,
     prompt_path: str | None = None,
     provider: str = "Codex",
+    fallback_reason: str = "",
 ) -> dict:
     """基础设施不可用时的 fail-closed 兜底.
 
@@ -462,22 +486,37 @@ def _fail_decision(
          恢复告警交给 _ai_cli_diag 的实际探测, 这里不发.
     下单许可仍按 fail-closed 处理, 本次改动不改变任何 order gating.
     """
-    failure_class = classify_cli_failure(status)
-    health = record_cli_failure(provider, status, failure_class)
+    # 2026-10-19: 逐通道记录 (主通道 Claude 失败 → 备用 Codex 也失败 → 两条都如实记)
+    channel_failures = []
+    health = None
+    for prov, st in split_cli_failures(status, provider, fallback_reason):
+        cls = classify_cli_failure(st)
+        h = record_cli_failure(prov, st, cls)
+        channel_failures.append({"channel": h["channel"], "failure_class": cls,
+                                 "status": str(st)[:300], "duration_s": h["duration_s"],
+                                 "is_new_failure": h["is_new_failure"]})
+        health = h
+    failure_class = channel_failures[-1]["failure_class"]   # 最后尝试的通道
+    summary = ", ".join(f"{c['channel']}={c['failure_class']}" for c in channel_failures)
+    all_tried_down = len(channel_failures) > 1
 
     audit = _audit(
         provider,
         "HOLD",
         status,
-        f"ai_gate_unavailable ({failure_class}); fail-closed, 非模型给出的 HOLD",
+        (f"ai_gate_unavailable ({summary}); "
+         + ("Claude 与 Codex 均不可用, " if all_tried_down else "")
+         + "fail-closed, 非模型给出的 HOLD"),
         confidence=None,
         prompt_path=prompt_path,
     )
     audit["ai_gate_available"] = False
     audit["failure_class"] = failure_class
-    audit["failure_duration_s"] = health["duration_s"]
+    audit["channel_failures"] = channel_failures
+    audit["all_tried_channels_unavailable"] = all_tried_down
+    audit["failure_duration_s"] = max(c["duration_s"] for c in channel_failures)
     audit["model_confidence"] = "N/A"
-    audit["health_channel"] = health["channel"]
+    audit["health_channel"] = "+".join(c["channel"] for c in channel_failures)
     audit["health_overall"] = health.get("overall")
 
     original_action = (decision or {}).get("action")
@@ -487,13 +526,13 @@ def _fail_decision(
         original_conf = None
 
     # 只在"新故障"或 class 切换时推送告警, 否则合并. 推送失败不影响交易路径.
-    if health["is_new_failure"]:
+    if any(c["is_new_failure"] for c in channel_failures):
         try:
             from notifications import notify_ai_gate_unavailable
             notify_ai_gate_unavailable(
-                classification=failure_class,
-                duration_s=health["duration_s"],
-                channel=health["channel"],
+                classification=summary if all_tried_down else failure_class,
+                duration_s=audit["failure_duration_s"],
+                channel=audit["health_channel"],
                 status_text=status,
                 overall=health.get("overall"),
             )
@@ -585,12 +624,21 @@ def apply_claude_gate(
         return _fail_decision(decision, f"import_error: {exc}", str(prompt_path))
 
     # 每 trade 都调, 打市场决策级 → medium (需 regime+confluence+risk 联动推理)
-    output, status, provider, _ = query_ai_cli(prompt_text, timeout=_timeout_sec(),
-                                                complexity="medium")
+    output, status, provider, fb_reason = query_ai_cli(prompt_text, timeout=_timeout_sec(),
+                                                       complexity="medium")
 
     if not output:
         logger.warning(f"[claude-gate] {ticker} unavailable: {status}")
-        return _fail_decision(decision, status, str(prompt_path), provider)
+        return _fail_decision(decision, status, str(prompt_path), provider,
+                              fallback_reason=fb_reason)
+
+    # 主通道失败、备用通道接手成功: 主通道的故障也如实记下 (健康状态 → degraded)
+    if fb_reason:
+        try:
+            primary, primary_status = split_cli_failures(status, provider, fb_reason)[0]
+            record_cli_failure(primary, primary_status)
+        except Exception:
+            pass
 
     raw_path.write_text(output + "\n", encoding="utf-8")
     parsed = _extract_json(output)

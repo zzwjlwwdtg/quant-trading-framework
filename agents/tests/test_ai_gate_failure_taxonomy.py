@@ -307,3 +307,76 @@ class ProbeStatusParseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BothChannelsHonestReportTests(unittest.TestCase):
+    """2026-10-19 用户要求: Claude 没额度时先看 Codex, 两边都不行才如实回报 (逐通道、各自分类)."""
+
+    BOTH = ("claude: error: exit=1 stderr=You've hit your limit · resets 4am; "
+            "codex=codex_error: exit=1 stderr=failed to decode models response: unknown variant `max`")
+    FB = "claude: error: exit=1 stderr=You've hit your limit · resets 4am"
+
+    def test_split_both_channels(self):
+        parts = claude_gate.split_cli_failures(self.BOTH, "Codex", self.FB)
+        self.assertEqual([p for p, _ in parts], ["claude", "Codex"])
+        self.assertIn("hit your limit", parts[0][1])
+        self.assertTrue(parts[1][1].startswith("codex_error"))
+        self.assertNotIn("hit your limit", parts[1][1])
+
+    def test_split_single_channel_unchanged(self):
+        self.assertEqual(claude_gate.split_cli_failures("timeout", "Claude", ""), [("Claude", "timeout")])
+
+    def test_both_down_records_each_channel_with_own_class(self):
+        with HealthStateFixture() as fx, \
+             patch.object(notifications, "send_alert", return_value={"sent": ["mock"]}) as alert:
+            out = claude_gate._fail_decision(_mk_decision(), self.BOTH, provider="Codex",
+                                             fallback_reason=self.FB)
+            state = json.loads(fx.state_path.read_text(encoding="utf-8"))
+        self.assertEqual(out["action"], "HOLD")                      # fail-closed 不变
+        cg = out["claude_gate"]
+        self.assertTrue(cg["all_tried_channels_unavailable"])
+        classes = {c["channel"]: c["failure_class"] for c in cg["channel_failures"]}
+        self.assertEqual(classes, {"claude": "quota", "codex": "protocol"})   # 不再串类
+        self.assertEqual(state["channels"]["claude"]["failure_class"], "quota")
+        self.assertEqual(state["channels"]["codex"]["failure_class"], "protocol")
+        self.assertEqual(state["overall"], "down")
+        self.assertIn("Claude 与 Codex 均不可用", cg["reason"])
+        self.assertEqual(alert.call_count, 1)                         # 合并成一条告警
+        self.assertIn("claude=quota", alert.call_args[0][0])
+        self.assertIn("codex=protocol", alert.call_args[0][0])
+
+    def _gate(self, reply):
+        import os, types
+        mod = types.ModuleType("ai_prompt")
+        mod.query_ai_cli = lambda prompt, timeout, **kw: reply
+        dec = {"action": "BUY", "confidence": 5, "reason": "test"}
+        with HealthStateFixture() as fx, tempfile.TemporaryDirectory() as tmp, \
+             patch.dict(os.environ, {"CLAUDE_DECISION_GATE": "1"}), \
+             patch.object(claude_gate, "SIGNALS_DIR", tmp), \
+             patch.object(claude_gate, "_current_conf_scale", return_value=5), \
+             patch.object(notifications, "send_alert", return_value={"sent": ["mock"]}), \
+             patch.dict(sys.modules, {"ai_prompt": mod}):
+            out = claude_gate.apply_claude_gate("US.SHY", {"price": 80}, {}, dec, {}, "post-open")
+            state = json.loads(fx.state_path.read_text(encoding="utf-8"))
+        return out, state
+
+    def test_end_to_end_claude_quota_codex_answers(self):
+        reply = ('{"verdict": "APPROVE", "reason": "ok", "confidence": 6, "risk_flags": []}',
+                 "ok", "Codex", self.FB)
+        out, state = self._gate(reply)
+        self.assertEqual(out["claude_gate"]["verdict"], "APPROVE")   # Codex 的真实判断照常生效
+        self.assertEqual(state["channels"]["claude"]["status"], "unavailable")
+        self.assertEqual(state["channels"]["claude"]["failure_class"], "quota")
+        self.assertEqual(state["channels"]["codex"]["status"], "ok")
+        self.assertEqual(state["overall"], "degraded")
+
+    def test_end_to_end_both_down_reports_honestly(self):
+        out, state = self._gate((None, self.BOTH, "Codex", self.FB))
+        self.assertEqual(out["action"], "HOLD")
+        self.assertFalse(out["ai_gate_available"])
+        self.assertTrue(out["claude_gate"]["all_tried_channels_unavailable"])
+        self.assertEqual(state["overall"], "down")
+
+    def test_fallback_reason_without_channel_prefix(self):
+        parts = claude_gate.split_cli_failures("x", "Codex", "error: You've hit your limit")
+        self.assertEqual(parts[0], ("claude", "error: You've hit your limit"))
