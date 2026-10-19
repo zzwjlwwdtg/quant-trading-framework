@@ -58,9 +58,19 @@ def get_quote_ctx(retries: int = 5, delay: float = 2.0) -> OpenQuoteContext:
 
 
 @atexit.register
-def _cleanup():
+def close_quote_ctx() -> None:
+    """Close the shared quote context now; safe to call more than once.
+
+    Short-lived commands must call this explicitly before returning. Relying
+    only on ``atexit`` can leave the process waiting on moomoo worker threads,
+    so the batch file never reaches its remaining commands.
+    """
     global _ctx
-    if _ctx is not None:
-        try: _ctx.close()
-        except Exception: pass
+    with _lock:
+        ctx = _ctx
         _ctx = None
+    if ctx is not None:
+        try:
+            ctx.close()
+        except Exception:
+            pass
