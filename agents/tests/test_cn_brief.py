@@ -145,7 +145,9 @@ class BuildAndTick(unittest.TestCase):
         import types
         mod = types.ModuleType("ai_prompt")
         mod.query_ai_cli = lambda *a, **k: (None, "claude: quota; codex=timeout", "Codex", "claude: quota")
-        with patch.dict(sys.modules, {"ai_prompt": mod}):
+        import os
+        env = {k: v for k, v in os.environ.items() if k != "CN_BRIEF_NO_AI"}
+        with patch.dict(sys.modules, {"ai_prompt": mod}), patch.dict(os.environ, env, clear=True):
             summ, status = B.ai_summary({"hot": [], "upgrades": [{"change": "调高", "name": "甲", "code": "1",
                                                                    "org": "A", "last_rating": "增持", "rating": "买入",
                                                                    "title": "t"}]}, {}, [])
