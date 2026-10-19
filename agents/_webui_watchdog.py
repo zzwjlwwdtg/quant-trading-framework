@@ -91,6 +91,8 @@ JOBS = {
     "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True, "auto_every_days": 1 / 24},
     # 2026-10-19: EVO-3 退回后重做的长周期回测 (盘前止盈延迟, ~2 年 1h 盘前数据), 只读, 按需触发
     "premarket_tp_long": {"bat": "_premarket_tp_long.bat", "market_quiet": True},
+    # 2026-10-19: EVO-20261014-1 合并后的预注册回测 (固定 8% vs ATR 倍数移动止损), 只读, 按需触发
+    "stop_distance_atr": {"bat": "_stop_distance_atr.bat", "market_quiet": True},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
