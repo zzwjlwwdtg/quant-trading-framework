@@ -1162,10 +1162,27 @@ def _find_codex_cli() -> str | None:
     return None
 
 
-def query_claude_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
+# ── Claude 模型分级 (2026-10-19 用户决定) ─────────────────────────────────
+# 框架/交易判断用最高档 Opus; 只有简单的结构化抽取 (新闻解析等) 用 Sonnet 省额度.
+#   simple  → sonnet  (news_analyzer / fed_watch / policy_toolkit_tracker)
+#   medium  → opus    (claude_gate 交易复核 / bond_ai_interpret / webui 等默认调用)
+#   complex → opus    (主分析 / 卖出复盘 / 自我进化提案)
+# 用 CLI 别名 "opus"/"sonnet", 自动对应当前最新版本. 环境变量 CLAUDE_MODEL_<档> 可覆盖.
+_CLAUDE_MODEL_DEFAULTS = {"simple": "sonnet", "medium": "opus", "complex": "opus"}
+
+
+def _resolve_claude_model(complexity: str) -> str:
+    c = complexity if complexity in _CLAUDE_MODEL_DEFAULTS else "medium"
+    env = os.environ.get(f"CLAUDE_MODEL_{c.upper()}", "").strip()
+    return env or _CLAUDE_MODEL_DEFAULTS[c]
+
+
+def query_claude_cli(prompt: str, timeout: int = 300,
+                     model: str | None = None) -> tuple[str | None, str]:
     """
     用本地 claude CLI 非交互模式跑一次查询。
     走 Claude Code 当前登录账号（订阅 OAuth）—— 不算 API 费用。
+    model: CLI --model 参数 (别名 opus / sonnet 或完整模型名); None = CLI 默认.
     返回 (output, status)。status: "ok" / "not_installed" / "timeout" / "error:..."
     """
     cli_path = _find_claude_cli()
@@ -1173,8 +1190,11 @@ def query_claude_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
         return None, "not_installed"
     try:
         # 用 stdin 喂 prompt 绕开 Windows 命令行长度限制（~32K）
+        cmd = [cli_path, "-p"]
+        if model:
+            cmd += ["--model", model]
         result = subprocess.run(
-            [cli_path, "-p"],
+            cmd,
             input=prompt,
             capture_output=True,
             text=True,
@@ -1444,7 +1464,16 @@ def _query_named_cli(provider: str, prompt: str, timeout: int,
     if provider == "codex":
         return query_codex_cli(prompt, timeout=timeout, web_search=web_search,
                                complexity=complexity)
-    return query_claude_cli(prompt, timeout=timeout)
+    return query_claude_cli(prompt, timeout=timeout, model=_resolve_claude_model(complexity))
+
+
+def _model_for(provider: str, complexity: str) -> str | None:
+    """审计 log 用: 本次调用请求的模型."""
+    if provider == "codex":
+        return _resolve_codex_model(complexity)
+    if provider == "claude":
+        return _resolve_claude_model(complexity)
+    return None
 
 
 def query_ai_cli(
@@ -1468,7 +1497,7 @@ def query_ai_cli(
     fallback = policy["fallback"]
 
     # F11: 记录实际 model (若 env 空, 记 cli_internal_default 让人能看出)
-    model_used = _resolve_codex_model(complexity) if primary == "codex" else None
+    model_used = _model_for(primary, complexity)
 
     t0 = _time.monotonic()
     output, status = _query_named_cli(primary, prompt, timeout, web_search, complexity)
@@ -1490,7 +1519,7 @@ def query_ai_cli(
         return None, status, primary.title(), ""
 
     fallback_reason = f"{primary}: {_redact_cli_text(status)}"
-    fb_model = _resolve_codex_model(complexity) if fallback == "codex" else None
+    fb_model = _model_for(fallback, complexity)
     t1 = _time.monotonic()
     output, fallback_status = _query_named_cli(
         fallback, prompt, timeout, web_search, complexity
