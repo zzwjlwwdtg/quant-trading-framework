@@ -3,7 +3,7 @@
 渠道 (都在 secrets.local.json 或环境变量里配置, 不配就跳过):
   - Discord:  DISCORD_WEBHOOK_URL            (沿用 notifications 的配置)
   - Telegram: TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID
-  - 通用:     CN_BRIEF_WEBHOOK_URL           POST JSON {"slot","title","markdown","data"}
+  - 通用:     CN_BRIEF_WEBHOOK_URL (不配则用 BOT_WEBHOOK_URL)  POST JSON {"source","type":"brief","slot","title","markdown","data"}
               (给以后选定的第三方机器人库用: 它起一个本地 HTTP 接收端即可)
 单独给本模块用的 Discord/Telegram 可以另配 CN_BRIEF_DISCORD_WEBHOOK_URL / CN_BRIEF_TELEGRAM_CHAT_ID.
 """
@@ -71,12 +71,12 @@ def push(title: str, markdown: str, slot: str = "", data: dict | None = None) ->
     else:
         result["skipped"].append("telegram_no_config")
 
-    hook = _cfg("CN_BRIEF_WEBHOOK_URL")
+    hook = _cfg("CN_BRIEF_WEBHOOK_URL") or _cfg("BOT_WEBHOOK_URL")   # 2026-10-19: 没单独配就推给统一的机器人地址
     if hook:
         try:
             import requests
-            r = requests.post(hook, json={"slot": slot, "title": title, "markdown": markdown,
-                                          "data": data or {}}, timeout=15)
+            r = requests.post(hook, json={"source": "fsi-skills", "type": "brief", "slot": slot, "title": title,
+                                          "markdown": markdown, "data": data or {}}, timeout=15)
             (result["sent"] if r.ok else result["skipped"]).append(
                 "webhook" if r.ok else f"webhook_http_{r.status_code}")
         except Exception as e:

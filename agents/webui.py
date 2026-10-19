@@ -5410,6 +5410,22 @@ class Handler(BaseHTTPRequestHandler):
                 self._html(SCRIPT_DIR / "dashboard.html")
             elif path == "/api/health":
                 self._json(api_health())
+            # 2026-10-19: 机器人只读接入层 (bot_gateway.py; 说明见 BOT_INTEGRATION.md)
+            elif path in ("/api/bot", "/api/bot/"):
+                import bot_gateway
+                self._json(bot_gateway.index())
+            elif path == "/api/bot/summary":
+                import bot_gateway
+                self._json(bot_gateway.summary(positions=api_positions(), nav=api_nav(days=7), health=api_health()))
+            elif path == "/api/bot/events":
+                import bot_gateway
+                _kinds = qs.get("kinds", [""])[0]
+                self._json(bot_gateway.events(since=qs.get("since", [None])[0], until=qs.get("until", [None])[0],
+                                              kinds=[k for k in _kinds.split(",") if k] or None,
+                                              limit=max(1, min(2000, int(qs.get("limit", ["200"])[0])))))
+            elif path == "/api/bot/brief":
+                import bot_gateway
+                self._json(bot_gateway.brief(qs.get("slot", ["morning"])[0]))
             elif path == "/api/nav":
                 self._json(api_nav(days=days))
             elif path == "/api/equity_curve":

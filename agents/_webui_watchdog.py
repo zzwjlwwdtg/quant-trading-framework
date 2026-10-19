@@ -98,6 +98,9 @@ JOBS = {
     "cn_brief_tick": {"bat": "_cn_brief_tick.bat", "auto_every_days": 4 / 1440},
     "cn_brief_now": {"bat": "_cn_brief_now.bat"},
     "cn_brief_morning": {"bat": "_cn_brief_morning.bat"},
+    # 2026-10-19: 机器人只读接入. bot_feed_tick 每 ~5 分钟把新操作推到 BOT_WEBHOOK_URL (美股时段也要跑, 不设 market_quiet)
+    "bot_feed_tick": {"bat": "_bot_feed_tick.bat", "auto_every_days": 4 / 1440},
+    "bot_selftest": {"bat": "_bot_selftest.bat"},
     # 2026-10-19: A股研报信号/经济数据意外 回测 (只读)
     "ashare_bt_reports": {"bat": "_ashare_bt_reports.bat"},
     "ashare_bt_econ": {"bat": "_ashare_bt_econ.bat"},
