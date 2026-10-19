@@ -23,6 +23,34 @@ os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 LOG_PATH = Path(__file__).parent / "signals" / "trade_log.jsonl"
 REPORT_PATH = Path(__file__).parent / "signals" / "trade_postmortem.md"
+POSTMORTEM_ARCHIVE = Path(__file__).parent / "signals" / "postmortem" / "archive.jsonl"
+
+
+def load_news_structured_index(path: Path | None = None) -> dict:
+    """EVO-20261014-2: 按 order_id 索引 postmortem 归档里的 news_structured.
+
+    只读 trade_postmortem.py 写出的 archive.jsonl, 决策链路零接触 —
+    这里只是把 '那笔强制卖出有没有事件/新闻背书' 的结构化证据挂到回测报告上.
+    """
+    p = Path(path or POSTMORTEM_ARCHIVE)
+    out = {}
+    if not p.exists():
+        return out
+    try:
+        lines = p.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        ns = rec.get("news_structured") or {}
+        oid = str(rec.get("order_id") or "")
+        if not oid:
+            continue
+        out[oid] = ns
+    return out
 
 
 def load_log() -> list:
@@ -76,6 +104,7 @@ def pair_trades(events: list) -> list[dict]:
                 "qty": qty, "price": price, "ts": ts,
                 "decision": ev.get("decision", {}), "mkt": ev.get("market", {}),
                 "tag": ev.get("tag", ""),
+                "order_id": str(ev.get("order_id") or ""),
                 "price_snapshot": _extract_prices(ev),
             })
         elif side == "SELL":
@@ -93,6 +122,8 @@ def pair_trades(events: list) -> list[dict]:
                     "ticker":     ticker,
                     "entry_ts":   pos["ts"],
                     "exit_ts":    ts,
+                    "entry_order_id": pos.get("order_id", ""),
+                    "exit_order_id":  str(ev.get("order_id") or ""),
                     "hold_days":  round(hold_days, 1),
                     "entry_price": pos["price"],
                     "exit_price": price,
@@ -209,6 +240,23 @@ def report(trades: list[dict]):
                 print(f"      {t['ticker']:<10} entry {t['entry_ts'][:10]}  "
                       f"ref=${t['entry_ref_price']}  live=${t['entry_live_quote']}  "
                       f"div={t['entry_divergence_pct']*100:+.2f}%  pnl={t['pnl_pct']:+.2f}%")
+
+    # EVO-20261014-2: 卖出结构化新闻覆盖率 (只是展示, 不参与归因 — 消息面不进决策)
+    ns_idx = load_news_structured_index()
+    with_sell_id = [t for t in trades if t.get("exit_order_id")]
+    if ns_idx and with_sell_id:
+        print(f"\n  ── 卖出 ±48h 结构化新闻覆盖 (postmortem archive) ──")
+        hit = [t for t in with_sell_id
+               if (ns_idx.get(t["exit_order_id"]) or {}).get("items")]
+        total = len(with_sell_id)
+        rate = len(hit) / total * 100 if total else 0.0
+        print(f"    有新闻背书 {len(hit)}/{total} ({rate:.0f}%); 其余为 '难判断/证据不足'")
+        et_count: dict = defaultdict(int)
+        for t in hit:
+            for it in (ns_idx.get(t["exit_order_id"]) or {}).get("items") or []:
+                et_count[it.get("event_type", "NOISE")] += 1
+        for et, c in sorted(et_count.items(), key=lambda x: -x[1])[:6]:
+            print(f"      {et:<16} n={c}")
 
 
 def main():
