@@ -5429,6 +5429,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/bot/radar":
                 import market_radar
                 self._json(market_radar.read())
+            elif path == "/api/bot/forecasts":
+                import research_forecasts
+                self._json(research_forecasts.read())
             elif path == "/api/nav":
                 self._json(api_nav(days=days))
             elif path == "/api/equity_curve":
