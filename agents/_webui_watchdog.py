@@ -93,6 +93,10 @@ JOBS = {
     "premarket_tp_long": {"bat": "_premarket_tp_long.bat", "market_quiet": True},
     # 2026-10-19: EVO-20261014-1 合并后的预注册回测 (固定 8% vs ATR 倍数移动止损), 只读, 按需触发
     "stop_distance_atr": {"bat": "_stop_distance_atr.bat", "market_quiet": True},
+    # 2026-10-19: A股研报 + 中美日重大经济数据. tick 每 5 分钟 (到点汇报/公布前 30 分钟提醒/公布后补发);
+    # 不设 market_quiet: 21:00 JST 的晚间时段在美股时段内, 且 tick 很轻 (只读、无事时秒退)
+    "cn_brief_tick": {"bat": "_cn_brief_tick.bat", "auto_every_days": 4 / 1440},
+    "cn_brief_now": {"bat": "_cn_brief_now.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
