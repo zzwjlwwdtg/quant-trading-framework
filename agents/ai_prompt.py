@@ -1140,9 +1140,15 @@ def _find_codex_cli() -> str | None:
     override = os.environ.get("CODEX_CLI_PATH", "").strip()
     if override and Path(override).exists():
         return override
-    npm_cmd = Path(os.environ.get("APPDATA", "")) / "npm" / "codex.cmd"
-    if os.environ.get("APPDATA") and npm_cmd.exists():
-        return str(npm_cmd)
+    # 2026-10-19: 不只依赖 APPDATA 环境变量 (10/18 22:33 有任务在缺 APPDATA 的环境下
+    # 落到旧的 0.130 独立版, 报 unknown variant `max`); 也按用户目录直接找 npm 版.
+    npm_candidates = []
+    if os.environ.get("APPDATA"):
+        npm_candidates.append(Path(os.environ["APPDATA"]) / "npm" / "codex.cmd")
+    npm_candidates.append(Path.home() / "AppData" / "Roaming" / "npm" / "codex.cmd")
+    for npm_cmd in npm_candidates:
+        if npm_cmd.exists():
+            return str(npm_cmd)
     known = Path.home() / "AppData" / "Local" / "OpenAI" / "Codex" / "bin" / "codex.exe"
     if known.exists():
         return str(known)
