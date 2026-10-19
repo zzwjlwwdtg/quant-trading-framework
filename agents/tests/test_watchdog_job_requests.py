@@ -23,6 +23,25 @@ import _webui_watchdog as wd
 
 
 class JobRequests(unittest.TestCase):
+    def test_news_job_uses_python_without_shell_and_cannot_be_suppressed_by_old_four_hour_marker(self):
+        import os
+        import subprocess
+        (self.td / "logs").mkdir()
+        with patch.object(wd, "SCRIPT_DIR", self.td), patch.object(subprocess, "Popen") as popen:
+            popen.return_value.pid = 5432
+            self.assertEqual(wd._launch_job("market_radar_tick"), 5432)
+            args = popen.call_args.args[0]
+            self.assertEqual(args[0], sys.executable)
+            self.assertEqual(args[-1], "tick")
+            self.assertNotIn("cmd.exe", args)
+        (self.td / "job_request_market_radar_tick.json").write_text("{}", encoding="utf-8")
+        marker = self.td / "job_market_radar_tick.running"
+        marker.write_text("old", encoding="utf-8")
+        old = time.time() - 31 * 60
+        os.utime(marker, (old, old))
+        _, launch = self.run_main()
+        launch.assert_called_once_with("market_radar_tick")
+
     def setUp(self):
         self.td = Path(tempfile.mkdtemp())
         self.log = self.td / "wd.jsonl"
