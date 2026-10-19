@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import market_radar as r
@@ -25,6 +25,24 @@ def item(**extra):
 
 
 class Radar(unittest.TestCase):
+    def test_live_registration_uses_post_analysis_clock_not_fetch_start(self):
+        class Clock:
+            calls = 0
+
+            @classmethod
+            def now(cls, _tz):
+                cls.calls += 1
+                return NOW if cls.calls == 1 else NOW + timedelta(minutes=2)
+
+            fromisoformat = datetime.fromisoformat
+
+        with tempfile.TemporaryDirectory() as tmp, patch.object(r, "datetime", Clock):
+            path = Path(tmp) / "market_radar.json"
+            analyze = Mock(return_value={"items": [item(event_type="RESEARCH_NOTE")]})
+            with patch("research_forecasts.register", return_value=None) as register, patch("research_forecasts.review_due", return_value={}):
+                r.refresh(path=path, fetch=lambda *a, **kw: [rss()], analyze=analyze)
+            self.assertEqual(register.call_args.kwargs["now"], NOW + timedelta(minutes=2))
+
     def test_refresh_registers_frozen_forecast_before_exposing_it_and_removes_untracked_draft(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/"market_radar.json"
