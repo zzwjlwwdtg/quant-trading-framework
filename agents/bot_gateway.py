@@ -82,6 +82,10 @@ def _s_conflict(d):
     return f"规则与 AI 分歧 {d.get('ticker')}：规则 {d.get('rule_action')} / AI {d.get('ai_action')}；{_clip(d.get('notes', ''), 120)}"
 
 
+def _s_guard(d):
+    return f"止损线拦下买入 {d.get('ticker')} @ {d.get('price')}：线 {d.get('line')}（{d.get('kind')}）{_clip(d.get('tag', ''), 60)}"
+
+
 def _s_brief(d):
     return f"汇报推送 {d.get('kind')}：{d.get('title')}（已发 {d.get('sent')}）"
 
@@ -95,6 +99,7 @@ SOURCES = [
     ("postmortem", "postmortem/archive.jsonl", "ts", timezone.utc, _s_pm, ("material",)),
     ("ai_conflict", "claude_conflict.jsonl", "ts", timezone.utc, _s_conflict, None),
     ("brief", "cn_brief/push_log.jsonl", "ts", JST, _s_brief, None),
+    ("guard_block", "stop_line_blocks.jsonl", "ts", timezone.utc, _s_guard, None),   # 2026-10-19 止损线守卫
 ]
 KINDS = [s[0] for s in SOURCES]
 
@@ -274,6 +279,8 @@ FILES = {
     "signals/ai_gate_health.json": "AI 复核通道健康（Claude/Codex）",
     "signals/ai_calls.jsonl": "所有 AI 调用审计（模型、耗时、状态）",
     "signals/cn_brief/latest_<slot>.json": "A股研报/经济数据汇报",
+    "signals/stop_lines.json": "止损线 (未收复前不买回)",
+    "signals/stop_line_blocks.jsonl": "被止损线拦下的买单",
     "signals/backtest_verdicts/*.json": "所有预注册回测结论",
 }
 

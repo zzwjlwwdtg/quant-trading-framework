@@ -1563,6 +1563,14 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         logger.warning(f"[trader] SKIP {side} {code} qty={qty} price={price}")
         return None
     side_label = "BUY " if side == TrdSide.BUY else "SELL"
+    # 2026-10-19 止损线守卫 (用户: "总之是有一条线"): 止损线未收复前不买回. 必须在现金筹措之前,
+    # 否则会为一笔被拦下的买单先卖掉 SHY. 只拦买入, 不碰任何卖出/止损.
+    if side == TrdSide.BUY:
+        import stop_line_guard
+        _ok_line, _why_line = stop_line_guard.check_buy(code, price, tag)
+        if not _ok_line:
+            logger.warning(f"[trader] SKIP BUY {code}: {_why_line}")
+            return None
     # 规则 A 现金纪律 (2026-10-07): 买入必须有现金覆盖, 不借保证金; 不受 SIM_ACTIVE 豁免
     if side == TrdSide.BUY and not DRY_RUN:
         funded_qty = _fund_buy_qty(code, int(qty), price * (1 + buffer))
@@ -2156,6 +2164,8 @@ def _monitor_software_stops_unlocked() -> list[str]:
         if oid is None:
             logger.error(f"[trader] SOFTWARE STOP exit failed for {ticker}; remains armed")
             continue
+        import stop_line_guard
+        stop_line_guard.record(ticker, stop_price, "software_stop", current_price)
 
         now_iso = datetime.now(timezone.utc).isoformat()
         tstate.update({
@@ -2277,6 +2287,8 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
                          buffer=win_cfg.get("buffer", 0.005),
                          fill_outside_rth=win_cfg.get("fill_outside_rth", False))
             if oid:
+                import stop_line_guard
+                stop_line_guard.record(ticker, stop_line_guard.trailing_line(entry_high, ts_pct), "trailing_stop", cur_price)
                 tstate.update({"last_action":"TRAILING_STOP","last_qty":qty,
                                "last_price":cur_price,
                                "last_time_utc": datetime.now(timezone.utc).isoformat(),
