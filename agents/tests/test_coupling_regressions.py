@@ -326,7 +326,8 @@ class CliFallbackTests(unittest.TestCase):
             output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
         self.assertEqual((output, status, provider, reason),
                          ("claude answer", "ok", "Claude", ""))
-        claude.assert_called_once_with("prompt", timeout=7)
+        # 2026-10-19: 模型分级, 默认 medium 档 → opus
+        claude.assert_called_once_with("prompt", timeout=7, model="opus")
         codex.assert_not_called()
 
     def test_default_is_claude_first_with_codex_fallback(self):
@@ -352,7 +353,8 @@ class CliFallbackTests(unittest.TestCase):
             output, status, provider, reason = ai_prompt.query_ai_cli("prompt", timeout=7)
         self.assertEqual((output, status, provider), ("fallback answer", "ok", "Claude"))
         self.assertIn("codex_timeout", reason)
-        claude.assert_called_once_with("prompt", timeout=7)
+        # 2026-10-19: 模型分级, 默认 medium 档 → opus
+        claude.assert_called_once_with("prompt", timeout=7, model="opus")
 
     def test_legacy_claude_primary_can_fallback_to_codex(self):
         env = {"AI_CLI_PRIMARY": "claude", "AI_CLI_FALLBACK": "codex"}
