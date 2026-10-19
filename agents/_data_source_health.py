@@ -7,7 +7,7 @@ _data_source_health.py
   · yfinance      : 价格 / 期权 / earnings_dates       (free, ~15min delay)
   · FRED          : VIX / F&G / T10Y2Y / FEDFUNDS    (API key 需要)
   · moomoo OpenD  : 真实订单 + 持仓 + 实时报价         (登录态)
-  · Claude CLI    : 决策门禁 + 复盘 + AI prompt        (订阅 OAuth)
+  · AI CLI        : Claude（默认）/ Codex（备用, 2026-10-08 起）  (本机登录态)
   · 期权链        : yfinance options（无 OI，只用 today volume）
 
 已知缺口（P5.2 仍开放）:
@@ -17,7 +17,7 @@ _data_source_health.py
 
 接入：
   · weekly.bat 已集成（每周末检查一次）
-  · 失败时邮件 / Claude 报告（待加）
+  · 失败时邮件 / AI 报告（待加）
 """
 from __future__ import annotations
 
@@ -86,15 +86,24 @@ def check_moomoo() -> tuple[bool, str]:
         return False, f"moomoo 失败: {e}"
 
 
-def check_claude() -> tuple[bool, str]:
+def check_ai_cli() -> tuple[bool, str]:
     try:
-        from ai_prompt import _find_claude_cli
-        path = _find_claude_cli()
+        from ai_prompt import (
+            _find_claude_cli,
+            _find_codex_cli,
+            get_ai_cli_policy,
+        )
+        policy = get_ai_cli_policy()
+        primary = policy["primary"]
+        fallback = policy["fallback"]
+        finders = {"codex": _find_codex_cli, "claude": _find_claude_cli}
+        path = finders[primary]()
         if path:
-            return True, f"Claude CLI 找到: {path}"
-        return False, "Claude CLI 未安装 / 不在 PATH"
+            extra = f"，fallback={fallback}" if fallback != "none" else "，无自动 fallback"
+            return True, f"主 CLI={primary}: {path}{extra}"
+        return False, f"主 CLI={primary} 未安装 / 不在 PATH"
     except Exception as e:
-        return False, f"Claude CLI 检查失败: {e}"
+        return False, f"AI CLI 检查失败: {e}"
 
 
 def check_calibration() -> tuple[bool, str]:
@@ -131,6 +140,34 @@ def check_hmm() -> tuple[bool, str]:
         return False, f"HMM 读取失败: {e}"
 
 
+def check_point_in_time_and_signals() -> tuple[bool, str]:
+    try:
+        from data_quality import audit_latest_signal_files
+        base = Path(__file__).parent / "signals"
+        report = audit_latest_signal_files(base)
+        pit = base / "point_in_time_market.jsonl"
+        pit_note = "PIT已启用" if pit.exists() else "PIT将在下个交易cycle建立"
+        ok = report["critical_files"] == 0
+        return ok, (
+            f"latest={report['checked_files']} critical={report['critical_files']} "
+            f"warning={report['warning_files']} · {pit_note}"
+        )
+    except Exception as e:
+        return False, f"point-in-time/信号审计失败: {e}"
+
+
+def check_execution_audit() -> tuple[bool, str]:
+    try:
+        from execution_analytics import verify_execution_log
+        path = Path(__file__).parent / "signals" / "execution_ledger.jsonl"
+        result = verify_execution_log(path)
+        if not result["valid"]:
+            return False, f"执行审计链损坏: {result}"
+        return True, f"执行审计链 OK (hashed={result['checked']}, legacy={result['legacy_unhashed']})"
+    except Exception as e:
+        return False, f"执行审计链检查失败: {e}"
+
+
 def main():
     print("=" * 78)
     print("  数据源健康检查")
@@ -139,9 +176,11 @@ def main():
         ("yfinance",     check_yfinance),
         ("FRED",         check_fred),
         ("moomoo OpenD", check_moomoo),
-        ("Claude CLI",   check_claude),
+        ("AI CLI",       check_ai_cli),
         ("校准文件",     check_calibration),
         ("HMM 状态",     check_hmm),
+        ("PIT/信号质量", check_point_in_time_and_signals),
+        ("执行审计链",   check_execution_audit),
     ]
     fail_count = 0
     for name, fn in checks:

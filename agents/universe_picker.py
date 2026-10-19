@@ -52,21 +52,26 @@ def _direction_for_regime(z: float, regime: str) -> Optional[str]:
     4a 严格按 regime 矩阵决定方向：
       bull_trending  → 高 z 顺动量 (BUY)，低 z 不要
       overheated     → 高 z 反转减仓 (SKIP，反转风险高)，低 z 反弹候选 (BUY)
-      recession_risk → 仅 |z|>2.5 才动；偏避险
+      recession_risk / risk_off → 仅极端超卖反转
+      neutral_chop / bull_chop → 提高顺势候选门槛
       crisis         → 现金为王，全空
       neutral        → 仅 |z|>3 才动
     返回 'BUY' 或 None（不选）。
     """
     if regime == "crisis":
         return None
-    if regime == "bull_trending":
+    if regime in ("bull_trending", "bull_extended", "bull_pulling"):
         return "BUY" if z >= MIN_ABS_Z else None
+    if regime == "bull_chop":
+        return "BUY" if z >= 2.0 else None
     if regime == "overheated":
         return "BUY" if z <= -MIN_ABS_Z else None  # 反弹候选
-    if regime == "recession_risk":
+    if regime in ("recession_risk", "risk_off"):
         if z <= (-2.0 if is_sim_active_trading() else -2.5):
             return "BUY"   # 极端超卖反转
         return None
+    if regime == "neutral_chop":
+        return "BUY" if z >= (2.0 if is_sim_active_trading() else 2.5) else None
     # neutral
     if is_sim_active_trading():
         return "BUY" if z >= 1.5 else None
@@ -174,7 +179,8 @@ def pick_today_universe(regime: Optional[str] = None) -> dict:
     out["pick_mode"] = pick_mode
 
     # 排序：bull_trending / neutral 按 z 降序；overheated / recession 按 |z| 降序（反转候选）
-    if regime in ("bull_trending", "neutral"):
+    if regime in ("bull_trending", "bull_extended", "bull_pulling", "bull_chop",
+                  "neutral", "neutral_chop"):
         qualified.sort(key=lambda c: -c["z"])
     else:
         qualified.sort(key=lambda c: -abs(c["z"]))
@@ -193,11 +199,13 @@ def pick_today_universe(regime: Optional[str] = None) -> dict:
 
 
 def _hint(z: float, regime: str) -> str:
-    if regime == "bull_trending":
+    if regime in ("bull_trending", "bull_extended", "bull_pulling"):
         return f"顺动量跟仓 (z={z:+.2f}σ)"
+    if regime in ("bull_chop", "neutral_chop"):
+        return f"震荡环境高门槛试仓 (z={z:+.2f}σ)"
     if regime == "overheated":
         return f"反弹候选 (z={z:+.2f}σ)"
-    if regime == "recession_risk":
+    if regime in ("recession_risk", "risk_off"):
         return f"超卖反转 (z={z:+.2f}σ)"
     return f"中性极端 (z={z:+.2f}σ)"
 

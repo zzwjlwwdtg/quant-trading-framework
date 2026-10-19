@@ -35,7 +35,7 @@ from backtest_engine import (
     _classify_bb_zone,
     _classify_pct_zone,
 )
-from config import TICKERS, SIGNALS_DIR
+from config import TICKERS, SIGNALS_DIR, get_asset_class
 
 CALIB_PATH = Path(SIGNALS_DIR) / "confidence_calibration.json"
 FORWARD_DAYS = 5  # 命中率定义：T+5 收盘 vs T+0 收盘 的方向
@@ -164,16 +164,59 @@ def _weighted_raw_distribution(d: pd.DataFrame,
     return bull_pcts, bear_pcts
 
 
+def _combine(per_ticker: dict, rules: dict) -> dict:
+    """按 total fires/hits 合并 per-ticker 结果 → 单套权重。"""
+    merged = {}
+    for key in rules.keys():
+        total_fires = sum(d[key]["fires"] for d in per_ticker.values())
+        total_hits  = sum(d[key].get("hits", 0) for d in per_ticker.values())
+        total_valid = sum(d[key].get("n_valid", 0) for d in per_ticker.values())
+        if total_valid == 0:
+            merged[key] = {"fires": 0, "hits": 0, "n_valid": 0,
+                            "hit_rate": 0.5, "weight": 0.0}
+            continue
+        hit_rate = total_hits / total_valid
+        weight = max(0.0, round((hit_rate - 0.5) * 4, 2))
+        weight = min(weight, 2.0)
+        merged[key] = {
+            "fires":    total_fires,
+            "n_valid":  total_valid,
+            "hits":     total_hits,
+            "hit_rate": round(hit_rate, 3),
+            "weight":   weight,
+        }
+    return merged
+
+
 def calibrate(tickers: list[str], days: int = 250) -> dict:
-    """跑全部 ticker，得到合并权重 + 分位数阈值。"""
+    """跑全部 ticker，得到 per-asset-class 权重 + 全局 default 权重 + 分位数阈值。
+
+    Output schema:
+      {
+        "ts", "lookback_days", "forward_days", "tickers",
+        "bull_weights", "bear_weights",       ← default (全局合并)
+        "bull_percentiles", "bear_percentiles",  ← default
+        "per_class": {
+          "commodity": {"bull_weights": {...}, "bear_weights": {...},
+                        "bull_percentiles": {...}, "bear_percentiles": {...},
+                        "tickers": [...], "n_valid_days": N},
+          "equity_leveraged": {...},
+          "bond": {...},
+          "equity_single": {...},
+        }
+      }
+    """
     print(f"=== 校准 confluence 权重 + 置信度分位（lookback={days}d, fwd={FORWARD_DAYS}d）===\n")
     per_ticker_bull = {}
     per_ticker_bear = {}
-    combined_df_list = []
+    per_ticker_df   = {}
+    ticker_class    = {}
 
     for tk_full in tickers:
         tk = tk_full.replace("US.", "")
-        print(f"[{tk}] 拉历史...")
+        cls = get_asset_class(tk_full)
+        ticker_class[tk] = cls
+        print(f"[{tk}] class={cls} 拉历史...")
         df = load_history(tk, days=days + 60)
         if df.empty:
             print(f"  {tk}: 无历史，跳过")
@@ -183,48 +226,61 @@ def calibrate(tickers: list[str], days: int = 250) -> dict:
         d = _enrich(df)
         per_ticker_bull[tk] = _eval_signals(d, BULL_RULES)
         per_ticker_bear[tk] = _eval_signals(d, BEAR_RULES)
-        combined_df_list.append(d)
+        per_ticker_df[tk]   = d
         print(f"  {tk}: {len(d)} 个有效日")
 
-    # 合并各 ticker 权重：用样本量加权求平均
-    def _combine(per_ticker: dict, rules: dict) -> dict:
-        merged = {}
-        for key in rules.keys():
-            total_fires = sum(d[key]["fires"] for d in per_ticker.values())
-            total_hits  = sum(d[key].get("hits", 0) for d in per_ticker.values())
-            total_valid = sum(d[key].get("n_valid", 0) for d in per_ticker.values())
-            if total_valid == 0:
-                merged[key] = {"fires": 0, "hits": 0, "n_valid": 0,
-                                "hit_rate": 0.5, "weight": 0.0}
-                continue
-            hit_rate = total_hits / total_valid
-            weight = max(0.0, round((hit_rate - 0.5) * 4, 2))
-            weight = min(weight, 2.0)
-            merged[key] = {
-                "fires":    total_fires,
-                "n_valid":  total_valid,
-                "hits":     total_hits,
-                "hit_rate": round(hit_rate, 3),
-                "weight":   weight,
-            }
-        return merged
-
+    # ── Default（全部 ticker 合并）───────────────────────────
     bull_w = _combine(per_ticker_bull, BULL_RULES)
     bear_w = _combine(per_ticker_bear, BEAR_RULES)
-
-    # 用合并权重 + 合并数据算分位数
-    combined_df = pd.concat(combined_df_list) if combined_df_list else pd.DataFrame()
+    combined_df = pd.concat(per_ticker_df.values()) if per_ticker_df else pd.DataFrame()
     if combined_df.empty:
         bull_pcts = [1, 2, 3, 4]
         bear_pcts = [1, 2, 3, 4]
     else:
         bull_pcts, bear_pcts = _weighted_raw_distribution(combined_df, bull_w, bear_w)
 
+    # ── Per-asset-class（分类合并）── 每类样本 ≥ 100 天才输出，否则回退 default
+    per_class = {}
+    classes = set(ticker_class.values())
+    for cls in classes:
+        tks_in_cls = [tk for tk, c in ticker_class.items() if c == cls and tk in per_ticker_bull]
+        if not tks_in_cls:
+            continue
+        cls_bull_per = {tk: per_ticker_bull[tk] for tk in tks_in_cls}
+        cls_bear_per = {tk: per_ticker_bear[tk] for tk in tks_in_cls}
+        cls_df = pd.concat([per_ticker_df[tk] for tk in tks_in_cls])
+        n_days = len(cls_df)
+        if n_days < 100:
+            print(f"  ⚠ class={cls} 样本仅 {n_days} 天 (<100)，跳过 per-class 权重，走 default")
+            continue
+        cls_bull_w = _combine(cls_bull_per, BULL_RULES)
+        cls_bear_w = _combine(cls_bear_per, BEAR_RULES)
+        cls_bull_pcts, cls_bear_pcts = _weighted_raw_distribution(cls_df, cls_bull_w, cls_bear_w)
+        per_class[cls] = {
+            "tickers":     tks_in_cls,
+            "n_valid_days": n_days,
+            "bull_weights": cls_bull_w,
+            "bear_weights": cls_bear_w,
+            "bull_percentiles": {
+                "p20": round(cls_bull_pcts[0], 2),
+                "p40": round(cls_bull_pcts[1], 2),
+                "p60": round(cls_bull_pcts[2], 2),
+                "p80": round(cls_bull_pcts[3], 2),
+            },
+            "bear_percentiles": {
+                "p20": round(cls_bear_pcts[0], 2),
+                "p40": round(cls_bear_pcts[1], 2),
+                "p60": round(cls_bear_pcts[2], 2),
+                "p80": round(cls_bear_pcts[3], 2),
+            },
+        }
+
     calibration = {
         "ts":            datetime.now().isoformat(),
         "lookback_days": days,
         "forward_days":  FORWARD_DAYS,
         "tickers":       tickers,
+        # default（全 ticker 合并）— 无 per-class 匹配时的 fallback
         "bull_weights":  bull_w,
         "bear_weights":  bear_w,
         "bull_percentiles": {
@@ -239,33 +295,44 @@ def calibrate(tickers: list[str], days: int = 250) -> dict:
             "p60": round(bear_pcts[2], 2),
             "p80": round(bear_pcts[3], 2),
         },
+        # 分类权重（新，per-class 校准）
+        "per_class":     per_class,
     }
     return calibration
 
 
 def _print_report(calib: dict) -> None:
+    def _dump_side(title: str, weights: dict) -> None:
+        print(f"  {title}")
+        print(f"  {'key':<22} {'fires':>6} {'n_val':>6} {'hits':>5}  {'hit_rate':>9}  {'weight':>6}")
+        for k, v in sorted(weights.items(), key=lambda x: -x[1]["weight"]):
+            print(f"  {k:<22} {v['fires']:>6} {v['n_valid']:>6} {v['hits']:>5}  "
+                  f"{v['hit_rate']:>8.1%}  {v['weight']:>6}")
+
     print()
     print("=" * 72)
-    print("  Bull 信号权重（按 fwd 5d 命中率）")
+    print("  DEFAULT（全 ticker 合并）— 用于无匹配 asset_class 的兜底")
     print("=" * 72)
-    print(f"  {'key':<22} {'fires':>6} {'n_val':>6} {'hits':>5}  {'hit_rate':>9}  {'weight':>6}")
-    for k, v in sorted(calib["bull_weights"].items(), key=lambda x: -x[1]["weight"]):
-        print(f"  {k:<22} {v['fires']:>6} {v['n_valid']:>6} {v['hits']:>5}  "
-              f"{v['hit_rate']:>8.1%}  {v['weight']:>6}")
+    _dump_side("Bull 权重", calib["bull_weights"])
     print()
-    print("  Bear 信号权重（按 fwd 5d 命中率）")
-    print("=" * 72)
-    print(f"  {'key':<22} {'fires':>6} {'n_val':>6} {'hits':>5}  {'hit_rate':>9}  {'weight':>6}")
-    for k, v in sorted(calib["bear_weights"].items(), key=lambda x: -x[1]["weight"]):
-        print(f"  {k:<22} {v['fires']:>6} {v['n_valid']:>6} {v['hits']:>5}  "
-              f"{v['hit_rate']:>8.1%}  {v['weight']:>6}")
+    _dump_side("Bear 权重", calib["bear_weights"])
     print()
-    print("  Bull 加权 raw 分位（置信度 5 档阈值）:")
-    print(f"    p20={calib['bull_percentiles']['p20']}  "
-          f"p40={calib['bull_percentiles']['p40']}  "
-          f"p60={calib['bull_percentiles']['p60']}  "
-          f"p80={calib['bull_percentiles']['p80']}")
-    print(f"    → raw < p20 = conf 1/5；p20-p40 = 2/5；p40-p60 = 3/5；p60-p80 = 4/5；> p80 = 5/5")
+    print("  Bull 加权 raw 分位:", ", ".join(f"{k}={v}" for k, v in calib["bull_percentiles"].items()))
+    print("  Bear 加权 raw 分位:", ", ".join(f"{k}={v}" for k, v in calib["bear_percentiles"].items()))
+
+    per_class = calib.get("per_class", {})
+    if per_class:
+        for cls, cd in sorted(per_class.items()):
+            print()
+            print("=" * 72)
+            print(f"  CLASS = {cls}  ({cd['n_valid_days']} 天, tickers={cd['tickers']})")
+            print("=" * 72)
+            _dump_side("Bull 权重", cd["bull_weights"])
+            print()
+            _dump_side("Bear 权重", cd["bear_weights"])
+            print()
+            print("  Bull 分位:", ", ".join(f"{k}={v}" for k, v in cd["bull_percentiles"].items()))
+            print("  Bear 分位:", ", ".join(f"{k}={v}" for k, v in cd["bear_percentiles"].items()))
 
 
 def main() -> int:
