@@ -170,6 +170,7 @@ def read(*, path=None, now=None):
 
 def refresh(*, path=None, now=None, fetch=None, analyze=None):
     from news_analyzer import analyze_rss_items, fetch_agency_rss
+    fixed_clock = now is not None  # Explicit clock is only for deterministic offline tests.
     now = now or datetime.now(JST)
     fetch = fetch or fetch_agency_rss
     target = Path(path or CACHE)
@@ -192,10 +193,13 @@ def refresh(*, path=None, now=None, fetch=None, analyze=None):
         data = build(batches, now=now, analyze=analyze or analyze_rss_items)
         from research_forecasts import register, review_due
         try:
+            # Classification can take minutes. Never backdate a hypothesis to fetch start:
+            # it might cross a market open and falsely select an already observed price.
+            registered_at = now if fixed_clock else datetime.now(JST)
             for note in data["research_notes"]:
-                note["forecast"] = register(note, now=now, path=target.parent / "research_forecasts.sqlite3")
+                note["forecast"] = register(note, now=registered_at, path=target.parent / "research_forecasts.sqlite3")
                 note.pop("hypothesis", None)
-            data["forecast_review"] = review_due(path=target.parent / "research_forecasts.sqlite3", now=now)
+            data["forecast_review"] = review_due(path=target.parent / "research_forecasts.sqlite3", now=registered_at)
         except Exception:
             for note in data["research_notes"]:
                 note["forecast"] = None
