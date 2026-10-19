@@ -5426,6 +5426,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/bot/brief":
                 import bot_gateway
                 self._json(bot_gateway.brief(qs.get("slot", ["morning"])[0]))
+            elif path == "/api/bot/radar":
+                import market_radar
+                self._json(market_radar.read())
             elif path == "/api/nav":
                 self._json(api_nav(days=days))
             elif path == "/api/equity_curve":

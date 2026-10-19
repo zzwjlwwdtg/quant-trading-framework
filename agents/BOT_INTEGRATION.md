@@ -6,7 +6,7 @@
 |---|---|---|
 | HTTP 接口 | `http://127.0.0.1:8080/api/bot/...` | 查询（推荐） |
 | Webhook 推送 | 你在 `BOT_WEBHOOK_URL` 配置的地址 | 有新操作时系统主动推给机器人（约每 5 分钟一次） |
-| 命令行 / 文件 | `F:\fsi-skills\agents\` | 备用：接口不通时直接读文件 |
+| 本机运维 | `F:\fsi-skills\agents\` | 仅开发人员；机器人不得用Shell/文件绕过接口权限 |
 
 ---
 
@@ -22,7 +22,8 @@
 - `http://127.0.0.1:8080/api/bot`：接口目录。先调一次，了解所有可用接口和每个接口的权限等级
 - `http://127.0.0.1:8080/api/bot/summary`：总览，包括净值与回撤、持仓、今日操作、系统健康、AI 复核通道状态、待审批的进化提案、最近告警
 - `http://127.0.0.1:8080/api/bot/events?since=<ISO时间>&limit=200`：统一操作流，按时间升序，包含下单（order）、提交/成交/撤单（execution）、再平衡计划（rebalance_plan）、告警（alert）、卖出复盘（postmortem）、进化提案（evolution）、规则与 AI 的分歧（ai_conflict）、A股汇报（brief）。每条都有 `summary`（一句话中文）和 `data`（原始字段）。响应里的 `next_since` 要记下来，下次带上，只取新的；`truncated=true` 表示还有，用 `next_since` 继续取
-- `http://127.0.0.1:8080/api/bot/brief?slot=morning|close|evening|now`：A股研报与经济数据汇报，直接转发其中的 `markdown`
+- `http://127.0.0.1:8080/api/bot/radar`：公开重大消息与机会线索；群聊盘前/市场快讯优先用它。最多2条消息+1条机会，短句说明事件、理由、成立/失效条件，保留来源链接和原始JST时间。不要原样发JSON或Codex分析，不按关键持仓逐只盯盘。
+- `http://127.0.0.1:8080/api/bot/brief?slot=morning|close|evening|now`：A股原始汇报缓存，不是美股；群聊不得直接粘贴其中的分析正文。
 - `/api/positions`（实时持仓）、`/api/fills`（成交）、`/api/postmortem`（卖出复盘）、`/api/evolution`（进化提案）、`/api/health` 等其他接口，见 `/api/bot` 目录
 
 **规则**：
@@ -38,13 +39,13 @@
 - "为什么卖了 X" → 在 events 里找该股票的 order 和 postmortem
 - "系统正常吗" → `/api/bot/summary` 的 `health` 和 `ai_gate_health`
 - "有要我批的提案吗" → `/api/bot/summary` 的 `evolution_pending`（只告诉我，不要替我审批）
-- "盘前 / 收盘汇报" → `/api/bot/brief?slot=morning` 或 `slot=close`
+- "盘前简报 / breaking news / 隐藏性机会" → `/api/bot/radar`。只讲已取证的消息与条件线索；STALE/UNAVAILABLE/PARTIAL不能说成“没有新闻”，多域名不代表独立确认或市场未定价。
 
 **主动推送**：系统会把新操作 POST 到你的接收地址，格式如下：
 - 操作：`{"source":"fsi-skills","type":"events","count":N,"markdown":"- 10-19 22:35 成交 BUY ...","events":[...]}`
 - 汇报：`{"source":"fsi-skills","type":"brief","slot":"morning|close|evening|reminder|result","title":"...","markdown":"..."}`
 
-收到后把 `markdown` 转发给我即可。告警（kind=alert，level=crisis）请优先发送。
+群聊不要直接转发分析 `markdown`；使用新闻雷达提炼简报。操作推送仍走独立白名单、幂等投递流程，不因本说明扩大广播范围。告警（kind=alert，level=crisis）按既有授权处理。
 
 ---8<---
 
