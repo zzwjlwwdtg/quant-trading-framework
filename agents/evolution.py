@@ -92,7 +92,15 @@ def save(items: list[dict]) -> None:
     EVO_DIR.mkdir(parents=True, exist_ok=True)
     tmp = PROPOSALS.with_suffix(".tmp")
     tmp.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
-    os.replace(tmp, PROPOSALS)
+    # 2026-10-19: Windows 上看板/杀毒软件短暂占用目标文件会让 os.replace 报 WinError 5 (EVO-20261014-3 误判失败)
+    for attempt in range(6):
+        try:
+            os.replace(tmp, PROPOSALS)
+            return
+        except PermissionError:
+            if attempt == 5:
+                raise
+            time.sleep(0.25 * (attempt + 1))
 
 
 def get(items: list[dict], pid: str) -> dict | None:
@@ -390,7 +398,20 @@ def _save_test_log(pid: str, label: str, res: dict) -> None:
         pass
 
 
-def _claude_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
+# 2026-10-19 用户决定: 框架/交易相关仍用最高档 Opus; 只有不碰交易代码的小改动 (infra/research, effort S) 用 Sonnet.
+DEV_MODEL_HIGH = os.environ.get("EVO_DEV_MODEL_HIGH", "opus")
+DEV_MODEL_LIGHT = os.environ.get("EVO_DEV_MODEL_LIGHT", "sonnet")
+
+
+def dev_model(p: dict) -> str:
+    files = [str(f).replace("\\", "/") for f in (p.get("change") or {}).get("files") or []]
+    touches_trading = any(f in TRADING_CRITICAL for f in files)
+    if p.get("category") == "trading" or touches_trading or str(p.get("effort", "M")).upper() != "S":
+        return DEV_MODEL_HIGH
+    return DEV_MODEL_LIGHT
+
+
+def _claude_dev(worktree: Path, prompt: str, model: str | None = None) -> tuple[bool, str]:
     from ai_prompt import _find_claude_cli, _hidden_cli_subprocess_kwargs
     cli = _find_claude_cli()
     if not cli:
@@ -400,6 +421,8 @@ def _claude_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
            # 显式禁止命令执行/联网: 开发只能读写 worktree 里的文件, 测试由 evolution.py 自己跑
            "--disallowedTools", "Bash,WebFetch,WebSearch,NotebookEdit",
            "--no-session-persistence", "--output-format", "text"]
+    if model:
+        cmd += ["--model", model]
     # 参数已核对 claude 2.1.138 --help (logs/claude_help_full.txt, 2026-10-12)
     try:
         r = subprocess.run(cmd, input=prompt, cwd=str(worktree), capture_output=True, text=True,
@@ -434,12 +457,23 @@ def build_dev_prompt(p: dict, test_failures: str = "") -> str:
 
 def develop(pid: str, dev=None, tests=None) -> dict:
     """对一条 approved 提案: 建隔离分支 → 基线测试 → Claude 开发 → 测试 → 护栏 → 合并或待审."""
-    dev = dev or _claude_dev
     tests = tests or run_tests
     items = load()
     p = get(items, pid)
     if not p or p.get("status") != "approved":
         return {"ok": False, "error": "not approved"}
+    if dev is None:
+        _model = dev_model(p)
+        _log("dev_model", id=pid, model=_model)
+
+        def dev(wt_, prompt_):
+            fn = _claude_dev                      # 运行时取 (测试可能替换成只收两个参数的函数)
+            import inspect
+            try:
+                takes_model = "model" in inspect.signature(fn).parameters
+            except (TypeError, ValueError):
+                takes_model = False
+            return fn(wt_, prompt_, model=_model) if takes_model else fn(wt_, prompt_)
     _set_status(p, "developing"); save(items)
     branch, wt = f"evo/{pid}", WORKTREES / pid
     WORKTREES.mkdir(parents=True, exist_ok=True)

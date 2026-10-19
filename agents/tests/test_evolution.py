@@ -328,3 +328,22 @@ class Wiring(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DevModelTier(unittest.TestCase):
+    """2026-10-19: 框架/交易相关用 Opus, 只有不碰交易代码的小改动用 Sonnet."""
+
+    def test_trading_category_uses_high(self):
+        self.assertEqual(ev.dev_model({"category": "trading", "effort": "S"}), ev.DEV_MODEL_HIGH)
+
+    def test_trading_file_uses_high(self):
+        p = {"category": "infra", "effort": "S", "change": {"files": ["agents/claude_gate.py"]}}
+        self.assertEqual(ev.dev_model(p), ev.DEV_MODEL_HIGH)
+
+    def test_large_effort_uses_high(self):
+        p = {"category": "research", "effort": "M", "change": {"files": ["agents/news_analyzer.py"]}}
+        self.assertEqual(ev.dev_model(p), ev.DEV_MODEL_HIGH)
+
+    def test_small_infra_uses_light(self):
+        p = {"category": "infra", "effort": "S", "change": {"files": ["agents/_data_source_health.py"]}}
+        self.assertEqual(ev.dev_model(p), ev.DEV_MODEL_LIGHT)
