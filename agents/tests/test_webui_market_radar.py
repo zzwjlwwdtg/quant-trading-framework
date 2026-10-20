@@ -13,6 +13,7 @@ import webui
 import market_radar
 import news_analyzer
 import research_forecasts
+import market_outlook
 from cn_brief import research
 
 
@@ -24,7 +25,8 @@ class Route(unittest.TestCase):
                 patch.object(news_analyzer, "analyze_rss_items") as ai, \
                 patch.object(research_forecasts, "read", return_value={"status":"NO_FORECASTS"}) as review, \
                 patch.object(research_forecasts, "review_due") as calculate, \
-                patch.object(research, "read", return_value={"status":"UNAVAILABLE", "ai_analysis":None}) as reports:
+                patch.object(research, "read", return_value={"status":"UNAVAILABLE", "ai_analysis":None}) as reports, \
+                patch.object(market_outlook,"read",return_value={"regime":"INSUFFICIENT"}) as outlook:
             server = ThreadingHTTPServer(("127.0.0.1", 0), webui.Handler)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
@@ -46,6 +48,10 @@ class Route(unittest.TestCase):
                     self.assertEqual(json.load(response), {"status":"UNAVAILABLE", "ai_analysis":None})
                 self.assertEqual([x["class"] for x in directory["endpoints"] if x["path"]=="/api/bot/research"], ["read"])
                 reports.assert_called_once_with()
+                with urllib.request.urlopen(base + "/api/bot/outlook?region=US", timeout=3) as response:
+                    self.assertEqual(json.load(response), {"regime":"INSUFFICIENT"})
+                outlook.assert_called_once_with("US")
+                self.assertEqual([x["class"] for x in directory["endpoints"] if x["path"]=="/api/bot/outlook"], ["read"])
                 calculate.assert_not_called()
                 ai.assert_not_called()
             finally:

@@ -104,6 +104,8 @@ JOBS = {
     # Public news only; one bounded cached classifier batch per ~30 minutes. No QQ pushes/trading.
     "market_radar_tick": {"bat": "_market_radar_tick.bat", "auto_every_days": 30 / 1440,
                           "stale_hours": 0.1},
+    "market_outlook_tick": {"bat": "_market_outlook_tick.bat", "auto_every_days": 30 / 1440,
+                            "stale_hours": 0.1},
     # 2026-10-19: A股研报信号/经济数据意外 回测 (只读)
     "ashare_bt_reports": {"bat": "_ashare_bt_reports.bat"},
     "ashare_bt_econ": {"bat": "_ashare_bt_econ.bat"},
@@ -306,13 +308,14 @@ def _handle_restart_request(reason: str) -> int:
 def _launch_job(name: str) -> int | None:
     """隐藏窗口、脱离父进程启动白名单 .bat; 不等待."""
     try:
-        if name == "market_radar_tick":
+        if name in ("market_radar_tick", "market_outlook_tick"):
             # This small new worker needs no command shell/AutoRun or console. Keep all
             # existing job launch paths unchanged, and capture actual worker completion.
             (SCRIPT_DIR / "logs").mkdir(parents=True, exist_ok=True)
-            with open(SCRIPT_DIR / "logs" / "market_radar_last.log", "w", encoding="utf-8") as out:
+            worker = "market_radar" if name == "market_radar_tick" else "market_outlook"
+            with open(SCRIPT_DIR / "logs" / f"{worker}_last.log", "w", encoding="utf-8") as out:
                 proc = subprocess.Popen(
-                    [sys.executable, "-X", "utf8", str(SCRIPT_DIR / "market_radar.py"), "tick"],
+                    [sys.executable, "-X", "utf8", str(SCRIPT_DIR / f"{worker}.py"), "tick"],
                     cwd=str(SCRIPT_DIR), stdin=subprocess.DEVNULL, stdout=out, stderr=out,
                     creationflags=0x00000200 | 0x08000000, close_fds=True)
             return proc.pid

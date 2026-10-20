@@ -5432,6 +5432,13 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/bot/research":
                 from cn_brief import research
                 self._json(research.read())
+            elif path == "/api/bot/outlook":
+                import market_outlook
+                region = qs.get("region", ["CN"])[0]
+                if region not in ("CN", "US"):
+                    self._json({"error": "invalid_region"}, status=400)
+                else:
+                    self._json(market_outlook.read(region))
             elif path == "/api/bot/forecasts":
                 import research_forecasts
                 self._json(research_forecasts.read())
