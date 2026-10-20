@@ -13,3 +13,9 @@
 单股13+gateway8+market_outlook9项通过，是公式/权限/失败/缓存合成测试，不是盈利回测。AAPL/600519真实免费抓价成功，但时间各异，不冒称实时；没有QQ/量化AI/交易调用。部署后HTTP与机器人验收须分别记录。后台新增公共查询不扩大群白名单，原三人小群测试、大群静默/广播暂停继续。
 
 参考：https://ranaroussi.github.io/yfinance/reference/api/yfinance.Ticker.history.html
+
+## 生产验收
+
+功能b0eb8ebb9无快进合并main dc41f2fad，仅核验原PID后重载WebUI245552→246968，不运行含其他自动任务的watchdog，不动OpenD/交易。实际HTTP目录read，FsiQuantReadClient严格契约验证600519/AAPL的真实快照及渲染，错误交易所HTTP400。D盘久留美五个实际命令处理器+生产小群配置随后全部离线执行成功，不发QQ/不调模型/不启动私人runtime。报价显示日本时间、保留原市场交易日。
+
+原AI Planner198168/Scheduler19544未动；久留美仅自身247656→241296重连。四份配置/角色/推送SHA不变，广播端口仍停。F盘原signals/logs等脏改动与工作树原ai_calls.jsonl保留，不纳入提交。未push；真实QQ客户端与后台按钮未代验收。
