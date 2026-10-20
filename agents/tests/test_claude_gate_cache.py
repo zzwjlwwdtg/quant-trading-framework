@@ -80,8 +80,8 @@ class GateCacheTests(unittest.TestCase):
     def _query(self, reply=APPROVE, provider="Claude", status="ok"):
         calls = []
 
-        def fake(prompt_text, timeout=None, complexity=None):
-            calls.append(prompt_text)
+        def fake(prompt_text, timeout=None, complexity=None, caller=None):
+            calls.append((prompt_text, caller))
             return reply, status, provider, ""
 
         return fake, calls

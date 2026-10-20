@@ -62,7 +62,7 @@ STATIC_JSON = Path("F:/trump-code/data/trump_posts_all.json")
 CACHE_DIR = Path(SIGNALS_DIR) / "trump_cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 LIVE_CACHE_TTL_MIN = 5         # 5min cache for live feed
-CLI_CACHE_TTL_HOURS = 6        # CLI 解析 6h cache
+POST_CACHE_TTL_HOURS = 24 * 7  # per-post parses are reused while the post is in the feed window
 
 _EVENT_TYPES = {"TARIFF", "DEAL", "FED", "GEOPOLITICAL", "MARKET",
                 "DOMESTIC_POLICY", "MEDIA_ATTACK", "NOISE"}
@@ -271,29 +271,82 @@ _PROMPT = """你是 Trump Truth Social 推文 → 美股交易信号 的解析�
 """
 
 
-def _cli_cache_path(key: str) -> Path:
-    return CACHE_DIR / f"parsed_{key}.json"
+def _post_cache_path(post_id: str) -> Path:
+    digest = hashlib.sha1(post_id.encode("utf-8")).hexdigest()[:16]
+    return CACHE_DIR / f"post_{digest}.json"
 
 
-def _cli_cache_read(key: str) -> dict | None:
-    p = _cli_cache_path(key)
+def _post_cache_read(post: dict) -> dict | None:
+    pid = str(post.get("id") or "").strip()
+    if not pid:
+        return None
+    p = _post_cache_path(pid)
     if not p.exists():
         return None
     age_h = (datetime.now().timestamp() - p.stat().st_mtime) / 3600
-    if age_h > CLI_CACHE_TTL_HOURS:
+    if age_h > POST_CACHE_TTL_HOURS:
         return None
     try:
-        return json.loads(p.read_text(encoding="utf-8"))
+        data = json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         return None
+    if str(data.get("post_id") or "") != pid:
+        return None
+    content = str(post.get("content") or "")
+    preview = str(data.get("content_preview") or "")
+    if preview and content[:len(preview)] != preview:
+        return None
+    item = data.get("item")
+    return item if isinstance(item, dict) else None
 
 
-def _cli_cache_write(key: str, data: dict) -> None:
+def _post_cache_write(post: dict, item: dict) -> None:
+    pid = str(post.get("id") or "").strip()
+    if not pid:
+        return
     try:
-        _cli_cache_path(key).write_text(
-            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        _post_cache_path(pid).write_text(
+            json.dumps({
+                "post_id": pid,
+                "content_preview": (post.get("content") or "")[:120],
+                "item": item,
+            }, ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception:
         pass
+
+
+def _migrate_legacy_cache() -> int:
+    """Import the old batch-keyed parsed_*.json files into per-post cache."""
+    marker = CACHE_DIR / ".post_cache_migrated"
+    if marker.exists():
+        return 0
+    migrated = 0
+    try:
+        for path in sorted(CACHE_DIR.glob("parsed_*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            for item in data.get("items") or []:
+                if not isinstance(item, dict):
+                    continue
+                pid = str(item.get("post_id") or "").strip()
+                if not pid or _post_cache_path(pid).exists():
+                    continue
+                try:
+                    _post_cache_path(pid).write_text(
+                        json.dumps({
+                            "post_id": pid,
+                            "content_preview": item.get("preview") or "",
+                            "item": item,
+                        }, ensure_ascii=False, indent=2), encoding="utf-8")
+                    migrated += 1
+                except Exception:
+                    continue
+        marker.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
+    except Exception:
+        pass
+    return migrated
 
 
 def _normalize_item(raw: dict, post: dict) -> dict:
@@ -334,9 +387,12 @@ def analyze_posts(posts: list[dict], *, cli_timeout: int = 90,
     """调统一 AI CLI 把推文拆成结构化信号。
 
     超过 max_posts_per_call 时分批调用（避免 prompt 过大或 stdin 限制）。
+    每条推文按 post id 单独缓存，只把缓存缺失的推文送去解析。
     """
     if not posts:
         return {"items": [], "fallback": False, "n_posts": 0}
+
+    _migrate_legacy_cache()
 
     # 分批：超过限制时切片调用，最后合并 items
     if len(posts) > max_posts_per_call:
@@ -344,6 +400,7 @@ def analyze_posts(posts: list[dict], *, cli_timeout: int = 90,
         statuses: list[str] = []
         providers: set[str] = set()
         any_ok = False
+        all_cached = True
         for i in range(0, len(posts), max_posts_per_call):
             chunk = posts[i:i + max_posts_per_call]
             sub = analyze_posts(chunk, cli_timeout=cli_timeout,
@@ -355,49 +412,85 @@ def analyze_posts(posts: list[dict], *, cli_timeout: int = 90,
                 providers.add(str(sub["provider"]))
             if not sub.get("fallback"):
                 any_ok = True
+            all_cached = all_cached and bool(sub.get("cached"))
         return {
             "items": all_items, "fallback": (not any_ok),
             "n_posts": len(posts),
             "provider": next(iter(providers)) if len(providers) == 1 else "Mixed",
             "ts": datetime.now().isoformat(),
             "cli_status": " | ".join(statuses)[:300] if statuses else "",
+            "cached": all_cached,
         }
+
+    cached_by_id: dict[str, dict] = {}
+    missing: list[dict] = []
+    for post in posts:
+        pid = str(post.get("id") or "").strip()
+        item = _post_cache_read(post) if pid else None
+        if item is not None:
+            cached_by_id[pid] = item
+        else:
+            missing.append(post)
+
+    if not missing:
+        items = [cached_by_id[str(p.get("id") or "").strip()] for p in posts
+                 if str(p.get("id") or "").strip() in cached_by_id]
+        return {"items": items, "fallback": False, "n_posts": len(posts),
+                "provider": "cache", "ts": datetime.now().isoformat(),
+                "cached": True}
 
     compact = [
         {"id": p.get("id", ""),
          "created_at": p.get("created_at", ""),
          "content": (p.get("content") or "")[:600]}
-        for p in posts
+        for p in missing
     ]
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     posts_json = json.dumps(compact, ensure_ascii=False, indent=2)
 
-    text = json.dumps([compact, today], sort_keys=True, ensure_ascii=False)
-    key = hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
-    cached = _cli_cache_read(key)
-    if cached:
-        return {**cached, "cached": True}
-
     prompt = _PROMPT.format(today=today, posts_json=posts_json)
 
     from ai_prompt import query_ai_cli
-    out, status, provider, _ = query_ai_cli(prompt, timeout=cli_timeout)
+    out, status, provider, _ = query_ai_cli(
+        prompt, timeout=cli_timeout, caller="trump")
+
+    def _cached_items() -> list[dict]:
+        items = []
+        for post in posts:
+            item = cached_by_id.get(str(post.get("id") or "").strip())
+            if item is not None:
+                items.append(item)
+        return items
 
     if not out:
-        return {"items": [], "fallback": True, "n_posts": len(posts),
-                "cli_status": status}
+        return {"items": _cached_items(), "fallback": True, "n_posts": len(posts),
+                "cli_status": status, "cached": bool(cached_by_id)}
 
     from news_analyzer import _extract_json_from_cli_output
     parsed = _extract_json_from_cli_output(out)
     if not parsed or not isinstance(parsed.get("items"), list):
-        return {"items": [], "fallback": True, "n_posts": len(posts),
-                "cli_status": f"parse_failed: {out[:200]}"}
+        return {"items": _cached_items(), "fallback": True, "n_posts": len(posts),
+                "cli_status": f"parse_failed: {out[:200]}",
+                "cached": bool(cached_by_id)}
 
-    items = [_normalize_item(it, p) for it, p in zip(parsed["items"], posts)
-             if isinstance(it, dict)]
+    new_by_obj: dict[int, dict] = {}
+    for it, post in zip(parsed["items"], missing):
+        if not isinstance(it, dict):
+            continue
+        item = _normalize_item(it, post)
+        new_by_obj[id(post)] = item
+        _post_cache_write(post, item)
+
+    items = []
+    for post in posts:
+        item = new_by_obj.get(id(post))
+        if item is None:
+            item = cached_by_id.get(str(post.get("id") or "").strip())
+        if item is not None:
+            items.append(item)
+
     result = {"items": items, "fallback": False, "n_posts": len(posts),
               "provider": provider, "ts": datetime.now().isoformat()}
-    _cli_cache_write(key, result)
     return result
 
 

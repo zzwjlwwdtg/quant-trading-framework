@@ -308,7 +308,8 @@ def propose(ai=None) -> dict:
         return {"skipped": "weekly cap"}
     if ai is None:
         from ai_prompt import query_ai_cli
-        ai = lambda prompt: query_ai_cli(prompt, timeout=600, complexity="complex")
+        ai = lambda prompt: query_ai_cli(prompt, timeout=600, complexity="complex",
+                                         caller="evolution")
     out, status, provider, _ = ai(build_propose_prompt(items))
     summary, new = parse_proposals(out)
     titles = {p.get("title") for p in items}

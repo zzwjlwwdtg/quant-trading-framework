@@ -240,7 +240,7 @@ def llm_extract(items: list[ContentItem], *, timeout: int = 90) -> tuple[list[Ex
         from ai_prompt import query_ai_cli
         out, status, provider, _ = query_ai_cli(
             prompt, timeout=timeout, fallback_on_unavailable=True,
-            complexity="simple"
+            complexity="simple", caller="jp_social_extractor"
         )
     except Exception as exc:
         return [], f"llm_error: {exc}"

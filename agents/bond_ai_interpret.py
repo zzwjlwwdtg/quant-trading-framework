@@ -495,7 +495,8 @@ def interpret_bond_context(bond_data: dict, timeout: int = 120) -> dict:
     prompt = _make_prompt(bond_data)
     # 债市传导链解读, 需宏观 + regime 联动推理 → medium
     out, status, provider, fb_reason = query_ai_cli(prompt, timeout=timeout,
-                                                     complexity="medium")
+                                                     complexity="medium",
+                                                     caller="bond_ai_interpret")
     if not out:
         result = _fallback_from_rules(bond_data)
         result["_source"] = f"rules_fallback ({provider}: {status[:100]})"

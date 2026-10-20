@@ -68,6 +68,16 @@ class AICallAuditLogTests(unittest.TestCase):
         entries = self._read_log()
         self.assertEqual(entries[0]["model"], "cli_internal_default")
 
+    def test_caller_is_logged(self):
+        with patch.object(ai_prompt, "get_ai_cli_policy",
+                            return_value={"primary": "codex", "fallback": "none"}), \
+             patch.object(ai_prompt, "_query_named_cli",
+                            return_value=("out", "ok")), \
+             patch.object(ai_prompt, "_resolve_codex_model", return_value=None):
+            ai_prompt.query_ai_cli("x", complexity="medium", caller="trump")
+        entries = self._read_log()
+        self.assertEqual(entries[0]["caller"], "trump")
+
     def test_failed_call_still_logged(self):
         # 失败也应留 audit — 便于查看 CLI 挂了/超时
         with patch.object(ai_prompt, "get_ai_cli_policy",

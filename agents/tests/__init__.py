@@ -39,6 +39,7 @@ _REDIRECTS = (
     ("_watchdog", "LOCK_PATH", ".orchestrator.lock"),
     ("_watchdog", "LOG_PATH", "watchdog.jsonl"),
     ("ai_prompt", "AI_CALL_LOG_PATH", "ai_calls.jsonl"),
+    ("trump_signal", "CACHE_DIR", "trump_cache"),
     ("claude_gate", "HEALTH_STATE_PATH", "ai_gate_health.json"),
     ("claude_gate", "GATE_CACHE_PATH", "claude_gate_cache.json"),
     ("notifications", "ALERTS_PATH", "critical_alerts.jsonl"),

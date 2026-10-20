@@ -198,7 +198,8 @@ def ai_summary(stock: dict, ind: dict, macro: list[str]) -> tuple[str | None, st
     try:
         from ai_prompt import query_ai_cli
         complexity = os.environ.get("CN_BRIEF_AI_COMPLEXITY", "simple")   # 标题整理属于简单抽取 → Sonnet
-        out, status, provider, fb = query_ai_cli(prompt, timeout=240, complexity=complexity)
+        out, status, provider, fb = query_ai_cli(
+            prompt, timeout=240, complexity=complexity, caller="cn_brief")
         if out:
             return out.strip(), f"ok ({provider}{', 主通道失败后由备用接手' if fb else ''})"
         return None, f"AI 不可用 (Claude 与 Codex 均失败): {str(status)[:160]}"

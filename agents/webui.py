@@ -268,7 +268,8 @@ def _trump_summary_recent3(items: list) -> dict:
                     "只输出概括，不要前后解释，不要 markdown。\n\n"
                     f"推文：\n{previews}\n"
                 )
-                out, status, _, _ = query_ai_cli(prompt, timeout=60)
+                out, status, _, _ = query_ai_cli(prompt, timeout=60,
+                                                 caller="webui_trump_summary")
                 if out and out.strip():
                     cache_path.write_text(out.strip(), encoding="utf-8")
             except Exception:
@@ -1583,7 +1584,8 @@ def _compute_supply_chain(ticker: str) -> dict:
         "6. 若是 ETF 或杠杆产品，视为其追踪的标的（TQQQ→QQQ 前十大 / SOXL→半导体链）\n"
         "7. 严格只输出 JSON 对象，不要 ``` 围栏\n"
     )
-    out, status, provider, _ = query_ai_cli(prompt, timeout=90)
+    out, status, provider, _ = query_ai_cli(prompt, timeout=90,
+                                            caller="webui_supply_chain")
     if not out:
         return {"error": f"{provider.lower()} {status}", "ticker": ticker}
     # 去除潜在的 markdown 围栏
@@ -2937,7 +2939,7 @@ Target:
 """
     to = int(os.environ.get("JP_GUIDANCE_TIMEOUT", "240"))
     out, status, provider, _ = query_ai_cli(
-        prompt, timeout=to, web_search=True
+        prompt, timeout=to, web_search=True, caller="webui_jp_guidance"
     )
     provider = provider.lower()
     if not out:
@@ -4012,7 +4014,8 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                     "标的数据：\n"
                     + "\n".join(lines)
                 )
-                out, status, provider, _ = query_ai_cli(prompt, timeout=120)
+                out, status, provider, _ = query_ai_cli(prompt, timeout=120,
+                                                        caller="webui_ticker_ai_all")
                 if out and out.strip():
                     import re
                     parts = re.split(r"^###\s+([A-Z]{2,6})\b", out, flags=re.MULTILINE)

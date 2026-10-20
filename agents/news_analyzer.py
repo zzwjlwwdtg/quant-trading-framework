@@ -284,7 +284,8 @@ def analyze_rss_items(rss_items: list, *, source: str = "RSS",
     # RSS 解析成 JSON schema — 简单结构化提取, 用 simple 档
     from ai_prompt import query_ai_cli
     out, status, provider, _ = query_ai_cli(prompt, timeout=cli_timeout,
-                                             complexity="simple")
+                                             complexity="simple",
+                                             caller="news_analyzer")
 
     if not out:
         return {"items": [], "fallback": True, "source": source,

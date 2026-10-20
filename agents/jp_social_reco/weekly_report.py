@@ -170,7 +170,8 @@ def _call_ai_summary(payload: dict[str, Any], timeout: int = 420) -> tuple[str |
     except Exception as exc:
         return None, f"ai_cli_import_error: {exc}"
     prompt = _build_ai_prompt(payload)
-    out, status, _, _ = query_ai_cli(prompt, timeout=timeout)
+    out, status, _, _ = query_ai_cli(prompt, timeout=timeout,
+                                     caller="jp_social_weekly")
     if out:
         return _clean_llm_markdown(out), status
     return None, status

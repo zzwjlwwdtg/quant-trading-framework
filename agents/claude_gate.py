@@ -540,7 +540,7 @@ def _log_gate_cache_hit(provider: str) -> None:
     try:
         from ai_prompt import _log_ai_call
         _log_ai_call(provider=provider, model=None, complexity="medium",
-                     status="cache_hit", duration_s=0.0)
+                     status="cache_hit", duration_s=0.0, caller="gate")
     except Exception:
         pass
 
@@ -742,7 +742,8 @@ def apply_claude_gate(
 
     # 每 trade 都调, 打市场决策级 → medium (需 regime+confluence+risk 联动推理)
     output, status, provider, fb_reason = query_ai_cli(prompt_text, timeout=_timeout_sec(),
-                                                       complexity="medium")
+                                                       complexity="medium",
+                                                       caller="gate")
 
     if not output:
         logger.warning(f"[claude-gate] {ticker} unavailable: {status}")

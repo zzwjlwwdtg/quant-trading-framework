@@ -79,7 +79,8 @@ def _fetch_fed_watch_via_ai() -> Optional[dict]:
     to = int(os.environ.get("FED_WATCH_TIMEOUT", "180"))
     # Fed speech / statement 解析成结构化 JSON — 简单信息提取 simple
     out, status, provider, _ = query_ai_cli(
-        prompt, timeout=to, web_search=True, complexity="simple"
+        prompt, timeout=to, web_search=True, complexity="simple",
+        caller="fed_watch"
     )
     provider = provider.lower()
     if not out:

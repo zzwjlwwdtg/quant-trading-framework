@@ -1320,7 +1320,7 @@ def _parse_codex_model(text: str | None) -> str | None:
 
 def _log_ai_call(*, provider: str, model: str | None, complexity: str,
                   status: str, duration_s: float, fallback_reason: str = "",
-                  model_reported: str | None = None) -> None:
+                  model_reported: str | None = None, caller: str = "") -> None:
     """Append 一条 AI call metadata 到 signals/ai_calls.jsonl. 静默失败."""
     import json as _json
     from datetime import datetime as _dt, timezone as _tz
@@ -1339,6 +1339,7 @@ def _log_ai_call(*, provider: str, model: str | None, complexity: str,
                 "status":           status,
                 "duration_s":       round(duration_s, 2),
                 "fallback_reason":  fallback_reason,
+                "caller":           caller,
             }, ensure_ascii=False) + "\n")
     except Exception:
         pass
@@ -1484,6 +1485,7 @@ def query_ai_cli(
     fallback_on_unavailable: bool = False,
     web_search: bool = False,
     complexity: str = "medium",
+    caller: str = "",
 ) -> tuple[str | None, str, str, str]:
     """Query the configured local CLI (Claude-first by default since 2026-10-08).
 
@@ -1505,7 +1507,7 @@ def query_ai_cli(
     dur = _time.monotonic() - t0
     # F11: 每次调用后 log (无论成功/失败) — 如果 fallback 起飞我们要有两条 audit
     _log_ai_call(provider=primary, model=model_used, complexity=complexity,
-                  status=status, duration_s=dur,
+                  status=status, duration_s=dur, caller=caller,
                   model_reported=(getattr(_CODEX_RECEIPT, "model", None)
                                   if primary == "codex" else None))
     if output:
@@ -1529,14 +1531,14 @@ def query_ai_cli(
     if output:
         _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
                       status=fallback_status, duration_s=fb_dur,
-                      fallback_reason=fallback_reason,
+                      fallback_reason=fallback_reason, caller=caller,
                       model_reported=(getattr(_CODEX_RECEIPT, "model", None)
                                       if fallback == "codex" else None))
         return output, fallback_status, fallback.title(), fallback_reason
     combined = f"{fallback_reason}; {fallback}={fallback_status}"
     _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
                   status=fallback_status, duration_s=fb_dur,
-                  fallback_reason=fallback_reason,
+                  fallback_reason=fallback_reason, caller=caller,
                   model_reported=(getattr(_CODEX_RECEIPT, "model", None)
                                   if fallback == "codex" else None))
     return None, _redact_cli_text(combined), fallback.title(), fallback_reason
@@ -1553,7 +1555,8 @@ def auto_analyze(mode: str = "review") -> dict:
 
     prompt = prompt_path.read_text(encoding="utf-8")
     # 主 AI 分析 (morning / review / deep) — 完整今日 log 深度推理, complex 档
-    output, status, provider, fallback_reason = query_ai_cli(prompt, complexity="complex")
+    output, status, provider, fallback_reason = query_ai_cli(
+        prompt, complexity="complex", caller="auto_analyze")
 
     today = _market_date()
     analysis_path = Path(SIGNALS_DIR) / f"ai_analysis_{mode}_{today}.md"

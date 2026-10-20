@@ -315,7 +315,8 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
     prompt = build_prompt(sell, excerpt, news, after_log, after_closes)
     if ai is None:
         from ai_prompt import query_ai_cli
-        ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex")
+        ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex",
+                                    caller="trade_postmortem")
     out, status, provider, fb = ai(prompt)
     parsed = parse_ai(out)
     if parsed is None and out:      # 保留原文便于排查 (下次运行会重试)
