@@ -12,7 +12,7 @@ from cn_brief import research as R, brief as B
 
 NOW = datetime(2026, 10, 20, 10, tzinfo=timezone(timedelta(hours=9)))
 ROW = {"infoCode": "AP202610191234567890", "title": "需求结构变化，维持评级", "orgSName": "测试证券",
-       "publishDate": "2026-10-19 09:00:00", "emRatingName": "增持", "stockCode": "000001"}
+       "publishDate": "2026-10-19 09:00:00", "emRatingName": "增持", "stockCode": "000001", "stockName": "测试公司"}
 
 
 class Research(unittest.TestCase):
@@ -42,6 +42,8 @@ class Research(unittest.TestCase):
             self.assertEqual(result["status"], "OK")
             self.assertIsNone(result["ai_analysis"])
             self.assertEqual(result["source_policy"], "FREE_PUBLIC_ONLY")
+            self.assertEqual(result["reports"][0]["subject"], "测试公司")
+            self.assertEqual(result["reports"][0]["code"], "000001")
             self.assertEqual(result["macro_events"][0]["expected"], "5.0")
             self.assertNotIn("PRIVATE", json.dumps(result))
             self.assertNotIn("DO NOT SEND", json.dumps(result))
