@@ -13,6 +13,7 @@ import webui
 import market_radar
 import news_analyzer
 import research_forecasts
+from cn_brief import research
 
 
 class Route(unittest.TestCase):
@@ -22,7 +23,8 @@ class Route(unittest.TestCase):
         with patch.object(market_radar, "read", return_value=expected) as read, \
                 patch.object(news_analyzer, "analyze_rss_items") as ai, \
                 patch.object(research_forecasts, "read", return_value={"status":"NO_FORECASTS"}) as review, \
-                patch.object(research_forecasts, "review_due") as calculate:
+                patch.object(research_forecasts, "review_due") as calculate, \
+                patch.object(research, "read", return_value={"status":"UNAVAILABLE", "ai_analysis":None}) as reports:
             server = ThreadingHTTPServer(("127.0.0.1", 0), webui.Handler)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
@@ -40,6 +42,10 @@ class Route(unittest.TestCase):
                     self.assertEqual(json.load(response),{"status":"NO_FORECASTS"})
                 self.assertEqual([x["class"] for x in directory["endpoints"] if x["path"]=="/api/bot/forecasts"],["read"])
                 review.assert_called_once_with()
+                with urllib.request.urlopen(base + "/api/bot/research", timeout=3) as response:
+                    self.assertEqual(json.load(response), {"status":"UNAVAILABLE", "ai_analysis":None})
+                self.assertEqual([x["class"] for x in directory["endpoints"] if x["path"]=="/api/bot/research"], ["read"])
+                reports.assert_called_once_with()
                 calculate.assert_not_called()
                 ai.assert_not_called()
             finally:

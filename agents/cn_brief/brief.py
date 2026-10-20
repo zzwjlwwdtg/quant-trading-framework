@@ -190,6 +190,7 @@ def ai_summary(stock: dict, ind: dict, macro: list[str]) -> tuple[str | None, st
     if not lines:
         return None, "no_input"
     prompt = ("你是A股卖方研报的整理助手。下面是今天东方财富研报中心的研报标题和评级变动(只有标题, 没有正文)。\n"
+              "这是独立的AI整理/分析区，不是券商原文摘要。机构观点和你的推断必须明确归因，不能混写；标题没有的理由不可推测。\n"
               "请用中文写 4-6 条要点: 卖方今天集中关注的方向/行业、评级调高或首次覆盖的重点、需要注意的下调或分歧。\n"
               "严格只依据下面给出的信息, 不要编造数字、股价或正文内容; 提到机构观点时沿用原标题措辞, 不要改写专有名词;\n"
               "不构成投资建议。每条一行, 以 '- ' 开头, 条目之间不要空行。\n\n"
@@ -226,7 +227,7 @@ def build_brief(slot: str = "now", now: datetime | None = None, use_ai: bool = T
     now = (now or datetime.now(JST)).astimezone(JST)
     today_bjt = now.astimezone(BJT).date()
     out = {"slot": slot, "title": SLOT_TITLES[slot], "generated_at": now.isoformat(timespec="seconds"),
-           "errors": [], "reports": None, "events": {}}
+           "errors": [], "reports": None, "research_reports": [], "events": {}}
     if slot == "morning":           # 2026-10-19: 盘前改为精简定调版 (见 morning.py)
         from . import morning
         data, md_lines, errs = morning.build(now)
@@ -243,15 +244,20 @@ def build_brief(slot: str = "now", now: datetime | None = None, use_ai: bool = T
         b, e = _report_window(slot, today_bjt)
         try:
             srows, irows, mrows = sources.stock_reports(b, e), sources.industry_reports(b, e), sources.macro_reports(b, e)
+            from .research import project
+            out["research_reports"] = project(srows, irows, mrows)
             st, ind, mac = summarize_stock_reports(srows), summarize_industry_reports(irows), summarize_macro_reports(mrows)
             out["reports"] = {"window": [b.isoformat(), e.isoformat()], "stock": st, "industry": ind, "macro": mac}
             md.append(f"\n### 📑 研报 ({b.isoformat()}{'' if b == e else ' ~ ' + e.isoformat()})："
                       f"个股 {st['n']} 篇 / {st['n_stocks']} 只，行业 {ind['n']} 篇，宏观 {len(mac)} 篇")
+            md.append("**研报一句话（券商题摘，未读正文，不含AI判断）**")
+            md += [f"- {r['institution']} · {r['published_date']}：{r['one_sentence']} [来源]({r['url']})"
+                   for r in out["research_reports"]]
             if use_ai:
                 summ, ai_status = ai_summary(st, ind, mac)
                 out["ai"] = {"summary": summ, "status": ai_status}
                 if summ:
-                    md.append("**要点（AI 依据标题整理，仅供参考）**\n" + summ)
+                    md.append("**AI整理/分析（与券商观点分开，仅依据标题，非正文摘要）**\n" + summ)
                 elif ai_status not in ("disabled", "no_input"):
                     md.append(f"_要点摘要：{ai_status}_")
             if st["upgrades"]:
