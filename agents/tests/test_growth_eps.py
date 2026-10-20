@@ -183,11 +183,12 @@ class SystemRouteFallback(unittest.TestCase):
         import tempfile
         from unittest.mock import patch
         with tempfile.TemporaryDirectory() as td:
+            dest = Path(td) / "t.json"   # build before faking os.name (pathlib dispatch)
             with patch.object(gd, "_download_direct", side_effect=OSError("x")), \
                  patch.object(gd, "_download_system_route") as sysr, \
                  patch.object(gd.os, "name", "posix"):
                 with self.assertRaises(OSError):
-                    gd._download("https://www.sec.gov/x", Path(td) / "t.json", "ua a@b", 1)
+                    gd._download("https://www.sec.gov/x", dest, "ua a@b", 1)
             sysr.assert_not_called()
 
     def test_system_route_reports_failure(self):
@@ -323,4 +324,7 @@ class BookRuleExtensions(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

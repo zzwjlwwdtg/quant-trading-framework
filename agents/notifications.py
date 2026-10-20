@@ -27,11 +27,17 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+from atomic_io import atomic_write_json
 from config import _cfg, SIGNALS_DIR
 
+ET           = ZoneInfo("America/New_York")
 DEDUP_PATH   = Path(SIGNALS_DIR) / "notify_dedup.json"
+ALERTS_PATH  = Path(SIGNALS_DIR) / "critical_alerts.jsonl"
+ALERT_DEDUPE_PATH = Path(SIGNALS_DIR) / "alert_dedupe.json"
 DEDUP_WINDOW = 300   # 5 分钟内相同消息只推一次
+ALERT_DEDUPE_RETENTION_DAYS = 8
 TIMEOUT      = 8
 
 # EVO-20261015-1: AI Gate 不可用告警 30 分钟内合并一次, 避免 orchestrator
@@ -76,6 +82,48 @@ def _dedup_record(msg_hash: str, window: int = DEDUP_WINDOW) -> None:
         cutoff = max(window, DEDUP_WINDOW) * 2
         data = {k: v for k, v in data.items() if now - v < cutoff}
         DEDUP_PATH.write_text(json.dumps(data), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _alert_day_key(event: str, level: str, day: str | None = None) -> str:
+    day = day or datetime.now(ET).date().isoformat()
+    return f"{event}|{day}|{level}"
+
+
+def _load_alert_dedupe() -> dict:
+    try:
+        data = json.loads(ALERT_DEDUPE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _prune_alert_dedupe(data: dict, now: datetime | None = None) -> dict:
+    now = now or datetime.now(timezone.utc)
+    kept = {}
+    for key, ts in data.items():
+        try:
+            sent = datetime.fromisoformat(str(ts))
+            if sent.tzinfo is None:
+                sent = sent.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            continue
+        if (now - sent).total_seconds() < ALERT_DEDUPE_RETENTION_DAYS * 86400:
+            kept[key] = ts
+    return kept
+
+
+def _alert_sent_today(event: str, level: str) -> bool:
+    return _alert_day_key(event, level) in _load_alert_dedupe()
+
+
+def _record_alert_sent(event: str, level: str) -> None:
+    """Mark one event as pushed for the current ET date; survives restarts."""
+    data = _load_alert_dedupe()
+    data[_alert_day_key(event, level)] = datetime.now(timezone.utc).isoformat()
+    try:
+        atomic_write_json(ALERT_DEDUPE_PATH, _prune_alert_dedupe(data))
     except Exception:
         pass
 
@@ -160,7 +208,7 @@ def send_alert(msg: str, level: str = "info", dedup: bool = True) -> dict:
     # 避免 verdict change / thesis invalidation 静默漏发.
     if not result["sent"] and level in ("crisis", "warning", "error", "trade"):
         try:
-            crit_path = Path(SIGNALS_DIR) / "critical_alerts.jsonl"
+            crit_path = ALERTS_PATH
             crit_path.parent.mkdir(parents=True, exist_ok=True)
             entry = {
                 "ts":       datetime.now(timezone.utc).isoformat(),
@@ -192,8 +240,20 @@ def notify_trade(ticker: str, side: str, qty: int, price: float,
 
 
 def notify_crisis(ticker: str, pct_chg: float, reason: str = "") -> dict:
+    """Push one crisis alert per ticker per ET day.
+
+    Restarts used to resend the same event because send_alert only dedups for
+    five minutes.  The daily marker is persisted before returning; a later
+    higher level uses a different key and is allowed through.
+    """
+    event = f"crisis:{ticker}"
+    if _alert_sent_today(event, "crisis"):
+        return {"sent": [], "skipped": ["daily_dedup"], "dedup": True,
+                "date": datetime.now(ET).date().isoformat()}
     msg = f"**CRISIS** {ticker} 单日 {pct_chg:+.2f}% → 触发 crisis regime\n{reason}"
-    return send_alert(msg, level="crisis")
+    result = send_alert(msg, level="crisis")
+    _record_alert_sent(event, "crisis")
+    return result
 
 
 def notify_jp_guidance_opportunity(ticker: str, name: str, rsi: float,

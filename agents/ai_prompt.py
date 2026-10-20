@@ -1298,7 +1298,9 @@ _COMPLEXITY_MODEL_ENV = {
 
 # F11: 结构化 AI 调用审计 log (ts, provider, model, complexity, status, duration_s)
 # 让 dashboard/复盘可以看到"这次 backtest 实际用了什么模型"而不是靠注释猜测.
-_AI_CALL_LOG_PATH = None   # 延迟初始化, 避 import 循环
+# Module-level so the test package can redirect it before any call; a lazy
+# per-call assignment would overwrite the redirected path.
+AI_CALL_LOG_PATH = Path(SIGNALS_DIR) / "ai_calls.jsonl"
 
 import threading as _threading
 
@@ -1322,16 +1324,9 @@ def _log_ai_call(*, provider: str, model: str | None, complexity: str,
     """Append 一条 AI call metadata 到 signals/ai_calls.jsonl. 静默失败."""
     import json as _json
     from datetime import datetime as _dt, timezone as _tz
-    global _AI_CALL_LOG_PATH
-    if _AI_CALL_LOG_PATH is None:
-        try:
-            from config import SIGNALS_DIR as _SD
-            _AI_CALL_LOG_PATH = Path(_SD) / "ai_calls.jsonl"
-        except Exception:
-            return
     try:
-        _AI_CALL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(_AI_CALL_LOG_PATH, "a", encoding="utf-8") as f:
+        AI_CALL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(AI_CALL_LOG_PATH, "a", encoding="utf-8") as f:
             f.write(_json.dumps({
                 "ts":               _dt.now(_tz.utc).isoformat(),
                 "provider":         provider,

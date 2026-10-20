@@ -26,11 +26,11 @@ class AICallAuditLogTests(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.log_path = Path(self.tmpdir) / "ai_calls.jsonl"
-        self._orig = ai_prompt._AI_CALL_LOG_PATH
-        ai_prompt._AI_CALL_LOG_PATH = self.log_path
+        self._orig = ai_prompt.AI_CALL_LOG_PATH
+        ai_prompt.AI_CALL_LOG_PATH = self.log_path
 
     def tearDown(self):
-        ai_prompt._AI_CALL_LOG_PATH = self._orig
+        ai_prompt.AI_CALL_LOG_PATH = self._orig
         import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -106,4 +106,7 @@ class AICallAuditLogTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

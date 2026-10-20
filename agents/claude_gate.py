@@ -7,13 +7,16 @@ an order.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
+from atomic_io import atomic_write_json
 from config import SIGNALS_DIR, is_sim_active_trading
 from notifier import logger
 from trading_contracts import (
@@ -34,6 +37,10 @@ ALLOWED_VERDICTS = {"APPROVE", "HOLD", "CAUTION"}
 FAILURE_CLASSES = ("quota", "protocol", "network", "unavailable", "unknown")
 
 HEALTH_STATE_PATH = Path(SIGNALS_DIR) / "ai_gate_health.json"
+GATE_CACHE_PATH = Path(SIGNALS_DIR) / "claude_gate_cache.json"
+ET = ZoneInfo("America/New_York")
+_GATE_CACHE_RETENTION_DAYS = 7
+_TIMESTAMP_RE = re.compile(r'"timestamp_local"\s*:\s*"[^"]*"')
 
 
 def classify_cli_failure(status: str) -> str:
@@ -445,6 +452,99 @@ def _sim_active_probe(decision: dict, market: dict | None, audit: dict) -> dict 
     return out
 
 
+def _prompt_fingerprint(prompt_text: str) -> str:
+    """Hash the gate input while ignoring the per-call wall-clock field."""
+    normalized = _TIMESTAMP_RE.sub('"timestamp_local": "<excluded>"', prompt_text)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _gate_cache_key(ticker: str, window: str, fingerprint: str) -> str:
+    raw = f"{ticker}|{datetime.now(ET).date().isoformat()}|{window}|{fingerprint}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _load_gate_cache() -> dict:
+    try:
+        data = json.loads(GATE_CACHE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _prune_gate_cache(data: dict) -> dict:
+    now = datetime.now(timezone.utc)
+    kept = {}
+    for key, entry in data.items():
+        if not isinstance(entry, dict):
+            continue
+        try:
+            ts = datetime.fromisoformat(str(entry.get("ts") or ""))
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            continue
+        if (now - ts).total_seconds() < _GATE_CACHE_RETENTION_DAYS * 86400:
+            kept[key] = entry
+    return kept
+
+
+def _gate_cache_lookup(key: str) -> dict | None:
+    entry = _load_gate_cache().get(key)
+    if not isinstance(entry, dict):
+        return None
+    if str(entry.get("verdict") or "").upper() not in ALLOWED_VERDICTS:
+        return None
+    return entry
+
+
+def _gate_cache_store(key: str, *, verdict: str, reason: str, confidence: Any,
+                      risk_flags: Any, provider: str, status: str,
+                      prompt_path: str | None, raw_path: str | None) -> None:
+    data = _load_gate_cache()
+    data[key] = {
+        "verdict": verdict,
+        "reason": _clip_text(str(reason or ""), 500),
+        "confidence": confidence,
+        "risk_flags": risk_flags if isinstance(risk_flags, list) else [],
+        "provider": provider,
+        "status": status,
+        "prompt_path": prompt_path,
+        "raw_path": raw_path,
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        atomic_write_json(GATE_CACHE_PATH, _prune_gate_cache(data))
+    except Exception:
+        pass
+
+
+def _cached_audit(entry: dict, cache_key: str) -> dict:
+    audit = _audit(
+        provider=str(entry.get("provider") or "cache"),
+        verdict=str(entry.get("verdict") or "").upper(),
+        status="cache_hit",
+        reason=str(entry.get("reason") or ""),
+        confidence=entry.get("confidence"),
+        risk_flags=entry.get("risk_flags"),
+        prompt_path=entry.get("prompt_path"),
+        raw_path=entry.get("raw_path"),
+    )
+    audit["ai_gate_available"] = True
+    audit["cached"] = True
+    audit["cache_key"] = cache_key
+    audit["cache_ts"] = entry.get("ts")
+    return audit
+
+
+def _log_gate_cache_hit(provider: str) -> None:
+    try:
+        from ai_prompt import _log_ai_call
+        _log_ai_call(provider=provider, model=None, complexity="medium",
+                     status="cache_hit", duration_s=0.0)
+    except Exception:
+        pass
+
+
 def split_cli_failures(status: str, provider: str, fallback_reason: str = "") -> list[tuple[str, str]]:
     """把 ai_prompt.query_ai_cli 的结果拆成逐通道的 (provider, status).
 
@@ -578,7 +678,9 @@ def apply_claude_gate(
     if not _enabled():
         return decision
     if window not in TRADE_WINDOWS:
-        return decision
+        out = deepcopy(decision)
+        out["ai_gate_status"] = "skipped_outside_window"
+        return out
     if (decision or {}).get("action") not in ORDER_ACTIONS:
         return decision
     try:
@@ -609,10 +711,25 @@ def apply_claude_gate(
         return approved
 
     out_dir = Path(SIGNALS_DIR)
-    out_dir.mkdir(exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_ticker = ticker.replace(".", "-")
     prompt_text = _prompt(ticker, market, events, decision, macro, str(window))
+    cache_key = _gate_cache_key(ticker, str(window), _prompt_fingerprint(prompt_text))
+    cached = _gate_cache_lookup(cache_key)
+    if cached is not None:
+        audit = _cached_audit(cached, cache_key)
+        _log_gate_cache_hit(audit["provider"])
+        logger.info(f"[claude-gate] {ticker} cache_hit: {audit['verdict']}")
+        if audit["verdict"] == "APPROVE":
+            approved = deepcopy(decision)
+            approved["claude_gate"] = audit
+            approved["ai_gate_available"] = True
+            return approved
+        active_probe = _sim_active_probe(decision, market, audit)
+        return active_probe if active_probe is not None else _demote(
+            decision, audit["verdict"], audit)
+
+    out_dir.mkdir(exist_ok=True)
     prompt_path = out_dir / f"claude_gate_prompt_{safe_ticker}_{stamp}.md"
     raw_path = out_dir / f"claude_gate_raw_{safe_ticker}_{stamp}.txt"
     prompt_path.write_text(prompt_text, encoding="utf-8")
@@ -668,6 +785,17 @@ def apply_claude_gate(
     except Exception:
         pass
     audit["ai_gate_available"] = True
+    _gate_cache_store(
+        cache_key,
+        verdict=verdict,
+        reason=str(parsed.get("reason") or ""),
+        confidence=parsed.get("confidence"),
+        risk_flags=parsed.get("risk_flags"),
+        provider=provider,
+        status=status,
+        prompt_path=str(prompt_path),
+        raw_path=str(raw_path),
+    )
 
     if verdict == "APPROVE":
         approved = deepcopy(decision)
