@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -173,6 +174,36 @@ class SummaryByTickerTests(unittest.TestCase):
         self.assertIn("US.NBIS", s)
         self.assertEqual(s["US.SOXL"]["qty"], 100)
         self.assertEqual(s["US.NBIS"]["qty"], 5)
+
+
+class EffectiveTimeOrdering(unittest.TestCase):
+    """2026-10-16 TQQQ: all fills recorded in one reconciliation pass, so ts is
+    the record time and can invert a buy and its stop sell. Order must follow
+    broker/submitted time."""
+
+    def test_reconciliation_timestamp_does_not_invert_buy_sell(self):
+        td = Path(tempfile.mkdtemp())
+        exec_ = td / "exec.jsonl"
+        hist = td / "hist.jsonl"
+        rows = [
+            _submit("B1", "2026-10-16T16:02:38+00:00", "US.TQQQ", "BUY", 286),
+            _submit("S1", "2026-10-16T18:58:24+00:00", "US.TQQQ", "SELL", 286),
+            _fill("S1", "2026-10-16T19:45:24.749609+00:00", "US.TQQQ", "SELL", 286, 67.915),
+            _fill("B1", "2026-10-16T19:45:24.942231+00:00", "US.TQQQ", "BUY", 286, 70.02),
+        ]
+        exec_.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        hist.write_text(json.dumps({
+            "event": "filled", "source": "broker_history", "order_id": "B2",
+            "ts": "2026-10-16T19:46:48+00:00", "ticker": "US.TQQQ", "side": "BUY",
+            "dealt_qty": 296, "average_fill_price": 67.878,
+        }) + "\n", encoding="utf-8")
+        with patch.multiple(fl, EXEC_LEDGER_PATH=exec_, BROKER_HISTORY_PATH=hist):
+            pos = fl.get_position("US.TQQQ")
+        self.assertEqual(pos["qty"], 296)
+        self.assertEqual(pos["avg_cost"], 67.878)
+        self.assertEqual(pos["unreconciled_sells"], 0)
+        self.assertAlmostEqual(pos["realized_pnl"], -602.03, places=2)
+        self.assertEqual(pos["qty_reversals"], 0)
 
 
 if __name__ == "__main__":

@@ -315,7 +315,7 @@ def api_health() -> dict:
     orch_alive = False
     if LOCK_PATH.exists():
         try:
-            orch_pid = int(LOCK_PATH.read_text().strip())
+            orch_pid = int(LOCK_PATH.read_text().splitlines()[0].strip())
             orch_alive = _pid_alive(orch_pid)
         except Exception:
             pass

@@ -15,6 +15,7 @@ Run:  python orchestrator.py
 Stop: Ctrl-C
 """
 
+import json
 import os
 import schedule
 import threading
@@ -45,6 +46,7 @@ from claude_gate import apply_claude_gate
 from trading_contracts import ORDER_ACTIONS, TRADE_WINDOWS
 from atomic_io import atomic_write_json
 from data_quality import PointInTimeStore, audit_latest_signal_files
+from regime_today import is_nyse_session, nyse_close_minute
 
 ET = ZoneInfo("America/New_York")
 
@@ -84,16 +86,19 @@ _LOCK_PATH = Path(__file__).parent / ".orchestrator.lock"
 
 
 def _check_lock_or_exit() -> None:
-    """启动时检查锁文件：已有活进程在跑就拒绝启动；否则写入自己 PID。"""
+    """启动时检查锁文件：已有活进程在跑就拒绝启动；否则写入自己 PID。
+
+    锁文件首行仍是裸 PID（run.bat 兼容），后续行记录进程启动时间/镜像名，
+    watchdog 用它们识别 PID 复用 (2026-10-20 audit P1-4)。
+    """
+    from _watchdog import lock_matches_process, read_lock, write_lock_metadata
     while True:
         try:
             fd = os.open(_LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         except FileExistsError:
-            try:
-                old_pid = int(_LOCK_PATH.read_text().strip())
-            except (ValueError, OSError):
-                old_pid = None
-            if old_pid and _pid_alive(old_pid):
+            meta = read_lock(_LOCK_PATH)
+            old_pid = meta.get("pid")
+            if old_pid and lock_matches_process(meta):
                 print(f"[orchestrator] 已有进程在跑 (PID={old_pid})，本次启动取消。")
                 print(f"  如确认那个进程已死，删除 {_LOCK_PATH} 后重试。")
                 sys.exit(2)
@@ -109,6 +114,10 @@ def _check_lock_or_exit() -> None:
             os.fsync(fd)
         finally:
             os.close(fd)
+        try:
+            write_lock_metadata(_LOCK_PATH)
+        except Exception as exc:
+            print(f"[orchestrator] 锁指纹写入失败 (仅 PID 锁): {exc}")
         break
     atexit.register(_release_lock)
 
@@ -136,7 +145,8 @@ def _pid_alive(pid: int) -> bool:
 
 def _release_lock() -> None:
     try:
-        if _LOCK_PATH.exists() and _LOCK_PATH.read_text().strip() == str(os.getpid()):
+        from _watchdog import read_lock
+        if read_lock(_LOCK_PATH).get("pid") == os.getpid():
             _LOCK_PATH.unlink()
     except OSError:
         pass
@@ -194,15 +204,12 @@ def _exit_for_code_change(changed: str) -> None:
     except Exception:
         pass
     # 手动清 lock（os._exit 绕过 atexit）
-    try:
-        if _LOCK_PATH.exists() and _LOCK_PATH.read_text().strip() == str(os.getpid()):
-            _LOCK_PATH.unlink()
-    except OSError:
-        pass
+    _release_lock()
     os._exit(0)
 
-# 防止同一窗口重复触发
+# 防重复：内存缓存 + 持久化标记（进程在报告窗口内重启也不会重跑）
 _last_report_session = {"open": None, "close": None}
+_REPORT_STATE_PATH = SIGNALS_PATH / "report_state.json"
 _last_window_run: dict[str, str | None] = {w[2]: None for w in DAILY_WINDOWS_ET}
 
 
@@ -212,14 +219,18 @@ def _in_daily_window() -> str | None:
 
     此函数只检查资格，不提交完成状态。完成状态必须在整个窗口任务成功
     返回后由 _mark_window_complete() 写入，失败时下一次 5 分钟 tick 可重试。
+    休市日和提前收盘日（13:00 ET）不返回窗口。
     """
     now = datetime.now(ET)
-    if now.weekday() >= 5:
+    if not is_nyse_session(now.date()):
         return None
     t     = now.hour * 60 + now.minute
     today = now.date().isoformat()
+    close_min = nyse_close_minute(now.date())
     for start, end, name in DAILY_WINDOWS_ET:
-        if start <= t <= end and _last_window_run[name] != today:
+        if start >= close_min:
+            continue
+        if start <= t <= min(end, close_min) and _last_window_run[name] != today:
             return name
     return None
 
@@ -234,41 +245,88 @@ def _session() -> str:
     now = datetime.now(ET)
     if now.weekday() >= 5:
         return "closed(weekend)"
+    if not is_nyse_session(now.date()):
+        return "closed(holiday)"
     t = now.hour * 60 + now.minute
-    if 240 <= t < 570:   return "pre-market"
-    if 570 <= t < 960:   return "open"
-    if 960 <= t < 1200:  return "after-hours"
+    close_min = nyse_close_minute(now.date())
+    if 240 <= t < 570:          return "pre-market"
+    if 570 <= t < close_min:    return "open"
+    if close_min <= t < 1200:   return "after-hours"
     return "closed"
+
+
+def _report_done(session_type: str, today: str | None = None) -> bool:
+    today = today or datetime.now(ET).date().isoformat()
+    if _last_report_session.get(session_type) == today:
+        return True
+    try:
+        state = json.loads(_REPORT_STATE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(state, dict) and state.get(session_type) == today
+
+
+def _mark_report_done(session_type: str, today: str | None = None) -> None:
+    today = today or datetime.now(ET).date().isoformat()
+    _last_report_session[session_type] = today
+    try:
+        state = json.loads(_REPORT_STATE_PATH.read_text(encoding="utf-8"))
+        if not isinstance(state, dict):
+            state = {}
+    except (OSError, ValueError):
+        state = {}
+    state[session_type] = today
+    try:
+        atomic_write_json(_REPORT_STATE_PATH, state)
+    except Exception as exc:
+        logger.error(f"[report] 报告标记写入失败: {exc}")
 
 
 def _report_trigger() -> str | None:
     """
     返回 'open' 或 'close' 表示应生成报告，否则返回 None。
-    窗口: 开盘后 0-14 分钟 (9:30-9:44 ET) / 收盘后 0-14 分钟 (16:00-16:14 ET)。
-    每个窗口只触发一次（用日期防重复）。
+    窗口: 开盘后 0-14 分钟 (9:30-9:44 ET) / 收盘后 0-14 分钟
+    (正常 16:00-16:14, 提前收盘日 13:00-13:14)。
+    只判定是否到期，不写完成状态；成功生成后由 _mark_report_done() 提交。
     """
     now = datetime.now(ET)
-    if now.weekday() >= 5:
+    if not is_nyse_session(now.date()):
         return None
     today = now.date().isoformat()
     t = now.hour * 60 + now.minute
+    close_min = nyse_close_minute(now.date())
 
-    if 570 <= t <= 584:  # 9:30–9:44 ET
-        if _last_report_session["open"] != today:
-            _last_report_session["open"] = today
-            return "open"
-    if 960 <= t <= 974:  # 16:00–16:14 ET
-        if _last_report_session["close"] != today:
-            _last_report_session["close"] = today
-            return "close"
+    if 570 <= t <= 584 and not _report_done("open", today):
+        return "open"
+    if close_min <= t <= close_min + 14 and not _report_done("close", today):
+        return "close"
     return None
 
 
-def _run_report(session_type: str) -> None:
+def _run_report_once(session_type: str) -> bool:
+    today = datetime.now(ET).date().isoformat()
+    if _report_done(session_type, today):
+        return False
+    if not _run_report(session_type):
+        return False
+    _mark_report_done(session_type, today)
+    return True
+
+
+def _maybe_run_report() -> str | None:
+    """Run a due report outside the five trading windows (e.g. 16:00 close)."""
+    trigger = _report_trigger()
+    if not trigger:
+        return None
+    return trigger if _run_report_once(trigger) else None
+
+
+def _run_report(session_type: str) -> bool:
     logger.info(f"\n{'='*64}")
     sess_disp = t(f"生成{session_type}报告...",
                   f"{('寄付' if session_type == 'open' else '引け')}レポート生成中...")
     logger.info(sess_disp)
+    report_ok = False
     try:
         from report_generator import generate_report
         label = (t("开盘报告", "寄付レポート") if session_type == "open"
@@ -276,6 +334,7 @@ def _run_report(session_type: str) -> None:
         report, fpath = generate_report(label)
         logger.info(report)
         logger.info(t(f"报告已保存: {fpath}", f"レポート保存先: {fpath}"))
+        report_ok = True
         # 之前每 cycle (5/天) 都弹"报告已生成", 干扰工作. 现改为静默 log.
     except Exception as exc:
         logger.error(t(f"报告生成失败: {exc}", f"レポート生成失敗: {exc}"))
@@ -504,6 +563,7 @@ def _run_report(session_type: str) -> None:
         except Exception as exc:
             logger.error(t(f"AI 复盘失败: {exc}",
                            f"AI 復盤失敗: {exc}"))
+    return report_ok
 
 
 def _emit_ai_brief() -> None:
@@ -983,13 +1043,14 @@ def run_cycle(window: str | None = None) -> None:
             logger.warning(f"[rebalance] skipped: {_exc}")
 
     # 检查是否到了报告生成时间
-    trigger = _report_trigger()
-    if trigger:
-        _run_report(trigger)
+    _maybe_run_report()
 
 
 def _tick() -> None:
-    """每5分钟检查一次是否进入日K交易窗口。"""
+    """每5分钟检查一次报告时间与日K交易窗口。"""
+    # 收盘报告 (16:00 / 提前收盘 13:00) 没有对应的 DAILY_WINDOWS_ET 窗口，
+    # 必须在窗口门禁之前判断，否则永远不会触发 (2026-10-20 audit P1-1).
+    _maybe_run_report()
     window = _in_daily_window()
     if not window:
         return
@@ -1009,15 +1070,13 @@ def _tick() -> None:
         # post-open 也会 catch-up 生成一次，避免整天没有 AI 分析
         today = datetime.now(ET).date().isoformat()
         if window == "pre-open":
-            _run_report("open")
-            _last_report_session["open"] = today
-        elif window == "post-open" and _last_report_session.get("open") != today:
+            _run_report_once("open")
+        elif window == "post-open" and not _report_done("open", today):
             logger.info(t(
                 "[补漏] pre-open 未触发 open 报告，post-open 补跑一次",
                 "[補完] pre-open が open レポートを未生成、post-open で補完実行",
             ))
-            _run_report("open")
-            _last_report_session["open"] = today
+            _run_report_once("open")
     except Exception as exc:
         logger.exception(f"[scheduler] {window} 窗口执行失败，保留为未完成并等待重试: {exc}")
         return
@@ -1148,7 +1207,7 @@ def main() -> None:
                       f"起動スキャン：現在 {startup_window} ウィンドウ内、通常タスクとして実行..."))
         run_cycle(window=startup_window)
         if startup_window == "pre-open":
-            _run_report("open")
+            _run_report_once("open")
         _mark_window_complete(startup_window)
     else:
         logger.info(t("启动扫描：非交易窗口，仅刷新信号，不生成开盘/收盘报告。",

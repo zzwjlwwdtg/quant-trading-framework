@@ -21,6 +21,8 @@ DecisionAgent — 10分制信号引擎 + Regime Detection。
 
 import json
 import os
+from pathlib import Path
+
 from openai import OpenAI
 
 from config import (OPENAI_API_KEY, DECISION_MODEL, RSI_OVERBOUGHT, RSI_OVERSOLD,
@@ -393,6 +395,36 @@ def _conf_scale() -> int:
 
 
 _CALIB_CACHE = {"loaded": False, "data": None}
+_CALIB_PATH = Path(__file__).parent / "signals" / "confidence_calibration.json"
+
+
+def _warn_degenerate_live_calibration(cal: dict) -> None:
+    """Surface the 2026-10-20 P0 without changing the live weights.
+
+    All-zero bear weights make every technical sell score zero.  The writer
+    guard rejects new degenerate files, but the current file is already bad;
+    alert on read until a pre-registered bear-market calibration replaces it.
+    """
+    try:
+        problems = []
+        sides = [("default", cal.get("bear_weights"))]
+        for cls, data in (cal.get("per_class") or {}).items():
+            if isinstance(data, dict):
+                sides.append((cls, data.get("bear_weights")))
+        for name, weights in sides:
+            values = [float(v.get("weight") or 0)
+                      for v in (weights or {}).values() if isinstance(v, dict)]
+            if values and max(values) <= 0:
+                problems.append(name)
+        if problems:
+            from notifier import logger
+            logger.warning(
+                "[decision] live calibration disables technical sells: all bear "
+                f"weights are zero ({', '.join(problems)}); awaiting the "
+                "pre-registered bear-market calibration"
+            )
+    except Exception:
+        pass
 
 # F10 lite (2026-09-19, audit): 校准若超过 N 天就 warn 一次, 让用户知道
 # 覆盖的 ticker 是否需要重训 (2026-08-11 校准只覆盖 5 个 ticker, 新加的
@@ -425,10 +457,10 @@ def _load_calibration() -> dict | None:
     if _CALIB_CACHE["loaded"]:
         return _CALIB_CACHE["data"]
     try:
-        from pathlib import Path
-        p = Path(__file__).parent / "signals" / "confidence_calibration.json"
-        if p.exists():
-            _CALIB_CACHE["data"] = json.loads(p.read_text(encoding="utf-8"))
+        if _CALIB_PATH.exists():
+            cal = json.loads(_CALIB_PATH.read_text(encoding="utf-8"))
+            _warn_degenerate_live_calibration(cal)
+            _CALIB_CACHE["data"] = cal
     except Exception:
         _CALIB_CACHE["data"] = None
     _CALIB_CACHE["loaded"] = True

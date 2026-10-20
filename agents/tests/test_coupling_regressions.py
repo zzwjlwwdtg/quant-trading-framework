@@ -30,9 +30,37 @@ import orchestrator
 import paper_trader
 import moomoo_pool
 import snapshot_generator
+import stop_line_guard
 import trading_contracts
 import universe_picker
 import _watchdog as watchdog
+
+
+_STOP_TMP: tempfile.TemporaryDirectory | None = None
+_STOP_PATCHES: list = []
+
+
+def setUpModule():
+    # These tests exercise live order paths (trailing/software stops).  Without
+    # isolation they read real stop lines (blocking unrelated buys) and write
+    # test stop lines into signals/stop_lines.json.
+    global _STOP_TMP
+    _STOP_TMP = tempfile.TemporaryDirectory(prefix="stop-lines-test-")
+    base = Path(_STOP_TMP.name)
+    _STOP_PATCHES.extend([
+        patch.object(stop_line_guard, "LINES", base / "stop_lines.json"),
+        patch.object(stop_line_guard, "BLOCKS", base / "stop_line_blocks.jsonl"),
+    ])
+    for p in _STOP_PATCHES:
+        p.start()
+
+
+def tearDownModule():
+    for p in reversed(_STOP_PATCHES):
+        p.stop()
+    _STOP_PATCHES.clear()
+    if _STOP_TMP is not None:
+        _STOP_TMP.cleanup()
 
 
 class SnapshotProcessCleanupTests(unittest.TestCase):
@@ -1122,7 +1150,9 @@ class SingleInstanceLockTests(unittest.TestCase):
                  patch.object(orchestrator.atexit, "register"), \
                  patch("builtins.print"):
                 orchestrator._check_lock_or_exit()
-                self.assertEqual(lock_path.read_text(encoding="utf-8"), str(os.getpid()))
+                self.assertEqual(
+                    lock_path.read_text(encoding="utf-8").splitlines()[0],
+                    str(os.getpid()))
                 with patch.object(orchestrator, "_pid_alive", return_value=True):
                     with self.assertRaises(SystemExit):
                         orchestrator._check_lock_or_exit()
@@ -1141,8 +1171,19 @@ class SchedulerCommitTests(unittest.TestCase):
         self.previous = dict(orchestrator._last_window_run)
         for window in orchestrator._last_window_run:
             orchestrator._last_window_run[window] = None
+        self.previous_report = dict(orchestrator._last_report_session)
+        orchestrator._last_report_session.update({"open": None, "close": None})
+        self._report_dir = tempfile.TemporaryDirectory()
+        self._report_path_patch = patch.object(
+            orchestrator, "_REPORT_STATE_PATH",
+            Path(self._report_dir.name) / "report_state.json")
+        self._report_path_patch.start()
 
     def tearDown(self):
+        self._report_path_patch.stop()
+        self._report_dir.cleanup()
+        orchestrator._last_report_session.clear()
+        orchestrator._last_report_session.update(self.previous_report)
         orchestrator._last_window_run.clear()
         orchestrator._last_window_run.update(self.previous)
 

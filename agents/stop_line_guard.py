@@ -5,7 +5,8 @@
 
   - 记线: 软件止损 = 触发价 stop_price; 移动止损 = 入场后最高价 × (1 − 回撤比例)
   - 拦截: 买入价 ≤ 线 → 不下单 (在现金筹措之前拦, 不会为一笔被拦的买单先卖 SHY)
-  - 解除: 买入时价格 > 线 → 线清除, 照常下单
+  - 检查只读: 价格回到线上方只表示"可下单", 不删除线
+  - 解除: 买入成交且成交价 > 线 → 显式清除; 成交价 ≤ 线 → 保留并告警
   - 不拦再平衡 (REBALANCE) 的买入: 它按组合权重运作, 拦下会打乱现金计算
 只会少买, 不会多买, 也不改任何卖出 / 止损逻辑.
 """
@@ -40,6 +41,14 @@ def _save(d: dict) -> None:
     os.replace(tmp, LINES)
 
 
+def _log_event(payload: dict) -> None:
+    try:
+        with open(BLOCKS, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
 def record(ticker: str, line: float, kind: str, exit_price: float | None = None) -> None:
     """止损卖出成功后调用. 失败只记日志, 不能影响卖出."""
     try:
@@ -55,8 +64,29 @@ def record(ticker: str, line: float, kind: str, exit_price: float | None = None)
         pass
 
 
+def clear(ticker: str, reason: str = "manual") -> bool:
+    """显式清线 (成交确认 / 人工). 返回是否确实删除了线."""
+    try:
+        d = _load()
+        k = _key(ticker)
+        rec = d.pop(k, None)
+        if rec is None:
+            return False
+        _save(d)
+        _log_event({"ts": datetime.now(timezone.utc).isoformat(), "event": "cleared",
+                    "ticker": k, "line": rec.get("line"), "kind": rec.get("kind"),
+                    "reason": reason})
+        return True
+    except Exception:
+        return False
+
+
 def check_buy(ticker: str, price: float, tag: str = "") -> tuple[bool, str]:
-    """返回 (允许, 原因). 任何异常都放行 (守卫自身出错不能卡住正常交易, 其余风控照常)."""
+    """返回 (允许, 原因). 只读, 不删除线. 任何异常都放行.
+
+    守卫自身出错不能卡住正常交易, 其余风控照常. 线的解除只能由
+    confirm_buy_fill 在**成交后**显式执行.
+    """
     try:
         if "REBALANCE" in str(tag or "").upper():
             return True, "rebalance_exempt"
@@ -69,21 +99,56 @@ def check_buy(ticker: str, price: float, tag: str = "") -> tuple[bool, str]:
         if price <= 0 or line <= 0:
             return True, "no_price"
         if price > line:
-            d.pop(k, None)          # 价格回到线上方 → 线解除
-            _save(d)
-            return True, f"reclaimed {price:.2f} > {line:.2f}"
+            return True, f"reclaimed {price:.2f} > {line:.2f}; clear on fill"
         reason = (f"止损线未收复: 现价 ${price:.2f} ≤ {rec.get('kind')} 线 ${line:.2f}"
                   f" (止损于 {str(rec.get('ts'))[:16]})")
-        try:
-            with open(BLOCKS, "a", encoding="utf-8") as f:
-                f.write(json.dumps({"ts": datetime.now(timezone.utc).isoformat(), "ticker": k, "price": price,
-                                    "line": line, "kind": rec.get("kind"), "tag": tag, "reason": reason},
-                                   ensure_ascii=False) + "\n")
-        except OSError:
-            pass
+        _log_event({"ts": datetime.now(timezone.utc).isoformat(), "event": "blocked",
+                    "ticker": k, "price": price, "line": line,
+                    "kind": rec.get("kind"), "tag": tag, "reason": reason})
         return False, reason
     except Exception:
         return True, "guard_error"
+
+
+def confirm_buy_fill(ticker: str, fill_price: float,
+                     order_id: str = "") -> tuple[bool, str]:
+    """成交后处理止损线: 成交价 > 线才清除; ≤ 线保留并返回 False 供告警.
+
+    2026-10-16 TQQQ 的买单在 68.50 线下成交 (67.86); 当时守卫尚未上线,
+    漏记成交由历史对账修复. 对已存在的线, 参考价高于线不构成解除条件:
+    只有实际成交价高于线才清除, 否则保留为后续买入的阻挡.
+    """
+    try:
+        d = _load()
+        k = _key(ticker)
+        rec = d.get(k)
+        if not rec:
+            return True, "no_line"
+        line = float(rec.get("line") or 0)
+        fp = float(fill_price or 0)
+        if line <= 0:
+            return True, "no_line"
+        if fp <= 0:
+            _log_event({"ts": datetime.now(timezone.utc).isoformat(),
+                        "event": "fill_price_missing", "ticker": k,
+                        "order_id": order_id, "line": line})
+            return False, "fill_price_missing; line kept"
+        if fp > line:
+            d.pop(k, None)
+            _save(d)
+            _log_event({"ts": datetime.now(timezone.utc).isoformat(),
+                        "event": "cleared_after_fill", "ticker": k,
+                        "order_id": order_id, "fill_price": fp, "line": line,
+                        "kind": rec.get("kind")})
+            return True, f"cleared {fp:.2f} > {line:.2f}"
+        reason = f"成交价 ${fp:.2f} ≤ 止损线 ${line:.2f}; 线保留, 禁止后续加仓"
+        _log_event({"ts": datetime.now(timezone.utc).isoformat(),
+                    "event": "fill_below_line", "ticker": k,
+                    "order_id": order_id, "fill_price": fp, "line": line,
+                    "kind": rec.get("kind")})
+        return False, reason
+    except Exception as exc:
+        return False, f"guard_error: {exc}; line kept"
 
 
 def trailing_line(entry_high: float, trail_pct: float) -> float:

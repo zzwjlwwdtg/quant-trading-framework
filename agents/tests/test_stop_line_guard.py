@@ -29,7 +29,21 @@ class Guard(unittest.TestCase):
         self.assertIn("68.50", why)
         self.assertTrue((self.tmp / "blocks.jsonl").exists())
         self.assertTrue(g.check_buy("TQQQ", 69.0)[0])               # 收复 → 放行 (代码带不带 US. 都认)
+        # 检查只读: 没成交前线必须还在, 回落仍然拦
+        self.assertFalse(g.check_buy("US.TQQQ", 60.0)[0])
+        self.assertTrue(g.confirm_buy_fill("TQQQ", 69.0, "O1")[0])  # 成交价 > 线 → 清除
         self.assertTrue(g.check_buy("US.TQQQ", 60.0)[0])            # 线已解除
+
+    def test_fill_below_line_keeps_line(self):
+        g.record("US.TQQQ", 68.50, "software_stop", 67.89)
+        ok, why = g.confirm_buy_fill("US.TQQQ", 67.86, "474274")    # 参考价 > 线, 实际成交 < 线
+        self.assertFalse(ok)
+        self.assertIn("68.50", why)
+        self.assertFalse(g.check_buy("US.TQQQ", 67.0)[0])           # 线保留
+        self.assertEqual(g._load()["US.TQQQ"]["line"], 68.50)
+
+    def test_confirm_without_line_is_noop(self):
+        self.assertTrue(g.confirm_buy_fill("US.MSFT", 400.0, "X")[0])
 
     def test_equal_to_line_is_blocked(self):
         g.record("US.DRAM", 46.8, "software_stop")
@@ -70,6 +84,14 @@ class PlaceIntegration(unittest.TestCase):
         i_guard, i_fund = src.index("stop_line_guard.check_buy"), src.index("_fund_buy_qty(")
         self.assertLess(i_guard, i_fund)
         self.assertIn("if side == TrdSide.BUY:", src[max(0, i_guard - 200):i_guard])
+
+    def test_final_guard_uses_actual_order_price(self):
+        import inspect
+        import paper_trader as pt
+        src = inspect.getsource(pt._place)
+        i_order = src.index("order_price = round(ref_price * (1 + buffer), 2)")
+        i_final = src.index("stop_line_guard.check_buy(code, order_price, tag)", i_order)
+        self.assertLess(i_order, i_final)
 
 
 if __name__ == "__main__":

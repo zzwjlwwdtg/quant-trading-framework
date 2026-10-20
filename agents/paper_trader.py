@@ -28,7 +28,7 @@ import os
 import sys
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from moomoo import (
@@ -211,9 +211,8 @@ def _kelly_mult(ticker: str, min_trades: int = 10) -> float:
     Half Kelly = 0.5 × Kelly（行业惯例，full Kelly 过度激进）
     """
     try:
-        from pathlib import Path
         from collections import defaultdict
-        log_path = Path(__file__).parent / "signals" / "trade_log.jsonl"
+        log_path = TRADE_LOG_PATH
         if not log_path.exists():
             return 1.0
         events = []
@@ -285,9 +284,8 @@ def _check_loss_streak() -> tuple[bool, str]:
     """读 trade_log.jsonl 配对最近 N 笔；全亏 → 暂停。
     返回 (is_paused, reason)。任何异常 → 不暂停。"""
     try:
-        from pathlib import Path
         from collections import defaultdict
-        log_path = Path(__file__).parent / "signals" / "trade_log.jsonl"
+        log_path = TRADE_LOG_PATH
         if not log_path.exists():
             return False, ""
         events = []
@@ -551,6 +549,7 @@ LIVE_FRACTION = max(0.0, min(1.0, float(os.environ.get("TRADER_LIVE_FRACTION", "
 STATE_PATH    = Path(__file__).parent / "trader_state.json"
 UNIVERSE_PATH = Path(__file__).parent / "universe_state.json"
 EXECUTION_LOG_PATH = Path(__file__).parent / "signals" / "execution_ledger.jsonl"
+TRADE_LOG_PATH = Path(__file__).parent / "signals" / "trade_log.jsonl"
 
 # R02 v3 (2026-09-20 audit): 独立 cohort dedup ledger, 与 state file 分离.
 # state.clear() 或 state file 丢失时, 这个 ledger 仍能防重复入账.
@@ -1463,8 +1462,7 @@ def _log_trade(ticker: str, side: str, qty: int, price: float,
     trade-log 列可以直接读. entry["price"] 保持原语义 = 下单 trigger (order_price).
     """
     try:
-        from pathlib import Path
-        path = Path(__file__).parent / "signals" / "trade_log.jsonl"
+        path = TRADE_LOG_PATH
         path.parent.mkdir(parents=True, exist_ok=True)
         decision = decision or {}
         mkt = mkt or {}
@@ -1671,6 +1669,15 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         order_price = round(ref_price * (1 + buffer), 2)
     else:
         order_price = round(ref_price * (1 - buffer), 2)
+    # Final guard against the price actually sent to the broker.  The earlier
+    # check uses the daily reference and runs before cash funding; this one
+    # catches a realtime quote below the stop line (2026-10-16 TQQQ: ref > line,
+    # actual order 67.86 <= 68.50).
+    if side == TrdSide.BUY:
+        _ok_final, _why_final = stop_line_guard.check_buy(code, order_price, tag)
+        if not _ok_final:
+            logger.warning(f"[trader] SKIP BUY {code} at order price ${order_price:.2f}: {_why_final}")
+            return None
     rth_label = "+RTHx" if fill_outside_rth else ""
     ref_label = f"ref {ref_price:.2f}" + (f" / daily {price:.2f}" if ref_price != price else "")
     execution_plan = estimate_execution(
@@ -1767,6 +1774,54 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     return oid
 
 
+RECONCILE_LOOKBACK_DAYS = 7
+RECONCILE_MAX_LOOKBACK_DAYS = 30
+
+
+def _query_reconcile_orders(ctx, earliest_unresolved: datetime | None):
+    """今日订单 + 覆盖未结委托的历史订单.
+
+    order_list_query 只看当前交易日; 上一窗口对账之后才成交的单子 (2026-10-16
+    TQQQ 15:46 ET) 次日从该视图消失, 账本永久缺失. 历史查询补上这段; 重复处理
+    由 state 的 __execution_reconcile 签名幂等挡住.
+    """
+    import pandas as pd
+    end = (datetime.now(timezone.utc) + timedelta(days=1)).date()
+    start = end - timedelta(days=RECONCILE_LOOKBACK_DAYS - 1)
+    if earliest_unresolved is not None:
+        start = min(start, earliest_unresolved.date())
+    start = max(start, end - timedelta(days=RECONCILE_MAX_LOOKBACK_DAYS - 1))
+    frames = []
+    history_error = ""
+    try:
+        ret, df = ctx.history_order_list_query(
+            trd_env=TRD_ENV, acc_id=ACC_ID,
+            start=f"{start.isoformat()} 00:00:00", end=f"{end.isoformat()} 23:59:59",
+        )
+        if ret == RET_OK and df is not None and not df.empty:
+            frames.append(df)
+        elif ret != RET_OK:
+            history_error = str(df)
+    except Exception as exc:
+        history_error = f"{type(exc).__name__}: {exc}"
+    try:
+        ret, df = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+        if ret == RET_OK and df is not None and not df.empty:
+            frames.append(df)
+    except Exception as exc:
+        if not frames:
+            logger.warning(f"[trader] order queries failed: {exc}")
+            return None
+    if not frames:
+        if history_error:
+            logger.warning(f"[trader] history_order_list_query {start}~{end} "
+                           f"failed: {history_error[:160]}")
+        return None
+    out = pd.concat(frames, ignore_index=True)
+    out["order_id"] = out["order_id"].astype(str)
+    return out.drop_duplicates("order_id", keep="last")
+
+
 def refresh_execution_ledger() -> None:
     """Reconcile submitted orders with broker fill/partial/cancel facts."""
     if DRY_RUN or not EXECUTION_LOG_PATH.exists():
@@ -1788,12 +1843,19 @@ def refresh_execution_ledger() -> None:
         return
     if not submitted:
         return
+    earliest = None
+    for ev in submitted.values():
+        try:
+            ts = datetime.fromisoformat(str(ev.get("ts") or "").replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        earliest = ts if earliest is None or ts < earliest else earliest
     try:
         ctx = _ctx_get()
-        ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
-        if ret != RET_OK or orders is None or orders.empty:
-            return
+        orders = _query_reconcile_orders(ctx, earliest)
     except Exception:
+        return
+    if orders is None or orders.empty:
         return
     state = _state_load()
     seen = state.get("__execution_reconcile", {})
@@ -1841,6 +1903,22 @@ def refresh_execution_ledger() -> None:
             "broker_time": broker_time_to_utc_iso(row.get("updated_time") or row.get("create_time")),
             "broker_time_raw": str(row.get("updated_time") or row.get("create_time") or ""),
         })
+        # 成交确认后才解除止损线; 成交价仍在线下则保留并告警 (见 stop_line_guard).
+        if event_name == "filled" and str(base.get("side") or "").upper() == "BUY":
+            try:
+                import stop_line_guard
+                line_ok, line_why = stop_line_guard.confirm_buy_fill(
+                    base.get("ticker") or "", avg_fill, oid)
+                if not line_ok and line_why != "no_line":
+                    logger.error(f"[trader] STOP-LINE {base.get('ticker')} order={oid}: {line_why}")
+                    try:
+                        from notifications import send_alert
+                        send_alert(f"⚠️ 止损线守卫: {base.get('ticker')} 买单 {oid} "
+                                   f"成交 {avg_fill:.2f}, {line_why}", level="warning")
+                    except Exception:
+                        pass
+            except Exception as exc:
+                logger.warning(f"[trader] stop-line confirm failed for {oid}: {exc}")
         # R01/R02 CRITICAL FIX (2026-09-20 followup audit):
         # 上轮把 seen[oid]=signature 移到 cohort 回调之前, 导致 cohort 读 prev_sig
         # 时读到的是**本次**signature → delta_qty = dealt - dealt = 0 → 永不入账.
@@ -2099,6 +2177,241 @@ def _clear_protective_stop(tstate: dict) -> None:
         _cancel_broker_stop(stop_oid)
     for key in _PROTECTIVE_STOP_KEYS:
         tstate.pop(key, None)
+
+
+# last_* is execution history, not position state.  last_window_key is the
+# per-window idempotency marker: clearing it after a flat exit lets a restart
+# in the same window re-enter on a remaining signal (the TQQQ pattern).  Keep
+# it; only cost basis, stops, and managed-entry state die with the position.
+_STATE_FLAT_CLEAR_KEYS = (
+    "first_entry_utc", "entry_price", "entry_high", "entry_qty",
+    "entry_basis_source", "entry_conf", "entry_conf_scale",
+    "pyramid_layer", "tp_levels_hit",
+    "protective_stop_price", "protective_stop_mode",
+    "protective_stop_order_id", "protective_stop_updated_utc",
+    "managed_entry_order_id", "managed_entry_kind", "managed_entry_ref",
+    "managed_entry_stop_ref", "managed_entry_target_ts",
+    "managed_entry_updated_utc", "rebuy_done",
+)
+
+
+def _broker_position_truth() -> dict[str, dict] | None:
+    """{code: broker facts}; None when the account cannot be read."""
+    try:
+        ctx = _ctx_get()
+        ret, pos = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+    except Exception as exc:
+        logger.warning(f"[trader] position truth query failed: {exc}")
+        return None
+    if ret != RET_OK:
+        logger.warning(f"[trader] position truth query rejected: {pos}")
+        return None
+    out: dict[str, dict] = {}
+    if pos is None or pos.empty:
+        return out
+    for _, row in pos.iterrows():
+        code = str(row.get("code") or "")
+        if not code:
+            continue
+        try:
+            qty = float(row.get("qty") or 0)
+        except (TypeError, ValueError):
+            continue
+        if qty <= 0:
+            continue
+
+        def _num(field: str) -> float:
+            try:
+                return float(row.get(field) or 0)
+            except (TypeError, ValueError):
+                return 0.0
+
+        out[code] = {
+            "qty": qty,
+            "can_sell_qty": _num("can_sell_qty") or qty,
+            # average_cost is the purchase basis; cost_price is diluted by
+            # realized P&L and would move TP thresholds after partial exits.
+            "avg_cost": _num("average_cost") or _num("cost_price"),
+            "cost_price": _num("cost_price"),
+            "nominal_price": _num("nominal_price"),
+        }
+    return out
+
+
+def _open_order_tickers() -> set[str] | None:
+    """Tickers with a working order; None means the check itself failed.
+
+    Today's list alone misses a GTC order submitted on a prior day, which would
+    let flat-state cleanup erase the state of a ticker that still has live
+    exposure. Query history as well; fail closed if either source is unreadable.
+    """
+    try:
+        ctx = _ctx_get()
+        ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+    except Exception as exc:
+        logger.warning(f"[trader] open-order query failed: {exc}")
+        return None
+    if ret != RET_OK or orders is None:
+        return None
+    frames = []
+    if not orders.empty:
+        frames.append(orders)
+    end = (datetime.now(timezone.utc) + timedelta(days=1)).date()
+    start = end - timedelta(days=RECONCILE_LOOKBACK_DAYS - 1)
+    try:
+        hret, hist = ctx.history_order_list_query(
+            trd_env=TRD_ENV, acc_id=ACC_ID,
+            start=f"{start.isoformat()} 00:00:00",
+            end=f"{end.isoformat()} 23:59:59")
+    except Exception as exc:
+        logger.warning(f"[trader] working-order history query failed: {exc}")
+        return None
+    if hret != RET_OK:
+        logger.warning(f"[trader] working-order history query rejected: {hist}")
+        return None
+    if hist is not None and not hist.empty:
+        frames.append(hist)
+    out: set[str] = set()
+    for frame in frames:
+        for _, o in frame.iterrows():
+            status = str(o.get("order_status", "")).upper().split(".")[-1]
+            if status in _OPEN_ORDER_STATUSES:
+                code = str(o.get("code") or "")
+                if code:
+                    out.add(code)
+    return out
+
+
+def _default_protective_stop(ticker: str, entry_price: float,
+                             entry_high: float) -> float | None:
+    """Fallback software stop for a held position that has none.
+
+    Tighter of (8%×√leverage below the post-entry high) and (5%×leverage
+    below cost), never within 2% of the current price at arming time.
+
+    entry_price is broker average_cost (purchase basis), not the diluted
+    cost_price; e.g. MSFT 2026-10-20: 497.07 vs 444.55.  The stop uses the
+    purchase basis and post-entry high, so the diluted figure cannot move it.
+    """
+    import math
+    from config import LEVERAGE_FACTORS
+    lev = float(LEVERAGE_FACTORS.get(ticker, 1.0) or 1.0)
+    high = max(float(entry_high or 0), float(entry_price or 0))
+    if high <= 0:
+        return None
+    candidate = max(
+        high * (1 - TRAILING_STOP_BASE_PCT * math.sqrt(lev)),
+        float(entry_price) * (1 - 0.05 * lev),
+    )
+    return round(candidate, 2) if candidate > 0 else None
+
+
+def reconcile_state_with_broker(*, apply: bool = False,
+                                repair_price: bool = False,
+                                reason: str = "") -> dict:
+    """Align persisted position state with broker position facts.
+
+    Fixes entry_qty after missed/partial fills, preserves the original lot size
+    once a TP level has fired, arms a software stop when a held position has
+    none, and removes stale execution metadata from flat tickers that have no
+    working order. Dry-run by default: `apply=True` writes one backup first.
+    """
+    positions = _broker_position_truth()
+    if positions is None:
+        return {"status": "unavailable", "reason": reason, "changes": []}
+    pending = _open_order_tickers()
+    state = _state_load()
+    changes: list[dict] = []
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    for ticker, pos in positions.items():
+        tstate = state.get(ticker)
+        if not isinstance(tstate, dict):
+            tstate = {}
+        diff: dict[str, dict] = {}
+        qty = int(round(pos["qty"]))
+        broker_cost = float(pos["avg_cost"] or 0)
+        tp_hit = tstate.get("tp_levels_hit") or []
+        if not tp_hit or "entry_qty" not in tstate:
+            before = tstate.get("entry_qty")
+            if before != qty:
+                tstate["entry_qty"] = qty
+                diff["entry_qty"] = {"before": before, "after": qty}
+        if broker_cost > 0:
+            before = tstate.get("entry_price")
+            if before is None or repair_price:
+                if before is None or abs(float(before or 0) - broker_cost) > 0.005:
+                    tstate["entry_price"] = round(broker_cost, 4)
+                    tstate["entry_basis_source"] = "broker_state_reconcile"
+                    diff["entry_price"] = {"before": before,
+                                           "after": tstate["entry_price"]}
+            before_high = tstate.get("entry_high")
+            high = max(float(before_high or 0), broker_cost)
+            if high > 0 and abs(high - float(before_high or 0)) > 0.005:
+                tstate["entry_high"] = round(high, 4)
+                diff["entry_high"] = {"before": before_high,
+                                      "after": tstate["entry_high"]}
+        stop = float(tstate.get("protective_stop_price") or 0)
+        mode = tstate.get("protective_stop_mode")
+        if stop <= 0 or mode not in ("software", "broker", "software_triggered"):
+            new_stop = _default_protective_stop(
+                ticker, float(tstate.get("entry_price") or broker_cost or 0),
+                float(tstate.get("entry_high") or 0))
+            nominal = float(pos.get("nominal_price") or 0)
+            if new_stop and nominal > 0:
+                new_stop = min(new_stop, round(nominal * 0.98, 2))
+            if new_stop and new_stop > 0:
+                tstate.update({
+                    "protective_stop_price": new_stop,
+                    "protective_stop_mode": "software",
+                    "protective_stop_order_id": None,
+                    "protective_stop_updated_utc": now_iso,
+                })
+                diff["protective_stop"] = {"before": stop or None, "after": new_stop,
+                                           "mode": "software"}
+        if diff:
+            changes.append({"ticker": ticker, "position_qty": qty, "fields": diff})
+            state[ticker] = tstate
+
+    if pending is not None:
+        for ticker, tstate in list(state.items()):
+            if ticker.startswith("__") or not isinstance(tstate, dict):
+                continue
+            if ticker in positions or ticker in pending:
+                continue
+            removed = [k for k in _STATE_FLAT_CLEAR_KEYS if k in tstate]
+            if not removed:
+                continue
+            for k in removed:
+                tstate.pop(k, None)
+            changes.append({"ticker": ticker, "position_qty": 0,
+                            "cleared": removed})
+            state[ticker] = tstate
+
+    rep = {"status": "dry_run" if not apply else "applied",
+           "reason": reason, "n_changes": len(changes),
+           "changes": changes, "backup": None}
+    if not changes:
+        rep["status"] = "no_changes"
+        return rep
+    if not apply:
+        return rep
+    try:
+        backup_dir = STATE_PATH.parent / "state_backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        backup = backup_dir / (
+            "trader_state."
+            + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + ".json")
+        backup.write_bytes(STATE_PATH.read_bytes())
+        rep["backup"] = str(backup)
+    except Exception as exc:
+        logger.error(f"[trader] state backup failed, refusing to write: {exc}")
+        rep["status"] = "backup_failed"
+        return rep
+    _state_save(state)
+    logger.warning(f"[trader] state reconciled from broker ({reason}): "
+                   f"{len(changes)} tickers, backup={rep['backup']}")
+    return rep
 
 
 def monitor_software_stops() -> list[str]:
@@ -2819,6 +3132,16 @@ def _refresh_nav_peak_unlocked() -> None:
         refresh_execution_ledger()
     except Exception as exc:
         logger.warning(f"[trader] execution reconciliation skipped: {exc}")
+    # Runs at every cycle start (before new orders), after startup, and from the
+    # post-close tick: missed fills and cash-floor sells otherwise drift state
+    # away from broker quantities until the next manual repair.
+    try:
+        rep = reconcile_state_with_broker(apply=True, reason="cycle")
+        if rep.get("n_changes"):
+            logger.warning(f"[trader] broker state repair: {rep['n_changes']} tickers "
+                           f"({rep.get('status')}) backup={rep.get('backup')}")
+    except Exception as exc:
+        logger.warning(f"[trader] broker state repair skipped: {exc}")
 
 
 # ---------- CLI ----------
@@ -2917,6 +3240,15 @@ def _cli_reset():
         print("state 不存在，无需清理")
 
 
+def _cli_reconcile_state():
+    apply = "--apply" in sys.argv[2:]
+    rep = reconcile_state_with_broker(apply=apply, repair_price=True,
+                                      reason="cli")
+    print(json.dumps(rep, ensure_ascii=False, indent=2))
+    if not apply:
+        print("\nDRY-RUN: 未写文件. 确认后加 --apply 应用 (会先备份).")
+
+
 def _cli_picks():
     uni = _universe_load()
     print(f"DRY_RUN={DRY_RUN}  caps: total<={MAX_TOTAL_POSITIONS}  satellite<={MAX_SATELLITE_POSITIONS}")
@@ -2938,12 +3270,15 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     try:
         {
-            "status":  _cli_status,
-            "flatten": _cli_flatten,
-            "reset":   _cli_reset,
-            "picks":   _cli_picks,
+            "status":          _cli_status,
+            "flatten":         _cli_flatten,
+            "reset":           _cli_reset,
+            "picks":           _cli_picks,
+            "reconcile-state": _cli_reconcile_state,
         }[cmd]()
     except KeyError:
-        print(f"用法: python paper_trader.py {{status|flatten|reset|picks}}"); sys.exit(2)
+        print(f"用法: python paper_trader.py "
+              f"{{status|flatten|reset|picks|reconcile-state [--apply]}}")
+        sys.exit(2)
     finally:
         _ctx_close()

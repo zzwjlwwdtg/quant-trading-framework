@@ -86,6 +86,33 @@ def _read_jsonl(path: Path) -> list[dict]:
     return out
 
 
+def _event_ts(ev: dict) -> str:
+    """Effective event time: broker time > submitted time > reconciliation record time.
+
+    Local fills recorded by refresh_execution_ledger carry the reconciliation time
+    in ``ts`` (all fills in one pass share almost the same timestamp), so ordering
+    by ``ts`` can invert a buy and its exit (2026-10-16 TQQQ).  ``effective_ts`` is
+    filled in ``_load_ledger`` and never mutates execution_ledger.
+    """
+    return str(ev.get("effective_ts") or ev.get("broker_time") or ev.get("ts") or "")
+
+
+def _tag_effective_ts(rows: list[dict], submitted_ts: dict[str, str] | None = None) -> list[dict]:
+    submitted_ts = submitted_ts or {}
+    out = []
+    for row in rows:
+        if row.get("event") not in ("filled", "partial"):
+            out.append(row)
+            continue
+        oid = str(row.get("order_id") or "")
+        effective = (row.get("broker_time")
+                     or submitted_ts.get(oid)
+                     or row.get("ts")
+                     or "")
+        out.append({**row, "effective_ts": str(effective)})
+    return out
+
+
 def _load_ledger(path: Optional[Path] = None,
                  include_broker_history: bool = True) -> list[dict]:
     """读取成交事实.
@@ -94,17 +121,25 @@ def _load_ledger(path: Optional[Path] = None,
     本地账本没有的订单 (2026-09-24). 同一 order_id 以本地账本为准.
     execution_ledger 本身不被修改 (hash 链不动).
     显式传 path → 只读该文件, 不合并.
+
+    filled/partial 事件带 effective_ts: broker_time > submitted ts > 记录 ts.
     """
     if path is not None:
-        return _read_jsonl(path)
+        rows = _read_jsonl(path)
+        submitted_ts = {str(r.get("order_id") or ""): str(r.get("ts") or "")
+                        for r in rows if r.get("event") == "submitted" and r.get("order_id")}
+        return _tag_effective_ts(rows, submitted_ts)
     rows = _read_jsonl(EXEC_LEDGER_PATH)
+    submitted_ts = {str(r.get("order_id") or ""): str(r.get("ts") or "")
+                    for r in rows if r.get("event") == "submitted" and r.get("order_id")}
+    rows = _tag_effective_ts(rows, submitted_ts)
     if not include_broker_history:
         return rows
     local_oids = {str(r.get("order_id")) for r in rows
                   if r.get("event") in ("filled", "partial")}
     for r in _read_jsonl(BROKER_HISTORY_PATH):
         if r.get("event") in ("filled", "partial") and str(r.get("order_id")) not in local_oids:
-            rows.append(r)
+            rows.append({**r, "effective_ts": _event_ts(r)})
     return rows
 
 
@@ -165,7 +200,7 @@ def fill_increments(events: list[dict],
         (ev for ev in events
          if float(ev.get("dealt_qty") or 0) > 0
          and float(ev.get("average_fill_price") or 0) > 0),
-        key=lambda e: e.get("ts", ""))
+        key=_event_ts)
     # pass 1: 每 (oid, 累计数量) 的最终均价 → 修订生效
     final_avg: dict[tuple[str, float], float] = {}
     first_avg: dict[tuple[str, float], float] = {}
@@ -198,7 +233,8 @@ def fill_increments(events: list[dict],
         origin = ev.get("origin") or (
             "unknown" if ev.get("source") == "broker_history" else "system")
         increments.append({
-            "ts": ev.get("ts", ""), "order_id": oid,
+            "ts": _event_ts(ev), "recorded_ts": ev.get("ts", ""),
+            "order_id": oid,
             "ticker": canonical_ticker(ev.get("ticker")),
             "side": (ev.get("side") or "").upper(),
             "qty": delta_qty, "price": price, "origin": origin,
@@ -247,7 +283,7 @@ def get_fills(
             continue
         if norm_ticker and canonical_ticker(ev.get("ticker")) != norm_ticker:
             continue
-        if since and ev.get("ts", "") < since:
+        if since and _event_ts(ev) < since:
             continue
         out.append(ev)
     return out
@@ -338,7 +374,7 @@ def get_cash_flow(since: Optional[str] = None) -> dict:
         if not oid:
             continue
         prev = final_by_oid.get(oid)
-        if prev is None or ev.get("ts", "") > prev.get("ts", ""):
+        if prev is None or _event_ts(ev) > _event_ts(prev):
             final_by_oid[oid] = ev
 
     gross_out = 0.0
@@ -442,7 +478,7 @@ def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
         if not oid:
             continue
         prev = final_by_oid.get(oid)
-        if prev is None or str(ev.get("ts", "")) > str(prev.get("ts", "")):
+        if prev is None or _event_ts(ev) > _event_ts(prev):
             final_by_oid[oid] = ev
     fees = load_order_fees()
     # EVO-20261013-2: 一次性拉 execution_ledger, 构造 oid → 三端价差 lookup,

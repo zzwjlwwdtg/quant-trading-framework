@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -35,6 +36,7 @@ from backtest_engine import (
     _classify_bb_zone,
     _classify_pct_zone,
 )
+from atomic_io import atomic_write_json
 from config import TICKERS, SIGNALS_DIR, get_asset_class
 
 CALIB_PATH = Path(SIGNALS_DIR) / "confidence_calibration.json"
@@ -335,6 +337,62 @@ def _print_report(calib: dict) -> None:
             print("  Bear 分位:", ", ".join(f"{k}={v}" for k, v in cd["bear_percentiles"].items()))
 
 
+def _side_problem(weights: dict, percentiles: dict) -> str | None:
+    """Return why one bull/bear side is unsafe to publish, else None."""
+    values = [float(v.get("weight") or 0) for v in (weights or {}).values()
+              if isinstance(v, dict)]
+    if not values:
+        return "no weights"
+    if max(values) <= 0:
+        return "all weights are zero"
+    try:
+        pcts = [float(v) for v in (percentiles or {}).values()]
+    except (TypeError, ValueError):
+        return "percentiles are not numeric"
+    if len(pcts) < 4 or not all(math.isfinite(p) for p in pcts):
+        return f"invalid percentiles {pcts}"
+    if len({round(p, 6) for p in pcts}) == 1:
+        return f"degenerate percentiles {pcts}"
+    if pcts[-1] <= 0:
+        return f"top percentile <= 0 {pcts}"
+    return None
+
+
+def validate_calibration(calib: dict) -> list[str]:
+    """Reject all-zero sides / collapsed percentile maps (P0 audit 2026-10-20).
+
+    A calibration window that contains only an uptrend can zero every bear
+    weight, which silently disables all technical sell rules. Publishing such a
+    file is worse than keeping the previous one, so main() refuses the write.
+    """
+    problems: list[str] = []
+    for side in ("bull", "bear"):
+        problem = _side_problem(calib.get(f"{side}_weights"),
+                                calib.get(f"{side}_percentiles"))
+        if problem:
+            problems.append(f"default {side}: {problem}")
+    for cls, data in (calib.get("per_class") or {}).items():
+        if not isinstance(data, dict):
+            continue
+        for side in ("bull", "bear"):
+            problem = _side_problem(data.get(f"{side}_weights"),
+                                    data.get(f"{side}_percentiles"))
+            if problem:
+                problems.append(f"{cls} {side}: {problem}")
+    return problems
+
+
+def _alert_rejected(problems: list[str]) -> None:
+    msg = ("校准写入被拒绝 (保留旧文件): " + "; ".join(problems)
+           + f" | {CALIB_PATH}")
+    print("\n" + msg)
+    try:
+        from notifications import send_alert
+        send_alert(msg, level="warning")
+    except Exception as exc:
+        print(f"警告推送失败: {exc}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--days", type=int, default=250)
@@ -345,8 +403,13 @@ def main() -> int:
     calib = calibrate(tickers, days=args.days)
     _print_report(calib)
 
+    problems = validate_calibration(calib)
+    if problems:
+        _alert_rejected(problems)
+        return 2
+
     Path(SIGNALS_DIR).mkdir(parents=True, exist_ok=True)
-    CALIB_PATH.write_text(json.dumps(calib, indent=2, ensure_ascii=False), encoding="utf-8")
+    atomic_write_json(CALIB_PATH, calib)
     print(f"\n校准结果已保存: {CALIB_PATH}")
     return 0
 
