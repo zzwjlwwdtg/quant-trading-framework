@@ -5442,6 +5442,12 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/bot/forecasts":
                 import research_forecasts
                 self._json(research_forecasts.read())
+            elif path == "/api/bot/stock":
+                import public_stock
+                try:
+                    self._json(public_stock.read(qs.get("ticker", [""])[0]))
+                except ValueError:
+                    self._json({"error":"invalid_symbol"}, status=400)
             elif path == "/api/nav":
                 self._json(api_nav(days=days))
             elif path == "/api/equity_curve":

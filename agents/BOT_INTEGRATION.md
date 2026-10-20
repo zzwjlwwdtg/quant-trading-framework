@@ -27,6 +27,7 @@
 - `http://127.0.0.1:8080/api/bot/outlook?region=CN|US`：固定版五维市场观察框架，宽基趋势/风格参与度/ETF量能/方向相对强度，再独立核对宏观与公开催化。只读免费日线缓存，非实时报价；LAGGED_BACKGROUND只回顾原日期、不报当日方向。最多2个条件候选，研报和AI判断仍分开；不输出后台状态或报错。详见PUBLIC_MARKET_FRAMEWORK.md。
 - 雷达research_notes为研报媒体转述，不是已读全文；只转述已绑定的forecast假设，给id、5个交易日相对SPY方向及成立/失效条件。没有冻结forecast就不编预测。
 - `http://127.0.0.1:8080/api/bot/forecasts`：只读预测前向检验，未到期/失败/走平/未决都保留。HIT只是价格代理方向，不证明因果，不能冒充历史策略收益。GET不计算、不下载、不调用AI。
+- `http://127.0.0.1:8080/api/bot/stock?ticker=600519.SS`：免费公开沪深/美股单股，可能延迟；后台最多2抓取，初次可能未就绪。分钟报价/累计股数与完成日线量能/MACD顶背离/固定观察条件分开注明日期，不冒充实时买点。无AI/账户/交易，详见PUBLIC_STOCK_LOOKUP.md。
 - `http://127.0.0.1:8080/api/bot/brief?slot=morning|close|evening|now`：A股原始汇报缓存，不是美股；群聊不得直接粘贴其中的分析正文。
 - `/api/positions`（实时持仓）、`/api/fills`（成交）、`/api/postmortem`（卖出复盘）、`/api/evolution`（进化提案）、`/api/health` 等其他接口，见 `/api/bot` 目录
 
