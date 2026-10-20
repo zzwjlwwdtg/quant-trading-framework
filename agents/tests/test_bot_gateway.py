@@ -89,6 +89,7 @@ class Gateway(unittest.TestCase):
         self.assertEqual(classes["/api/evolution_action"], "write_forbidden")
         self.assertEqual(classes["/api/evolution_token"], "write_forbidden")
         self.assertEqual(classes["/api/bot/events"], "read")
+        self.assertEqual(classes["/api/bot/stock"], "read")
 
     def test_tick_init_then_push_once(self):
         sent = []
