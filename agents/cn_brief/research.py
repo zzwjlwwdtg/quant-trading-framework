@@ -48,6 +48,7 @@ def project(stock: list[dict], industry: list[dict], macro: list[dict]) -> list[
                 continue
             seen.add(info)
             selected.append({"id": info, "source_ref": ref, "report_type": kind, "institution": org,
+                             "subject": _text(row.get("stockName") if kind == "STOCK" else row.get("industryName") if kind == "INDUSTRY" else "宏观研究", 80),
                              "published_date": day, "title": title,
                              "source": "东方财富研报中心（券商元数据）",
                              "url": url,
@@ -104,6 +105,8 @@ def read(*, root: Path = ROOT, now: datetime | None = None) -> dict:
                 continue
             # Rebuild all links/attribution; never forward cached markdown/AI/account fields.
             reports.append({"id": info, "source_ref": row.get("source_ref") or info, "report_type": row["report_type"], "institution": org,
+                            "subject": _text(row.get("subject"), 80),
+                            "code": str(row.get("code") or "") if re.fullmatch(r"\d{6}", str(row.get("code") or "")) else "",
                             "published_date": day.isoformat(), "title": title,
                             "source": "东方财富研报中心（券商元数据）",
                             "url": url,
