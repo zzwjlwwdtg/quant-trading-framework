@@ -219,6 +219,7 @@ ENDPOINTS = [
     ("/api/bot/events", R, "统一操作流。参数 since=ISO时间 kinds=逗号分隔(" + ",".join(KINDS) + ") limit=默认200；返回 next_since"),
     ("/api/bot/brief", R, "A股研报/经济数据汇报。参数 slot=morning|close|evening|now"),
     ("/api/bot/radar", R, "公开重大新闻与机会线索缓存；附原文证据/时间/链接。无持仓，无原始Codex报告；GET不调用AI。"),
+    ("/api/bot/research", R, "免费公开A股研报题摘与宏观日历；机构/日期/原链独立归因，未读正文。仅缓存，无AI分析/账户/交易。"),
     ("/api/bot/forecasts", R, "事前锁定的公开研报假设与到期前向检验；只读账本，不计算、不下载、不调用AI。"),
     # 看板原有 (只读)
     ("/api/health", R, "系统健康：OpenD、看板、各进程"),
