@@ -207,6 +207,9 @@ def summary(positions: dict | None = None, nav: dict | None = None, health: dict
 def brief(slot: str = "morning") -> dict:
     slot = slot if slot in ("morning", "close", "evening", "now") else "morning"
     d = _read_json(f"cn_brief/latest_{slot}.json")
+    if slot == "morning" and d and (d.get("overnight") or {}).get("change_scope") != "PREVIOUS_COMPLETED_SOURCE_SESSION_NOT_A_CLOSE":
+        return {"slot":slot,"title":"旧晨报仅保留历史档案","generated_at":d.get("generated_at"),
+                "status":"LEGACY_BACKGROUND_ONLY","markdown":"旧晨报使用了已停用的隔夜比较口径，不拿它判断今日开盘。未来1/3/5交易日：证据不足，操作：数据不足。","errors":[]}
     return d if d else {"slot": slot, "error": "尚未生成", "markdown": ""}
 
 
@@ -221,6 +224,7 @@ ENDPOINTS = [
     ("/api/bot/radar", R, "公开重大新闻与机会线索缓存；附原文证据/时间/链接。无持仓，无原始Codex报告；GET不调用AI。"),
     ("/api/bot/research", R, "免费公开A股研报题摘与宏观日历；机构/日期/原链独立归因，未读正文。仅缓存，无AI分析/账户/交易。"),
     ("/api/bot/outlook", R, "固定版本公共市场观察框架：region=CN|US，宽基/风格ETF、量能代理、板块相对强度；完成日线，不是实时报价。GET仅缓存、无AI/账户/交易。"),
+    ("/api/bot/decision", R, "A股冻结研究决策，symbol=600000.SH horizon=1|3|5；只读，不训练/生成/下单。无可信模型则证据不足，不以旧趋势/新闻代预测。"),
     ("/api/bot/stock", R, "公共单股查询：ticker=沪深代码或美股代码。受限后台免费抓价，无AI/账户/交易；含实际报价时间、累计成交股数及完成日线技术观察。"),
     ("/api/bot/forecasts", R, "事前锁定的公开研报假设与到期前向检验；只读账本，不计算、不下载、不调用AI。"),
     # 看板原有 (只读)

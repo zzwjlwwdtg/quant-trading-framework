@@ -217,10 +217,11 @@ class MorningConcise(unittest.TestCase):
         data, md, errs = self._run()
         text = "\n".join(md)
         self.assertIn("11:00 有中国重大数据", data["headline"])
-        self.assertIn("外围指向高开 0.2%", data["headline"])         # 0.24 × 1% = 0.24%
-        self.assertIn("对开盘后的日内走势没有预测力", text)
+        self.assertNotIn("外围指向高开", data["headline"])
+        self.assertIn("未来1/3/5交易日：证据不足", text)
+        self.assertNotIn("样本外方向命中", text)
         self.assertIn("期指交割日", data["headline"])
-        self.assertIn("好于预期当天沪深300ETF平均 +0.46%", text)
+        self.assertNotIn("好于预期当天沪深300ETF平均", text)
         self.assertIn("美10年期 4.10%（+3bp）", text)
         self.assertIn("评级调低", text)
         self.assertIn("乙(600002) 3家", text)
@@ -230,7 +231,7 @@ class MorningConcise(unittest.TestCase):
     def test_unproven_overnight_has_no_estimate(self):
         data, md, _ = self._run(on_v={"metrics": {"results": {}}})
         self.assertIsNone(data.get("implied_open"))
-        self.assertIn("未证明", "\n".join(md))
+        self.assertIn("未接入独立校准模型", "\n".join(md))
 
     def test_watchlist_filters_risk(self):
         data, md, _ = self._run(watch=["600002"])
@@ -253,4 +254,26 @@ class MorningConcise(unittest.TestCase):
         # 今天 10/16 开盘前: 上个 A 股收盘 10/15 → 外围从 10/14 收盘 (101) 到 10/15 收盘 (103)
         it = next(i for i in on["items"] if i["ticker"] == "^GSPC")
         self.assertAlmostEqual(it["change"], 103 / 101 - 1)
-        self.assertEqual(on["last_a_close"], "2026-10-15")
+        self.assertIsNone(on["last_a_close"])
+        self.assertEqual(it["base_as_of"], "2026-10-14")
+        self.assertEqual(on["change_scope"], "PREVIOUS_COMPLETED_SOURCE_SESSION_NOT_A_CLOSE")
+
+    def test_stale_domestic_anchor_cannot_reverse_last_us_yield_change(self):
+        import pandas as pd
+        O=self.O
+        a=pd.DataFrame({"Close":[1,1]},index=pd.to_datetime(["2026-10-16","2026-10-19"]))
+        tnx=pd.DataFrame({"Close":[5.098,5.136,5.117]},index=pd.to_datetime(["2026-10-16","2026-10-19","2026-10-20"]))
+        with patch.object(O,"_hist",side_effect=lambda tk,days=20:a if tk==O.A_PROXY else tnx if tk=="^TNX" else tnx.iloc[:0]):
+            on=O.overnight(datetime(2026,10,21).date())
+        item=next(x for x in on["items"] if x["ticker"]=="^TNX")
+        self.assertAlmostEqual(item["change"]*100,-1.9)
+        self.assertEqual(item["base_as_of"],"2026-10-19")
+        self.assertIsNone(O.implied_open(on["items"],self.on_v))
+
+    def test_cny_is_not_a_fallback_for_offshore_cnh(self):
+        import pandas as pd
+        O=self.O
+        empty=pd.DataFrame({"Close":[]},index=pd.DatetimeIndex([]))
+        with patch.object(O,"_hist",return_value=empty) as history:
+            O.overnight(datetime(2026,10,21).date())
+        self.assertNotIn("CNY=X",[call.args[0] for call in history.call_args_list])

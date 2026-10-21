@@ -5442,6 +5442,14 @@ class Handler(BaseHTTPRequestHandler):
                     self._json({"error": "invalid_region"}, status=400)
                 else:
                     self._json(market_outlook.read(region))
+            elif path == "/api/bot/decision":
+                from cn_decisions.store import read as read_cn_decision
+                try:
+                    if any(key not in ("symbol", "horizon") for key in qs) or any(len(value) != 1 for value in qs.values()):
+                        raise ValueError("ambiguous input")
+                    self._json(read_cn_decision(qs.get("symbol", [""])[0], int(qs.get("horizon", ["5"])[0])))
+                except ValueError:
+                    self._json({"error": "invalid_decision_input"}, status=400)
             elif path == "/api/bot/forecasts":
                 import research_forecasts
                 self._json(research_forecasts.read())

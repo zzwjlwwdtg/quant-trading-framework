@@ -128,15 +128,12 @@ def build(now: datetime) -> tuple[dict, list[str], list[str]]:
         lines = []
         for e in key:
             lines.append(B.fmt_event(e, with_result=False))
-            note = econ_note(econ_group(e), econ_v)
-            if note:
-                lines.append(f"  └ {note}")
         hi = [e for e in key if econ_group(e) == "cn_growth" or re.search(B.TOP_TIER, str(e.get("title")))]
         if hi:
             times = sorted({e["time_jst"].strftime("%H:%M") for e in hi})
             head.append(f"{'、'.join(times)} 有{('中国' if all(e['region'] == '中国' for e in hi) else '')}重大数据")
         elif not errs:
-            head.append("今天没有中美日重大数据（安静日）")
+            head.append("本次日历未筛到重点，不代表今天没有重大事件")
         md.append("**今日关键时刻（日本时间）**")
         md += lines or ([B._empty(errs, "_无_")])
     except Exception as ex:     # noqa: BLE001
@@ -150,32 +147,14 @@ def build(now: datetime) -> tuple[dict, list[str], list[str]]:
         data["overnight"] = on
         items = on["items"]
         if items:
-            md.append(f"\n**外围隔夜**（{on['last_a_close']} A股收盘以来）")
+            md.append("\n**外围已结束场次**（各自对比前一场次，不是A股收盘以来）")
             md.append(" | ".join(overseas.fmt_item(it) for it in items))
-            imp = overseas.implied_open(items, on_v)
-            data["implied_open"] = imp
-            if imp:
-                rng = (f"{imp['low'] * 100:+.2f}%" if abs(imp["high"] - imp["low"]) < 0.0005
-                       else f"{imp['low'] * 100:+.2f}% ~ {imp['high'] * 100:+.2f}%")
-                md.append(f"按历史关系，沪深300ETF 开盘约 **{rng}**（"
-                          + "；".join(f"{p['driver']} → {p['implied_gap'] * 100:+.2f}%" for p in imp["parts"])
-                          + f"；样本外方向命中 {imp['hit_range'][0] * 100:.0f}–{imp['hit_range'][1] * 100:.0f}%）")
-                md.append("_外围只影响开盘：回测显示对开盘后的日内走势没有预测力，高开/低开后延续还是回落也没有稳定规律_")
-                mid = (imp["low"] + imp["high"]) / 2
-                lo, hi = sorted((abs(imp["low"]) * 100, abs(imp["high"]) * 100))
-                size = f"{lo:.1f}%" if f"{lo:.1f}" == f"{hi:.1f}" else f"{lo:.1f}–{hi:.1f}%"
-                head.append(f"外围指向{'高开' if mid > 0 else '低开'} {size}"
-                            if (imp["low"] > 0) == (imp["high"] > 0) else "外围方向不一致")
-            elif on_v:
-                md.append("_回测未证明这些指标能预测A股开盘，仅供参考_")
-            else:
-                md.append("_外围对A股开盘的回测尚未完成，仅供参考_")
-            fade = overseas.fade_note(on_v)
-            if fade:
-                md.append(f"_{fade}_")
+            data["implied_open"] = None
+            data["decision_status"] = "NO_VALIDATED_CN_MODEL"
+            md.append("_未来1/3/5交易日：证据不足，操作：数据不足；旧隔夜回归未接入独立校准模型，不报开盘区间或命中率。_")
             spx = next((it for it in items if it["ticker"] == "^GSPC"), None)
-            if spx and not imp:
-                head.append(f"标普 {spx['change'] * 100:+.1f}%")
+            if spx:
+                head.append(f"上一已结束美股场次标普 {spx['change'] * 100:+.1f}%（非A股预测）")
         else:
             md += ["\n**外围隔夜**", "_获取失败_" if on["errors"] else "_无数据_"]
     except Exception as ex:     # noqa: BLE001
@@ -189,10 +168,10 @@ def build(now: datetime) -> tuple[dict, list[str], list[str]]:
         data["risk"] = rl
         md.append(f"\n**风险名单**（近 7 天{'，自选股' if watch else '，全市场前 5'}；只做提醒，不是卖出信号）")
         if rl["downgrades"]:
-            md.append("评级调低" + (f"（{rl['down_note']}）" if rl["down_note"] else "") + "：" +
+            md.append("评级调低（作者观点变化，非未来价格方向）" + "：" +
                       "；".join(f"{x['name']}({x['code']}) {x['org']} {x['from']}→{x['to']}" for x in rl["downgrades"]))
         if rl["crowded"]:
-            md.append("一周内 ≥3 家扎堆覆盖" + (f"（{rl['crowded_note']}）" if rl["crowded_note"] else "") + "：" +
+            md.append("一周内 ≥3 家覆盖（数量非预测）" + "：" +
                       "；".join(f"{x['name']}({x['code']}) {x['n_orgs']}家" for x in rl["crowded"]))
         if not rl["downgrades"] and not rl["crowded"]:
             md.append("_无_")
