@@ -1,10 +1,12 @@
-"""外围隔夜 (上个 A股收盘以来) — 与 _backtest_overnight_ashare.py 同一套对齐口径.
+"""Compare the two last completed source sessions, NOT a predicted A-share opening gap.
 
-隔夜变化 = Close(最近一个 < 今天 的外围交易日) / Close(最近一个 < 上个A股交易日 的外围交易日) − 1
+The former domestic-date anchor could mix two days and reverse yield changes.
+Old research constants remain for historical scripts, not the current forecast.
 """
 from __future__ import annotations
 
 import json
+import math
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -33,35 +35,30 @@ def _hist(tk: str, days: int = 20):
 def overnight(today_bjt: date | None = None) -> dict:
     import pandas as pd
     today_bjt = today_bjt or datetime.now(BJT).date()
-    out = {"items": [], "errors": [], "last_a_close": None}
-    try:
-        a = _hist(A_PROXY)
-        prev = a.index[a.index < pd.Timestamp(today_bjt)]
-        last_a = prev[-1]
-        out["last_a_close"] = str(last_a.date())
-    except Exception as e:      # noqa: BLE001
-        out["errors"].append(f"A股收盘日获取失败: {e}")
-        return out
+    out = {"items": [], "errors": [], "last_a_close": None,
+           "change_scope": "PREVIOUS_COMPLETED_SOURCE_SESSION_NOT_A_CLOSE"}
     for tk, name in DRIVERS.items():
         try:
             d, used = None, tk
-            for cand in [tk] + ALTERNATES.get(tk, []):
+            alternatives = ["USDCNH=X"] if tk == "CNH=X" else ALTERNATES.get(tk, [])
+            for cand in [tk] + alternatives:
                 d = _hist(cand)
-                if len(d) >= 5:
+                if len(d) >= 2:
                     used = cand
                     break
             c = d["Close"]
             now_s = c[c.index < pd.Timestamp(today_bjt)]
-            prev_s = c[c.index < last_a]
-            if now_s.empty or prev_s.empty:
+            if len(now_s) < 2 or now_s.index.has_duplicates or not now_s.index.is_monotonic_increasing:
+                out["errors"].append(f"{name}: completed session pair unavailable")
                 continue
-            c1, c0 = float(now_s.iloc[-1]), float(prev_s.iloc[-1])
-            if now_s.index[-1] <= prev_s.index[-1]:
-                chg = 0.0
-            else:
-                chg = (c1 - c0) if tk in LEVEL_DIFF else (c1 / c0 - 1)
-            label = name if used == tk else f"{name}({used})"
+            c1, c0 = float(now_s.iloc[-1]), float(now_s.iloc[-2])
+            if not all(math.isfinite(x) and x > 0 for x in (c0,c1)):
+                out["errors"].append(f"{name}: invalid completed prices")
+                continue
+            chg = (c1 - c0) if tk in LEVEL_DIFF else (c1 / c0 - 1)
+            label = name if used == tk else "中概互联网ETF代理(KWEB)" if used == "KWEB" else f"{name}({used})"
             out["items"].append({"ticker": tk, "name": label, "symbol": used, "level": round(c1, 4), "change": chg,
+                                 "base_as_of": str(now_s.index[-2].date()), "is_proxy": used != tk,
                                  "as_of": str(now_s.index[-1].date()), "kind": "diff" if tk in LEVEL_DIFF else "pct"})
         except Exception as e:      # noqa: BLE001
             out["errors"].append(f"{name}: {e}")
@@ -84,24 +81,8 @@ def load_verdict() -> dict:
 
 
 def implied_open(items: list[dict], verdict: dict | None = None, target: str = A_PROXY) -> dict | None:
-    """只用通过预注册检验 (gap: useful) 的指标, 各自按样本外 beta 推算开盘跳空, 给区间 (不挑单一指标, 不事后组合)."""
-    verdict = verdict if verdict is not None else load_verdict()
-    res = ((verdict.get("metrics") or {}).get("results") or {}).get(target) or {}
-    parts = []
-    for it in items:
-        r = res.get(it["ticker"])
-        if not r or (r.get("verdict") or {}).get("gap") != "useful":
-            continue
-        oos = (r.get("oos") or {}).get("gap") or {}
-        if "beta" not in oos:
-            continue
-        parts.append({"driver": it["name"], "implied_gap": oos["beta"] * it["change"], "r": oos.get("r"),
-                      "hit": oos.get("hit"), "n": oos.get("n")})
-    if not parts:
-        return None
-    vals = [p["implied_gap"] for p in parts]
-    return {"low": min(vals), "high": max(vals), "parts": parts,
-            "hit_range": [min(p["hit"] for p in parts), max(p["hit"] for p in parts)]}
+    """Retired: legacy coefficients do not validate the new observation basis or 1/3/5-day forecasts."""
+    return None
 
 
 def fade_note(verdict: dict | None = None, target: str = A_PROXY) -> str | None:
