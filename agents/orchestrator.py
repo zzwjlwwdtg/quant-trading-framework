@@ -53,6 +53,7 @@ ET = ZoneInfo("America/New_York")
 GOLD_TICKER = "US.GLD"
 SIGNALS_PATH = Path(__file__).parent / "signals"
 _PIT_MARKET_STORE = PointInTimeStore(SIGNALS_PATH / "point_in_time_market.jsonl")
+_EARNINGS_CAL_WARNED: set[str] = set()
 
 
 def _sync_auto_orders_after_ai_refresh(result: dict) -> None:
@@ -961,8 +962,49 @@ def run_cycle(window: str | None = None) -> None:
                 logger.error(t(f"earnings IM {stock} 失败: {ee}",
                                f"earnings IM {stock} 失敗: {ee}"))
                 continue
-            if em.get("error"):
+            # 日历可用时即使 IM 取不到也要注入：T-1/T-0 黑名单不能依赖 IM。
+            if not em.get("calendar_ok"):
+                logger.warning(t(
+                    f"earnings 日历不可用 {stock}: {em.get('error') or em.get('calendar_error')}",
+                    f"earnings カレンダー不可用 {stock}: {em.get('error') or em.get('calendar_error')}",
+                ))
                 continue
+            if em.get("days_to_earnings") is None:
+                continue
+            warn_key = (
+                f"{stock}:{em.get('calendar_source')}:{em.get('event_date_latest')}:"
+                f"{em.get('error')}:{em.get('calendar_error')}:{em.get('calendar_conflict')}"
+            )
+            if warn_key not in _EARNINGS_CAL_WARNED:
+                _EARNINGS_CAL_WARNED.add(warn_key)
+                if em.get("calendar_error") and em.get("calendar_source") == "yfinance":
+                    logger.warning(t(
+                        f"earnings 日历仅单源可用 {stock}: {em.get('calendar_error')}",
+                        f"earnings カレンダーが単一源のみ {stock}: {em.get('calendar_error')}",
+                    ))
+                if em.get("calendar_source") in ("static_fallback", "cache_stale"):
+                    logger.warning(t(
+                        f"earnings 日历降级 {stock}: source={em.get('calendar_source')} "
+                        f"error={em.get('calendar_error')} "
+                        f"dates={em.get('earnings_date')}~{em.get('event_date_latest')}",
+                        f"earnings カレンダー縮退 {stock}: source={em.get('calendar_source')} "
+                        f"error={em.get('calendar_error')} "
+                        f"dates={em.get('earnings_date')}~{em.get('event_date_latest')}",
+                    ))
+                if em.get("calendar_conflict"):
+                    logger.warning(t(
+                        f"earnings 日历来源不一致 {stock}: "
+                        f"{em.get('earnings_date')}~{em.get('event_date_latest')}；按整段窗口处理",
+                        f"earnings カレンダー來源不一致 {stock}: "
+                        f"{em.get('earnings_date')}~{em.get('event_date_latest')}；全ウィンドウで処理",
+                    ))
+                if em.get("error"):
+                    logger.warning(t(
+                        f"earnings IM 不可用 {stock}: {em.get('error')} "
+                        f"(T-{em.get('days_to_earnings')})；仅保留日历黑名单",
+                        f"earnings IM 不可用 {stock}: {em.get('error')} "
+                        f"(T-{em.get('days_to_earnings')})；カレンダー遮断のみ",
+                    ))
             em["leverage"] = LEVERAGE_FACTORS.get(f"US.{etf}", 1.0)
             im_map[etf] = em
             im_map[f"US.{etf}"] = em
@@ -972,10 +1014,14 @@ def run_cycle(window: str | None = None) -> None:
             for k, v in im_map.items():
                 if k.startswith("US."):
                     continue
-                im_pct = v.get("smoothed_implied_move_pct") or v.get("implied_move_pct") or 0
+                im_pct = v.get("smoothed_implied_move_pct") or v.get("implied_move_pct")
+                im_txt = (
+                    f"IM≈{im_pct:.1f}%"
+                    if im_pct else f"IM缺失({v.get('error') or 'n/a'})"
+                )
                 parts.append(
                     f"{k}→{v.get('stock')}(T-{v.get('days_to_earnings')}, "
-                    f"IM≈{im_pct:.1f}%×{v.get('leverage')})"
+                    f"{im_txt}×{v.get('leverage')})"
                 )
             logger.info(t(f"  关联财报 IM: {', '.join(parts)}",
                           f"  関連決算 IM: ({len(parts)} 件)"))

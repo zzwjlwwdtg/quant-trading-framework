@@ -4968,39 +4968,63 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                     f"{side}_wall_notional": int(notional),
                 }
 
-            # 财报上下文：从 option_walls._next_earnings_for 拿到 (股票, 财报日, 天数)
+            # 财报上下文：动态日历（yfinance 双源交叉核对），按事件窗口取天数
             earnings_meta = {}
             try:
-                from option_walls import _TICKER_EARNINGS, _ETF_EARNINGS_LINKS, get_earnings_implied_move
-                from datetime import date as _date, datetime as _dt
+                from option_walls import (
+                    _TICKER_EARNINGS_FALLBACK,
+                    _ETF_EARNINGS_LINKS,
+                    get_earnings_events,
+                    get_earnings_implied_move,
+                )
+                from datetime import date as _date, timedelta as _td
                 today = _date.today()
+                tk_key = tk.upper().replace("US.", "")
                 # 关联财报：先看是不是单股（直接查），再看是不是 ETF（走 links）
-                candidate_stocks = [tk] if tk in _TICKER_EARNINGS else list(_ETF_EARNINGS_LINKS.get(tk, []))
+                candidate_stocks = (
+                    [tk_key] if tk_key in _TICKER_EARNINGS_FALLBACK
+                    else list(_ETF_EARNINGS_LINKS.get(tk_key, []))
+                )
                 best = None
                 for e_stock in candidate_stocks:
-                    for d_str in _TICKER_EARNINGS.get(e_stock, []):
+                    cal = get_earnings_events(e_stock)
+                    for ev in cal.get("events") or []:
                         try:
-                            d_obj = _dt.strptime(d_str, "%Y-%m-%d").date()
+                            start = _date.fromisoformat(ev["date"])
+                            latest = _date.fromisoformat(ev["date_latest"])
                         except Exception:
                             continue
-                        days = (d_obj - today).days
-                        if 0 <= days <= 60:  # 60 天窗口（比 option_walls 的 30 天宽）
+                        if latest < today:
+                            continue
+                        days = max(0, (start - today).days) if start > today else 0
+                        if days <= 60:  # 60 天窗口（比 option_walls 的 30 天宽）
                             if best is None or days < best[2]:
-                                best = (e_stock, d_str, days)
+                                best = (e_stock, ev, days, cal)
                 if best:
-                    e_stock, e_date, e_days = best
+                    e_stock, ev, e_days, cal = best
+                    e_date = ev["date"]
+                    e_latest = ev["date_latest"]
+                    required_expiry = (
+                        _date.fromisoformat(e_latest) + _td(days=1)
+                    ).isoformat()
                     earnings_meta = {
                         "earnings_stock":     e_stock,
                         "earnings_date":      e_date,
+                        "earnings_date_latest": e_latest,
                         "days_to_earnings":   e_days,
-                        "expiry_covers_earnings": exp >= e_date,
+                        "earnings_calendar_source": cal.get("source"),
+                        "earnings_calendar_conflict": bool(ev.get("conflict")),
+                        # AMC 财报同日到期不覆盖反应，必须至少晚一天
+                        "expiry_covers_earnings": exp >= required_expiry,
                     }
                     # 隐含波动幅度（ATM straddle 反推），只在 ≤ 14 天且是单股时算
-                    if e_days <= 14 and tk in ("MU", "NVDA"):
+                    if e_days <= 14 and tk_key in ("MU", "NVDA"):
                         try:
-                            im = get_earnings_implied_move(tk, earnings_date=e_date)
+                            im = get_earnings_implied_move(tk_key, earnings_date=e_date)
                             if im and im.get("implied_move_pct"):
                                 earnings_meta["implied_move_pct"] = round(im["implied_move_pct"], 2)
+                            if im and im.get("error"):
+                                earnings_meta["implied_move_error"] = im["error"]
                         except Exception:
                             pass
             except Exception:

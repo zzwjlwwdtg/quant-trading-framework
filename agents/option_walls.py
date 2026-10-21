@@ -15,14 +15,22 @@ OptionWalls — 期权墙分析（市场对哪些价位有心理预期）。
 from __future__ import annotations
 
 import json
+import logging
+import os
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from config import SIGNALS_DIR, TICKERS as _CFG_TICKERS
 
 
+logger = logging.getLogger(__name__)
+
 CACHE_TTL_SEC = 3600
+EARNINGS_CALENDAR_TTL_SEC = 12 * 3600
+EARNINGS_CALENDAR_STALE_MAX_SEC = 7 * 24 * 3600
+EARNINGS_IM_EXPIRY_WARN_DAYS = 7
 # 从 config.TICKERS 派生 (去 "US." 前缀), + GLD (hedge) + SPY/QQQ (market-wide gamma)
 # 若 config.TICKERS 变动, option_walls 自动跟进; SPY/QQQ 固定作 market benchmark
 DEFAULT_TICKERS = [t.replace("US.", "") for t in _CFG_TICKERS] + ["GLD", "SPY", "QQQ"]
@@ -41,14 +49,16 @@ UNDERLYING_WALL_PROXIES = {
     "MULL": [{"ticker": "MU", "leverage": 2.0, "label": "MU underlying"}],  # 2x MU
 }
 
-# 关注的单股财报日历（影响相关 ETF/杠杆 ETF），按 ticker 列出
-# 财报日是 ticker-specific 的，不放进 EQUITY_CALENDAR（不影响其它 ETF 决策）
-_TICKER_EARNINGS = {
-    "MU": [   # Micron 财季（Q1=12月底/Q2=3月底/Q3=6月底/Q4=9月底，财报次月公布）
-        "2026-03-19", "2026-06-25", "2026-09-24", "2026-12-17",
+# 静态兜底表：仅在 yfinance 两个来源都不可用时使用。
+# 2026-10-21 交叉核对发现 yfinance 的 earnings_dates 与 calendar 端点会相差一天，
+# 因此兜底保留日期窗口 (最早, 最晚, 时段)，guard 把整个窗口当作财报事件。
+_TICKER_EARNINGS_FALLBACK = {
+    "MU": [
+        ("2026-12-23", "2026-12-24", "AMC"),
     ],
     "NVDA": [
-        "2026-05-20", "2026-08-26", "2026-11-18", "2027-02-25",
+        ("2026-11-17", "2026-11-18", "AMC"),
+        ("2027-02-25", "2027-02-25", "AMC"),
     ],
 }
 # 哪些 ETF 受这些单股财报影响（用于 banner 提示）
@@ -59,23 +69,348 @@ _ETF_EARNINGS_LINKS = {
     "TQQQ": ["NVDA"], # TQQQ 也含 NVDA
 }
 
+_CALENDAR_MEM: dict[str, dict] = {}
 
-def _next_earnings_for(ticker: str) -> tuple[str, str, int] | None:
+
+def _calendar_cache_path() -> Path:
+    return Path(SIGNALS_DIR) / "earnings_calendar_cache.json"
+
+
+def _as_date(value) -> date | None:
+    if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone(ZoneInfo("America/New_York"))
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if len(text) >= 10 and text[4] == "-" and text[7] == "-":
+            try:
+                return date.fromisoformat(text[:10])
+            except ValueError:
+                return None
+    return None
+
+
+def _session_from_value(value) -> str:
+    if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone(ZoneInfo("America/New_York"))
+        if value.hour < 12:
+            return "BMO"
+        if value.hour >= 16:
+            return "AMC"
+    return "unknown"
+
+
+def _calendar_payload(stock: str, events: list[dict], *, source: str,
+                      stale: bool, fetched_at: str | None,
+                      error: str | None, providers: dict | None) -> dict:
+    normalized = []
+    for ev in events or []:
+        start = _as_date(ev.get("date"))
+        latest = _as_date(ev.get("date_latest")) or start
+        if not start or not latest:
+            continue
+        normalized.append({
+            "date": start.isoformat(),
+            "date_latest": latest.isoformat(),
+            "session": ev.get("session") or "unknown",
+            "sources": list(ev.get("sources") or []),
+            "conflict": bool(ev.get("conflict")) or start != latest,
+        })
+    return {
+        "stock": stock,
+        "events": normalized,
+        "source": source,
+        "stale": stale,
+        "fetched_at": fetched_at,
+        "error": error,
+        "providers": providers or {},
+        "calendar_ok": bool(normalized),
+    }
+
+
+def _fallback_events(stock: str) -> list[dict]:
+    return [
+        {
+            "date": start,
+            "date_latest": latest,
+            "session": session,
+            "sources": ["static_fallback"],
+            "conflict": start != latest,
+        }
+        for start, latest, session in _TICKER_EARNINGS_FALLBACK.get(stock, [])
+    ]
+
+
+def _cluster_events(provider_rows: list[dict]) -> list[dict]:
+    """Merge provider dates that differ by at most one day into one event window."""
+    dated = []
+    for row in provider_rows:
+        d = _as_date(row.get("date"))
+        if d:
+            dated.append((d, row.get("source") or "unknown",
+                          row.get("session") or "unknown"))
+    dated.sort(key=lambda item: item[0])
+    events: list[dict] = []
+    for d, source, session in dated:
+        if events and (d - events[-1]["_last"]).days <= 1:
+            ev = events[-1]
+            ev["_last"] = d
+            ev["date_latest"] = d.isoformat()
+            ev["sources"].add(source)
+            if ev["session"] == "unknown" and session != "unknown":
+                ev["session"] = session
+        else:
+            events.append({
+                "date": d.isoformat(),
+                "date_latest": d.isoformat(),
+                "_last": d,
+                "session": session,
+                "sources": {source},
+            })
+    for ev in events:
+        ev.pop("_last", None)
+        ev["sources"] = sorted(ev["sources"])
+        ev["conflict"] = ev["date"] != ev["date_latest"]
+    return events
+
+
+def _fetch_earnings_remote(stock: str) -> dict:
+    """Fetch raw dates from both yfinance endpoints (tests patch this)."""
+    import yfinance as yf
+
+    ticker = yf.Ticker(stock)
+    providers: dict[str, list[dict]] = {"earnings_dates": [], "calendar": []}
+    errors: list[str] = []
+
+    try:
+        frame = ticker.get_earnings_dates(limit=12)
+        if frame is not None and not frame.empty:
+            for idx in frame.index:
+                d = _as_date(idx)
+                if d:
+                    providers["earnings_dates"].append({
+                        "date": d.isoformat(),
+                        "session": _session_from_value(idx),
+                    })
+    except Exception as exc:
+        errors.append(f"earnings_dates: {exc}")
+
+    try:
+        cal = ticker.calendar
+        raw = cal.get("Earnings Date") if hasattr(cal, "get") else None
+        if raw:
+            if not isinstance(raw, (list, tuple)):
+                raw = [raw]
+            for item in raw:
+                d = _as_date(item)
+                if d:
+                    providers["calendar"].append({
+                        "date": d.isoformat(),
+                        "session": _session_from_value(item),
+                    })
+    except Exception as exc:
+        errors.append(f"calendar: {exc}")
+
+    if not providers["earnings_dates"] and not providers["calendar"]:
+        raise RuntimeError("; ".join(errors) or "no earnings dates")
+    return {"providers": providers, "errors": errors}
+
+
+def _load_calendar_cache() -> dict:
+    try:
+        data = json.loads(_calendar_cache_path().read_text(encoding="utf-8"))
+        if isinstance(data, dict) and isinstance(data.get("stocks"), dict):
+            return data
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {"version": 1, "stocks": {}}
+
+
+def _save_calendar_cache(data: dict) -> None:
+    path = _calendar_cache_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        tmp.replace(path)
+    except OSError:
+        pass
+
+
+def get_earnings_events(stock: str, *, force: bool = False,
+                        today: date | None = None) -> dict:
+    """Return a normalized, cached earnings calendar for one stock.
+
+    Primary source is yfinance. ``get_earnings_dates`` and ``calendar`` are
+    cross-checked; dates within one day are merged into an event window because
+    the two endpoints can disagree by a day. If both fail, use the last good
+    cache (up to 7 days), then the static fallback.
+    """
+    stock = stock.upper().replace("US.", "")
+    today = today or datetime.now(ZoneInfo("America/New_York")).date()
+    if stock not in _TICKER_EARNINGS_FALLBACK:
+        return _calendar_payload(stock, [], source="not_tracked", stale=False,
+                                 fetched_at=None, error=None, providers=None)
+
+    now = time.time()
+    memo = _CALENDAR_MEM.get(stock)
+    if not force and memo and now - memo["_ts"] < EARNINGS_CALENDAR_TTL_SEC:
+        return memo["payload"]
+
+    cache = _load_calendar_cache()
+    cached = (cache.get("stocks") or {}).get(stock)
+
+    if not force and cached:
+        age = now - float(cached.get("fetched_at") or 0)
+        if age < EARNINGS_CALENDAR_TTL_SEC:
+            payload = _calendar_payload(
+                stock, cached.get("events") or [], source="cache", stale=False,
+                fetched_at=cached.get("fetched_at_iso"), error=None,
+                providers=cached.get("providers"),
+            )
+            _CALENDAR_MEM[stock] = {"_ts": now, "payload": payload}
+            return payload
+
+    try:
+        raw = _fetch_earnings_remote(stock)
+        provider_rows = []
+        for name, rows in raw["providers"].items():
+            for row in rows:
+                provider_rows.append({**row, "source": name})
+        events = _cluster_events(provider_rows)
+        if not events:
+            raise RuntimeError("providers returned no parseable dates")
+        # 只缓存最近一周内及未来的事件，避免日历文件无限增长。
+        events = [
+            ev for ev in events
+            if (_as_date(ev.get("date_latest")) or date.min)
+            >= today - timedelta(days=7)
+        ]
+        fetched_at = datetime.now(ZoneInfo("America/New_York")).isoformat()
+        entry = {
+            "fetched_at": now,
+            "fetched_at_iso": fetched_at,
+            "events": events,
+            "providers": {name: len(rows) for name, rows in raw["providers"].items()},
+            "errors": raw.get("errors") or [],
+        }
+        cache.setdefault("stocks", {})[stock] = entry
+        _save_calendar_cache(cache)
+        payload = _calendar_payload(
+            stock, events, source="yfinance", stale=False,
+            fetched_at=fetched_at,
+            error="; ".join(raw.get("errors") or []) or None,
+            providers=entry["providers"],
+        )
+    except Exception as exc:
+        error = str(exc)
+        if cached:
+            age = now - float(cached.get("fetched_at") or 0)
+            if age < EARNINGS_CALENDAR_STALE_MAX_SEC:
+                payload = _calendar_payload(
+                    stock, cached.get("events") or [], source="cache_stale",
+                    stale=True, fetched_at=cached.get("fetched_at_iso"),
+                    error=error, providers=cached.get("providers"),
+                )
+                logger.warning(
+                    "[earnings-calendar] %s remote failed (%s); using %.1fh cache",
+                    stock, error, age / 3600,
+                )
+                _CALENDAR_MEM[stock] = {"_ts": now, "payload": payload}
+                return payload
+        payload = _calendar_payload(
+            stock, _fallback_events(stock), source="static_fallback",
+            stale=True, fetched_at=None, error=error, providers=None,
+        )
+        logger.warning(
+            "[earnings-calendar] %s remote failed (%s); using static fallback",
+            stock, error,
+        )
+
+    payload["events"] = [
+        ev for ev in payload["events"]
+        if _as_date(ev.get("date_latest"))
+        and (_as_date(ev["date_latest"]) - today).days >= -7
+    ]
+    payload["calendar_ok"] = bool(payload["events"])
+    _CALENDAR_MEM[stock] = {"_ts": now, "payload": payload}
+    return payload
+
+
+def _match_event(events: list[dict], target: str) -> dict | None:
+    target_date = _as_date(target)
+    if target_date is None:
+        return None
+    for ev in events or []:
+        start = _as_date(ev.get("date"))
+        latest = _as_date(ev.get("date_latest")) or start
+        if start and latest and start <= target_date <= latest:
+            return ev
+    return None
+
+
+def _days_to_event(event: dict, today: date) -> int:
+    start = _as_date(event.get("date"))
+    latest = _as_date(event.get("date_latest")) or start
+    if not start or not latest:
+        return 99
+    if today < start:
+        return (start - today).days
+    if today <= latest:
+        return 0
+    return (latest - today).days
+
+
+def _upcoming_event(stock: str, *, within_days: int = 30,
+                    today: date | None = None,
+                    force: bool = False) -> tuple[dict | None, int | None, dict]:
+    today = today or datetime.now(ZoneInfo("America/New_York")).date()
+    calendar = get_earnings_events(stock, force=force, today=today)
+    best = None
+    for event in calendar.get("events") or []:
+        latest = _as_date(event.get("date_latest"))
+        if not latest or latest < today:
+            continue
+        days = _days_to_event(event, today)
+        if days <= within_days and (best is None or days < best[1]):
+            best = (event, days)
+    if best is None:
+        return None, None, calendar
+    return best[0], best[1], calendar
+
+
+def _next_earnings_for(ticker: str, *,
+                       today: date | None = None) -> tuple[str, str, int] | None:
     """返回 (related_stock, earnings_date, days_to) 或 None"""
-    from datetime import date as _date
-    today = _date.today()
     best = None
     for stock in _ETF_EARNINGS_LINKS.get(ticker, []):
-        for d_str in _TICKER_EARNINGS.get(stock, []):
-            try:
-                d = datetime.strptime(d_str, "%Y-%m-%d").date()
-            except ValueError:
-                continue
-            days = (d - today).days
-            if 0 <= days <= 30:  # 30 天内
-                if best is None or days < best[2]:
-                    best = (stock, d_str, days)
+        event, days, _calendar = _upcoming_event(stock, today=today)
+        if event is None:
+            continue
+        if best is None or days < best[2]:
+            best = (stock, event["date"], days)
     return best
+
+
+def _select_earnings_expiry(all_expiries: list[str],
+                            event_date_latest: str) -> tuple[str | None, int | None]:
+    latest = _as_date(event_date_latest)
+    if not latest:
+        return None, None
+    required = latest + timedelta(days=1)
+    candidates = []
+    for exp in all_expiries or []:
+        exp_date = _as_date(exp)
+        if exp_date and exp_date >= required:
+            candidates.append((exp_date, exp))
+    if not candidates:
+        return None, None
+    exp_date, exp = min(candidates)
+    return exp, (exp_date - latest).days
 
 # 过滤条件
 ATM_RANGE_PCT = 0.20   # ATM ±20% 内的 strike 才算
@@ -369,12 +704,14 @@ def get_earnings_implied_move(stock: str, earnings_date: str | None = None,
 
     Args:
         stock: 个股 ticker (例: "MU")
-        earnings_date: 财报日 YYYY-MM-DD；不传则用 _TICKER_EARNINGS 里最近一个
+        earnings_date: 财报日 YYYY-MM-DD；不传则用动态日历里最近一个
         force: 跳过缓存
     Returns:
         {
-          stock, earnings_date, days_to_earnings,
-          expiry,               # 实际用的期权到期日（财报日 ≤ expiry）
+          stock, earnings_date, event_date_latest, days_to_earnings,
+          calendar_source, calendar_ok, calendar_conflict,
+          expiry,               # 实际用的期权到期日（严格晚于财报窗口最后一天）
+          expiry_days_after_event,
           spot, atm_strike,
           atm_call_mid, atm_put_mid,
           straddle_price,       # ATM call + ATM put
@@ -384,44 +721,71 @@ def get_earnings_implied_move(stock: str, earnings_date: str | None = None,
           smoothed,             # 是否用 ATM±1 strike 平均（更稳）
         }
     """
-    from datetime import date as _date, timedelta as _td
+    stock = stock.upper().replace("US.", "")
+    today = datetime.now(ZoneInfo("America/New_York")).date()
+    calendar: dict = {
+        "stock": stock, "events": [], "source": "not_tracked",
+        "stale": False, "error": None, "calendar_ok": False,
+    }
 
-    # 财报日：未传则查表取最近一个（30 天内）
     if earnings_date is None:
-        today = _date.today()
-        best = None
-        for d_str in _TICKER_EARNINGS.get(stock, []):
-            try:
-                d = datetime.strptime(d_str, "%Y-%m-%d").date()
-            except ValueError:
-                continue
-            days = (d - today).days
-            if 0 <= days <= 30 and (best is None or days < best[1]):
-                best = (d_str, days)
-        if best is None:
-            return {"stock": stock, "error": "no_upcoming_earnings"}
-        earnings_date, days_to = best
+        event, days_to, calendar = _upcoming_event(stock, today=today)
+        if event is None:
+            return {
+                "stock": stock,
+                "error": "no_upcoming_earnings",
+                "calendar_source": calendar.get("source"),
+                "calendar_ok": calendar.get("calendar_ok", False),
+                "calendar_error": calendar.get("error"),
+            }
+        earnings_date = event["date"]
     else:
-        try:
-            e_date = datetime.strptime(earnings_date, "%Y-%m-%d").date()
-        except ValueError:
+        target_date = _as_date(earnings_date)
+        if target_date is None:
             return {"stock": stock, "error": "bad_earnings_date_format"}
-        days_to = (e_date - _date.today()).days
+        earnings_date = target_date.isoformat()
+        calendar = get_earnings_events(stock, today=today)
+        event = _match_event(calendar.get("events") or [], earnings_date)
+        if event is None:
+            event = {
+                "date": earnings_date,
+                "date_latest": earnings_date,
+                "session": "unknown",
+                "sources": ["caller"],
+                "conflict": False,
+            }
+        days_to = _days_to_event(event, today)
 
-    # 缓存（1 小时 TTL，财报临近时手动 force=True 刷）
-    cache = Path(SIGNALS_DIR) / f"earnings_im_{stock}_{datetime.now().strftime('%Y%m%d')}.json"
+    event_date_latest = event.get("date_latest") or event["date"]
+
+    # 缓存（1 小时 TTL，财报临近时手动 force=True 刷）。key 必须含事件窗口，
+    # 否则日历修正后仍可能读到旧日期的 IM。
+    event_key = f"{event['date']}_{event_date_latest}".replace("-", "")
+    cache = Path(SIGNALS_DIR) / (
+        f"earnings_im_{stock}_{event_key}_{datetime.now().strftime('%Y%m%d')}.json"
+    )
     if not force and cache.exists():
         age = time.time() - cache.stat().st_mtime
         if age < CACHE_TTL_SEC:
             try:
-                return json.loads(cache.read_text(encoding="utf-8"))
+                cached = json.loads(cache.read_text(encoding="utf-8"))
+                if (cached.get("earnings_date") == event["date"]
+                        and cached.get("event_date_latest") == event_date_latest):
+                    return cached
             except (json.JSONDecodeError, OSError):
                 pass
 
     result: dict = {
         "stock": stock,
-        "earnings_date": earnings_date,
+        "earnings_date": event["date"],
+        "event_date_latest": event_date_latest,
         "days_to_earnings": days_to,
+        "session": event.get("session") or "unknown",
+        "calendar_source": calendar.get("source"),
+        "calendar_ok": calendar.get("calendar_ok", False),
+        "calendar_conflict": bool(event.get("conflict")),
+        "event_sources": list(event.get("sources") or []),
+        "calendar_error": calendar.get("error"),
         "ts": datetime.now().isoformat(),
     }
     try:
@@ -439,28 +803,34 @@ def get_earnings_implied_move(stock: str, earnings_date: str | None = None,
             return result
         result["spot"] = round(spot, 2)
 
-        # 找财报日 >= 第一个期权到期日
         all_expiries = t.options or []
         if not all_expiries:
             result["error"] = "no_option_chain"
             _save_cache(cache, result)
             return result
 
-        e_d = datetime.strptime(earnings_date, "%Y-%m-%d").date()
-        chosen_exp = None
-        for exp in all_expiries:
-            try:
-                ed = datetime.strptime(exp, "%Y-%m-%d").date()
-            except ValueError:
-                continue
-            if ed >= e_d:
-                chosen_exp = exp
-                break
+        # 严格校验：期权到期必须晚于财报窗口最后一天。同日到期不覆盖 AMC
+        # 财报反应，正是 2026-09 MU 缓存失效的原因。
+        required_expiry_after = (
+            date.fromisoformat(event_date_latest) + timedelta(days=1)
+        ).isoformat()
+        result["required_expiry_after"] = required_expiry_after
+        chosen_exp, expiry_days_after = _select_earnings_expiry(
+            all_expiries, event_date_latest,
+        )
         if chosen_exp is None:
             result["error"] = "no_expiry_after_earnings"
+            result["available_expiries"] = list(all_expiries)[-5:]
             _save_cache(cache, result)
             return result
         result["expiry"] = chosen_exp
+        result["expiry_days_after_event"] = expiry_days_after
+        result["expiry_quality"] = (
+            "event_week" if expiry_days_after <= EARNINGS_IM_EXPIRY_WARN_DAYS
+            else "distant"
+        )
+        if expiry_days_after > EARNINGS_IM_EXPIRY_WARN_DAYS:
+            result["warning"] = "expiry_more_than_7d_after_event"
 
         ch = t.option_chain(chosen_exp)
         calls, puts = ch.calls.copy(), ch.puts.copy()
@@ -737,8 +1107,20 @@ def format_walls_report(tickers: list[str] | None = None) -> list[str]:
             er = _next_earnings_for(tk)
             if er:
                 stock, ed, days = er
+                suffix = ""
+                try:
+                    cal = get_earnings_events(stock)
+                    ev = _match_event(cal.get("events") or [], ed)
+                    if ev and ev.get("conflict"):
+                        suffix += f"~{ev['date_latest']}"
+                    if cal.get("source") in ("static_fallback", "cache_stale"):
+                        suffix += " [fallback]"
+                except Exception:
+                    pass
                 tag = "★" if days <= 7 else "·"
-                earnings_alerts.append(f"{tag} {tk}→{stock} 财报 {ed} ({days}d)")
+                earnings_alerts.append(
+                    f"{tag} {tk}→{stock} 财报 {ed}{suffix} ({days}d)"
+                )
         if earnings_alerts:
             lines.append(f"  ⚠ 关联财报: {' | '.join(earnings_alerts)}")
         lines.append("  " + "-" * (W - 4))

@@ -859,6 +859,7 @@ def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
 
     规则（用 leveraged_im = im * leverage）：
       · days_to_earnings ≤ 1 且 BUY/WATCH_BUY → 强制 HOLD（财报当日不抢仓）
+        该条只依赖日历，不依赖 IM；IM 缺失/到期日不覆盖时仍然生效
       · leveraged_im > 20%  → 强制 HOLD（极端单日波动，杠杆放大）
       · leveraged_im 12-20% → conf -3，<6 降 HOLD
       · leveraged_im 6-12%  → conf -2
@@ -868,32 +869,44 @@ def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
         return result
     em_map = events.get("earnings_implied_move") or {}
     em = em_map.get(ticker) or em_map.get(ticker.replace("US.", ""))
-    if not em or em.get("error"):
+    if not em:
         return result
     action = result.get("action")
     if action not in BULLISH_SIGNAL_ACTIONS:
         return result
 
-    im = em.get("smoothed_implied_move_pct") or em.get("implied_move_pct")
-    if not im or im <= 0:
-        return result
     lev = float(em.get("leverage") or 1.0)
-    leveraged_im = im * lev
-    days = em.get("days_to_earnings", 99)
+    days = em.get("days_to_earnings")
+    if days is None:
+        return result
+    try:
+        days = int(days)
+    except (TypeError, ValueError):
+        return result
     stock = em.get("stock", "?")
     conf = result.get("confidence") or 0
 
-    # T-1 / T-0 强制屏蔽
-    if days <= 1:
+    # T-1 / T-0 强制屏蔽：日历规则优先，IM 缺失不能绕过。
+    if 0 <= days <= 1:
+        im = em.get("smoothed_implied_move_pct") or em.get("implied_move_pct")
+        if im and im > 0:
+            im_txt = f"跨日 IM={im * lev:.1f}%"
+        else:
+            im_txt = f"IM不可用({em.get('error') or 'missing'})"
         return {
             **result,
             "action":       "HOLD",
             "confidence":   conf,
-            "reason":       f"earnings_blackout ({stock} 财报 T-{days}, 跨日 IM={leveraged_im:.1f}%)",
+            "reason":       f"earnings_blackout ({stock} 财报 T-{days}, {im_txt})",
             "stop_ref":     None,
             "demoted_from": action,
             "earnings_guard": True,
         }
+
+    im = em.get("smoothed_implied_move_pct") or em.get("implied_move_pct")
+    if not im or im <= 0:
+        return result
+    leveraged_im = im * lev
 
     # 模拟仓积极模式：财报 T-1/T-0 仍硬禁；更远期的高 IV 改为带止损小 probe，
     # 用真实模拟成交积累样本，而不是提前数周完全冻结核心仓。
