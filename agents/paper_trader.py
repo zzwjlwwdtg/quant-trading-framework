@@ -2195,6 +2195,18 @@ _STATE_FLAT_CLEAR_KEYS = (
 )
 
 
+def _is_unknown_broker_code(code: str, stock_name: str = "") -> bool:
+    """Broker placeholder for a delisted/removed security (e.g. QRVO -> US.0000)."""
+    return (str(code or "").upper().endswith(".0000")
+            or str(stock_name or "").strip() == "未知股票")
+
+
+def _is_quarantined(tstate: dict | None) -> bool:
+    return bool(isinstance(tstate, dict)
+                and (tstate.get("quarantined")
+                     or tstate.get("pending_corporate_action")))
+
+
 def _broker_position_truth() -> dict[str, dict] | None:
     """{code: broker facts}; None when the account cannot be read."""
     try:
@@ -2234,6 +2246,7 @@ def _broker_position_truth() -> dict[str, dict] | None:
             "avg_cost": _num("average_cost") or _num("cost_price"),
             "cost_price": _num("cost_price"),
             "nominal_price": _num("nominal_price"),
+            "stock_name": str(row.get("stock_name") or ""),
         }
     return out
 
@@ -2328,6 +2341,36 @@ def reconcile_state_with_broker(*, apply: bool = False,
         tstate = state.get(ticker)
         if not isinstance(tstate, dict):
             tstate = {}
+        # A delisted security can surface as an unknown broker placeholder
+        # (QRVO 2026-10-05 -> US.0000). Never create a normal trading state or
+        # arm a stop for it; keep the broker facts for audit and wait for the
+        # corporate action to settle.
+        if _is_unknown_broker_code(ticker, pos.get("stock_name")):
+            qty = int(round(pos["qty"]))
+            changed = False
+            if not _is_quarantined(tstate):
+                tstate.update({
+                    "quarantined": True,
+                    "pending_corporate_action": True,
+                    "quarantine_reason": "unknown broker code / delisted security",
+                    "quarantined_at_utc": now_iso,
+                })
+                changed = True
+            if (tstate.get("protective_stop_mode") != "quarantined"
+                    or "protective_stop_price" in tstate):
+                for key in ("protective_stop_price", "protective_stop_order_id",
+                            "protective_stop_updated_utc"):
+                    tstate.pop(key, None)
+                tstate["protective_stop_mode"] = "quarantined"
+                changed = True
+            if tstate.get("entry_qty") != qty:
+                tstate["entry_qty"] = qty
+                changed = True
+            if changed:
+                changes.append({"ticker": ticker, "position_qty": qty,
+                                "quarantined": True})
+                state[ticker] = tstate
+            continue
         diff: dict[str, dict] = {}
         qty = int(round(pos["qty"]))
         broker_cost = float(pos["avg_cost"] or 0)
@@ -2431,6 +2474,8 @@ def _monitor_software_stops_unlocked() -> list[str]:
     dirty = False
     for ticker, tstate in list(state.items()):
         if not isinstance(tstate, dict):
+            continue
+        if _is_quarantined(tstate):
             continue
         if tstate.get("protective_stop_mode") != "software":
             continue
@@ -2988,16 +3033,20 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
 # ---------- Universe lifecycle ----------
 
 def _list_satellite_positions() -> list[dict]:
-    """返回当前账户的卫星持仓（排除核心仓 + 0 仓位）。"""
+    """返回当前账户的卫星持仓（排除核心仓 + 0 仓位 + 隔离仓）。"""
     ctx = _ctx_get()
     ret, pos = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
     if ret != RET_OK or pos is None or pos.empty:
         return []
+    state = _state_load()
     out = []
     for _, row in pos.iterrows():
-        code = row.get("code")
+        code = str(row.get("code") or "")
         qty  = float(row.get("can_sell_qty", 0))
         if qty <= 0 or code in CORE_TICKERS:
+            continue
+        if _is_quarantined(state.get(code)) or _is_unknown_broker_code(
+                code, row.get("stock_name")):
             continue
         out.append({"code": code, "qty": qty,
                     "nominal_price": float(row.get("nominal_price", 0))})
