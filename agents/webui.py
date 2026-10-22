@@ -508,6 +508,7 @@ def _fetch_moomoo_live_positions() -> list[dict] | None:
             raw_pl_ratio = float(r.get("pl_ratio", 0) or 0)
             rows.append({
                 "code":          code,
+                "stock_name":    str(r.get("stock_name", "") or ""),
                 "qty":           qty,
                 "cost_price":    float(r.get("cost_price", 0) or 0),
                 "current_price": float(r.get("nominal_price", 0) or 0),
@@ -549,6 +550,9 @@ def api_positions() -> dict:
                 code = mp["code"]
                 st = state.get(code, {}) if isinstance(state.get(code), dict) else {}
                 seen_codes.add(code)
+                quarantined = bool(
+                    st.get("quarantined") or st.get("pending_corporate_action")
+                    or mp.get("stock_name") == "未知股票")
                 positions.append({
                     "ticker":         code,
                     "qty":            mp["qty"],
@@ -557,6 +561,10 @@ def api_positions() -> dict:
                     "market_val":     round(mp["market_val"], 2),
                     "pl_val":         round(mp["pl_val"], 2),
                     "pl_ratio":       round(mp["pl_ratio"], 4),
+                    "pending_corporate_action": quarantined,
+                    "tradable":       not quarantined,
+                    "estimated_consideration_usd":
+                        st.get("estimated_consideration_usd") if quarantined else None,
                     # 本地 state 附加 metadata（可能缺失如手动下单）
                     "last_action":    st.get("last_action"),
                     "last_side":      st.get("last_side"),
@@ -601,8 +609,12 @@ def api_positions() -> dict:
                 except Exception:
                     pass
 
+        pending_value = sum(
+            float(p.get("estimated_consideration_usd") or 0)
+            for p in positions if p.get("pending_corporate_action"))
         return {
             "positions":    positions,
+            "pending_corporate_action_value": round(pending_value, 2),
             "peak_nav":     peak_meta.get("peak_nav"),
             "current_nav":  peak_meta.get("current_nav"),
             "sync_source":  "moomoo_live" if mm_positions is not None else "state_only_fallback",
