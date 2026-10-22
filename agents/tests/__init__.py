@@ -12,9 +12,11 @@ asserts the snapshots are byte-identical after the rest of the suite.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import sys
 import tempfile
+from datetime import date, datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -45,6 +47,10 @@ _REDIRECTS = (
     ("notifications", "ALERTS_PATH", "critical_alerts.jsonl"),
     ("notifications", "ALERT_DEDUPE_PATH", "alert_dedupe.json"),
     ("notifications", "DEDUP_PATH", "notify_dedup.json"),
+    ("supply_calendar", "OUT_PATH", "supply_calendar.json"),
+    ("supply_calendar", "DOC_CACHE", "supply_calendar_docs"),
+    ("semi_risk_guard", "STATE_PATH", "semi_risk_guard.json"),
+    ("thesis_config", "_GUARD_STATE_PATH", "semi_risk_guard.json"),
 )
 
 
@@ -76,9 +82,22 @@ for _module_name, _attr, _filename in _REDIRECTS:
     _patch.start()
     _PATCHES.append(_patch)
 
+# Fail-closed supply guard: without a fresh healthy fixture, every equity
+# decision in the suite would be demoted to HOLD.  Tests that exercise
+# missing/stale data patch supply_calendar.load explicitly.
+import config as _config  # noqa: E402
+_CAL_STATUS = {t.replace("US.", ""): "ok" for t in _config.TRADE_ELIGIBLE_TICKERS}
+(TMP_DIR / "supply_calendar.json").write_text(json.dumps({
+    "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    "as_of": date.today().isoformat(), "tickers": {}, "market_days": [],
+    "status": _CAL_STATUS, "run_status": "ok",
+    "counts": {"expected": len(_CAL_STATUS), "ok": len(_CAL_STATUS),
+               "error": 0, "no_cik": 0},
+    "classification": {},
+}), encoding="utf-8")
+
 # Keep the file logger out of logs/run_YYYYMMDD.log; stdout logging still works.
 import notifier  # noqa: E402  (import triggers logging.basicConfig)
-
 _root = logging.getLogger()
 for _handler in list(_root.handlers):
     if isinstance(_handler, notifier._DailyLogHandler):

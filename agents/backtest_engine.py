@@ -256,6 +256,7 @@ class SignalEvent:
 def run_lite(tickers=None, days=BACKTEST_DAYS) -> dict:
     """对每个 ticker 跑过去 N 天 decision_agent，收集 BUY/SELL/REDUCE 信号 + 前向收益。"""
     from decision_agent import get_decision
+    from decision_context import from_snapshot
     tickers = tickers or TICKERS
     fake_events = {"breaking_news": False, "days_to_event": 99,
                    "risk_level": "moderate", "gold_bias": "neutral",
@@ -277,8 +278,12 @@ def run_lite(tickers=None, days=BACKTEST_DAYS) -> dict:
             row = df_test.iloc[i]
             try:
                 mkt = build_mkt(full, row)
+                ctx = from_snapshot(
+                    as_of=row.name.to_pydatetime(), market=mkt,
+                    events=fake_events, macro=fake_macro,
+                    thesis_snapshot={}, board_regime="bull_trending")
                 d = get_decision(mkt, fake_events, fake_macro,
-                                 board_regime="bull_trending")
+                                 board_regime="bull_trending", context=ctx)
             except Exception:
                 continue
             action = d.get("action", "HOLD")

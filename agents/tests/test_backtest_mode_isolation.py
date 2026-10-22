@@ -76,6 +76,37 @@ class LLMCallBacktestBypassTests(unittest.TestCase):
             self.assertIsNone(r, "BACKTEST_MODE=1 时 LLM 必须被禁")
 
 
+class RunLiteContextTests(unittest.TestCase):
+    """P2-17 (2026-10-22): run_lite 无 context → 会读 live supply calendar
+    (look-ahead). 现在必须传冻结的 is_backtest context."""
+
+    def test_run_lite_passes_backtest_context(self):
+        import pandas as pd
+        import backtest_engine as be
+
+        idx = pd.date_range("2026-01-01", periods=4, freq="B")
+        df = pd.DataFrame({
+            "close": [100, 101, 102, 103], "pct_chg": [0.0] * 4,
+            "rsi_14": [50] * 4, "ma20": [100] * 4, "ma50": [99] * 4,
+            "bb_pct": [0.5] * 4, "cci_20": [0] * 4, "vol_ratio": [1.0] * 4,
+        }, index=idx)
+        seen = []
+
+        def fake_decision(mkt, events, macro, **kw):
+            seen.append(kw.get("context"))
+            return {"action": "HOLD", "confidence": 0}
+
+        with patch.object(be, "load_history", return_value=df), \
+             patch.object(be, "add_indicators", return_value=df), \
+             patch.object(be, "build_mkt", return_value={"ticker": "US.MSFT", "price": 100}), \
+             patch("decision_agent.get_decision", side_effect=fake_decision):
+            be.run_lite(tickers=["MSFT"], days=2)
+
+        self.assertEqual(len(seen), 1)
+        self.assertTrue(seen[0].is_backtest)
+        self.assertEqual(dict(seen[0].thesis_snapshot), {})
+
+
 if __name__ == "__main__":
     raise SystemExit(
         "Run the suite from agents/: python -m unittest discover -s tests -t . "

@@ -84,6 +84,15 @@ _GUARD_STATE_PATH = Path(SIGNALS_DIR) / "semi_risk_guard.json"
 _GUARD_STALE_DAYS = 4
 
 
+def _guard_stale_days() -> float:
+    """单一源: 跟随 semi_risk_guard.STALE_DAYS; import 失败时用本地兜底."""
+    try:
+        import semi_risk_guard as _srg
+        return float(_srg.STALE_DAYS)
+    except Exception:
+        return float(_GUARD_STALE_DAYS)
+
+
 def semi_risk_guard_config() -> Optional[dict]:
     """thesis_config.json 的 semi_risk_guard 段 (2026-10-03): tickers / min_confidence / conditions."""
     cfg = _load()
@@ -92,20 +101,44 @@ def semi_risk_guard_config() -> Optional[dict]:
 
 
 def semi_risk_guard_state(path: Optional[Path] = None, now: Optional[float] = None) -> dict:
-    """读 _semi_risk_guard 每日检查结果. 文件缺失 / 过期 / 无法解析 → status=unknown, active=False."""
+    """读 _semi_risk_guard 每日检查结果.
+
+    文件缺失 / 无法解析 → status=unknown, active=False.
+    文件过期但上次 active=True → status=stale_active, active=True (数据降级不释放
+    已开启的开关; 2026-10-22). 过期且上次 inactive → unknown/inactive.
+    """
     import time as _time
     path = Path(path) if path is not None else _GUARD_STATE_PATH
     if not path.exists():
         return {"status": "unknown", "active": False, "reason": "no_state_file"}
     age_d = ((now or _time.time()) - path.stat().st_mtime) / 86400
-    if age_d > _GUARD_STALE_DAYS:
-        return {"status": "unknown", "active": False, "reason": f"stale {age_d:.1f}d"}
     try:
         st = json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return {"status": "unknown", "active": False, "reason": "unreadable"}
-    return {"status": "active" if st.get("active") else "inactive", "active": bool(st.get("active")),
-            "triggered": st.get("triggered", []), "unknown": st.get("unknown", []), "ts": st.get("ts")}
+    active = bool(st.get("active"))
+    out = {"active": active, "triggered": st.get("triggered", []),
+           "unknown": st.get("unknown", []), "ts": st.get("ts"),
+           "data_degraded": bool(st.get("unknown")),
+           "carried": st.get("carried", []), "sticky_days": st.get("sticky_days")}
+    if age_d > _guard_stale_days():
+        if active:
+            return {**out, "status": "stale_active",
+                    "reason": f"stale {age_d:.1f}d; last active preserved"}
+        return {**out, "status": "unknown", "active": False, "reason": f"stale {age_d:.1f}d"}
+    return {**out, "status": "active" if active else "inactive"}
+
+
+def _notify_semi_stale() -> None:
+    try:
+        from notifications import send_alert, _alert_sent_today, _record_alert_sent
+        if _alert_sent_today("semi_guard_stale_active", "warning"):
+            return
+        send_alert("半导体风险开关状态文件过期但上次为开启 → 维持半导体买入门槛; "
+                   "请检查 _semi_risk_guard 任务", level="warning", dedup=True)
+        _record_alert_sent("semi_guard_stale_active", "warning")
+    except Exception:
+        pass
 
 
 def _semi_guard_block(ticker: str) -> Optional[tuple[str, dict]]:
@@ -118,14 +151,17 @@ def _semi_guard_block(ticker: str) -> Optional[tuple[str, dict]]:
     st = semi_risk_guard_state()
     if not st.get("active"):
         return None
+    if st.get("status") == "stale_active":
+        _notify_semi_stale()
     try:
         mc = int(g.get("min_confidence", 10))
     except (TypeError, ValueError):
         mc = 10
+    tag = " (状态文件过期, 维持上次结论)" if st.get("status") == "stale_active" else ""
     reason = (f"semi_risk_guard: 看错条件触发 ({', '.join(st.get('triggered', []))}) → "
-              f"半导体买入门槛提高")
+              f"半导体买入门槛提高{tag}")
     return reason, {"min_confidence": mc, "since": st.get("ts", ""), "semi_risk_guard": True,
-                    "triggered": st.get("triggered", [])}
+                    "triggered": st.get("triggered", []), "stale_active": st.get("status") == "stale_active"}
 
 
 def is_ticker_soft_blacklisted(ticker: str) -> tuple[bool, str, dict]:
