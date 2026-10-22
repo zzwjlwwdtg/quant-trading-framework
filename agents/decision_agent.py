@@ -794,7 +794,8 @@ def _apply_options_flow_guard(
         }
 
     if (authoritative and score >= 75 and direction == "bullish"
-            and bull_confirmed and action == "HOLD"):
+            and bull_confirmed and action == "HOLD"
+            and not result.get("supply_block")):
         return {
             **enriched,
             "action": "WATCH_BUY_PROBE",
@@ -820,30 +821,85 @@ def _et_today():
 def _apply_supply_event_guard(result: dict, ticker: str, context=None) -> dict:
     """供给冲击日历 (2026-10-05, supply_calendar): 个股增发 / 股东转售 / 解禁窗口内
     新买入降级 HOLD (不卖出); 指数调仓 / 季度期权到期 / 季末前后一天只标注 flow_day.
-    回测 context 不读 live 日历 (无未来函数). 日历缺失或过期 → 不拦截."""
+
+    2026-10-22 (用户确认): 数据降级只暂停 asset_class=="equity" 的新买入 ——
+    日历缺失 / 过期 / 当日抓取失败 → 全部股票; 单只股票 error / no_cik /
+    未覆盖 → 只暂停该股票. ETF/债券/商品不受影响. 读取异常同样 fail-closed.
+    回测 context 不读 live 日历 (无未来函数).
+    """
     if context is not None and getattr(context, "is_backtest", False):
         return result
     try:
         import supply_calendar as _sc
         data = _sc.load()
+        h = _sc.health(data)
+        tk_state = _sc.ticker_health(ticker or "", data, h)
+        equity = _sc.is_equity(ticker or "")
+    except Exception as e:
+        try:
+            import supply_calendar as _sc
+            equity = _sc.is_equity(ticker or "")
+        except Exception:
+            equity = bool(ticker)
+        if equity:
+            return _supply_blocked(result, "reader_error", f"{type(e).__name__}: {e}")
+        return result
+
+    if equity and (h.get("block_equity") or tk_state not in ("ok", "not_equity")):
+        kind = h.get("state") if h.get("block_equity") else tk_state
+        action = result.get("action")
+        if action in BULLISH_SIGNAL_ACTIONS or action == "HOLD":
+            try:
+                _sc.notify_equity_block(kind, ticker or "", str(h.get("errors") or ""))
+            except Exception:
+                pass
+            return _supply_blocked(result, kind)
+        return {**result, "supply_calendar_health": kind}
+
+    try:
         today = _et_today()
         flow = _sc.flow_days_near(today, data)
         events = _sc.active_events(ticker or "", today, data)
-    except Exception:
+    except Exception as e:
+        if equity:
+            return _supply_blocked(result, "reader_error", f"{type(e).__name__}: {e}")
         return result
     if flow:
         result = {**result, "flow_day": [f"{e['type']} {e['date']}" for e in flow]}
     action = result.get("action")
-    if not events or action not in BULLISH_SIGNAL_ACTIONS:
+    if not events or (action not in BULLISH_SIGNAL_ACTIONS and action != "HOLD"):
         return result
     e = events[0]
+    out = {**result, "supply_guard": events,
+           "supply_block": {"kind": "event", "type": e["type"], "date": e["date"]},
+           "supply_calendar_health": "ok"}
+    if action not in BULLISH_SIGNAL_ACTIONS:
+        return out          # 已是 HOLD: 只加 veto 标记, 防止后续 options-flow 升级
     return {
-        **result,
+        **out,
         "action":       "HOLD",
         "demoted_from": action,
-        "supply_guard": events,
         "reason":       (f"supply_event ({e['type']} {e['date']}, 窗口 {e['window'][0]}~{e['window'][1]}): "
                          f"供给冲击窗口内不新买 (orig={action}, prev={(result.get('reason') or '')[:40]})"),
+    }
+
+
+def _supply_blocked(result: dict, kind: str, detail: str = "") -> dict:
+    """数据不可用 → 股票新买入暂停; 卖出/减仓原样保留."""
+    action = result.get("action")
+    block = {"kind": kind}
+    if detail:
+        block["detail"] = detail[:200]
+    out = {**result, "supply_block": block, "supply_calendar_health": kind}
+    if action not in BULLISH_SIGNAL_ACTIONS:
+        return out
+    return {
+        **out,
+        "action":       "HOLD",
+        "demoted_from": action,
+        "supply_guard": [{"type": "calendar_unavailable", **block}],
+        "reason":       (f"supply_calendar_unavailable ({kind}): 供给数据不可用, "
+                         f"股票新买入暂停 (orig={action}, prev={(result.get('reason') or '')[:40]})"),
     }
 
 
