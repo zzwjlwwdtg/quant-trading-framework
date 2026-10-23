@@ -3460,20 +3460,11 @@ async function loadAITargets() {
     fetchJson('/api/ai_targets'),
     fetchJson('/api/top_picks?n=50'),
   ]);
-  if (!t) {
-    el.innerHTML = '<small style="color:var(--muted)">自动执行数据不可用。</small>';
-    return;
-  }
-  if (!t.exists && !t.tlt_hint && !t.tlt_signal) {
+  if (!t || !t.exists) {
     el.innerHTML = '<small style="color:var(--muted)">当前没有系统未结订单，也没有可用的 AI 价位计划。</small>';
     return;
   }
-  if (mtimeEl) {
-    mtimeEl.textContent = t.ts
-      ? '· 价位计划 ' + (t.ts || '').slice(5, 16)
-      : (t.tlt_signal && t.tlt_signal.generated_at ? '· TLT 系统信号'
-        : (t.tlt_hint ? '· 宏观 TLT 提示' : ''));
-  }
+  if (mtimeEl) mtimeEl.textContent = '· 价位计划 ' + (t.ts || '').slice(5, 16);
 
   // ticker → score 映射 (含 blacklisted 的负分, 展示时也标)
   const scoreMap = {};
@@ -3593,64 +3584,6 @@ async function loadAITargets() {
     </div>`;
   }).join('');
 
-  // TLT：与上面五只共用 market_watch + decision_agent 技术决策（只读，不落信号文件）
-  const tltRaw = t.tlt_signal || null;
-  const tsig = (tltRaw && !tltRaw.error) ? tltRaw : null;
-  const tltMacro = t.tlt_hint || null;
-  const TLT_MACRO_META = {
-    buy:  { zh: '买入', color: '#3fb950' },
-    sell: { zh: '卖出/回避', color: '#f85149' },
-    hold: { zh: '观望', color: '#7d8590' },
-  };
-  const tsigMeta = tsig && tsig.action
-    ? (ACT_META[tsig.action] || ACT_META.UNKNOWN)
-    : (tltRaw && tltRaw.error
-        ? { zh: '不可用', color: '#f85149', bg: 'rgba(248,81,73,0.06)', icon: '⚠' }
-        : { zh: '计算中', color: '#7d8590', bg: 'rgba(125,133,144,0.04)', icon: '⏳' });
-  const tltScore = (tsig && typeof tsig.score === 'number')
-    ? (() => {
-        const s = tsig.score;
-        const cls = s >= 5 ? 'ok' : (s >= 2 ? 'info' : (s > 0 ? 'warn' : 'bad'));
-        return `<span class="badge ${cls}" style="font-size:10px" title="${tsig.score_why || ''}">${s >= 0 ? '+' : ''}${s.toFixed(1)}${tsig.whitelist ? ' ⭐' : ''}</span>`;
-      })()
-    : '<span class="muted" style="font-size:9px">—</span>';
-  const tltEntry = tsig && tsig.entry_ref !== null && tsig.entry_ref !== undefined
-    ? `<b style="color:var(--fg); font-size:12px">$${tsig.entry_ref}</b> <small style="color:var(--muted); font-size:9px">当前系统价</small>`
-    : '<span class="muted" style="font-size:9px">—</span>';
-  const tltStop = tsig && tsig.stop_ref !== null && tsig.stop_ref !== undefined
-    ? `<b class="bad" style="font-size:11px">$${tsig.stop_ref}</b>`
-    : '<span class="muted" style="font-size:9px">—</span>';
-  const tltTarget = tsig && tsig.target_ref !== null && tsig.target_ref !== undefined
-    ? `<b class="ok" style="font-size:11px">$${tsig.target_ref}</b>`
-    : '<span class="muted" style="font-size:9px">—</span>';
-  const tltPriceLine = (tsig && typeof tsig.price === 'number')
-    ? `现价 $${tsig.price}${typeof tsig.pct_chg === 'number' ? ` (${tsig.pct_chg >= 0 ? '+' : ''}${tsig.pct_chg.toFixed(2)}%)` : ''}`
-    : '';
-  const tltReason = tsig
-    ? `${tsig.reason || '系统未给出理由'}${tsig.confidence !== null && tsig.confidence !== undefined ? ` · conf ${tsig.confidence}` : ''}`
-    : (tltRaw && tltRaw.error ? `系统信号暂不可用: ${tltRaw.error}` : '正在计算 TLT 系统信号…');
-  const tltMetaLine = tsig
-    ? [
-        tsig.quote_ts ? `行情 ${String(tsig.quote_ts).slice(11, 16)}` : '',
-        tsig.generated_at ? `计算 ${hhmm(tsig.generated_at)}` : '',
-      ].filter(Boolean).join(' · ')
-    : '';
-  const tltStale = (tltRaw && tltRaw._meta && tltRaw._meta.stale && tsig) ? ' · ⚠ 可能过期' : '';
-  const tltMacroLine = (tltMacro && TLT_MACRO_META[tltMacro.action])
-    ? `<small style="display:block; color:${TLT_MACRO_META[tltMacro.action].color}">宏观 AI 参考: ${TLT_MACRO_META[tltMacro.action].zh}${tltMacro.reason ? ' · ' + tltMacro.reason : ''}${tltMacro.stale ? ' (可能过期)' : ''}</small>`
-    : '';
-  const tltRow = `
-    <div style="display:grid; grid-template-columns:auto 60px 92px 105px 150px 85px 85px 1fr; gap:8px; padding:6px 8px; align-items:center; background:${tsigMeta.bg}; border:1px dashed rgba(125,133,144,0.35); border-radius:3px; margin-bottom:3px; font-size:11px">
-      <span style="min-width:70px"><b style="color:#79c0ff; font-size:12.5px">TLT</b><small style="display:block;color:var(--muted);font-size:9px">参考</small></span>
-      <span title="与五只标地同一套 top_picks 评分公式">${tltScore}</span>
-      <span><span class="badge" style="font-size:9px; background:${tsigMeta.color}; color:#0d1117">${tsigMeta.icon} ${tsigMeta.zh}</span>${tltMetaLine ? `<small style="display:block;color:var(--muted);font-size:9px">${tltMetaLine}${tltStale}</small>` : ''}</span>
-      <span title="decision_agent 给出的参考价；TLT 没有 AI 价位计划">${tltEntry}</span>
-      <span style="color:var(--muted); font-size:10px">仅展示 · 未纳入自动交易</span>
-      <span title="decision_agent 支撑位；无持仓时不执行">${tltStop}</span>
-      <span title="TLT 没有 AI 价位计划">${tltTarget}</span>
-      <span style="color:var(--muted); font-size:10px; line-height:1.4">${tltReason}${tltPriceLine ? `<small style="display:block">${tltPriceLine}</small>` : ''}${tltMacroLine}</span>
-    </div>`;
-
   const activeCount = t.pending_count || 0;
   const totalCount = (t.targets || []).length;
   const brokerNote = t.broker_status === 'ok'
@@ -3670,9 +3603,9 @@ async function loadAITargets() {
       <span>目标 (参考)</span>
       <span>当前系统理由</span>
     </div>
-    ${rows}${tltRow}
+    ${rows}
     <div style="font-size:9px; color:var(--muted); margin-top:6px; padding:4px 6px; background:rgba(255,255,255,0.02); border-radius:2px">
-      <b>执行口径</b>: 最新规则/动量决策是下单开关；旧于当前决策的 AI 数字会隐藏。绿色“已在 broker 挂单”才代表真实未结单。模拟账户不支持原生 STOP 时，止损由后台软件风控每分钟执行。TLT 行与上面五只用同一套技术决策引擎（market_watch + confluence + regime；宏观分/事件/15m/Claude gate 未接入）生成，仅展示、不写信号文件、不参与自动下单；TLT 无 AI 价位计划，宏观 AI 仅作附注。
+      <b>执行口径</b>: 最新规则/动量决策是下单开关；旧于当前决策的 AI 数字会隐藏。绿色“已在 broker 挂单”才代表真实未结单。模拟账户不支持原生 STOP 时，止损由后台软件风控每分钟执行。
     </div>
   `;
 }

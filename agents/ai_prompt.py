@@ -287,6 +287,7 @@ _TICKER_DESC_ZH = {
     "US.DRAM": "DRAM：Roundhill Memory ETF（存储芯片板块，含 Micron / SK Hynix / Samsung 暴露）",
     "US.MULL": "MULL：2 倍做多 Micron（DRAM/NAND 龙头单股杠杆 ETF）",
     "US.MU":   "MU：Micron（DRAM/NAND 龙头单股，1x）",
+    "US.TLT":  "TLT：20 年以上美国国债 ETF（长端利率/久期，1x）",
 }
 
 _TICKER_DESC_JA = {
@@ -296,6 +297,7 @@ _TICKER_DESC_JA = {
     "US.DRAM": "DRAM：Roundhill Memory ETF（メモリ半導体セクター、Micron / SK Hynix / Samsung エクスポージャー）",
     "US.MULL": "MULL：Micron 2倍ロングETF（DRAM/NAND 大手の単銘柄レバレッジ）",
     "US.MU":   "MU：Micron（DRAM/NAND 大手、1x）",
+    "US.TLT":  "TLT：20年超米国債ETF（長期金利/デュレーション、1x）",
 }
 
 

@@ -45,7 +45,8 @@ def is_sim_active_trading() -> bool:
 #   US.DRAM = Roundhill Memory ETF（存储芯片板块 ETF，1x）
 #   US.MULL = 2x MU 杠杆 ETF（Micron 单股杠杆暴露）
 # LEVERAGED_PAIRS 配置防止 MU↔MULL 同时持仓叠杠杆（见 paper_trader.py）
-TICKERS = ["US.TQQQ", "US.SOXL", "US.DRAM", "US.MULL"]
+# US.TLT = 20+Y 美债 ETF（2026-10-23 加）：与其它核心标的同一套决策/下单流程
+TICKERS = ["US.TQQQ", "US.SOXL", "US.DRAM", "US.MULL", "US.TLT"]
 
 # --- Asset class (per-class calibration & TA weight lookup) ---
 # 不同资产类别对相同 TA 信号的反应完全不同：
@@ -59,6 +60,7 @@ ASSET_CLASS_MAP = {
     "US.USO":  "commodity",   # oil ETF, if added
     "US.SHY":  "bond",
     "US.IEI":  "bond",
+    "US.TLT":  "bond",
     "US.TQQQ": "equity_leveraged",
     "US.SOXL": "equity_leveraged",
     "US.MULL": "equity_leveraged",  # 2x MU
@@ -77,7 +79,7 @@ def get_asset_class(ticker: str) -> str:
 
 # 无股票基本面的 ticker（商品/债券/行业 ETF）—— yfinance quoteSummary 会返 404
 # 用于 webui.get_fundamental_stock() 单一源判定，避免每加一个 ETF 都要手动补 None
-NO_FUNDAMENTALS_TICKERS = {"GLD", "USO", "SHY", "IEI", "XLV"}
+NO_FUNDAMENTALS_TICKERS = {"GLD", "USO", "SHY", "IEI", "TLT", "XLV"}
 
 # 用其它股票作为基本面代理的杠杆/主题 ETF —— 显示 proxy 公司的基本面
 # 未列出的 ticker 默认用自身（NVDA→NVDA, LITE→LITE, CBRS→CBRS 等）
@@ -113,6 +115,7 @@ TICKER_NAME_ZH = {
     "USO":  ("原油 ETF",  "WTI 原油 · 通胀 + 地缘政治"),
     "SHY":  ("2Y 债 ETF", "1-3Y 美债 · 短端利率"),
     "IEI":  ("5Y 债 ETF", "3-7Y 美债 · 中端利率"),
+    "TLT":  ("长债 ETF",  "20+Y 美债 · 长端利率/久期"),
     "XLV":  ("医疗 ETF",  "SPDR 医疗行业 · JNJ/UNH/LLY 权重"),
     # AI/tech 权重股
     "NVDA": ("英伟达",     "AI 芯片龙头 · 数据中心 GPU 独占"),

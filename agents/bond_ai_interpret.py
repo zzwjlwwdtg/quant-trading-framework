@@ -89,17 +89,10 @@ _SYSTEM_PROMPT = """你是资深宏观策略师，用**大白话**给不懂金�
     "action_around_thesis": "10 月前操作建议一句话"
   },
   "action_hint": "对散户操作建议一句话",
-  "tlt_action": "buy" | "sell" | "hold",
-  "tlt_reason": "≤30字, 只讲长债方向依据 (利率/久期/波动)",
   "confidence": "high" | "medium" | "low"
 }
 
 **判读原则**：
-- **TLT 提示**（只做宏观参考，系统不会自动下单）:
-    · 收益率下行 / 降息概率上升 / 长端抛售缓解 → buy
-    · 收益率上行 / 长端加速抛售 / 实际利率高位 / MOVE 抬升 → sell
-    · 多空信号冲突或数据不足 → hold
-    不要拿股票方向直接映射 TLT；tlt_reason 只写长端利率/久期/波动依据。
 - **必须**填齐 13 个节点（数据缺失时 direction=null，note='数据不足'）
 - 每个 note 短、大白话，禁用 ERP/OAS/duration/NFCI/DXY/RRP/TGA/EEM/BBI/CDX 等术语
   - 例：credit 说 "银行相互借钱正常" 不说 "IG 利差正常"
@@ -466,26 +459,6 @@ def _fallback_from_rules(bond_data: dict) -> dict:
         action = "按原计划操作"
         blocked = None
 
-    # TLT 兜底只复用 bond_monitor 已触发的长端警示, 不新增阈值.
-    tlt_sell_keys = {
-        "10y_high", "10y_restrictive", "30y_high", "30y_extreme",
-        "tips_high", "tips_extreme", "duration_selling",
-        "term_spread_steep", "move_elevated", "move_crisis", "move_extreme",
-    }
-    tlt_warn = next(
-        (
-            w for w in warnings
-            if isinstance(w, dict) and str(w.get("key") or "") in tlt_sell_keys
-        ),
-        None,
-    )
-    if tlt_warn:
-        tlt_action = "sell"
-        tlt_reason = str(tlt_warn.get("msg") or "长端利率/波动压力偏高")[:60]
-    else:
-        tlt_action = "hold"
-        tlt_reason = "未触发长端抛售或波动警示"
-
     return {
         "chain_verdict": verdict,
         "chain_summary": one_liner,
@@ -493,8 +466,6 @@ def _fallback_from_rules(bond_data: dict) -> dict:
         "nodes": nodes,
         "user_thesis_check": thesis_check,
         "action_hint": action,
-        "tlt_action": tlt_action,
-        "tlt_reason": tlt_reason,
         "confidence": "low",
         "_source": "rules_fallback",
         # 兼容旧字段 (dashboard 老版本)
@@ -510,7 +481,7 @@ def interpret_bond_context(bond_data: dict, timeout: int = 120) -> dict:
 
     Returns:
       {"one_liner", "verdict", "reasoning", "who_agrees", "action_hint",
-       "tlt_action", "tlt_reason", "confidence", "generated_at", "_source"}
+       "confidence", "generated_at", "_source"}
     """
     if not bond_data or not isinstance(bond_data, dict):
         return {"error": "no_bond_data"}
@@ -554,7 +525,6 @@ def interpret_bond_context(bond_data: dict, timeout: int = 120) -> dict:
     for k, dflt in (
         ("chain_verdict", "中性"), ("chain_summary", ""), ("chain_blocked_at", None),
         ("nodes", {}), ("action_hint", ""), ("confidence", "low"),
-        ("tlt_action", None), ("tlt_reason", ""),
         # 兼容旧字段
         ("verdict", "中性"), ("one_liner", ""), ("reasoning", ""), ("who_agrees", ""),
     ):
@@ -564,9 +534,6 @@ def interpret_bond_context(bond_data: dict, timeout: int = 120) -> dict:
         result["verdict"] = result.get("chain_verdict", "中性")
     if not result.get("one_liner"):
         result["one_liner"] = result.get("chain_summary", "")
-    tlt_action = str(result.get("tlt_action") or "").strip().lower()
-    result["tlt_action"] = tlt_action if tlt_action in {"buy", "sell", "hold"} else None
-    result["tlt_reason"] = str(result.get("tlt_reason") or "").strip()[:160]
     result["_source"] = f"ai_cli_{provider.lower()}"
     result["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     return result
