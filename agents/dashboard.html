@@ -3477,11 +3477,21 @@ async function loadAITargets() {
   const ACT_META = {
     WATCH_BUY:       { zh: '关注买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
     WATCH_BUY_PROBE: { zh: '试探买入', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
+    WATCH_BUY_LONG_HOLD: { zh: '长持关注', color: '#3fb950', bg: 'rgba(63,185,80,0.06)', icon: '🟢' },
+    WATCH:           { zh: '观察',     color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '👁' },
     BUY:             { zh: '买入',     color: '#3fb950', bg: 'rgba(63,185,80,0.18)', icon: '🟢' },
+    PROBE:           { zh: '试探',     color: '#3fb950', bg: 'rgba(63,185,80,0.12)', icon: '🟢' },
+    ADD:             { zh: '加仓',     color: '#3fb950', bg: 'rgba(63,185,80,0.14)', icon: '🟢' },
+    CRISIS_PROBE:    { zh: '危机试探', color: '#3fb950', bg: 'rgba(63,185,80,0.08)', icon: '🟢' },
     HOLD:            { zh: '维持',     color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
+    HOLD_CROSS:      { zh: '上穿观察', color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
     SKIP:            { zh: '不操作',   color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚫' },
+    CAUTION:         { zh: '谨慎',     color: '#d29922', bg: 'rgba(210,153,34,0.08)', icon: '🟡' },
     SELL:            { zh: '卖出',     color: '#f85149', bg: 'rgba(248,81,73,0.10)', icon: '🔴' },
+    SELL_ALL:        { zh: '清仓',     color: '#f85149', bg: 'rgba(248,81,73,0.14)', icon: '🔴' },
+    EXIT:            { zh: '退出',     color: '#f85149', bg: 'rgba(248,81,73,0.10)', icon: '🔴' },
     REDUCE:          { zh: '减仓',     color: '#d29922', bg: 'rgba(210,153,34,0.10)', icon: '🟡' },
+    REDUCE_RISK:     { zh: '降风险',   color: '#d29922', bg: 'rgba(210,153,34,0.10)', icon: '🟡' },
     UNKNOWN:         { zh: '无新决策', color: '#7d8590', bg: 'rgba(125,133,144,0.05)', icon: '⚪' },
   };
   // F12 (2026-10-02): 候选 / 待触发计划 / 已提交 / 已成交 严格分开

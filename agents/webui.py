@@ -211,6 +211,16 @@ TICKER_DISPLAY_PROFILES = {
         "show_ai_analysis": False,
         "show_supply_chain": False,
     },
+    "TLT": {
+        "card_group": "macro",
+        "asset_class": "fixed_income",
+        "asset_label_zh": "20 年以上美国国债",
+        "show_options": False,
+        "show_fundamentals": False,
+        "show_forward_outlook": False,
+        "show_ai_analysis": False,
+        "show_supply_chain": False,
+    },
     "MUFG": {
         "card_group": "jp",
         "asset_class": "bank",
@@ -4108,6 +4118,7 @@ TICKER_TO_OPTION_SOURCE = {
     "NBIS": "NBIS",
     "SHY":  "SHY",   # 1-3Y Treasury ETF
     "IEI":  "IEI",   # 3-7Y Treasury ETF
+    "TLT":  "TLT",   # 20+Y Treasury ETF
     "LITE": "LITE",  # Lumentum 有 options chain
     "CBRS": "CBRS",  # Cerebras — 14 个到期日 (2026-08-21 起)
     "USO":  "USO",   # WTI 原油 ETF — 17 个到期日 (2026-08-19 起)

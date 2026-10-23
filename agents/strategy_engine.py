@@ -180,8 +180,8 @@ def _compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["trend"]    = (df["close"] > df["ma_20"]).map({True: "up", False: "down"})
     df["ma_stack"] = ((df["ma_5"] > df["ma_20"]) & (df["ma_20"] > df["ma_60"])).map({True: "bull", False: "bear"})
 
-    # 52周新高
-    df["is_new_52w_high"] = df["close"] >= df["close"].rolling(252).max().fillna(df["close"]) * 0.999
+    # 52周新高 (warm-up 期数据不足 → False, 不再 fillna(close) 伪造新高)
+    df["is_new_52w_high"] = df["close"] >= df["close"].rolling(252).max() * 0.999
 
     # ── 语义区间列（基于标准技术分析分界值，非任意阈值） ──────────────────────
     # RSI 区间: 经典 35/70 分界（ETF 略高于标准 30/70）

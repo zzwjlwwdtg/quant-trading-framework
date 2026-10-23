@@ -22,6 +22,7 @@ DEFAULT_ANNUAL_VOL = {
     "GLD": 0.18,
     "SHY": 0.05,
     "IEI": 0.08,
+    "TLT": 0.15,
 }
 
 GROUPS = {
@@ -36,6 +37,7 @@ GROUPS = {
     "USO": "energy",
     "SHY": "rates",
     "IEI": "rates",
+    "TLT": "rates",
 }
 
 STRESS_SHOCKS = {

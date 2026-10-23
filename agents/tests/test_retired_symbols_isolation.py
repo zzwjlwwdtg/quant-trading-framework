@@ -185,6 +185,56 @@ class PcaRetiredIntegrationTests(unittest.TestCase):
         self.assertFalse(downloaded["called"])
 
 
+class PcaStaleSeriesTests(unittest.TestCase):
+    """停更序列 (QRVO-like) 不参与矩阵, 避免 dropna 截断整个窗口."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.path = Path(self.tmp) / "retired_symbols.json"
+        self._patch = patch.object(dsh, "_retired_state_path",
+                                   return_value=self.path)
+        self._patch.start()
+
+    def tearDown(self):
+        self._patch.stop()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_stale_series_excluded_and_recorded(self):
+        import pandas as pd
+        import pca_sox
+
+        tickers = ["AAA", "BBB", "CCC", "DDD", "EEE", "QRVO"]
+        idx = pd.bdate_range(end="2026-10-21", periods=90)
+        cols = pd.MultiIndex.from_product([tickers, ["Close"]])
+        frame = pd.DataFrame(index=idx, columns=cols, dtype=float)
+        for n, tk in enumerate(tickers):
+            frame[(tk, "Close")] = (
+                100.0 + n + pd.Series(range(len(idx)), index=idx) * 0.1
+            )
+        # QRVO 停更 10 个交易日: 非空序列, 但最后成交日远落后于同批
+        frame.loc[idx[-10:], ("QRVO", "Close")] = float("nan")
+
+        class _FakeYF:
+            @staticmethod
+            def download(*args, **kwargs):
+                return frame
+
+        with patch.dict(sys.modules, {"yfinance": _FakeYF()}):
+            returns = pca_sox.fetch_returns(tickers=tickers, min_assets=5)
+
+        self.assertIsNotNone(returns)
+        self.assertNotIn("QRVO", returns.columns)
+        self.assertEqual(set(returns.columns), set(tickers) - {"QRVO"})
+        # 若未剔除, dropna 会把 90 天矩阵截到 QRVO 的 80 天 (再少 1 天收益)
+        self.assertGreater(len(returns), 80)
+
+        state = json.loads(self.path.read_text(encoding="utf-8"))
+        qrvo = state["symbols"]["QRVO"]
+        self.assertEqual(qrvo["status"], "watching")
+        self.assertEqual(qrvo["miss_days"], 1)
+        self.assertEqual(qrvo["reason"], "yfinance_stale")
+
+
 class DataQualityRetiredTests(unittest.TestCase):
     """data_quality.audit_latest_signal_files: retired 文件不计 critical."""
 
@@ -241,6 +291,90 @@ class DataQualityRetiredTests(unittest.TestCase):
         self.assertEqual(report["warning_files"],  0)
         self.assertEqual(report["retired_files"],  1)
         self.assertEqual(report["status"], "ok")
+
+
+class DataQualityAuditScopingTests(unittest.TestCase):
+    """legacy 副本 / 非行情文件 / 空文件不应冒充 critical."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.sig_dir = Path(self.tmp) / "signals"
+        self.sig_dir.mkdir(parents=True)
+        self.retired_path = self.sig_dir / "retired_symbols.json"
+        self._patch = patch.object(dsh, "_retired_state_path",
+                                   return_value=self.retired_path)
+        self._patch.start()
+
+    def tearDown(self):
+        self._patch.stop()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _write(self, name: str, payload) -> None:
+        text = payload if isinstance(payload, str) else json.dumps(payload)
+        (self.sig_dir / name).write_text(text, encoding="utf-8")
+
+    def _fresh_market(self) -> dict:
+        return {
+            "price": 100.0,
+            "ts": datetime.now(timezone.utc).astimezone().isoformat(),
+            "bid": 99.9, "ask": 100.1,
+            "rsi_14": 50, "ma20": 99, "ma50": 98, "vol_ratio": 1.0,
+        }
+
+    def test_legacy_us_prefix_duplicate_is_not_counted(self):
+        self._write("NVDA_latest.json", {"market": self._fresh_market()})
+        self._write("US.NVDA_latest.json", {"market": {"price": 100.0}})
+        report = data_quality.audit_latest_signal_files(self.sig_dir)
+        by_file = {f["file"]: f for f in report["files"]}
+        self.assertEqual(by_file["US.NVDA_latest.json"]["status"], "legacy")
+        self.assertEqual(by_file["NVDA_latest.json"]["status"], "ok")
+        self.assertEqual(report["critical_files"], 0)
+        self.assertEqual(report["legacy_files"], 1)
+
+    def test_retired_lookup_matches_us_prefixed_name(self):
+        base = datetime(2026, 10, 10, tzinfo=timezone.utc)
+        for i in range(3):
+            dsh.record_fetch_result(
+                "6488.TW", False, now=base + timedelta(days=i),
+                path=self.retired_path,
+            )
+        self._write("US.6488.TW_latest.json", {"market": {"price": 10.0}})
+        report = data_quality.audit_latest_signal_files(self.sig_dir)
+        by_file = {f["file"]: f for f in report["files"]}
+        self.assertEqual(by_file["US.6488.TW_latest.json"]["status"], "retired")
+        self.assertEqual(report["retired_files"], 1)
+        self.assertEqual(report["critical_files"], 0)
+
+    def test_non_market_payload_is_ignored(self):
+        self._write("policy_toolkit_latest.json", {"as_of": "2026-08-29", "tools": []})
+        report = data_quality.audit_latest_signal_files(self.sig_dir)
+        self.assertEqual(report["files"][0]["status"], "ignored")
+        self.assertEqual(report["ignored_files"], 1)
+        self.assertEqual(report["critical_files"], 0)
+
+    def test_empty_file_is_warning_not_critical(self):
+        self._write("US.0000_latest.json", "")
+        report = data_quality.audit_latest_signal_files(self.sig_dir)
+        entry = report["files"][0]
+        self.assertEqual(entry["status"], "warning")
+        self.assertEqual(entry["issues"][0]["code"], "empty_file")
+        self.assertEqual(report["critical_files"], 0)
+        self.assertEqual(report["warning_files"], 1)
+
+    def test_malformed_json_stays_critical(self):
+        self._write("BAD_latest.json", "{not json")
+        report = data_quality.audit_latest_signal_files(self.sig_dir)
+        entry = report["files"][0]
+        self.assertEqual(entry["status"], "critical")
+        self.assertEqual(entry["issues"][0]["code"], "invalid_json")
+        self.assertEqual(report["critical_files"], 1)
+
+    def test_flat_legacy_market_payload_still_audited(self):
+        self._write("OLD_latest.json", self._fresh_market())
+        report = data_quality.audit_latest_signal_files(self.sig_dir)
+        entry = report["files"][0]
+        self.assertEqual(entry["status"], "ok")
+        self.assertEqual(report["ignored_files"], 0)
 
 
 class MoomooPoolRetiredTests(unittest.TestCase):
