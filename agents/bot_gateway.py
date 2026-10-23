@@ -221,6 +221,7 @@ ENDPOINTS = [
     ("/api/bot/summary", R, "一次拿全：净值/回撤、持仓、今日操作、系统健康、AI 复核通道、待批提案、最近告警"),
     ("/api/bot/events", R, "统一操作流。参数 since=ISO时间 kinds=逗号分隔(" + ",".join(KINDS) + ") limit=默认200；返回 next_since"),
     ("/api/bot/brief", R, "A股研报/经济数据汇报。参数 slot=morning|close|evening|now"),
+    ("/api/bot/premarket", R, "美股盘前快讯（宏观/地缘/FSI标的公司/亚洲日本，带来源）；美东05:00-09:30每交易日生成一期，GET只读缓存不调用AI。"),
     ("/api/bot/radar", R, "公开重大新闻与机会线索缓存；附原文证据/时间/链接。无持仓，无原始Codex报告；GET不调用AI。"),
     ("/api/bot/research", R, "免费公开A股研报题摘与宏观日历；机构/日期/原链独立归因，未读正文。仅缓存，无AI分析/账户/交易。"),
     ("/api/bot/outlook", R, "固定版本公共市场观察框架：region=CN|US，宽基/风格ETF、量能代理、板块相对强度；完成日线，不是实时报价。GET仅缓存、无AI/账户/交易。"),

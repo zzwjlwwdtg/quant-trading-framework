@@ -3699,19 +3699,9 @@ def api_fed_watch() -> dict:
 
 
 def api_premarket_wrap() -> dict:
-    """彭博风格盘前快讯：美东盘前时段每个交易日由 AI CLI 生成一次，其余时间返回最近一期。"""
-    placeholder = {"edition": None, "status": "computing", "sections": [], "watch_today": []}
-    def _compute():
-        try:
-            from premarket_wrap import get_premarket_wrap
-            return get_premarket_wrap()
-        except Exception as e:
-            return {"edition": None, "status": "error", "error": str(e)[:200], "sections": [], "watch_today": []}
-    # 10 min TTL 只决定多久检查一次；真正的生成每个交易日最多一次（失败 20 分钟后重试）
-    return _cached("premarket_wrap", ttl_sec=10 * 60,
-                   compute_fn=_compute,
-                   first_call_async=True,
-                   first_call_placeholder=placeholder)
+    """盘前快讯只读投影：GET 不联网、不调用 AI；生成由看门狗 premarket_wrap_tick 负责。"""
+    import premarket_wrap
+    return premarket_wrap.read()
 
 
 def api_capital_flow(ticker: str) -> dict:
@@ -5492,6 +5482,8 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/bot/brief":
                 import bot_gateway
                 self._json(bot_gateway.brief(qs.get("slot", ["morning"])[0]))
+            elif path == "/api/bot/premarket":
+                self._json(api_premarket_wrap())
             elif path == "/api/bot/radar":
                 import market_radar
                 self._json(market_radar.read())

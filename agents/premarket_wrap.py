@@ -18,13 +18,17 @@ premarket_wrap.py — 彭博风格的美股盘前快讯（中文）
   python premarket_wrap.py            # 盘前时段内生成（已有当期则直接返回）
   python premarket_wrap.py --force    # 忽略时段与已有当期，强制重新生成
   python premarket_wrap.py --dry-run  # 只抓新闻、打印条数，不调用 AI CLI
+  python premarket_wrap.py tick       # 看门狗用：盘前时段内生成一次，其余时间秒退
+  python premarket_wrap.py read       # 打印 /api/bot/premarket 的只读投影
 """
 from __future__ import annotations
 
 import email.utils
 import json
+import os
 import re
 import sys
+import time
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -403,11 +407,100 @@ def get_premarket_wrap(now_utc: datetime | None = None, *, force: bool = False,
     return wrap
 
 
+# ── 只读投影（/api/bot/premarket 与公开快照）──────────────────────────────────
+READ_SCOPE = "PUBLIC_NEWS_PREMARKET_WRAP"
+_READ_STATUSES = {"ok", "fallback", "empty", "market_closed"}
+
+
+def _https(url: object) -> str:
+    try:
+        parsed = urllib.parse.urlparse(str(url or ""))
+    except Exception:
+        return ""
+    ok = parsed.scheme == "https" and parsed.hostname and not parsed.username and not parsed.password
+    return str(url)[:500] if ok else ""
+
+
+def read(*, path: Path = WRAP_PATH, now_utc: datetime | None = None) -> dict:
+    """GET 用：只读缓存，不联网、不调用 AI、不写文件。返回固定字段的公开投影。"""
+    now_utc = now_utc or datetime.now(timezone.utc)
+    base = {"version": 1, "scope": READ_SCOPE}
+    try:
+        if path.stat().st_size > 200_000:
+            raise ValueError("oversized")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        generated = _parse_time(data.get("generated_at") or "")
+        edition = str(data.get("edition") or "")
+        status = str(data.get("status") or "")
+        if (generated is None or generated > now_utc + timedelta(minutes=5)
+                or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", edition) or status not in _READ_STATUSES):
+            raise ValueError("invalid")
+    except (OSError, ValueError, TypeError, AttributeError):
+        return {**base, "status": "UNAVAILABLE", "edition": None, "generated_at": None, "current": False,
+                "headline": "", "sections": [], "watch_today": [],
+                "warning": "盘前快讯尚未生成或缓存无效，不能据此判断没有重要消息。"}
+    sections = []
+    for sec in (data.get("sections") or [])[:4]:
+        if not isinstance(sec, dict) or sec.get("key") not in _SECTION_KEYS:
+            continue
+        items = []
+        for it in (sec.get("items") or [])[:6]:
+            if not isinstance(it, dict) or not _clip(it.get("text"), 160):
+                continue
+            items.append({
+                "text": _clip(it.get("text"), 160),
+                "impact": it.get("impact") if it.get("impact") in _IMPACTS else "中性",
+                "tickers": [t for t in (it.get("tickers") or []) if isinstance(t, str) and re.fullmatch(r"[A-Z.]{1,8}", t)][:5],
+                "sources": [{"name": _clip(src.get("name"), 40), "url": _https(src.get("url")),
+                             "published_at": src.get("published_at") if isinstance(src.get("published_at"), str) else None}
+                            for src in (it.get("sources") or [])[:4] if isinstance(src, dict)],
+            })
+        sections.append({"key": sec["key"], "title": dict(SECTIONS)[sec["key"]], "items": items})
+    return {**base, "status": status.upper(), "edition": edition, "generated_at": generated.isoformat(timespec="seconds"),
+            "current": edition == edition_for(now_utc), "ai": bool(data.get("ai")),
+            "headline": _clip(data.get("headline"), 80), "sections": sections,
+            "watch_today": [_clip(w, 60) for w in (data.get("watch_today") or []) if isinstance(w, str) and w.strip()][:4],
+            "warning": "公开新闻标题的 AI 汇总，引用见 sources；不是实时报价、不读取持仓、不是投资建议。"}
+
+
+LOCK_STALE_SEC = 20 * 60  # 一轮生成最多约 5 分钟（AI CLI 240s 上限），20 分钟以上的锁视为崩溃遗留
+
+
+def tick(*, path: Path = WRAP_PATH, now_utc: datetime | None = None, **kwargs) -> dict:
+    """看门狗每 ~10 分钟调用：盘前时段内每交易日生成一次，其余时间秒退。"""
+    now_utc = now_utc or datetime.now(timezone.utc)
+    if not in_generation_window(now_utc):
+        return {"status": "OUT_OF_WINDOW"}
+    existing = load_wrap(path)
+    if existing and existing.get("edition") == edition_for(now_utc) and existing.get("status") in ("ok", "market_closed"):
+        return {"status": "CURRENT", "edition": existing["edition"]}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock = path.with_suffix(".lock")
+    try:
+        if lock.exists() and time.time() - lock.stat().st_mtime > LOCK_STALE_SEC:
+            lock.unlink(missing_ok=True)
+        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return {"status": "BUSY"}
+    try:
+        wrap = get_premarket_wrap(now_utc, path=path, **kwargs)
+        return {"status": str(wrap.get("status")).upper(), "edition": wrap.get("edition"), "sources": wrap.get("source_count")}
+    finally:
+        os.close(fd)
+        lock.unlink(missing_ok=True)
+
+
 def _cli_main() -> None:
     if "--dry-run" in sys.argv:
         items = select_items(collect_headlines(), datetime.now(timezone.utc))
         for key, title in SECTIONS:
             print(f"{title}: {sum(1 for it in items if it['section'] == key)} 条")
+        return
+    if "tick" in sys.argv[1:]:
+        print(json.dumps(tick(), ensure_ascii=False))
+        return
+    if "read" in sys.argv[1:]:
+        print(json.dumps(read(), ensure_ascii=False, indent=1))
         return
     wrap = get_premarket_wrap(force="--force" in sys.argv)
     print(json.dumps(wrap, ensure_ascii=False, indent=1))

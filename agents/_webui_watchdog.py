@@ -104,6 +104,9 @@ JOBS = {
     # Public news only; one bounded cached classifier batch per ~30 minutes. No QQ pushes/trading.
     "market_radar_tick": {"bat": "_market_radar_tick.bat", "auto_every_days": 30 / 1440,
                           "stale_hours": 0.1},
+    # 2026-10-23: 美股盘前快讯. 窗口外秒退; 窗口内每交易日一次有界 AI CLI 调用 (失败 20 分钟后重试). 不发 QQ.
+    "premarket_wrap_tick": {"bat": "_premarket_wrap_tick.bat", "auto_every_days": 10 / 1440,
+                            "stale_hours": 0.1},
     "market_outlook_tick": {"bat": "_market_outlook_tick.bat", "auto_every_days": 30 / 1440,
                             "stale_hours": 0.1},
     # 2026-10-19: A股研报信号/经济数据意外 回测 (只读)
@@ -308,11 +311,12 @@ def _handle_restart_request(reason: str) -> int:
 def _launch_job(name: str) -> int | None:
     """隐藏窗口、脱离父进程启动白名单 .bat; 不等待."""
     try:
-        if name in ("market_radar_tick", "market_outlook_tick"):
+        if name in ("market_radar_tick", "market_outlook_tick", "premarket_wrap_tick"):
             # This small new worker needs no command shell/AutoRun or console. Keep all
             # existing job launch paths unchanged, and capture actual worker completion.
             (SCRIPT_DIR / "logs").mkdir(parents=True, exist_ok=True)
-            worker = "market_radar" if name == "market_radar_tick" else "market_outlook"
+            worker = {"market_radar_tick": "market_radar", "market_outlook_tick": "market_outlook",
+                      "premarket_wrap_tick": "premarket_wrap"}[name]
             with open(SCRIPT_DIR / "logs" / f"{worker}_last.log", "w", encoding="utf-8") as out:
                 proc = subprocess.Popen(
                     [sys.executable, "-X", "utf8", str(SCRIPT_DIR / f"{worker}.py"), "tick"],

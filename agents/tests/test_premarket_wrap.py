@@ -144,3 +144,47 @@ class Lifecycle(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReadAndTick(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "premarket_wrap.json"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_read_is_cache_only_projection(self):
+        self.assertEqual(pw.read(path=self.path, now_utc=NOW)["status"], "UNAVAILABLE")
+        wrap = pw.build_wrap(NOW, fetch=fake_fetch, ai=lambda p: (json.dumps({
+            "headline": "主线", "sections": {"macro": [{"text": "Waller 称需耐心", "refs": [1], "impact": "利空", "tickers": ["SPY", "evil ticker"]}]},
+            "watch_today": ["CPI"]}), "ok", "Claude"))
+        wrap["sections"][0]["items"][0]["sources"].append({"name": "x", "url": "http://insecure.example/a"})
+        pw._save(wrap, self.path, None)
+        out = pw.read(path=self.path, now_utc=NOW)
+        self.assertEqual(out["scope"], "PUBLIC_NEWS_PREMARKET_WRAP")
+        self.assertEqual((out["status"], out["edition"], out["current"]), ("OK", "2026-10-13", True))
+        item = out["sections"][0]["items"][0]
+        self.assertEqual(item["tickers"], ["SPY"])
+        self.assertEqual([s["url"] for s in item["sources"]], ["https://r/1", ""])
+        self.assertFalse(pw.read(path=self.path, now_utc=NOW + timedelta(days=1))["current"])
+        self.path.write_text("{broken", encoding="utf-8")
+        self.assertEqual(pw.read(path=self.path, now_utc=NOW)["status"], "UNAVAILABLE")
+
+    def test_tick_window_lock_and_once_per_edition(self):
+        calls = []
+        def builder(now):
+            calls.append(now)
+            return {"edition": pw.edition_for(now), "generated_at": now.isoformat(), "status": "ok", "sections": [], "watch_today": []}
+        kw = {"is_trading_day": lambda d: True, "builder": builder}
+        self.assertEqual(pw.tick(path=self.path, now_utc=NOW + timedelta(hours=4), **kw)["status"], "OUT_OF_WINDOW")
+        lock = self.path.with_suffix(".lock")
+        lock.write_text("", encoding="utf-8")
+        self.assertEqual(pw.tick(path=self.path, now_utc=NOW, **kw)["status"], "BUSY")
+        old = pw.time.time() - pw.LOCK_STALE_SEC - 60
+        import os
+        os.utime(lock, (old, old))
+        self.assertEqual(pw.tick(path=self.path, now_utc=NOW, **kw)["status"], "OK")
+        self.assertFalse(lock.exists())
+        self.assertEqual(pw.tick(path=self.path, now_utc=NOW + timedelta(minutes=10), **kw)["status"], "CURRENT")
+        self.assertEqual(len(calls), 1)
