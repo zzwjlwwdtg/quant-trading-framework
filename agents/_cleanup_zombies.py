@@ -71,8 +71,8 @@ def _protected_pids() -> set[int]:
         if not lock.exists():
             continue
         try:
-            pid = int(lock.read_text(encoding="utf-8").strip())
-        except (OSError, ValueError):
+            pid = int(lock.read_text(encoding="utf-8").splitlines()[0].strip())
+        except (OSError, ValueError, IndexError):
             continue
         if _pid_alive(pid):
             pids.add(pid)

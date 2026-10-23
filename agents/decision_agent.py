@@ -21,6 +21,8 @@ DecisionAgent — 10分制信号引擎 + Regime Detection。
 
 import json
 import os
+from pathlib import Path
+
 from openai import OpenAI
 
 from config import (OPENAI_API_KEY, DECISION_MODEL, RSI_OVERBOUGHT, RSI_OVERSOLD,
@@ -393,6 +395,36 @@ def _conf_scale() -> int:
 
 
 _CALIB_CACHE = {"loaded": False, "data": None}
+_CALIB_PATH = Path(__file__).parent / "signals" / "confidence_calibration.json"
+
+
+def _warn_degenerate_live_calibration(cal: dict) -> None:
+    """Surface the 2026-10-20 P0 without changing the live weights.
+
+    All-zero bear weights make every technical sell score zero.  The writer
+    guard rejects new degenerate files, but the current file is already bad;
+    alert on read until a pre-registered bear-market calibration replaces it.
+    """
+    try:
+        problems = []
+        sides = [("default", cal.get("bear_weights"))]
+        for cls, data in (cal.get("per_class") or {}).items():
+            if isinstance(data, dict):
+                sides.append((cls, data.get("bear_weights")))
+        for name, weights in sides:
+            values = [float(v.get("weight") or 0)
+                      for v in (weights or {}).values() if isinstance(v, dict)]
+            if values and max(values) <= 0:
+                problems.append(name)
+        if problems:
+            from notifier import logger
+            logger.warning(
+                "[decision] live calibration disables technical sells: all bear "
+                f"weights are zero ({', '.join(problems)}); awaiting the "
+                "pre-registered bear-market calibration"
+            )
+    except Exception:
+        pass
 
 # F10 lite (2026-09-19, audit): 校准若超过 N 天就 warn 一次, 让用户知道
 # 覆盖的 ticker 是否需要重训 (2026-08-11 校准只覆盖 5 个 ticker, 新加的
@@ -425,10 +457,10 @@ def _load_calibration() -> dict | None:
     if _CALIB_CACHE["loaded"]:
         return _CALIB_CACHE["data"]
     try:
-        from pathlib import Path
-        p = Path(__file__).parent / "signals" / "confidence_calibration.json"
-        if p.exists():
-            _CALIB_CACHE["data"] = json.loads(p.read_text(encoding="utf-8"))
+        if _CALIB_PATH.exists():
+            cal = json.loads(_CALIB_PATH.read_text(encoding="utf-8"))
+            _warn_degenerate_live_calibration(cal)
+            _CALIB_CACHE["data"] = cal
     except Exception:
         _CALIB_CACHE["data"] = None
     _CALIB_CACHE["loaded"] = True
@@ -762,7 +794,8 @@ def _apply_options_flow_guard(
         }
 
     if (authoritative and score >= 75 and direction == "bullish"
-            and bull_confirmed and action == "HOLD"):
+            and bull_confirmed and action == "HOLD"
+            and not result.get("supply_block")):
         return {
             **enriched,
             "action": "WATCH_BUY_PROBE",
@@ -788,30 +821,85 @@ def _et_today():
 def _apply_supply_event_guard(result: dict, ticker: str, context=None) -> dict:
     """供给冲击日历 (2026-10-05, supply_calendar): 个股增发 / 股东转售 / 解禁窗口内
     新买入降级 HOLD (不卖出); 指数调仓 / 季度期权到期 / 季末前后一天只标注 flow_day.
-    回测 context 不读 live 日历 (无未来函数). 日历缺失或过期 → 不拦截."""
+
+    2026-10-22 (用户确认): 数据降级只暂停 asset_class=="equity" 的新买入 ——
+    日历缺失 / 过期 / 当日抓取失败 → 全部股票; 单只股票 error / no_cik /
+    未覆盖 → 只暂停该股票. ETF/债券/商品不受影响. 读取异常同样 fail-closed.
+    回测 context 不读 live 日历 (无未来函数).
+    """
     if context is not None and getattr(context, "is_backtest", False):
         return result
     try:
         import supply_calendar as _sc
         data = _sc.load()
+        h = _sc.health(data)
+        tk_state = _sc.ticker_health(ticker or "", data, h)
+        equity = _sc.is_equity(ticker or "")
+    except Exception as e:
+        try:
+            import supply_calendar as _sc
+            equity = _sc.is_equity(ticker or "")
+        except Exception:
+            equity = bool(ticker)
+        if equity:
+            return _supply_blocked(result, "reader_error", f"{type(e).__name__}: {e}")
+        return result
+
+    if equity and (h.get("block_equity") or tk_state not in ("ok", "not_equity")):
+        kind = h.get("state") if h.get("block_equity") else tk_state
+        action = result.get("action")
+        if action in BULLISH_SIGNAL_ACTIONS or action == "HOLD":
+            try:
+                _sc.notify_equity_block(kind, ticker or "", str(h.get("errors") or ""))
+            except Exception:
+                pass
+            return _supply_blocked(result, kind)
+        return {**result, "supply_calendar_health": kind}
+
+    try:
         today = _et_today()
         flow = _sc.flow_days_near(today, data)
         events = _sc.active_events(ticker or "", today, data)
-    except Exception:
+    except Exception as e:
+        if equity:
+            return _supply_blocked(result, "reader_error", f"{type(e).__name__}: {e}")
         return result
     if flow:
         result = {**result, "flow_day": [f"{e['type']} {e['date']}" for e in flow]}
     action = result.get("action")
-    if not events or action not in BULLISH_SIGNAL_ACTIONS:
+    if not events or (action not in BULLISH_SIGNAL_ACTIONS and action != "HOLD"):
         return result
     e = events[0]
+    out = {**result, "supply_guard": events,
+           "supply_block": {"kind": "event", "type": e["type"], "date": e["date"]},
+           "supply_calendar_health": "ok"}
+    if action not in BULLISH_SIGNAL_ACTIONS:
+        return out          # 已是 HOLD: 只加 veto 标记, 防止后续 options-flow 升级
     return {
-        **result,
+        **out,
         "action":       "HOLD",
         "demoted_from": action,
-        "supply_guard": events,
         "reason":       (f"supply_event ({e['type']} {e['date']}, 窗口 {e['window'][0]}~{e['window'][1]}): "
                          f"供给冲击窗口内不新买 (orig={action}, prev={(result.get('reason') or '')[:40]})"),
+    }
+
+
+def _supply_blocked(result: dict, kind: str, detail: str = "") -> dict:
+    """数据不可用 → 股票新买入暂停; 卖出/减仓原样保留."""
+    action = result.get("action")
+    block = {"kind": kind}
+    if detail:
+        block["detail"] = detail[:200]
+    out = {**result, "supply_block": block, "supply_calendar_health": kind}
+    if action not in BULLISH_SIGNAL_ACTIONS:
+        return out
+    return {
+        **out,
+        "action":       "HOLD",
+        "demoted_from": action,
+        "supply_guard": [{"type": "calendar_unavailable", **block}],
+        "reason":       (f"supply_calendar_unavailable ({kind}): 供给数据不可用, "
+                         f"股票新买入暂停 (orig={action}, prev={(result.get('reason') or '')[:40]})"),
     }
 
 
@@ -827,6 +915,7 @@ def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
 
     规则（用 leveraged_im = im * leverage）：
       · days_to_earnings ≤ 1 且 BUY/WATCH_BUY → 强制 HOLD（财报当日不抢仓）
+        该条只依赖日历，不依赖 IM；IM 缺失/到期日不覆盖时仍然生效
       · leveraged_im > 20%  → 强制 HOLD（极端单日波动，杠杆放大）
       · leveraged_im 12-20% → conf -3，<6 降 HOLD
       · leveraged_im 6-12%  → conf -2
@@ -836,32 +925,44 @@ def _apply_earnings_guard(result: dict, ticker: str, events: dict) -> dict:
         return result
     em_map = events.get("earnings_implied_move") or {}
     em = em_map.get(ticker) or em_map.get(ticker.replace("US.", ""))
-    if not em or em.get("error"):
+    if not em:
         return result
     action = result.get("action")
     if action not in BULLISH_SIGNAL_ACTIONS:
         return result
 
-    im = em.get("smoothed_implied_move_pct") or em.get("implied_move_pct")
-    if not im or im <= 0:
-        return result
     lev = float(em.get("leverage") or 1.0)
-    leveraged_im = im * lev
-    days = em.get("days_to_earnings", 99)
+    days = em.get("days_to_earnings")
+    if days is None:
+        return result
+    try:
+        days = int(days)
+    except (TypeError, ValueError):
+        return result
     stock = em.get("stock", "?")
     conf = result.get("confidence") or 0
 
-    # T-1 / T-0 强制屏蔽
-    if days <= 1:
+    # T-1 / T-0 强制屏蔽：日历规则优先，IM 缺失不能绕过。
+    if 0 <= days <= 1:
+        im = em.get("smoothed_implied_move_pct") or em.get("implied_move_pct")
+        if im and im > 0:
+            im_txt = f"跨日 IM={im * lev:.1f}%"
+        else:
+            im_txt = f"IM不可用({em.get('error') or 'missing'})"
         return {
             **result,
             "action":       "HOLD",
             "confidence":   conf,
-            "reason":       f"earnings_blackout ({stock} 财报 T-{days}, 跨日 IM={leveraged_im:.1f}%)",
+            "reason":       f"earnings_blackout ({stock} 财报 T-{days}, {im_txt})",
             "stop_ref":     None,
             "demoted_from": action,
             "earnings_guard": True,
         }
+
+    im = em.get("smoothed_implied_move_pct") or em.get("implied_move_pct")
+    if not im or im <= 0:
+        return result
+    leveraged_im = im * lev
 
     # 模拟仓积极模式：财报 T-1/T-0 仍硬禁；更远期的高 IV 改为带止损小 probe，
     # 用真实模拟成交积累样本，而不是提前数周完全冻结核心仓。
@@ -1720,3 +1821,41 @@ def _get_gold_decision_impl(market: dict, events: dict, macro: dict | None,
     # WP04: 传 context 让 gold 决策也能走 snapshot thesis (backtest 用)
     result = _apply_thesis_filter(result, market.get("ticker", ""), context=context)
     return _attach_model_versions(result, context)
+
+
+# EVO-20261013-2 (2026-10-13): 决策/日志/成交三端价差快照辅助.
+# 不改规则下单口径; 调用方 (paper_trader 等) 在抓到 live quote 后生成一份
+# 标准 snapshot, 写入 trade_log / execution_ledger / dashboard trade-log 列,
+# 让复盘能还原真实触发点, data_quality 能统计 PRICE_DIVERGENCE 频率.
+def build_price_snapshot(ref_price, live_quote,
+                          quote_source: str | None = None,
+                          staleness_sec: float | None = None) -> dict:
+    """构造标准三端快照. 字段固定, 便于下游 schema 稳定.
+
+    参数:
+      ref_price      日 K / 盘前参考价 (规则引擎实际消费的 price)
+      live_quote     决策时点的实时报价 (旁路, 不进规则)
+      quote_source   报价来源标签 (如 'yfinance_1m_prepost', 'fallback_daily')
+      staleness_sec  live_quote 与现在相差秒数 (越小越新)
+
+    返回: {ref_price, live_quote, quote_source, staleness_sec,
+            divergence_pct, divergence_flag, threshold}.
+    divergence_flag = 'PRICE_DIVERGENCE' 当 |divergence_pct| ≥ 阈值, 否则 None.
+    """
+    from decision_context import compute_price_divergence, PRICE_DIVERGENCE_THRESHOLD
+    pct = compute_price_divergence(ref_price, live_quote)
+    flagged = pct is not None and abs(pct) >= PRICE_DIVERGENCE_THRESHOLD
+    def _rp(x, nd):
+        try:
+            return None if x is None else round(float(x), nd)
+        except (TypeError, ValueError):
+            return None
+    return {
+        "ref_price":       _rp(ref_price, 4),
+        "live_quote":      _rp(live_quote, 4),
+        "quote_source":    quote_source,
+        "staleness_sec":   _rp(staleness_sec, 2),
+        "divergence_pct":  None if pct is None else round(pct, 6),
+        "divergence_flag": "PRICE_DIVERGENCE" if flagged else None,
+        "threshold":       PRICE_DIVERGENCE_THRESHOLD,
+    }

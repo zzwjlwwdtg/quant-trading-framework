@@ -211,6 +211,16 @@ TICKER_DISPLAY_PROFILES = {
         "show_ai_analysis": False,
         "show_supply_chain": False,
     },
+    "TLT": {
+        "card_group": "macro",
+        "asset_class": "fixed_income",
+        "asset_label_zh": "20 年以上美国国债",
+        "show_options": False,
+        "show_fundamentals": False,
+        "show_forward_outlook": False,
+        "show_ai_analysis": False,
+        "show_supply_chain": False,
+    },
     "MUFG": {
         "card_group": "jp",
         "asset_class": "bank",
@@ -268,7 +278,8 @@ def _trump_summary_recent3(items: list) -> dict:
                     "只输出概括，不要前后解释，不要 markdown。\n\n"
                     f"推文：\n{previews}\n"
                 )
-                out, status, _, _ = query_ai_cli(prompt, timeout=60)
+                out, status, _, _ = query_ai_cli(prompt, timeout=60,
+                                                 caller="webui_trump_summary")
                 if out and out.strip():
                     cache_path.write_text(out.strip(), encoding="utf-8")
             except Exception:
@@ -315,7 +326,7 @@ def api_health() -> dict:
     orch_alive = False
     if LOCK_PATH.exists():
         try:
-            orch_pid = int(LOCK_PATH.read_text().strip())
+            orch_pid = int(LOCK_PATH.read_text().splitlines()[0].strip())
             orch_alive = _pid_alive(orch_pid)
         except Exception:
             pass
@@ -507,6 +518,7 @@ def _fetch_moomoo_live_positions() -> list[dict] | None:
             raw_pl_ratio = float(r.get("pl_ratio", 0) or 0)
             rows.append({
                 "code":          code,
+                "stock_name":    str(r.get("stock_name", "") or ""),
                 "qty":           qty,
                 "cost_price":    float(r.get("cost_price", 0) or 0),
                 "current_price": float(r.get("nominal_price", 0) or 0),
@@ -548,6 +560,9 @@ def api_positions() -> dict:
                 code = mp["code"]
                 st = state.get(code, {}) if isinstance(state.get(code), dict) else {}
                 seen_codes.add(code)
+                quarantined = bool(
+                    st.get("quarantined") or st.get("pending_corporate_action")
+                    or mp.get("stock_name") == "未知股票")
                 positions.append({
                     "ticker":         code,
                     "qty":            mp["qty"],
@@ -556,6 +571,10 @@ def api_positions() -> dict:
                     "market_val":     round(mp["market_val"], 2),
                     "pl_val":         round(mp["pl_val"], 2),
                     "pl_ratio":       round(mp["pl_ratio"], 4),
+                    "pending_corporate_action": quarantined,
+                    "tradable":       not quarantined,
+                    "estimated_consideration_usd":
+                        st.get("estimated_consideration_usd") if quarantined else None,
                     # 本地 state 附加 metadata（可能缺失如手动下单）
                     "last_action":    st.get("last_action"),
                     "last_side":      st.get("last_side"),
@@ -600,8 +619,12 @@ def api_positions() -> dict:
                 except Exception:
                     pass
 
+        pending_value = sum(
+            float(p.get("estimated_consideration_usd") or 0)
+            for p in positions if p.get("pending_corporate_action"))
         return {
             "positions":    positions,
+            "pending_corporate_action_value": round(pending_value, 2),
             "peak_nav":     peak_meta.get("peak_nav"),
             "current_nav":  peak_meta.get("current_nav"),
             "sync_source":  "moomoo_live" if mm_positions is not None else "state_only_fallback",
@@ -1583,7 +1606,8 @@ def _compute_supply_chain(ticker: str) -> dict:
         "6. 若是 ETF 或杠杆产品，视为其追踪的标的（TQQQ→QQQ 前十大 / SOXL→半导体链）\n"
         "7. 严格只输出 JSON 对象，不要 ``` 围栏\n"
     )
-    out, status, provider, _ = query_ai_cli(prompt, timeout=90)
+    out, status, provider, _ = query_ai_cli(prompt, timeout=90,
+                                            caller="webui_supply_chain")
     if not out:
         return {"error": f"{provider.lower()} {status}", "ticker": ticker}
     # 去除潜在的 markdown 围栏
@@ -2937,7 +2961,7 @@ Target:
 """
     to = int(os.environ.get("JP_GUIDANCE_TIMEOUT", "240"))
     out, status, provider, _ = query_ai_cli(
-        prompt, timeout=to, web_search=True
+        prompt, timeout=to, web_search=True, caller="webui_jp_guidance"
     )
     provider = provider.lower()
     if not out:
@@ -4028,7 +4052,8 @@ def _ticker_ai_live_all(signals: dict, options: dict) -> dict:
                     "标的数据：\n"
                     + "\n".join(lines)
                 )
-                out, status, provider, _ = query_ai_cli(prompt, timeout=120)
+                out, status, provider, _ = query_ai_cli(prompt, timeout=120,
+                                                        caller="webui_ticker_ai_all")
                 if out and out.strip():
                     import re
                     parts = re.split(r"^###\s+([A-Z]{2,6})\b", out, flags=re.MULTILINE)
@@ -4109,6 +4134,7 @@ TICKER_TO_OPTION_SOURCE = {
     "NBIS": "NBIS",
     "SHY":  "SHY",   # 1-3Y Treasury ETF
     "IEI":  "IEI",   # 3-7Y Treasury ETF
+    "TLT":  "TLT",   # 20+Y Treasury ETF
     "LITE": "LITE",  # Lumentum 有 options chain
     "CBRS": "CBRS",  # Cerebras — 14 个到期日 (2026-08-21 起)
     "USO":  "USO",   # WTI 原油 ETF — 17 个到期日 (2026-08-19 起)
@@ -4981,39 +5007,63 @@ def _compute_ticker_options(sources: dict[str, str] | None = None) -> dict:
                     f"{side}_wall_notional": int(notional),
                 }
 
-            # 财报上下文：从 option_walls._next_earnings_for 拿到 (股票, 财报日, 天数)
+            # 财报上下文：动态日历（yfinance 双源交叉核对），按事件窗口取天数
             earnings_meta = {}
             try:
-                from option_walls import _TICKER_EARNINGS, _ETF_EARNINGS_LINKS, get_earnings_implied_move
-                from datetime import date as _date, datetime as _dt
+                from option_walls import (
+                    _TICKER_EARNINGS_FALLBACK,
+                    _ETF_EARNINGS_LINKS,
+                    get_earnings_events,
+                    get_earnings_implied_move,
+                )
+                from datetime import date as _date, timedelta as _td
                 today = _date.today()
+                tk_key = tk.upper().replace("US.", "")
                 # 关联财报：先看是不是单股（直接查），再看是不是 ETF（走 links）
-                candidate_stocks = [tk] if tk in _TICKER_EARNINGS else list(_ETF_EARNINGS_LINKS.get(tk, []))
+                candidate_stocks = (
+                    [tk_key] if tk_key in _TICKER_EARNINGS_FALLBACK
+                    else list(_ETF_EARNINGS_LINKS.get(tk_key, []))
+                )
                 best = None
                 for e_stock in candidate_stocks:
-                    for d_str in _TICKER_EARNINGS.get(e_stock, []):
+                    cal = get_earnings_events(e_stock)
+                    for ev in cal.get("events") or []:
                         try:
-                            d_obj = _dt.strptime(d_str, "%Y-%m-%d").date()
+                            start = _date.fromisoformat(ev["date"])
+                            latest = _date.fromisoformat(ev["date_latest"])
                         except Exception:
                             continue
-                        days = (d_obj - today).days
-                        if 0 <= days <= 60:  # 60 天窗口（比 option_walls 的 30 天宽）
+                        if latest < today:
+                            continue
+                        days = max(0, (start - today).days) if start > today else 0
+                        if days <= 60:  # 60 天窗口（比 option_walls 的 30 天宽）
                             if best is None or days < best[2]:
-                                best = (e_stock, d_str, days)
+                                best = (e_stock, ev, days, cal)
                 if best:
-                    e_stock, e_date, e_days = best
+                    e_stock, ev, e_days, cal = best
+                    e_date = ev["date"]
+                    e_latest = ev["date_latest"]
+                    required_expiry = (
+                        _date.fromisoformat(e_latest) + _td(days=1)
+                    ).isoformat()
                     earnings_meta = {
                         "earnings_stock":     e_stock,
                         "earnings_date":      e_date,
+                        "earnings_date_latest": e_latest,
                         "days_to_earnings":   e_days,
-                        "expiry_covers_earnings": exp >= e_date,
+                        "earnings_calendar_source": cal.get("source"),
+                        "earnings_calendar_conflict": bool(ev.get("conflict")),
+                        # AMC 财报同日到期不覆盖反应，必须至少晚一天
+                        "expiry_covers_earnings": exp >= required_expiry,
                     }
                     # 隐含波动幅度（ATM straddle 反推），只在 ≤ 14 天且是单股时算
-                    if e_days <= 14 and tk in ("MU", "NVDA"):
+                    if e_days <= 14 and tk_key in ("MU", "NVDA"):
                         try:
-                            im = get_earnings_implied_move(tk, earnings_date=e_date)
+                            im = get_earnings_implied_move(tk_key, earnings_date=e_date)
                             if im and im.get("implied_move_pct"):
                                 earnings_meta["implied_move_pct"] = round(im["implied_move_pct"], 2)
+                            if im and im.get("error"):
+                                earnings_meta["implied_move_error"] = im["error"]
                         except Exception:
                             pass
             except Exception:
@@ -5426,6 +5476,52 @@ class Handler(BaseHTTPRequestHandler):
                 self._html(SCRIPT_DIR / "dashboard.html")
             elif path == "/api/health":
                 self._json(api_health())
+            # 2026-10-19: 机器人只读接入层 (bot_gateway.py; 说明见 BOT_INTEGRATION.md)
+            elif path in ("/api/bot", "/api/bot/"):
+                import bot_gateway
+                self._json(bot_gateway.index())
+            elif path == "/api/bot/summary":
+                import bot_gateway
+                self._json(bot_gateway.summary(positions=api_positions(), nav=api_nav(days=7), health=api_health()))
+            elif path == "/api/bot/events":
+                import bot_gateway
+                _kinds = qs.get("kinds", [""])[0]
+                self._json(bot_gateway.events(since=qs.get("since", [None])[0], until=qs.get("until", [None])[0],
+                                              kinds=[k for k in _kinds.split(",") if k] or None,
+                                              limit=max(1, min(2000, int(qs.get("limit", ["200"])[0])))))
+            elif path == "/api/bot/brief":
+                import bot_gateway
+                self._json(bot_gateway.brief(qs.get("slot", ["morning"])[0]))
+            elif path == "/api/bot/radar":
+                import market_radar
+                self._json(market_radar.read())
+            elif path == "/api/bot/research":
+                from cn_brief import research
+                self._json(research.read())
+            elif path == "/api/bot/outlook":
+                import market_outlook
+                region = qs.get("region", ["CN"])[0]
+                if region not in ("CN", "US"):
+                    self._json({"error": "invalid_region"}, status=400)
+                else:
+                    self._json(market_outlook.read(region))
+            elif path == "/api/bot/decision":
+                from cn_decisions.store import read as read_cn_decision
+                try:
+                    if any(key not in ("symbol", "horizon") for key in qs) or any(len(value) != 1 for value in qs.values()):
+                        raise ValueError("ambiguous input")
+                    self._json(read_cn_decision(qs.get("symbol", [""])[0], int(qs.get("horizon", ["5"])[0])))
+                except ValueError:
+                    self._json({"error": "invalid_decision_input"}, status=400)
+            elif path == "/api/bot/forecasts":
+                import research_forecasts
+                self._json(research_forecasts.read())
+            elif path == "/api/bot/stock":
+                import public_stock
+                try:
+                    self._json(public_stock.read(qs.get("ticker", [""])[0]))
+                except ValueError:
+                    self._json({"error":"invalid_symbol"}, status=400)
             elif path == "/api/nav":
                 self._json(api_nav(days=days))
             elif path == "/api/equity_curve":

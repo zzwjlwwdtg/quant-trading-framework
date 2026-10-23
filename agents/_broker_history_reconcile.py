@@ -376,32 +376,48 @@ def _system_order_ids(logs_dir: Path) -> set[str]:
 
 def import_baseline(src: Path, out: Path, exec_path: Path | None = None,
                     logs_dir: Path | None = None) -> int:
-    """把券商导出 (broker_fills_*.jsonl) 中本地账本缺失的成交写成基线文件.
+    """把券商导出 (broker_fills_*.jsonl) 中本地账本缺失的成交合并进基线文件.
 
     不连 OpenD; 不改 execution_ledger. origin: 系统日志/本地账本有该订单 → system,
-    否则 manual. 返回写入行数. 目标文件整体重写 (可重复执行).
+    否则 manual. 只跳过本地已有 **成交** 的订单; 本地只有 submitted 的订单仍要补.
+    保留目标文件已有行, 按 order_id 去重, 可重复执行. 返回本次新增行数.
     """
     import fill_ledger as fl
     exec_path = Path(exec_path or fl.EXEC_LEDGER_PATH)
     logs_dir = Path(logs_dir or AGENTS / "logs")
-    local = {str(r.get("order_id")) for r in fl._read_jsonl(exec_path)}
-    sys_ids = _system_order_ids(logs_dir) | local
-    rows = []
-    now = datetime.now(timezone.utc).isoformat()
-    for r in fl._read_jsonl(Path(src)):
-        oid = str(r.get("order_id"))
-        if r.get("event") != "filled" or oid in local:
-            continue
-        rows.append({**r, "source": "broker_history",
-                     "origin": "system" if oid in sys_ids else "manual",
-                     "imported_at": now, "import_file": Path(src).name})
+    local_rows = fl._read_jsonl(exec_path)
+    local_filled = {
+        str(r.get("order_id") or "")
+        for r in local_rows
+        if r.get("event") in ("filled", "partial") and r.get("order_id")
+    }
+    local_ids = {str(r.get("order_id") or "") for r in local_rows if r.get("order_id")}
+    sys_ids = _system_order_ids(logs_dir) | local_ids
     out = Path(out)
+    existing = {
+        str(r.get("order_id") or ""): r
+        for r in fl._read_jsonl(out)
+        if r.get("order_id")
+    }
+    now = datetime.now(timezone.utc).isoformat()
+    added = 0
+    for r in fl._read_jsonl(Path(src)):
+        oid = str(r.get("order_id") or "")
+        if not oid or r.get("event") not in ("filled", "partial"):
+            continue
+        if oid in local_filled or oid in existing:
+            continue
+        existing[oid] = {**r, "source": "broker_history",
+                         "origin": "system" if oid in sys_ids else "manual",
+                         "imported_at": now, "import_file": Path(src).name}
+        added += 1
+    rows = sorted(existing.values(), key=lambda x: str(x.get("ts") or ""))
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(out.suffix + ".tmp")
     tmp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
                    encoding="utf-8")
     tmp.replace(out)
-    return len(rows)
+    return added
 
 
 def selftest():

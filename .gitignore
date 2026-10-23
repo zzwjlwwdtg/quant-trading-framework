@@ -48,6 +48,9 @@ agents/signals/ai_analysis_*.md
 agents/signals/ai_targets_*.json
 agents/signals/snapshot_*.txt
 agents/signals/news_seen.json
+agents/signals/market_radar.json
+agents/signals/market_radar.tmp
+agents/signals/research_forecasts.sqlite3*
 agents/signals/news_parsed_*.json
 agents/signals/manual_moomoo_ai_*.txt
 agents/signals/claude_gate_prompt_*.md
@@ -106,3 +109,8 @@ docs/data/
 # 2026-10-12: 自我进化的隔离开发副本 (git worktree) 与本机操作口令
 .evo_worktrees/
 agents/signals/evolution/.token
+agents/signals/cn_brief/
+agents/signals/public_market_outlook.json
+agents/signals/public_market_outlook.history.jsonl
+agents/signals/public_market_outlook.lock
+agents/signals/public_market_outlook.tmp

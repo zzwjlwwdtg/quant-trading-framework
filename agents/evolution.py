@@ -92,7 +92,15 @@ def save(items: list[dict]) -> None:
     EVO_DIR.mkdir(parents=True, exist_ok=True)
     tmp = PROPOSALS.with_suffix(".tmp")
     tmp.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
-    os.replace(tmp, PROPOSALS)
+    # 2026-10-19: Windows 上看板/杀毒软件短暂占用目标文件会让 os.replace 报 WinError 5 (EVO-20261014-3 误判失败)
+    for attempt in range(6):
+        try:
+            os.replace(tmp, PROPOSALS)
+            return
+        except PermissionError:
+            if attempt == 5:
+                raise
+            time.sleep(0.25 * (attempt + 1))
 
 
 def get(items: list[dict], pid: str) -> dict | None:
@@ -300,7 +308,8 @@ def propose(ai=None) -> dict:
         return {"skipped": "weekly cap"}
     if ai is None:
         from ai_prompt import query_ai_cli
-        ai = lambda prompt: query_ai_cli(prompt, timeout=600, complexity="complex")
+        ai = lambda prompt: query_ai_cli(prompt, timeout=600, complexity="complex",
+                                         caller="evolution")
     out, status, provider, _ = ai(build_propose_prompt(items))
     summary, new = parse_proposals(out)
     titles = {p.get("title") for p in items}
@@ -366,10 +375,44 @@ def run_tests(agents_dir: Path) -> dict:
     failed = set(re.findall(r"^(?:FAIL|ERROR): (\S+ \([^)]+\))", text, re.M))
     ran = re.search(r"Ran (\d+) tests?", text)
     return {"failed": sorted(failed), "ran": int(ran.group(1)) if ran else 0,
-            "ok": r.returncode == 0, "tail": text[-3000:]}
+            "ok": r.returncode == 0, "tail": text[-3000:], "text": text}
 
 
-def _claude_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
+def failure_details(text: str, ids, limit: int = 8000) -> str:
+    """2026-10-18: 只摘出新增失败测试的 traceback 块 (以前只给最后 3000 字符, 常常全是无关输出,
+    修复轮的 Claude 看不到真正的报错, 两次开发都卡在同一个导入错误上)."""
+    if not text:
+        return ""
+    sep = "=" * 70
+    blocks = [b for b in text.split(sep) if b.strip()]
+    want = [b.strip() for b in blocks
+            if b.lstrip().startswith(("FAIL:", "ERROR:")) and any(i in b[:500] for i in ids)]
+    return ("\n\n".join(want) or text[-3000:])[:limit]
+
+
+def _save_test_log(pid: str, label: str, res: dict) -> None:
+    try:
+        d = HERE / "logs" / "evo_tests"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / f"{pid}_{label}.txt").write_text(res.get("text") or res.get("tail") or "", encoding="utf-8")
+    except Exception:
+        pass
+
+
+# 2026-10-19 用户决定: 框架/交易相关仍用最高档 Opus; 只有不碰交易代码的小改动 (infra/research, effort S) 用 Sonnet.
+DEV_MODEL_HIGH = os.environ.get("EVO_DEV_MODEL_HIGH", "opus")
+DEV_MODEL_LIGHT = os.environ.get("EVO_DEV_MODEL_LIGHT", "sonnet")
+
+
+def dev_model(p: dict) -> str:
+    files = [str(f).replace("\\", "/") for f in (p.get("change") or {}).get("files") or []]
+    touches_trading = any(f in TRADING_CRITICAL for f in files)
+    if p.get("category") == "trading" or touches_trading or str(p.get("effort", "M")).upper() != "S":
+        return DEV_MODEL_HIGH
+    return DEV_MODEL_LIGHT
+
+
+def _claude_dev(worktree: Path, prompt: str, model: str | None = None) -> tuple[bool, str]:
     from ai_prompt import _find_claude_cli, _hidden_cli_subprocess_kwargs
     cli = _find_claude_cli()
     if not cli:
@@ -379,6 +422,8 @@ def _claude_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
            # 显式禁止命令执行/联网: 开发只能读写 worktree 里的文件, 测试由 evolution.py 自己跑
            "--disallowedTools", "Bash,WebFetch,WebSearch,NotebookEdit",
            "--no-session-persistence", "--output-format", "text"]
+    if model:
+        cmd += ["--model", model]
     # 参数已核对 claude 2.1.138 --help (logs/claude_help_full.txt, 2026-10-12)
     try:
         r = subprocess.run(cmd, input=prompt, cwd=str(worktree), capture_output=True, text=True,
@@ -413,46 +458,86 @@ def build_dev_prompt(p: dict, test_failures: str = "") -> str:
 
 def develop(pid: str, dev=None, tests=None) -> dict:
     """对一条 approved 提案: 建隔离分支 → 基线测试 → Claude 开发 → 测试 → 护栏 → 合并或待审."""
-    dev = dev or _claude_dev
     tests = tests or run_tests
     items = load()
     p = get(items, pid)
     if not p or p.get("status") != "approved":
         return {"ok": False, "error": "not approved"}
+    if dev is None:
+        _model = dev_model(p)
+        _log("dev_model", id=pid, model=_model)
+
+        def dev(wt_, prompt_):
+            fn = _claude_dev                      # 运行时取 (测试可能替换成只收两个参数的函数)
+            import inspect
+            try:
+                takes_model = "model" in inspect.signature(fn).parameters
+            except (TypeError, ValueError):
+                takes_model = False
+            return fn(wt_, prompt_, model=_model) if takes_model else fn(wt_, prompt_)
     _set_status(p, "developing"); save(items)
     branch, wt = f"evo/{pid}", WORKTREES / pid
     WORKTREES.mkdir(parents=True, exist_ok=True)
-    r = _git(["worktree", "add", "-B", branch, str(wt), "main"])
+    # 2026-10-18: 重试时如果分支上已有上次的 [evo-wip] 改动, 在它基础上续做 (只跑修复轮), 省 Claude 额度
+    head_msg = _git(["log", "-1", "--format=%s", branch]).stdout.strip()
+    resumed = head_msg.startswith(f"[evo-wip] {pid}")
+    if resumed:
+        wt_base = WORKTREES / f"{pid}-base"
+        rb = _git(["worktree", "add", "--detach", str(wt_base), "main"])
+        if rb.returncode != 0:
+            return _finish(pid, "dev_failed", f"worktree(base) 失败: {rb.stderr[:300]}")
+        base = tests(wt_base / "agents")
+        _git(["worktree", "remove", "--force", str(wt_base)])
+        r = _git(["worktree", "add", str(wt), branch])
+        if r.returncode == 0:
+            # 先把最新 main 合进来 (例如 2026-10-18 补提交的 portfolio_analytics 等模块), 冲突则放弃续做
+            m = _git(["merge", "--no-edit", "-q", "main"], cwd=wt)
+            if m.returncode != 0:
+                _git(["merge", "--abort"], cwd=wt)
+                _git(["worktree", "remove", "--force", str(wt)])
+                resumed = False
+                r = _git(["worktree", "add", "-B", branch, str(wt), "main"])
+    if not resumed and not (wt / ".git").exists():
+        r = _git(["worktree", "add", "-B", branch, str(wt), "main"])
     if r.returncode != 0:
         return _finish(pid, "dev_failed", f"worktree 失败: {r.stderr[:300]}")
-    base = tests(wt / "agents")
-    ok, out = dev(wt, build_dev_prompt(p))
-    if not ok and _quota_hit(out):
-        return _finish(pid, "approved", f"Claude 额度用完, 稍后自动重试: {out[-160:]}", cleanup=wt)
-    if not ok:
-        return _finish(pid, "dev_failed", f"开发失败: {out[-300:]}", cleanup=wt)
+    if not resumed:
+        base = tests(wt / "agents")
+        _save_test_log(pid, "base", base)
+        ok, out = dev(wt, build_dev_prompt(p))
+        if not ok and _quota_hit(out):
+            return _finish(pid, "approved", f"Claude 额度用完, 稍后自动重试: {out[-160:]}", cleanup=wt)
+        if not ok:
+            return _finish(pid, "dev_failed", f"开发失败: {out[-300:]}", cleanup=wt)
+    else:
+        ok, out = True, f"(续做: 基于分支 {branch} 上次的改动)"
     after = tests(wt / "agents")
+    _save_test_log(pid, "after", after)
     new_fail = sorted(set(after["failed"]) - set(base["failed"]))
     first_tail = after.get("tail", "")
-    if new_fail:                                  # 给一次修复机会
-        ok2, out2 = dev(wt, build_dev_prompt(p, after["tail"]))
+    if new_fail:                                  # 给一次修复机会 (附上真正的 traceback)
+        ok2, out2 = dev(wt, build_dev_prompt(p, failure_details(after.get("text", ""), new_fail)))
         if not ok2 and _quota_hit(out2):
             _keep_wip(pid, wt, "fix round hit quota")
             return _finish(pid, "approved", f"修复轮 Claude 额度用完, 稍后自动重试: {out2[-160:]}", cleanup=wt)
         out = out + "\n--- 修复轮 ---\n" + (out2 or "")
         after = tests(wt / "agents")
+        _save_test_log(pid, "after_fix", after)
         new_fail = sorted(set(after["failed"]) - set(base["failed"]))
     # 测试运行会改写被跟踪的运行时数据 (agents/signals/*.json), 不属于开发改动
-    _git(["checkout", "--", "agents/signals"], cwd=wt); _git(["clean", "-fq", "--", "agents/signals"], cwd=wt)
+    _drop_runtime_files(wt)
     _git(["add", "-A"], cwd=wt)
-    changed = [f for f in _git(["diff", "--cached", "--name-only"], cwd=wt).stdout.splitlines() if f]
-    diff = _git(["diff", "--cached"], cwd=wt, timeout=60).stdout
+    # 和 main 比 (续做时分支上已有 [evo-wip] 提交, 也要一起审)
+    changed = [f for f in _git(["diff", "--cached", "--name-only", "main"], cwd=wt).stdout.splitlines() if f]
+    diff = _git(["diff", "--cached", "main"], cwd=wt, timeout=60).stdout
     if not changed:
         return _finish(pid, "dev_failed", "没有产生任何改动", cleanup=wt)
     report = {"changed_files": changed, "tests_before": base["ran"], "tests_after": after["ran"],
               "new_failures": new_fail, "dev_summary": out[-1500:],
-              "diffstat": _git(["diff", "--cached", "--stat"], cwd=wt).stdout[-2000:],
-              "test_tail": (after.get("tail") or first_tail or "")[-2500:]}
+              "diffstat": _git(["diff", "--cached", "--stat", "main"], cwd=wt).stdout[-2000:],
+              "resumed_from_wip": resumed,
+              "test_tail": (failure_details(after.get("text", ""), new_fail) if new_fail
+                            else (after.get("tail") or first_tail or ""))[-4000:]}
     items = load(); p = get(items, pid); p["dev_report"] = report; save(items)
     if new_fail:
         _keep_wip(pid, wt, f"{len(new_fail)} new test failures")
@@ -465,7 +550,7 @@ def develop(pid: str, dev=None, tests=None) -> dict:
     msg = (f"[evo] {pid}: {p.get('title')}\n\n{p.get('problem', '')[:400]}\n\n"
            f"Approved by owner; developed by local Claude Code (evolution worker); "
            f"tests {after['ran']} run, no new failures.\n")
-    c = _git(["commit", "-q", "-m", msg], cwd=wt)
+    c = _git(["commit", "-q", "--allow-empty", "-m", msg], cwd=wt)   # 续做且修复轮无新改动时也要落一个正式提交
     if c.returncode != 0:
         return _finish(pid, "dev_failed", f"commit 失败: {c.stderr[:200]}", cleanup=wt)
     if needs_review(changed):
@@ -473,9 +558,29 @@ def develop(pid: str, dev=None, tests=None) -> dict:
     return merge(pid)
 
 
+RUNTIME_DIR = "agents/signals/"
+RUNTIME_KEEP = "agents/signals/backtest_verdicts/"   # 预注册 verdict 是开发产物, 必须保留
+
+
+def _drop_runtime_files(wt: Path) -> None:
+    """测试运行会改写/生成 agents/signals 下的运行时数据, 不属于开发改动; 预注册 verdict 除外.
+    (不用 git clean: 整个目录未跟踪时它会连 verdict 一起删)"""
+    modified = _git(["diff", "--name-only", "--", RUNTIME_DIR], cwd=wt).stdout.splitlines()
+    revert = [f for f in modified if f and not f.startswith(RUNTIME_KEEP)]
+    if revert:
+        _git(["checkout", "--", *revert], cwd=wt)
+    untracked = _git(["ls-files", "--others", "--exclude-standard", "--", RUNTIME_DIR], cwd=wt).stdout.splitlines()
+    for f in untracked:
+        if f and not f.startswith(RUNTIME_KEEP):
+            try:
+                (Path(wt) / f).unlink()
+            except OSError:
+                pass
+
+
 def _keep_wip(pid: str, wt: Path, why: str) -> None:
     """失败的开发也提交到 evo/<id> 分支 (不合并), 便于汇报时查看到底改了什么."""
-    _git(["checkout", "--", "agents/signals"], cwd=wt); _git(["clean", "-fq", "--", "agents/signals"], cwd=wt)
+    _drop_runtime_files(wt)
     _git(["add", "-A"], cwd=wt)
     _git(["commit", "-q", "--allow-empty", "-m", f"[evo-wip] {pid}: NOT MERGED ({why})"], cwd=wt)
 
@@ -507,13 +612,31 @@ def _finish(pid: str, status: str, note: str, cleanup: Path | None = None, delet
     return {"ok": status in ("merged", "ready_for_review"), "id": pid, "status": status, "note": note}
 
 
-def work() -> list[dict]:
-    """evo_worker 任务: 先合并已确认上线的, 再开发 1 条已批准的."""
+# 2026-10-14: 开发会大量消耗本机 Claude 额度, 而交易链路 (claude_gate) 也靠同一账号.
+# 只在美股收盘后的窗口开发 (UTC 20:00-04:59 = 日本 05:00-13:59), 额度 5 小时滚动恢复,
+# 保证下一个交易时段 (UTC 13:30 起) 前额度已恢复. 合并不调用 Claude, 不受此限.
+DEV_WINDOW_UTC_HOURS = (20, 21, 22, 23, 0, 1, 2, 3, 4)
+
+
+def in_dev_window(now: datetime | None = None) -> bool:
+    now = now or datetime.now(timezone.utc)
+    # 2026-10-18: 周末美股休市 (UTC 周六全天 / 周日全天), 额度在周一开盘前早已恢复, 可随时开发
+    if now.weekday() in (5, 6):
+        return True
+    return now.hour in DEV_WINDOW_UTC_HOURS
+
+
+def work(now: datetime | None = None) -> list[dict]:
+    """evo_worker 任务: 先合并已确认上线的, 再 (仅开发窗口内) 开发 1 条已批准的."""
     if not enabled():
         return [{"skipped": "kill switch"}]
     done = []
     for p in [x for x in load() if x.get("status") == "merge_approved"]:
         done.append(merge(p["id"]))
+    if not in_dev_window(now):
+        if any(x.get("status") == "approved" for x in load()):
+            done.append({"deferred": "outside dev window (UTC 20-03), protects trading Claude quota"})
+        return done
     progressed = True
     queue = sorted([x for x in load() if x.get("status") == "approved"],   # 先批准的先开发
                    key=lambda x: ((x.get("history") or [{}])[-1].get("ts", ""), x["id"]))

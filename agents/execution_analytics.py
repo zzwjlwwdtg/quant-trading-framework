@@ -149,6 +149,34 @@ def actual_execution_quality(
     }
 
 
+def broker_time_to_utc_iso(s) -> str:
+    """moomoo 美股订单时间 (美东, 无时区, 如 "2026-10-16 12:02:39.123") → UTC ISO. 解析不了返回 "".
+
+    与 _broker_history_reconcile.broker_time_to_utc_iso 同一口径 (2026-10-02 已按券商历史核对).
+    """
+    from datetime import timedelta
+    s = str(s or "").strip()
+    if not s:
+        return ""
+    for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+        try:
+            naive = datetime.strptime(s, fmt)
+            break
+        except ValueError:
+            continue
+    else:
+        return ""
+    try:
+        from zoneinfo import ZoneInfo
+        off = naive.replace(tzinfo=ZoneInfo("America/New_York")).utcoffset()
+    except Exception:
+        y = naive.year
+        mar = datetime(y, 3, 8) + timedelta(days=(6 - datetime(y, 3, 8).weekday()) % 7)
+        nov = datetime(y, 11, 1) + timedelta(days=(6 - datetime(y, 11, 1).weekday()) % 7)
+        off = timedelta(hours=-4 if mar.replace(hour=2) <= naive < nov.replace(hour=2) else -5)
+    return (naive - off).replace(tzinfo=timezone.utc).isoformat()
+
+
 def append_execution_event(path: Path, event: dict) -> None:
     """Append a hash-chained event. 加跨进程锁保证 read-then-append 原子性,
     防止并发 paper_trader 让 hash chain 分叉 (verify_execution_log 会误报篡改)."""

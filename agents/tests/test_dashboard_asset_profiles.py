@@ -17,6 +17,154 @@ import webui
 
 
 class DashboardAssetProfileTests(unittest.TestCase):
+    def test_leveraged_option_price_map_covers_tqqq_and_soxl(self):
+        self.assertEqual(
+            webui.LEVERAGED_OPTION_PRICE_MAP["TQQQ"],
+            {"source": "QQQ", "leverage": 3.0},
+        )
+        self.assertEqual(
+            webui.LEVERAGED_OPTION_PRICE_MAP["SOXL"],
+            {"source": "SOXX", "leverage": 3.0},
+        )
+
+    def test_proxy_level_is_converted_to_current_leveraged_etf_scale(self):
+        mapped = webui._convert_proxy_level(
+            proxy_level=731.41,
+            proxy_spot=732.07,
+            leveraged_spot=77.15,
+            leverage=3.0,
+        )
+
+        self.assertEqual(mapped["source_level"], 731.41)
+        self.assertEqual(mapped["spot_anchored_level"], 76.94)
+        self.assertAlmostEqual(mapped["spot_anchored_move_pct"], -0.27, places=2)
+
+    def test_long_horizon_mapping_applies_empirical_decay_and_range(self):
+        proxy = {"2026-01-01": 100.0}
+        leveraged = {"2026-01-01": 100.0}
+        proxy_price = 100.0
+        leveraged_price = 100.0
+        returns = [0.02, -0.02] * 7
+        for i, ret in enumerate(returns, start=2):
+            proxy_price *= 1.0 + ret
+            leveraged_price *= (1.0 + 3.0 * ret) * 0.9995
+            day = f"2026-01-{i:02d}"
+            proxy[day] = proxy_price
+            leveraged[day] = leveraged_price
+
+        decay = webui._estimate_leveraged_decay(proxy, leveraged, 3.0)
+        mapped = webui._convert_proxy_level(
+            proxy_level=100.0,
+            proxy_spot=100.0,
+            leveraged_spot=100.0,
+            leverage=3.0,
+            calendar_days=30,
+            decay=decay,
+        )
+
+        self.assertTrue(decay["available"])
+        self.assertGreater(decay["daily_decay_pct"], 0)
+        self.assertEqual(mapped["spot_anchored_level"], 100.0)
+        self.assertLess(mapped["expiry_estimate"], 100.0)
+        self.assertLessEqual(mapped["expiry_range_low"], mapped["expiry_estimate"])
+        self.assertGreaterEqual(mapped["expiry_range_high"], mapped["expiry_estimate"])
+
+    def test_actionable_contract_pairs_the_same_source_wall_and_target_price(self):
+        mapping = {
+            "leveraged_spot": 144.95,
+            "proxy_spot": 550.42,
+            "leverage": 3.0,
+            "expiry": "2026-08-21",
+            "levels": {
+                "call_wall": webui._convert_proxy_level(600, 550.42, 144.95, 3.0),
+                "put_wall": webui._convert_proxy_level(500, 550.42, 144.95, 3.0),
+            },
+        }
+
+        actionable = webui._build_actionable_option_prices("SOXL", "SOXX", mapping)
+
+        call = actionable["levels"]["call_wall"]
+        self.assertEqual(call["basis"], "open_interest")
+        self.assertEqual(call["source"], {
+            "ticker": "SOXX", "strike": 600.0, "move_pct": 9.01,
+        })
+        self.assertEqual(call["target"]["ticker"], "SOXL")
+        self.assertEqual(call["target"]["spot_anchored"], 184.12)
+
+    def test_api_keeps_raw_proxy_fields_and_adds_unambiguous_actionable_prices(self):
+        mapping = {
+            "leveraged_spot": 76.79,
+            "proxy_spot": 731.07,
+            "leverage": 3.0,
+            "expiry": "2026-08-21",
+            "levels": {
+                "call_wall": webui._convert_proxy_level(750, 731.07, 76.79, 3.0),
+            },
+        }
+        cached = {
+            "tickers": {
+                "TQQQ": {
+                    "underlying": "QQQ",
+                    "spot": 731.07,
+                    "call_wall_strike": 730.0,
+                    "call_wall_oi_strike": 750.0,
+                    "leveraged_mapping": mapping,
+                }
+            }
+        }
+        with patch.object(webui, "_cached", return_value=cached):
+            result = webui.api_ticker_options()
+
+        ticker = result["tickers"]["TQQQ"]
+        self.assertEqual(ticker["call_wall_strike"], 730.0)
+        self.assertEqual(
+            ticker["actionable_prices"]["levels"]["call_wall"]["source"]["strike"],
+            750.0,
+        )
+        self.assertEqual(
+            ticker["actionable_prices"]["levels"]["call_wall"]["target"]["spot_anchored"],
+            82.76,
+        )
+        self.assertEqual(
+            ticker["actionable_prices"]["levels"]["call_wall_oi"]["source"]["strike"],
+            750.0,
+        )
+        self.assertEqual(
+            ticker["actionable_prices"]["levels"]["call_wall_volume"]["source"]["strike"],
+            730.0,
+        )
+        self.assertEqual(
+            ticker["actionable_prices"]["levels"]["call_wall_volume"]["target"]["spot_anchored"],
+            76.45,
+        )
+        self.assertEqual(ticker["price_context"]["top_level_price_space"], "QQQ")
+        self.assertEqual(ticker["price_context"]["actionable_price_space"], "TQQQ")
+
+    def test_api_labels_decision_wall_as_volume_fallback_when_oi_is_missing(self):
+        mapping = {
+            "leveraged_spot": 76.79,
+            "proxy_spot": 731.07,
+            "leverage": 3.0,
+            "levels": {
+                "call_wall": webui._convert_proxy_level(730, 731.07, 76.79, 3.0),
+            },
+        }
+        cached = {
+            "tickers": {
+                "TQQQ": {
+                    "underlying": "QQQ",
+                    "call_wall_strike": 730.0,
+                    "call_wall_oi_strike": None,
+                    "leveraged_mapping": mapping,
+                }
+            }
+        }
+        with patch.object(webui, "_cached", return_value=cached):
+            result = webui.api_ticker_options()
+
+        call = result["tickers"]["TQQQ"]["actionable_prices"]["levels"]["call_wall"]
+        self.assertEqual(call["basis"], "volume_fallback")
+
     def test_macro_assets_share_the_simplified_capability_contract(self):
         expected_classes = {
             "GLD": "commodity",
@@ -169,6 +317,57 @@ class DashboardAssetProfileTests(unittest.TestCase):
         self.assertEqual(
             refreshed["tickers"]["AAPL"]["gex_analysis"],
             {"error": "insufficient_open_interest"},
+        )
+
+    def test_retained_proxy_gex_rebuilds_leveraged_pin_price(self):
+        previous = {
+            "ts": "old-ts",
+            "tickers": {
+                "TQQQ": {
+                    "underlying": "QQQ",
+                    "expiry": "2026-08-21",
+                    "gex_analysis": {
+                        "gex": {"total_gex_millions": 8.0},
+                        "stock_verdict": {
+                            "summary": "valid",
+                            "key_prices": {
+                                "upper_resistance": 740.0,
+                                "pin": 731.41,
+                                "lower_support": 718.0,
+                            },
+                        },
+                    },
+                }
+            },
+        }
+        refreshed = {
+            "ts": "new-ts",
+            "tickers": {
+                "TQQQ": {
+                    "underlying": "QQQ",
+                    "expiry": "2026-08-21",
+                    "gex_analysis": {"error": "insufficient_open_interest"},
+                    "leveraged_mapping": {
+                        "proxy_spot": 732.07,
+                        "leveraged_spot": 77.15,
+                        "leverage": 3.0,
+                        "calendar_days": 7,
+                        "decay": {"available": False},
+                        "levels": {},
+                    },
+                }
+            },
+        }
+
+        current = webui._retain_last_known_good_gex(previous, refreshed)["tickers"]["TQQQ"]
+
+        self.assertEqual(
+            current["leveraged_mapping"]["levels"]["pin"]["spot_anchored_level"],
+            76.94,
+        )
+        self.assertEqual(
+            current["leveraged_mapping"]["levels"]["upper_resistance"]["source_level"],
+            740.0,
         )
 
     def test_changed_expiry_never_reuses_old_gex(self):
@@ -397,7 +596,7 @@ class DashboardMarkupContractTests(unittest.TestCase):
 
     def test_advanced_modules_are_guarded_by_profile_capabilities(self):
         self.assertIn("showOptions ? renderMiniWall(opt) : ''", self.html)
-        self.assertIn("showOptions ? renderOptAnalysis(opt) : ''", self.html)
+        self.assertIn("showOptions ? renderOptAnalysis(opt, t.ticker) : ''", self.html)
         self.assertIn("showAI ? renderTickerAI(t, context) : ''", self.html)
         self.assertIn("const fundamentals = showFundamentals ?", self.html)
         self.assertIn("const forwardOutlook = showForwardOutlook ?", self.html)
@@ -412,6 +611,28 @@ class DashboardMarkupContractTests(unittest.TestCase):
         self.assertIn("GEX 为上一份有效数据", self.html)
         self.assertIn("ga.stale_reason", self.html)
 
+    def test_leveraged_cards_separate_raw_chain_from_executable_price(self):
+        self.assertIn("结构 → ${lm.ticker} 可执行价", self.html)
+        self.assertIn("spot_anchored_level", self.html)
+        self.assertIn("到期路径估算", self.html)
+        self.assertIn("非挂单价", self.html)
+        self.assertIn("底层期权链原价", self.html)
+        self.assertIn("换算未就绪，不可直接挂单", self.html)
+        self.assertIn("opt.actionable_prices", self.html)
+
+    def test_auto_execution_uses_broker_as_fact_source(self):
+        self.assertIn("自动执行状态 · Auto Execution", self.html)
+        self.assertIn("真实系统未结单", self.html)
+        self.assertIn("broker 未结订单是事实", self.html)
+        self.assertNotIn("这是系统实际在执行的动作", self.html)
+        self.assertNotIn("挂 <b>GTC 限价</b>", self.html)
+        self.assertIn("旧计划已隐藏", self.html)
+        self.assertIn("tg.effective_entry_ref", self.html)
+        self.assertIn("data/_meta.json?_=" , self.html)
+
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

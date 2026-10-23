@@ -287,6 +287,7 @@ _TICKER_DESC_ZH = {
     "US.DRAM": "DRAM：Roundhill Memory ETF（存储芯片板块，含 Micron / SK Hynix / Samsung 暴露）",
     "US.MULL": "MULL：2 倍做多 Micron（DRAM/NAND 龙头单股杠杆 ETF）",
     "US.MU":   "MU：Micron（DRAM/NAND 龙头单股，1x）",
+    "US.TLT":  "TLT：20 年以上美国国债 ETF（长端利率/久期，1x）",
 }
 
 _TICKER_DESC_JA = {
@@ -296,6 +297,7 @@ _TICKER_DESC_JA = {
     "US.DRAM": "DRAM：Roundhill Memory ETF（メモリ半導体セクター、Micron / SK Hynix / Samsung エクスポージャー）",
     "US.MULL": "MULL：Micron 2倍ロングETF（DRAM/NAND 大手の単銘柄レバレッジ）",
     "US.MU":   "MU：Micron（DRAM/NAND 大手、1x）",
+    "US.TLT":  "TLT：20年超米国債ETF（長期金利/デュレーション、1x）",
 }
 
 
@@ -1131,7 +1133,24 @@ def _find_claude_cli() -> str | None:
 
 
 def _find_codex_cli() -> str | None:
-    """Windows: codex.exe / codex.cmd / codex；按优先级查 PATH。"""
+    """Windows: codex.exe / codex.cmd / codex；按优先级查 PATH。
+
+    2026-10-15: AppData\\Local\\OpenAI\\Codex\\bin\\codex.exe (0.130 alpha) 已过旧, 读不了服务端
+    模型列表 (unknown variant `max`) 每次 exit=1. 现由 watchdog 任务 codex_update 用 npm 装最新版,
+    优先用 CODEX_CLI_PATH 指定 → npm 全局安装 (%APPDATA%\\npm\\codex.cmd) → 旧的独立版 → PATH.
+    """
+    override = os.environ.get("CODEX_CLI_PATH", "").strip()
+    if override and Path(override).exists():
+        return override
+    # 2026-10-19: 不只依赖 APPDATA 环境变量 (10/18 22:33 有任务在缺 APPDATA 的环境下
+    # 落到旧的 0.130 独立版, 报 unknown variant `max`); 也按用户目录直接找 npm 版.
+    npm_candidates = []
+    if os.environ.get("APPDATA"):
+        npm_candidates.append(Path(os.environ["APPDATA"]) / "npm" / "codex.cmd")
+    npm_candidates.append(Path.home() / "AppData" / "Roaming" / "npm" / "codex.cmd")
+    for npm_cmd in npm_candidates:
+        if npm_cmd.exists():
+            return str(npm_cmd)
     known = Path.home() / "AppData" / "Local" / "OpenAI" / "Codex" / "bin" / "codex.exe"
     if known.exists():
         return str(known)
@@ -1151,10 +1170,27 @@ def _find_codex_cli() -> str | None:
     return None
 
 
-def query_claude_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
+# ── Claude 模型分级 (2026-10-19 用户决定) ─────────────────────────────────
+# 框架/交易判断用最高档 Opus; 只有简单的结构化抽取 (新闻解析等) 用 Sonnet 省额度.
+#   simple  → sonnet  (news_analyzer / fed_watch / policy_toolkit_tracker)
+#   medium  → opus    (claude_gate 交易复核 / bond_ai_interpret / webui 等默认调用)
+#   complex → opus    (主分析 / 卖出复盘 / 自我进化提案)
+# 用 CLI 别名 "opus"/"sonnet", 自动对应当前最新版本. 环境变量 CLAUDE_MODEL_<档> 可覆盖.
+_CLAUDE_MODEL_DEFAULTS = {"simple": "sonnet", "medium": "opus", "complex": "opus"}
+
+
+def _resolve_claude_model(complexity: str) -> str:
+    c = complexity if complexity in _CLAUDE_MODEL_DEFAULTS else "medium"
+    env = os.environ.get(f"CLAUDE_MODEL_{c.upper()}", "").strip()
+    return env or _CLAUDE_MODEL_DEFAULTS[c]
+
+
+def query_claude_cli(prompt: str, timeout: int = 300,
+                     model: str | None = None) -> tuple[str | None, str]:
     """
     用本地 claude CLI 非交互模式跑一次查询。
     走 Claude Code 当前登录账号（订阅 OAuth）—— 不算 API 费用。
+    model: CLI --model 参数 (别名 opus / sonnet 或完整模型名); None = CLI 默认.
     返回 (output, status)。status: "ok" / "not_installed" / "timeout" / "error:..."
     """
     cli_path = _find_claude_cli()
@@ -1162,8 +1198,11 @@ def query_claude_cli(prompt: str, timeout: int = 300) -> tuple[str | None, str]:
         return None, "not_installed"
     try:
         # 用 stdin 喂 prompt 绕开 Windows 命令行长度限制（~32K）
+        cmd = [cli_path, "-p"]
+        if model:
+            cmd += ["--model", model]
         result = subprocess.run(
-            [cli_path, "-p"],
+            cmd,
             input=prompt,
             capture_output=True,
             text=True,
@@ -1261,7 +1300,9 @@ _COMPLEXITY_MODEL_ENV = {
 
 # F11: 结构化 AI 调用审计 log (ts, provider, model, complexity, status, duration_s)
 # 让 dashboard/复盘可以看到"这次 backtest 实际用了什么模型"而不是靠注释猜测.
-_AI_CALL_LOG_PATH = None   # 延迟初始化, 避 import 循环
+# Module-level so the test package can redirect it before any call; a lazy
+# per-call assignment would overwrite the redirected path.
+AI_CALL_LOG_PATH = Path(SIGNALS_DIR) / "ai_calls.jsonl"
 
 import threading as _threading
 
@@ -1281,20 +1322,13 @@ def _parse_codex_model(text: str | None) -> str | None:
 
 def _log_ai_call(*, provider: str, model: str | None, complexity: str,
                   status: str, duration_s: float, fallback_reason: str = "",
-                  model_reported: str | None = None) -> None:
+                  model_reported: str | None = None, caller: str = "") -> None:
     """Append 一条 AI call metadata 到 signals/ai_calls.jsonl. 静默失败."""
     import json as _json
     from datetime import datetime as _dt, timezone as _tz
-    global _AI_CALL_LOG_PATH
-    if _AI_CALL_LOG_PATH is None:
-        try:
-            from config import SIGNALS_DIR as _SD
-            _AI_CALL_LOG_PATH = Path(_SD) / "ai_calls.jsonl"
-        except Exception:
-            return
     try:
-        _AI_CALL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(_AI_CALL_LOG_PATH, "a", encoding="utf-8") as f:
+        AI_CALL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(AI_CALL_LOG_PATH, "a", encoding="utf-8") as f:
             f.write(_json.dumps({
                 "ts":               _dt.now(_tz.utc).isoformat(),
                 "provider":         provider,
@@ -1307,6 +1341,7 @@ def _log_ai_call(*, provider: str, model: str | None, complexity: str,
                 "status":           status,
                 "duration_s":       round(duration_s, 2),
                 "fallback_reason":  fallback_reason,
+                "caller":           caller,
             }, ensure_ascii=False) + "\n")
     except Exception:
         pass
@@ -1433,7 +1468,16 @@ def _query_named_cli(provider: str, prompt: str, timeout: int,
     if provider == "codex":
         return query_codex_cli(prompt, timeout=timeout, web_search=web_search,
                                complexity=complexity)
-    return query_claude_cli(prompt, timeout=timeout)
+    return query_claude_cli(prompt, timeout=timeout, model=_resolve_claude_model(complexity))
+
+
+def _model_for(provider: str, complexity: str) -> str | None:
+    """审计 log 用: 本次调用请求的模型."""
+    if provider == "codex":
+        return _resolve_codex_model(complexity)
+    if provider == "claude":
+        return _resolve_claude_model(complexity)
+    return None
 
 
 def query_ai_cli(
@@ -1443,6 +1487,7 @@ def query_ai_cli(
     fallback_on_unavailable: bool = False,
     web_search: bool = False,
     complexity: str = "medium",
+    caller: str = "",
 ) -> tuple[str | None, str, str, str]:
     """Query the configured local CLI (Claude-first by default since 2026-10-08).
 
@@ -1457,14 +1502,14 @@ def query_ai_cli(
     fallback = policy["fallback"]
 
     # F11: 记录实际 model (若 env 空, 记 cli_internal_default 让人能看出)
-    model_used = _resolve_codex_model(complexity) if primary == "codex" else None
+    model_used = _model_for(primary, complexity)
 
     t0 = _time.monotonic()
     output, status = _query_named_cli(primary, prompt, timeout, web_search, complexity)
     dur = _time.monotonic() - t0
     # F11: 每次调用后 log (无论成功/失败) — 如果 fallback 起飞我们要有两条 audit
     _log_ai_call(provider=primary, model=model_used, complexity=complexity,
-                  status=status, duration_s=dur,
+                  status=status, duration_s=dur, caller=caller,
                   model_reported=(getattr(_CODEX_RECEIPT, "model", None)
                                   if primary == "codex" else None))
     if output:
@@ -1479,7 +1524,7 @@ def query_ai_cli(
         return None, status, primary.title(), ""
 
     fallback_reason = f"{primary}: {_redact_cli_text(status)}"
-    fb_model = _resolve_codex_model(complexity) if fallback == "codex" else None
+    fb_model = _model_for(fallback, complexity)
     t1 = _time.monotonic()
     output, fallback_status = _query_named_cli(
         fallback, prompt, timeout, web_search, complexity
@@ -1488,14 +1533,14 @@ def query_ai_cli(
     if output:
         _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
                       status=fallback_status, duration_s=fb_dur,
-                      fallback_reason=fallback_reason,
+                      fallback_reason=fallback_reason, caller=caller,
                       model_reported=(getattr(_CODEX_RECEIPT, "model", None)
                                       if fallback == "codex" else None))
         return output, fallback_status, fallback.title(), fallback_reason
     combined = f"{fallback_reason}; {fallback}={fallback_status}"
     _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
                   status=fallback_status, duration_s=fb_dur,
-                  fallback_reason=fallback_reason,
+                  fallback_reason=fallback_reason, caller=caller,
                   model_reported=(getattr(_CODEX_RECEIPT, "model", None)
                                   if fallback == "codex" else None))
     return None, _redact_cli_text(combined), fallback.title(), fallback_reason
@@ -1512,7 +1557,8 @@ def auto_analyze(mode: str = "review") -> dict:
 
     prompt = prompt_path.read_text(encoding="utf-8")
     # 主 AI 分析 (morning / review / deep) — 完整今日 log 深度推理, complex 档
-    output, status, provider, fallback_reason = query_ai_cli(prompt, complexity="complex")
+    output, status, provider, fallback_reason = query_ai_cli(
+        prompt, complexity="complex", caller="auto_analyze")
 
     today = _market_date()
     analysis_path = Path(SIGNALS_DIR) / f"ai_analysis_{mode}_{today}.md"

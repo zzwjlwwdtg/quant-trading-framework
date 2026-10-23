@@ -107,7 +107,8 @@ class S3_SendAlertFallbackTests(unittest.TestCase):
     def test_no_channel_configured_writes_critical_alerts_for_crisis(self):
         import notifications
         with tempfile.TemporaryDirectory() as tmp:
-            with patch.object(notifications, "SIGNALS_DIR", tmp), \
+            with patch.object(notifications, "ALERTS_PATH",
+                              Path(tmp) / "critical_alerts.jsonl"), \
                  patch.object(notifications, "_cfg", return_value=""):
                 r = notifications.send_alert("test crisis msg", level="crisis", dedup=False)
             # assertions **inside** with block — tempdir 出块就删
@@ -124,7 +125,8 @@ class S3_SendAlertFallbackTests(unittest.TestCase):
         """info 级别不写 critical_alerts (避免刷屏, 只关键 level 才 fallback)."""
         import notifications
         with tempfile.TemporaryDirectory() as tmp:
-            with patch.object(notifications, "SIGNALS_DIR", tmp), \
+            with patch.object(notifications, "ALERTS_PATH",
+                              Path(tmp) / "critical_alerts.jsonl"), \
                  patch.object(notifications, "_cfg", return_value=""):
                 notifications.send_alert("just info", level="info", dedup=False)
             crit_path = Path(tmp) / "critical_alerts.jsonl"
@@ -133,4 +135,7 @@ class S3_SendAlertFallbackTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

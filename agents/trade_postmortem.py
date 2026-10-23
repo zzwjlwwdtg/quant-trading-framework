@@ -282,6 +282,24 @@ def parse_ai(text: str | None) -> dict | None:
     return d
 
 
+def collect_news_structured_for(sell: dict, t: datetime, *, window_hours: float = 48.0) -> dict:
+    """EVO-20261014-2: 把 ±window_hours 候选 RSS 一次性经 Claude CLI 拆成结构化信号.
+
+    结果只用于写进 postmortem 的 news_structured 字段, 决策链路零接触
+    (TECHNICAL_ONLY 不变; 这里不是把消息面放回决策, 只是让复盘能回答
+     '那笔强制卖出是否至少有事件/新闻背书'). CLI 调用 ≤ 1 次/笔.
+    """
+    try:
+        from news_analyzer import collect_news_structured
+        return collect_news_structured(
+            news_symbols(sell["ticker"]), t,
+            window_hours=window_hours, max_items=15,
+            source_label=f"postmortem/{sell.get('order_id', '')}")
+    except Exception as e:
+        return {"items": [], "fetched": 0, "fallback": True,
+                "error": str(e)[:200]}
+
+
 def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
     t = datetime.fromisoformat(sell["decision_ts"].replace("Z", "+00:00"))
     rows = load_log_window(t, BEFORE_H, AFTER_H)
@@ -289,10 +307,16 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
     news = news_from_cache(sell["ticker"], t) + (news_from_rss(sell["ticker"], t) if live_fetch else [])
     after_log: list[str] = []   # 不再用 log 价格做事后走势 (是日线参考价, 易误读)
     after_closes = closes_after(sell["ticker"], t) if live_fetch else []
+    # EVO-20261014-2: 候选新闻结构化拆解 (只入 postmortem, 不回传决策)
+    news_structured = (collect_news_structured_for(sell, t)
+                        if live_fetch else
+                        {"items": [], "fetched": 0, "fallback": None,
+                         "skipped": "live_fetch=False"})
     prompt = build_prompt(sell, excerpt, news, after_log, after_closes)
     if ai is None:
         from ai_prompt import query_ai_cli
-        ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex")
+        ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex",
+                                    caller="trade_postmortem")
     out, status, provider, fb = ai(prompt)
     parsed = parse_ai(out)
     if parsed is None and out:      # 保留原文便于排查 (下次运行会重试)
@@ -306,6 +330,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
             "provider": provider, "status": status,
             "ok": parsed is not None, "analysis": parsed,
             "material": {"excerpt_lines": len(excerpt), "news_items": len(news), "after_closes": after_closes},
+            "news_structured": news_structured,
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 
 

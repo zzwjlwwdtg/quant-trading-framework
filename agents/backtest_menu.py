@@ -69,7 +69,7 @@ def cmd_engine_mid():
 
 def cmd_modules():
     print("\n[1/1] 模块准确率 — 各系统模块 × 1d/5d/10d/20d × 3 标的（约 3-5 分钟）...")
-    print("      输出到 signals/module_accuracy.md，Claude prompt 会自动注入")
+    print("      输出到 signals/module_accuracy.md，AI prompt 会自动注入")
     if input("  确认开跑？(y/N): ").strip().lower() != "y":
         return
     run(["_backtest_modules_accuracy.py"])
@@ -90,7 +90,7 @@ MENU = [
     ("1", "regime 单一源",      "decision_agent 改 regime 路径必跑",  cmd_regime),
     ("2", "新闻管道",           "events_watch 改 RSS / CLI 解析必跑", cmd_news),
     ("3", "Trump signal",       "trump_signal / events_watch 改必跑（约 20 分钟）", cmd_trump),
-    ("4", "engine Lite",        "三档信号方向命中率",                cmd_engine_lite),
+    ("4", "engine Lite",        "两档回测中的轻量信号方向命中率",    cmd_engine_lite),
     ("5", "engine Mid",         "完整 trader 模拟 P&L vs B&H",      cmd_engine_mid),
     ("6", "模块准确率",         "各模块 × 1d/5d/10d/20d → 写 signals/module_accuracy.md（推荐周末跑）", cmd_modules),
     ("a", "全跑（1-6 顺序）",   "约 25-35 分钟",                     cmd_all),

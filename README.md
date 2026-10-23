@@ -1,5 +1,7 @@
 # fsi-skills Trading Agents
 
+A-share research P0 (not the US trading engine): [implementation plan](IMPLEMENTATION_PLAN.md), [deterministic decisions and CLI](agents/cn_decisions/README.md). Historical trend/news are not calibrated future forecasts. No validated A-share model is installed; probabilities remain null and actions remain data-insufficient. The new GET is cache-only and never trades.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 

@@ -112,9 +112,37 @@ class ImportBaseline(unittest.TestCase):
         self.assertEqual(n, 2)
         self.assertEqual({r["order_id"]: r["origin"] for r in rows}, {"100": "system", "200": "manual"})
 
+    def test_submitted_only_order_is_backfilled_and_existing_rows_kept(self):
+        import _broker_history_reconcile as br
+        td = Path(tempfile.mkdtemp())
+        src = td / "broker_fills.jsonl"
+        _write(src, [
+            _f("100", "2099-01-01T15:00:00+00:00", "US.X", "BUY", 5, 10.0),
+            _f("200", "2099-01-01T15:00:00+00:00", "US.Y", "BUY", 5, 20.0),
+            _f("300", "2099-01-02T15:00:00+00:00", "US.X", "SELL", 5, 11.0)])
+        exec_ = td / "exec.jsonl"
+        _write(exec_, [
+            {"event": "submitted", "order_id": "100", "ts": "2099-01-01T14:59:00+00:00",
+             "ticker": "US.X", "side": "BUY"},
+            _f("300", "2099-01-02T15:00:00+00:00", "US.X", "SELL", 5, 11.0)])
+        out = td / "hist.jsonl"
+        _write(out, [_f("050", "2098-12-31T15:00:00+00:00", "US.OLD", "BUY", 1, 1.0,
+                        source="broker_history", origin="system")])
+        n = br.import_baseline(src, out, exec_path=exec_, logs_dir=td / "logs")
+        rows = [json.loads(l) for l in out.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(n, 2)                       # 100 submitted-only + 200 new; 300 local fill
+        self.assertEqual([r["order_id"] for r in rows], ["050", "100", "200"])
+        self.assertEqual({r["order_id"]: r["origin"] for r in rows}["100"], "system")
+        # 可重复执行: 不重复追加
+        self.assertEqual(br.import_baseline(src, out, exec_path=exec_, logs_dir=td / "logs"), 0)
+        self.assertEqual(len(out.read_text(encoding="utf-8").splitlines()), 3)
+
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )
 
 
 class FormatShowsOrigin(unittest.TestCase):

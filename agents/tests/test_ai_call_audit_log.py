@@ -26,11 +26,11 @@ class AICallAuditLogTests(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.log_path = Path(self.tmpdir) / "ai_calls.jsonl"
-        self._orig = ai_prompt._AI_CALL_LOG_PATH
-        ai_prompt._AI_CALL_LOG_PATH = self.log_path
+        self._orig = ai_prompt.AI_CALL_LOG_PATH
+        ai_prompt.AI_CALL_LOG_PATH = self.log_path
 
     def tearDown(self):
-        ai_prompt._AI_CALL_LOG_PATH = self._orig
+        ai_prompt.AI_CALL_LOG_PATH = self._orig
         import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -67,6 +67,16 @@ class AICallAuditLogTests(unittest.TestCase):
             ai_prompt.query_ai_cli("x", complexity="simple")
         entries = self._read_log()
         self.assertEqual(entries[0]["model"], "cli_internal_default")
+
+    def test_caller_is_logged(self):
+        with patch.object(ai_prompt, "get_ai_cli_policy",
+                            return_value={"primary": "codex", "fallback": "none"}), \
+             patch.object(ai_prompt, "_query_named_cli",
+                            return_value=("out", "ok")), \
+             patch.object(ai_prompt, "_resolve_codex_model", return_value=None):
+            ai_prompt.query_ai_cli("x", complexity="medium", caller="trump")
+        entries = self._read_log()
+        self.assertEqual(entries[0]["caller"], "trump")
 
     def test_failed_call_still_logged(self):
         # 失败也应留 audit — 便于查看 CLI 挂了/超时
@@ -106,4 +116,7 @@ class AICallAuditLogTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

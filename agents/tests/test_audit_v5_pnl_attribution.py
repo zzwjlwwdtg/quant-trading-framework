@@ -130,9 +130,13 @@ class V5_01_WindowInheritsCost(unittest.TestCase):
 
     def test_old_buy_recent_sell_inherits_cost(self):
         # 买: 60d 前, 卖: 5d 前. since=30d 应包含 sell + 继承 buy 成本
+        # 2026-10-19: 原来写死 2026-09-18 (当时 5 天前), 时间一过就落到 30 天窗口外. 改为相对今天.
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        iso = lambda d: (now - timedelta(days=d)).strftime("%Y-%m-%dT14:00Z")  # noqa: E731
         events = [
-            _fill("B1", "2026-06-01T14:00Z", "US.T1", "BUY", 10, 100.0),   # 100+ days ago
-            _fill("S1", "2026-09-18T14:00Z", "US.T1", "SELL", 10, 110.0),
+            _fill("B1", iso(100), "US.T1", "BUY", 10, 100.0),   # 100 天前
+            _fill("S1", iso(5), "US.T1", "SELL", 10, 110.0),    # 5 天前
         ]
         with patch.object(fl, "_load_ledger", return_value=events):
             s = ct.stats_from_fills(since_days=30)
@@ -145,4 +149,7 @@ class V5_01_WindowInheritsCost(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

@@ -132,7 +132,7 @@ def _report_payload(sig: dict[str, Any],
     }
 
 
-def _build_claude_prompt(payload: dict[str, Any]) -> str:
+def _build_ai_prompt(payload: dict[str, Any]) -> str:
     packed = json.dumps(payload, ensure_ascii=False, indent=2)
     return f"""你是一个谨慎的日股社交媒体研究助理。请根据下面 JSON，写一份中文 Markdown 周报。
 
@@ -164,13 +164,14 @@ JSON:
 """
 
 
-def _call_claude_summary(payload: dict[str, Any], timeout: int = 420) -> tuple[str | None, str]:
+def _call_ai_summary(payload: dict[str, Any], timeout: int = 420) -> tuple[str | None, str]:
     try:
         from ai_prompt import query_ai_cli
     except Exception as exc:
-        return None, f"claude_import_error: {exc}"
-    prompt = _build_claude_prompt(payload)
-    out, status, _, _ = query_ai_cli(prompt, timeout=timeout)
+        return None, f"ai_cli_import_error: {exc}"
+    prompt = _build_ai_prompt(payload)
+    out, status, _, _ = query_ai_cli(prompt, timeout=timeout,
+                                     caller="jp_social_weekly")
     if out:
         return _clean_llm_markdown(out), status
     return None, status
@@ -812,7 +813,7 @@ def write_weekly_report(*,
     llm_status = "disabled"
     markdown = ""
     if use_llm:
-        markdown, llm_status = _call_claude_summary(payload, timeout=llm_timeout)
+        markdown, llm_status = _call_ai_summary(payload, timeout=llm_timeout)
     if not markdown:
         markdown = _fallback_markdown(payload)
         if use_llm:

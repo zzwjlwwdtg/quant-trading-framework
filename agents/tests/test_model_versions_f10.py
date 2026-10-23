@@ -151,13 +151,16 @@ class DecisionCarriesVersions(unittest.TestCase):
     def test_trade_log_records_model_versions(self):
         import paper_trader as pt
         with tempfile.TemporaryDirectory() as td:
-            fake = Path(td) / "paper_trader.py"
-            with patch.object(pt, "__file__", str(fake)):
+            log_path = Path(td) / "signals" / "trade_log.jsonl"
+            with patch.object(pt, "TRADE_LOG_PATH", log_path):
                 pt._log_trade("US.X", "BUY", 1, 10.0, "1", "t",
                               decision={"action": "BUY", "model_versions": {"hmm": {"id": "hmm-z"}}})
-            row = json.loads((Path(td) / "signals" / "trade_log.jsonl").read_text(encoding="utf-8"))
+            row = json.loads(log_path.read_text(encoding="utf-8"))
         self.assertEqual(row["decision"]["model_versions"], {"hmm": {"id": "hmm-z"}})
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

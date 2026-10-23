@@ -11,6 +11,14 @@ from zoneinfo import ZoneInfo
 from moomoo import KLType, AuType, RET_OK
 
 from moomoo_pool import get_quote_ctx
+from data_quality import quote_ts_from_update_time
+
+# GLD/USO 覆盖 overnight_pct 为 GC=F / CL=F 24h 期货真实动量
+# （NYSE extended-hours 太稀薄，抓不到 Asia/London 商品期货移动）
+try:
+    from commodity_overlay import enrich_market_snapshot as _enrich_commodity
+except Exception:
+    _enrich_commodity = None
 
 _ET = ZoneInfo("America/New_York")
 
@@ -351,6 +359,7 @@ def get_market_signal(ticker: str) -> dict:
             return {"ticker": ticker, "error": f"snapshot: {snap}"}
 
         row = snap.iloc[0]
+        quote_ts   = quote_ts_from_update_time(row.get("update_time"))
         price      = float(row["last_price"])
         prev_close = float(row["prev_close_price"])
         vol_today  = float(row["volume"])
@@ -365,6 +374,8 @@ def get_market_signal(ticker: str) -> dict:
                 return v if v != 0 else None
             except (TypeError, ValueError):
                 return None
+        bid_price    = _f("bid_price")
+        ask_price    = _f("ask_price")
         pre_price    = _f("pre_price")
         pre_pct      = _f("pre_change_rate")
         pre_vol      = _f("pre_volume")
@@ -394,6 +405,7 @@ def get_market_signal(ticker: str) -> dict:
             return {
                 "ticker": ticker.split(".")[-1],
                 "ts": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "quote_ts": quote_ts,
                 "price": round(price, 2),
                 "pct_chg": round((price - prev_close) / prev_close * 100, 2),
                 "rsi_14": None, "ma20": None, "vol_ratio": None,
@@ -648,10 +660,15 @@ def get_market_signal(ticker: str) -> dict:
         else:
             psar_cur = 1; psar_signal = "none"
 
-        return {
+        result = {
             "ticker":          ticker.split(".")[-1],
             "ts":              datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "quote_ts":        quote_ts,
             "price":           round(price, 2),
+            "bid_price":       bid_price,
+            "ask_price":       ask_price,
+            "volume":          vol_today,
+            "avg_volume_20":   round(vol_avg20, 0),
             "pct_chg":         round(pct_chg, 2),
             "rsi_14":          round(rsi, 1),
             "cci_20":          round(cci, 1) if cci == cci else None,
@@ -716,5 +733,12 @@ def get_market_signal(ticker: str) -> dict:
             "adx_14":          round(adx_14, 1),
             "adx_zone":        adx_zone,
         }
+        # GLD/USO：用 GC=F / CL=F 24h 期货覆盖 overnight_pct（幂等，非商品 ticker 直接返回原 dict）
+        if _enrich_commodity:
+            try:
+                result = _enrich_commodity(result)
+            except Exception:
+                pass
+        return result
     except Exception as e:
         return {"ticker": ticker.split(".")[-1], "error": str(e)}

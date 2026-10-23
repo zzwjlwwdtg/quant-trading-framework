@@ -42,6 +42,29 @@ class HolidayRules(unittest.TestCase):
         self.assertTrue(rt.is_nyse_session(date(2026, 11, 27)))   # 感恩节次日半天, 仍开市
 
 
+class EarlyCloseRules(unittest.TestCase):
+    def test_early_close_dates(self):
+        expected = {
+            2024: {"2024-07-03", "2024-11-29", "2024-12-24"},
+            2025: {"2025-07-03", "2025-11-28", "2025-12-24"},
+            # 2026-07-03 是独立日补休全天休市; 2027 圣诞夜是补休全天休市
+            2026: {"2026-11-27", "2026-12-24"},
+            2027: {"2027-11-26"},
+        }
+        for year, want in expected.items():
+            got = {d.isoformat() for d in rt.nyse_early_closes(year)}
+            self.assertEqual(got, want, year)
+
+    def test_close_minute(self):
+        self.assertEqual(rt.nyse_close_minute(date(2026, 11, 27)), 13 * 60)
+        self.assertEqual(rt.nyse_close_minute(date(2026, 12, 24)), 13 * 60)
+        self.assertEqual(rt.nyse_close_minute(date(2026, 11, 25)), 16 * 60)
+
+    def test_holiday_is_not_early_close(self):
+        self.assertFalse(rt.is_nyse_early_close(date(2026, 7, 3)))
+        self.assertFalse(rt.is_nyse_early_close(date(2026, 11, 26)))
+
+
 class MarketDateSkipsHolidays(unittest.TestCase):
     def test_codex_probe_holiday_session_date(self):
         # Codex 探针: 2026-07-03 14:00 UTC → 应跳到下一交易日 2026-07-06
@@ -59,4 +82,7 @@ class MarketDateSkipsHolidays(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

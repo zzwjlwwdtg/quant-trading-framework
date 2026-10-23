@@ -40,6 +40,9 @@ SOX_TICKERS = [
     "STM", "IPGP", "SLAB", "RMBS",
 ]
 
+# 最后成交日落后同批最新日期超过该天数的序列视为停更 (退市/停牌), 不参与矩阵.
+STALE_SERIES_DAYS = 5
+
 
 # 业务板块归类（用于残差动量分析的主题聚合）
 SOX_THEME = {
@@ -58,18 +61,37 @@ SOX_THEME = {
 
 
 def fetch_returns(tickers: list[str] = SOX_TICKERS,
-                  period: str = "2y") -> Optional[pd.DataFrame]:
+                  period: str = "2y",
+                  *,
+                  min_assets: int = 5) -> Optional[pd.DataFrame]:
     """
     用 yfinance 批量拉日 K 收盘价，转 log return 矩阵 (T × N)。
     成功的 ticker 才保留；任何错误返回 None。
+
+    EVO-20261014-3 (2026-10-19): 退市/长期 404 的 proxy 符号 (如 6488.TW /
+    3688.T) 从 retired list 剔除后再拉, 不再因为个别死票整轮跳过; 剔除后
+    仍 ≥ min_assets (默认 5) 就继续用 N-k 维跑, 否则才返回 None.
     """
     try:
         import yfinance as yf
     except ImportError:
         return None
+
+    # 先读 retired list, 过滤掉已退市/长期 404 的符号
+    try:
+        from _data_source_health import list_retired, record_fetch_result
+        retired = set(list_retired())
+    except Exception:
+        retired = set()
+        record_fetch_result = None  # noqa: F841
+
+    live_tickers = [tk for tk in tickers if tk not in retired]
+    if len(live_tickers) < min_assets:
+        return None
+
     try:
         data = yf.download(
-            tickers, period=period, interval="1d",
+            live_tickers, period=period, interval="1d",
             auto_adjust=True, progress=False, group_by="ticker",
             threads=True,
         )
@@ -78,22 +100,56 @@ def fetch_returns(tickers: list[str] = SOX_TICKERS,
     if data is None or data.empty:
         return None
 
-    closes = {}
-    for tk in tickers:
+    closes: dict[str, pd.Series] = {}
+    missing: list[str] = []
+    for tk in live_tickers:
         try:
             # yfinance 多 ticker 时是 MultiIndex columns
             col = data[tk]["Close"] if (tk, "Close") in data.columns else data["Close"][tk]
             if col is None or col.empty:
+                missing.append(tk)
                 continue
             closes[tk] = col.dropna()
         except (KeyError, AttributeError):
             try:
                 col = data["Close"][tk]
-                if col is None or col.empty: continue
+                if col is None or col.empty:
+                    missing.append(tk)
+                    continue
                 closes[tk] = col.dropna()
             except Exception:
+                missing.append(tk)
                 continue
-    if len(closes) < 10:
+
+    # 退市后 yfinance 仍会返回一段旧数据 (如 QRVO). 这类序列非空但最后成交日
+    # 停在过去, DataFrame.dropna() 会把整个矩阵截断到最旧的那条 K 线, 必须剔除.
+    stale: list[str] = []
+    last_dates = {
+        tk: pd.Timestamp(series.index.max()).date()
+        for tk, series in closes.items() if len(series)
+    }
+    if last_dates:
+        latest_date = max(last_dates.values())
+        stale = [
+            tk for tk, last_date in last_dates.items()
+            if (latest_date - last_date).days > STALE_SERIES_DAYS
+        ]
+        for tk in stale:
+            closes.pop(tk, None)
+
+    # 登记本轮每只票的拉取结果; 连续失败 N 天自动 retire, 不再刷日志
+    try:
+        from _data_source_health import record_fetch_result as _rec
+        for tk in closes:
+            _rec(tk, True)
+        for tk in missing:
+            _rec(tk, False, reason="yfinance_empty")
+        for tk in stale:
+            _rec(tk, False, reason="yfinance_stale")
+    except Exception:
+        pass
+
+    if len(closes) < min_assets:
         return None
 
     px = pd.DataFrame(closes).dropna()
@@ -444,6 +500,18 @@ def format_pca_report() -> list[str]:
     """生成可直接传给 logger 的多行 PCA 报告。"""
     returns = fetch_returns()
     if returns is None or returns.empty:
+        # EVO-20261014-3: 加上 retired 列表, 让"剔除后仍不够样本"与"全部跌掉"可区分
+        try:
+            from _data_source_health import list_retired
+            retired = list_retired()
+        except Exception:
+            retired = []
+        if retired:
+            tail = "，".join(retired[:8])
+            return [t(
+                f"  [PCA] 剔除 retired ({tail}) 后 feature matrix < 最小样本, 跳过本轮分析",
+                f"  [PCA] retired 除外 ({tail}) 後サンプル不足、本ラウンド分析スキップ",
+            )]
         return [t("  [PCA] 数据拉取失败，跳过本轮分析",
                   "  [PCA] データ取得失敗、本ラウンドの分析スキップ")]
 
@@ -703,6 +771,11 @@ def format_pca_report() -> list[str]:
 
         regime_label_map = {
             "bull_trending":  t("牛市延续",  "強気継続"),
+            "bull_extended":  t("牛市延伸",  "強気伸長"),
+            "bull_pulling":   t("牛市回调",  "強気押し目"),
+            "bull_chop":      t("偏多震荡",  "強気レンジ"),
+            "neutral_chop":   t("中性震荡",  "中立レンジ"),
+            "risk_off":       t("风险收缩",  "リスクオフ"),
             "overheated":     t("过热警戒",  "過熱警戒"),
             "recession_risk": t("衰退风险",  "景気後退リスク"),
             "crisis":         t("危机防御",  "危機モード"),
@@ -752,6 +825,16 @@ def format_pca_report() -> list[str]:
                 t("  ┌─ 混合策略", "  ┌─ ミックス戦略"),
                 t("  ├─ 仅 |z| > 3σ 才入场", "  ├─ |z| > 3σ のみエントリー"),
                 t("  └─ 等 regime 明朗", "  └─ Regime 明確化待ち"),
+            ],
+            "neutral_chop": [
+                t("  ┌─ 短线反复，降低加仓频率", "  ┌─ 短期レンジ、追加頻度を下げる"),
+                t("  ├─ 仅在更高动量门槛与多因子共振时试仓", "  ├─ 高いモメンタム閾値と複数因子一致時のみ試す"),
+                t("  └─ 慢周期偏多不等于短线买点", "  └─ 長期強気は短期買い場を意味しない"),
+            ],
+            "risk_off": [
+                t("  ┌─ 板块价格急跌，暂停追涨", "  ┌─ セクター急落、追い買い停止"),
+                t("  ├─ 等待止跌与动量确认", "  ├─ 下げ止まりとモメンタム確認待ち"),
+                t("  └─ 这是价格风险，不等于宏观衰退", "  └─ 価格リスクであり景気後退判定ではない"),
             ],
         }
         for ln in matrix_lines.get(regime, []):

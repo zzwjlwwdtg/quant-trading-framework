@@ -140,7 +140,7 @@ def _run_ai_analysis() -> None:
     prompt_path.write_text(prompt, encoding="utf-8")
 
     output, status, provider, fallback_reason = query_ai_cli(
-        prompt, timeout=AI_TIMEOUT_SEC
+        prompt, timeout=AI_TIMEOUT_SEC, caller="snapshot_today"
     )
 
     if not output:

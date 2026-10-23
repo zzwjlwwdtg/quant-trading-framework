@@ -22,7 +22,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
@@ -61,6 +61,114 @@ def _pid_alive(pid: int) -> bool:
         return exit_code.value == 259   # STILL_ACTIVE
     except Exception:
         return False
+
+
+class _FILETIME(ctypes.Structure):
+    _fields_ = [("dwLowDateTime", ctypes.c_ulong),
+                ("dwHighDateTime", ctypes.c_ulong)]
+
+
+def process_info(pid: int | None) -> dict | None:
+    """Return {pid, started_utc, image} for a live PID, else None.
+
+    Start time + image name are used together with the PID so a recycled PID
+    cannot make the watchdog report a dead orchestrator as healthy (P1-4).
+    """
+    if not pid:
+        return None
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return None
+    if not _pid_alive(pid):
+        return None
+    info = {"pid": pid, "started_utc": None, "image": None}
+    if os.name != "nt":
+        return info
+    handle = None
+    try:
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.OpenProcess(0x1000, 0, pid)  # QUERY_LIMITED_INFORMATION
+        if not handle:
+            return info
+        created, exited = _FILETIME(), _FILETIME()
+        kernel, user = _FILETIME(), _FILETIME()
+        if kernel32.GetProcessTimes(
+                handle, ctypes.byref(created), ctypes.byref(exited),
+                ctypes.byref(kernel), ctypes.byref(user)):
+            ticks = (created.dwHighDateTime << 32) | created.dwLowDateTime
+            started = (datetime(1601, 1, 1, tzinfo=timezone.utc)
+                       + timedelta(microseconds=ticks // 10))
+            info["started_utc"] = started.isoformat()
+        buf = ctypes.create_unicode_buffer(32768)
+        size = ctypes.c_ulong(len(buf))
+        if kernel32.QueryFullProcessImageNameW(handle, 0, buf, ctypes.byref(size)):
+            info["image"] = Path(buf.value).name
+    except Exception:
+        pass
+    finally:
+        if handle:
+            try:
+                ctypes.windll.kernel32.CloseHandle(handle)
+            except Exception:
+                pass
+    return info
+
+
+def write_lock_metadata(path: Path, pid: int | None = None) -> dict:
+    """Claim marker: first line stays the bare PID for run.bat compatibility."""
+    pid = int(pid or os.getpid())
+    info = process_info(pid) or {}
+    lines = [str(pid)]
+    for key in ("started_utc", "image"):
+        if info.get(key):
+            lines.append(f"{key}={info[key]}")
+    lines.append("script=orchestrator.py")
+    lines.append(f"created_utc={datetime.now(timezone.utc).isoformat()}")
+    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return info
+
+
+def read_lock(path: Path) -> dict:
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return {}
+    try:
+        meta = {"pid": int(lines[0])}
+    except ValueError:
+        return {}
+    for line in lines[1:]:
+        key, sep, value = line.partition("=")
+        if sep and value:
+            meta[key.strip()] = value.strip()
+    return meta
+
+
+def lock_matches_process(meta: dict) -> bool:
+    """True only when the lock belongs to the currently running process."""
+    pid = (meta or {}).get("pid")
+    info = process_info(pid)
+    if not info:
+        return False
+    expected_start = meta.get("started_utc")
+    actual_start = info.get("started_utc")
+    if expected_start and actual_start:
+        try:
+            a = datetime.fromisoformat(expected_start.replace("Z", "+00:00"))
+            b = datetime.fromisoformat(actual_start.replace("Z", "+00:00"))
+        except ValueError:
+            return False
+        if abs((a - b).total_seconds()) > 2:
+            return False
+    expected_image = meta.get("image")
+    actual_image = info.get("image")
+    if expected_image and actual_image and expected_image.lower() != actual_image.lower():
+        return False
+    return True
 
 
 def _log(event: str, pid=None, msg: str = "") -> None:
@@ -116,22 +224,28 @@ def main() -> int:
     # 情况 3：锁不存在 → 直接 start
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if LOCK_PATH.exists():
-        try:
-            old_pid = int(LOCK_PATH.read_text(encoding="utf-8").strip())
-        except (OSError, ValueError):
-            old_pid = None
-        if old_pid and _pid_alive(old_pid):
+        meta = read_lock(LOCK_PATH)
+        old_pid = meta.get("pid")
+        if old_pid and lock_matches_process(meta):
             _log("healthy", old_pid)
-            print(f"[{now_str}] orchestrator PID {old_pid} 存活")
+            print(f"[{now_str}] orchestrator PID {old_pid} alive (fingerprint match)")
             return 0
-        # stale lock
+        stale_info = process_info(old_pid) if old_pid else None
+        reason = f"stale lock had PID {old_pid}"
+        if stale_info:
+            reason = (f"lock fingerprint mismatch for live PID {old_pid} "
+                      f"(lock={meta.get('started_utc')}/{meta.get('image')}, "
+                      f"process={stale_info.get('started_utc')}/"
+                      f"{stale_info.get('image')})")
+        # stale lock (dead PID, recycled PID, or unreadable metadata)
         try:
             LOCK_PATH.unlink()
         except OSError:
             pass
         new_pid = _launch_orchestrator()
-        _log("dead_restart", new_pid, f"stale lock had PID {old_pid}")
-        print(f"[{now_str}] 检测到 orchestrator 死亡 (旧 PID {old_pid})，已重启 → 新 PID {new_pid}")
+        _log("dead_restart", new_pid, reason)
+        print(f"[{now_str}] orchestrator dead/lock mismatch (old PID {old_pid}), "
+              f"restarted -> PID {new_pid}")
         try:
             from notifications import notify_watchdog
             notify_watchdog("dead_restart", old_pid=old_pid, new_pid=new_pid)
@@ -141,7 +255,7 @@ def main() -> int:
     # 无锁
     new_pid = _launch_orchestrator()
     _log("no_lock_start", new_pid)
-    print(f"[{now_str}] 无锁文件，orchestrator 未在跑，已启动 → PID {new_pid}")
+    print(f"[{now_str}] no lock file, orchestrator not running, started -> PID {new_pid}")
     try:
         from notifications import notify_watchdog
         notify_watchdog("no_lock_start", new_pid=new_pid)

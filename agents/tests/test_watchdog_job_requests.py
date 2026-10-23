@@ -23,6 +23,37 @@ import _webui_watchdog as wd
 
 
 class JobRequests(unittest.TestCase):
+    def test_news_job_uses_python_without_shell_and_cannot_be_suppressed_by_old_four_hour_marker(self):
+        import os
+        import subprocess
+        (self.td / "logs").mkdir()
+        with patch.object(wd, "SCRIPT_DIR", self.td), patch.object(subprocess, "Popen") as popen:
+            popen.return_value.pid = 5432
+            self.assertEqual(wd._launch_job("market_radar_tick"), 5432)
+            args = popen.call_args.args[0]
+            self.assertEqual(args[0], sys.executable)
+            self.assertEqual(args[-1], "tick")
+            self.assertNotIn("cmd.exe", args)
+        (self.td / "job_request_market_radar_tick.json").write_text("{}", encoding="utf-8")
+        marker = self.td / "job_market_radar_tick.running"
+        marker.write_text("old", encoding="utf-8")
+        old = time.time() - 31 * 60
+        os.utime(marker, (old, old))
+        _, launch = self.run_main()
+        launch.assert_called_once_with("market_radar_tick")
+
+    def test_outlook_job_is_fixed_free_public_python_worker_without_console(self):
+        import subprocess
+        (self.td / "logs").mkdir()
+        with patch.object(wd, "SCRIPT_DIR", self.td), patch.object(subprocess, "Popen") as popen:
+            popen.return_value.pid = 5433
+            self.assertEqual(wd._launch_job("market_outlook_tick"), 5433)
+            args = popen.call_args.args[0]
+            self.assertEqual(args, [sys.executable, "-X", "utf8", str(self.td / "market_outlook.py"), "tick"])
+            self.assertNotIn("cmd.exe", args)
+            self.assertTrue(popen.call_args.kwargs["creationflags"] & 0x08000000)
+        self.assertEqual(wd.JOBS["market_outlook_tick"]["auto_every_days"], 30 / 1440)
+
     def setUp(self):
         self.td = Path(tempfile.mkdtemp())
         self.log = self.td / "wd.jsonl"
@@ -138,4 +169,7 @@ class MarketWindow(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

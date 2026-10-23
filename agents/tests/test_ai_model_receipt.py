@@ -55,7 +55,7 @@ class LogRecordsReceipt(unittest.TestCase):
         env = {"AI_CLI_PRIMARY": "codex", "AI_CLI_FALLBACK": "none"}
         if env_model:
             env["CODEX_MODEL_MEDIUM"] = env_model
-        with patch.object(ap, "_AI_CALL_LOG_PATH", log), \
+        with patch.object(ap, "AI_CALL_LOG_PATH", log), \
              patch.object(ap, "_find_codex_cli", return_value="codex"), \
              patch.object(ap.subprocess, "run", side_effect=fake_run), \
              patch.dict(ap.os.environ, env, clear=False):
@@ -82,4 +82,7 @@ class LogRecordsReceipt(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

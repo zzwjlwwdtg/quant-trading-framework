@@ -28,7 +28,7 @@ import os
 import sys
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from moomoo import (
@@ -52,6 +52,7 @@ from execution_analytics import (
     actual_execution_quality,
     append_execution_event,
     estimate_execution,
+    broker_time_to_utc_iso,
 )
 from portfolio_analytics import pretrade_portfolio_gate
 from trading_contracts import (
@@ -210,9 +211,8 @@ def _kelly_mult(ticker: str, min_trades: int = 10) -> float:
     Half Kelly = 0.5 × Kelly（行业惯例，full Kelly 过度激进）
     """
     try:
-        from pathlib import Path
         from collections import defaultdict
-        log_path = Path(__file__).parent / "signals" / "trade_log.jsonl"
+        log_path = TRADE_LOG_PATH
         if not log_path.exists():
             return 1.0
         events = []
@@ -284,9 +284,8 @@ def _check_loss_streak() -> tuple[bool, str]:
     """读 trade_log.jsonl 配对最近 N 笔；全亏 → 暂停。
     返回 (is_paused, reason)。任何异常 → 不暂停。"""
     try:
-        from pathlib import Path
         from collections import defaultdict
-        log_path = Path(__file__).parent / "signals" / "trade_log.jsonl"
+        log_path = TRADE_LOG_PATH
         if not log_path.exists():
             return False, ""
         events = []
@@ -550,6 +549,7 @@ LIVE_FRACTION = max(0.0, min(1.0, float(os.environ.get("TRADER_LIVE_FRACTION", "
 STATE_PATH    = Path(__file__).parent / "trader_state.json"
 UNIVERSE_PATH = Path(__file__).parent / "universe_state.json"
 EXECUTION_LOG_PATH = Path(__file__).parent / "signals" / "execution_ledger.jsonl"
+TRADE_LOG_PATH = Path(__file__).parent / "signals" / "trade_log.jsonl"
 
 # R02 v3 (2026-09-20 audit): 独立 cohort dedup ledger, 与 state file 分离.
 # state.clear() 或 state file 丢失时, 这个 ledger 仍能防重复入账.
@@ -1417,15 +1417,52 @@ def _get_realtime_price(code: str, fallback: float) -> float:
     return fallback
 
 
+def _capture_live_quote(code: str, fallback: float) -> dict:
+    """EVO-20261013-2 (2026-10-13): 单次 live quote 调用 + 元数据.
+
+    返回 {price, source, staleness_sec}. 内部复用 _get_realtime_price 保证
+    测试 patch 面兼容; 失败回退到 fallback (= 日 K 参考价).
+    staleness_sec 需要独立抓一次 tick 时间, 失败则 None (schema 稳定, 数据
+    best-effort). 价格 == fallback 视为未成功抓到 live quote, source 标
+    'fallback_daily'.
+    """
+    price_val = _get_realtime_price(code, fallback)
+    if price_val == fallback:
+        return {"price": fallback, "source": "fallback_daily",
+                 "staleness_sec": None}
+    staleness = None
+    try:
+        import yfinance as yf
+        import pandas as pd
+        symbol = code.replace("US.", "")
+        df = yf.Ticker(symbol).history(period="1d", interval="1m", prepost=True)
+        if df is not None and not df.empty:
+            tsv = pd.Timestamp(df.index[-1])
+            tsv = tsv.tz_convert("UTC") if tsv.tz is not None else tsv.tz_localize("UTC")
+            staleness = (datetime.now(timezone.utc) - tsv.to_pydatetime()).total_seconds()
+            if staleness < 0:   # 时钟微偏
+                staleness = 0.0
+    except Exception:
+        staleness = None
+    return {"price": price_val, "source": "yfinance_1m_prepost",
+             "staleness_sec": staleness}
+
+
 def _log_trade(ticker: str, side: str, qty: int, price: float,
                 order_id: str | None, tag: str, decision: dict | None = None,
                 mkt: dict | None = None, window: str | None = None,
-                extra: dict | None = None) -> None:
+                extra: dict | None = None,
+                price_snapshot: dict | None = None) -> None:
     """每笔成功成交（或 dry-run）追加到 signals/trade_log.jsonl，给复盘归因用。
-    永不影响主流程；任何异常吞掉。"""
+    永不影响主流程；任何异常吞掉。
+
+    EVO-20261013-2: 新增 price_snapshot (由 decision_agent.build_price_snapshot
+    生成), 展平到 entry 顶层字段 ref_price / live_quote / divergence_pct /
+    divergence_flag / quote_source / staleness_sec, 让 postmortem 与 dashboard
+    trade-log 列可以直接读. entry["price"] 保持原语义 = 下单 trigger (order_price).
+    """
     try:
-        from pathlib import Path
-        path = Path(__file__).parent / "signals" / "trade_log.jsonl"
+        path = TRADE_LOG_PATH
         path.parent.mkdir(parents=True, exist_ok=True)
         decision = decision or {}
         mkt = mkt or {}
@@ -1439,6 +1476,14 @@ def _log_trade(ticker: str, side: str, qty: int, price: float,
             "tag":      tag,
             "window":   window,
             "dry_run":  DRY_RUN,
+            # EVO-20261013-2 三端价差: snapshot=None 时字段为 None (兼容老记录)
+            "ref_price":       (price_snapshot or {}).get("ref_price"),
+            "live_quote":      (price_snapshot or {}).get("live_quote"),
+            "quote_source":    (price_snapshot or {}).get("quote_source"),
+            "staleness_sec":   (price_snapshot or {}).get("staleness_sec"),
+            "divergence_pct":  (price_snapshot or {}).get("divergence_pct"),
+            "divergence_flag": (price_snapshot or {}).get("divergence_flag"),
+            "trigger_price":   round(float(price), 2),   # 等价于 entry["price"], 显式命名方便复盘
             "decision": {
                 "action":     decision.get("action"),
                 "confidence": decision.get("confidence"),
@@ -1516,6 +1561,14 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         logger.warning(f"[trader] SKIP {side} {code} qty={qty} price={price}")
         return None
     side_label = "BUY " if side == TrdSide.BUY else "SELL"
+    # 2026-10-19 止损线守卫 (用户: "总之是有一条线"): 止损线未收复前不买回. 必须在现金筹措之前,
+    # 否则会为一笔被拦下的买单先卖掉 SHY. 只拦买入, 不碰任何卖出/止损.
+    if side == TrdSide.BUY:
+        import stop_line_guard
+        _ok_line, _why_line = stop_line_guard.check_buy(code, price, tag)
+        if not _ok_line:
+            logger.warning(f"[trader] SKIP BUY {code}: {_why_line}")
+            return None
     # 规则 A 现金纪律 (2026-10-07): 买入必须有现金覆盖, 不借保证金; 不受 SIM_ACTIVE 豁免
     if side == TrdSide.BUY and not DRY_RUN:
         funded_qty = _fund_buy_qty(code, int(qty), price * (1 + buffer))
@@ -1552,9 +1605,16 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
             return None
     # 盘前普通订单以实时价为基准，但正向跳空超过上限时不追价。
     # 明确低于市价的 AI resting limit 保留原限价，不受此门禁影响。
+    #
+    # EVO-20261013-2 (2026-10-13): 旁路抓 live quote 做三端价差快照
+    # (daily ref vs live quote). 走 _get_realtime_price 单一入口, 测试 patch
+    # 面不变. 规则/下单口径均不改, 仅额外在 extra / trade_log / execution_ledger
+    # 落多三栏 (ref/live/trigger).
     ref_price = price
+    rt_live: float | None = None
     if fill_outside_rth:
         rt = _get_realtime_price(code, price)
+        rt_live = rt   # EVO-20261013-2: 盘前 rt 已拿到, 直接作为 live_quote
         gap_pct = (rt - price) / price
         if (
             side == TrdSide.BUY
@@ -1574,10 +1634,50 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
                     f"(gap {gap_pct*100:+.1f}%)"
                 )
             ref_price = rt
+    elif not DRY_RUN:
+        # EVO-20261013-2: RTH 真实下单路径额外抓一次 live quote 做旁路价差,
+        # 不改 order_price 口径; DRY_RUN 跳过, 避免测试触发真实 yf 请求.
+        try:
+            rt_live = _get_realtime_price(code, price)
+        except Exception:
+            rt_live = None
+
+    live_quote_val: float | None = rt_live
+    if live_quote_val is None or live_quote_val <= 0 or live_quote_val == price:
+        live_source = "fallback_daily"
+        live_staleness: float | None = None
+    else:
+        live_source = "yfinance_1m_prepost"
+        live_staleness = None
+    try:
+        from decision_agent import build_price_snapshot
+        price_snapshot = build_price_snapshot(
+            ref_price=price, live_quote=live_quote_val,
+            quote_source=live_source, staleness_sec=live_staleness,
+        )
+    except Exception:
+        price_snapshot = None
+    if price_snapshot and price_snapshot.get("divergence_flag") == "PRICE_DIVERGENCE":
+        logger.warning(
+            f"[trader] PRICE_DIVERGENCE {code}: ref ${price:.2f} vs "
+            f"live ${live_quote_val:.2f} "
+            f"({(price_snapshot.get('divergence_pct') or 0)*100:+.2f}%)"
+        )
+    extra["price_snapshot"] = price_snapshot
+
     if side == TrdSide.BUY:
         order_price = round(ref_price * (1 + buffer), 2)
     else:
         order_price = round(ref_price * (1 - buffer), 2)
+    # Final guard against the price actually sent to the broker.  The earlier
+    # check uses the daily reference and runs before cash funding; this one
+    # catches a realtime quote below the stop line (2026-10-16 TQQQ: ref > line,
+    # actual order 67.86 <= 68.50).
+    if side == TrdSide.BUY:
+        _ok_final, _why_final = stop_line_guard.check_buy(code, order_price, tag)
+        if not _ok_final:
+            logger.warning(f"[trader] SKIP BUY {code} at order price ${order_price:.2f}: {_why_final}")
+            return None
     rth_label = "+RTHx" if fill_outside_rth else ""
     ref_label = f"ref {ref_price:.2f}" + (f" / daily {price:.2f}" if ref_price != price else "")
     execution_plan = estimate_execution(
@@ -1596,7 +1696,8 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     if DRY_RUN:
         logger.info(f"[trader-DRY ] {side_label} {qty:>5} {code:<8} @ {order_price:>8.2f} ({ref_label}) {rth_label} {tag}")
         _log_trade(code, side_label.strip(), qty, order_price, "DRY", tag,
-                   decision=decision, mkt=mkt, window=window, extra=extra)
+                   decision=decision, mkt=mkt, window=window, extra=extra,
+                   price_snapshot=price_snapshot)
         modeled_qty = int(execution_plan.get("modeled_fill_qty") or 0)
         modeled_price = float(execution_plan.get("expected_fill_price") or order_price)
         append_execution_event(EXECUTION_LOG_PATH, {
@@ -1605,6 +1706,14 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
             "ticker": code,
             "side": side_label.strip(),
             "plan": execution_plan,
+            # EVO-20261013-2: dry-run 也带三端价差快照, 便于影子期统计
+            "trigger_price": order_price,
+            "ref_price": price,
+            "live_quote": live_quote_val,
+            "quote_source": live_source,
+            "staleness_sec": live_staleness,
+            "divergence_pct": (price_snapshot or {}).get("divergence_pct"),
+            "divergence_flag": (price_snapshot or {}).get("divergence_flag"),
             "quality": actual_execution_quality(
                 side=side_label.strip(), requested_qty=qty, dealt_qty=modeled_qty,
                 reference_price=ref_price, average_fill_price=modeled_price,
@@ -1632,7 +1741,8 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     oid = info.iloc[0]["order_id"]
     logger.info(f"[trader-LIVE] {side_label} {qty:>5} {code:<8} @ {order_price:>8.2f} ({ref_label}) {rth_label} order={oid} {tag}")
     _log_trade(code, side_label.strip(), qty, order_price, str(oid), tag,
-               decision=decision, mkt=mkt, window=window, extra=extra)
+               decision=decision, mkt=mkt, window=window, extra=extra,
+               price_snapshot=price_snapshot)
     append_execution_event(EXECUTION_LOG_PATH, {
         "event": "submitted",
         "order_id": str(oid),
@@ -1643,6 +1753,15 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
         "requested_qty": qty,
         "order_price": order_price,
         "reference_price": ref_price,
+        # EVO-20261013-2 三端价差: trigger / ref(日 K) / live_quote 独立字段,
+        # fill_ledger.get_order_price_trio 读, dashboard trade log 列展示
+        "trigger_price": order_price,
+        "ref_price": price,
+        "live_quote": live_quote_val,
+        "quote_source": live_source,
+        "staleness_sec": live_staleness,
+        "divergence_pct": (price_snapshot or {}).get("divergence_pct"),
+        "divergence_flag": (price_snapshot or {}).get("divergence_flag"),
         "plan": execution_plan,
     })
     # 主动推送 trade（Telegram/Discord，如已配置）
@@ -1653,6 +1772,54 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     except Exception:
         pass
     return oid
+
+
+RECONCILE_LOOKBACK_DAYS = 7
+RECONCILE_MAX_LOOKBACK_DAYS = 30
+
+
+def _query_reconcile_orders(ctx, earliest_unresolved: datetime | None):
+    """今日订单 + 覆盖未结委托的历史订单.
+
+    order_list_query 只看当前交易日; 上一窗口对账之后才成交的单子 (2026-10-16
+    TQQQ 15:46 ET) 次日从该视图消失, 账本永久缺失. 历史查询补上这段; 重复处理
+    由 state 的 __execution_reconcile 签名幂等挡住.
+    """
+    import pandas as pd
+    end = (datetime.now(timezone.utc) + timedelta(days=1)).date()
+    start = end - timedelta(days=RECONCILE_LOOKBACK_DAYS - 1)
+    if earliest_unresolved is not None:
+        start = min(start, earliest_unresolved.date())
+    start = max(start, end - timedelta(days=RECONCILE_MAX_LOOKBACK_DAYS - 1))
+    frames = []
+    history_error = ""
+    try:
+        ret, df = ctx.history_order_list_query(
+            trd_env=TRD_ENV, acc_id=ACC_ID,
+            start=f"{start.isoformat()} 00:00:00", end=f"{end.isoformat()} 23:59:59",
+        )
+        if ret == RET_OK and df is not None and not df.empty:
+            frames.append(df)
+        elif ret != RET_OK:
+            history_error = str(df)
+    except Exception as exc:
+        history_error = f"{type(exc).__name__}: {exc}"
+    try:
+        ret, df = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+        if ret == RET_OK and df is not None and not df.empty:
+            frames.append(df)
+    except Exception as exc:
+        if not frames:
+            logger.warning(f"[trader] order queries failed: {exc}")
+            return None
+    if not frames:
+        if history_error:
+            logger.warning(f"[trader] history_order_list_query {start}~{end} "
+                           f"failed: {history_error[:160]}")
+        return None
+    out = pd.concat(frames, ignore_index=True)
+    out["order_id"] = out["order_id"].astype(str)
+    return out.drop_duplicates("order_id", keep="last")
 
 
 def refresh_execution_ledger() -> None:
@@ -1676,12 +1843,19 @@ def refresh_execution_ledger() -> None:
         return
     if not submitted:
         return
+    earliest = None
+    for ev in submitted.values():
+        try:
+            ts = datetime.fromisoformat(str(ev.get("ts") or "").replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        earliest = ts if earliest is None or ts < earliest else earliest
     try:
         ctx = _ctx_get()
-        ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
-        if ret != RET_OK or orders is None or orders.empty:
-            return
+        orders = _query_reconcile_orders(ctx, earliest)
     except Exception:
+        return
+    if orders is None or orders.empty:
         return
     state = _state_load()
     seen = state.get("__execution_reconcile", {})
@@ -1724,7 +1898,27 @@ def refresh_execution_ledger() -> None:
             "dealt_qty": dealt,
             "average_fill_price": avg_fill,
             "quality": quality,
+            # 2026-10-19: ts 是对账记录时刻 (可能比实际成交晚几小时, 例: 10/16 TQQQ 12:02 买 / 14:58 卖,
+            # 都在 15:45 对账时才记 → 看板显示成同一分钟). 另存券商时间, ts 语义不变 (哈希链兼容).
+            "broker_time": broker_time_to_utc_iso(row.get("updated_time") or row.get("create_time")),
+            "broker_time_raw": str(row.get("updated_time") or row.get("create_time") or ""),
         })
+        # 成交确认后才解除止损线; 成交价仍在线下则保留并告警 (见 stop_line_guard).
+        if event_name == "filled" and str(base.get("side") or "").upper() == "BUY":
+            try:
+                import stop_line_guard
+                line_ok, line_why = stop_line_guard.confirm_buy_fill(
+                    base.get("ticker") or "", avg_fill, oid)
+                if not line_ok and line_why != "no_line":
+                    logger.error(f"[trader] STOP-LINE {base.get('ticker')} order={oid}: {line_why}")
+                    try:
+                        from notifications import send_alert
+                        send_alert(f"⚠️ 止损线守卫: {base.get('ticker')} 买单 {oid} "
+                                   f"成交 {avg_fill:.2f}, {line_why}", level="warning")
+                    except Exception:
+                        pass
+            except Exception as exc:
+                logger.warning(f"[trader] stop-line confirm failed for {oid}: {exc}")
         # R01/R02 CRITICAL FIX (2026-09-20 followup audit):
         # 上轮把 seen[oid]=signature 移到 cohort 回调之前, 导致 cohort 读 prev_sig
         # 时读到的是**本次**signature → delta_qty = dealt - dealt = 0 → 永不入账.
@@ -1985,6 +2179,284 @@ def _clear_protective_stop(tstate: dict) -> None:
         tstate.pop(key, None)
 
 
+# last_* is execution history, not position state.  last_window_key is the
+# per-window idempotency marker: clearing it after a flat exit lets a restart
+# in the same window re-enter on a remaining signal (the TQQQ pattern).  Keep
+# it; only cost basis, stops, and managed-entry state die with the position.
+_STATE_FLAT_CLEAR_KEYS = (
+    "first_entry_utc", "entry_price", "entry_high", "entry_qty",
+    "entry_basis_source", "entry_conf", "entry_conf_scale",
+    "pyramid_layer", "tp_levels_hit",
+    "protective_stop_price", "protective_stop_mode",
+    "protective_stop_order_id", "protective_stop_updated_utc",
+    "managed_entry_order_id", "managed_entry_kind", "managed_entry_ref",
+    "managed_entry_stop_ref", "managed_entry_target_ts",
+    "managed_entry_updated_utc", "rebuy_done",
+)
+
+
+def _is_unknown_broker_code(code: str, stock_name: str = "") -> bool:
+    """Broker placeholder for a delisted/removed security (e.g. QRVO -> US.0000)."""
+    return (str(code or "").upper().endswith(".0000")
+            or str(stock_name or "").strip() == "未知股票")
+
+
+def _is_quarantined(tstate: dict | None) -> bool:
+    return bool(isinstance(tstate, dict)
+                and (tstate.get("quarantined")
+                     or tstate.get("pending_corporate_action")))
+
+
+def _broker_position_truth() -> dict[str, dict] | None:
+    """{code: broker facts}; None when the account cannot be read."""
+    try:
+        ctx = _ctx_get()
+        ret, pos = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+    except Exception as exc:
+        logger.warning(f"[trader] position truth query failed: {exc}")
+        return None
+    if ret != RET_OK:
+        logger.warning(f"[trader] position truth query rejected: {pos}")
+        return None
+    out: dict[str, dict] = {}
+    if pos is None or pos.empty:
+        return out
+    for _, row in pos.iterrows():
+        code = str(row.get("code") or "")
+        if not code:
+            continue
+        try:
+            qty = float(row.get("qty") or 0)
+        except (TypeError, ValueError):
+            continue
+        if qty <= 0:
+            continue
+
+        def _num(field: str) -> float:
+            try:
+                return float(row.get(field) or 0)
+            except (TypeError, ValueError):
+                return 0.0
+
+        out[code] = {
+            "qty": qty,
+            "can_sell_qty": _num("can_sell_qty") or qty,
+            # average_cost is the purchase basis; cost_price is diluted by
+            # realized P&L and would move TP thresholds after partial exits.
+            "avg_cost": _num("average_cost") or _num("cost_price"),
+            "cost_price": _num("cost_price"),
+            "nominal_price": _num("nominal_price"),
+            "stock_name": str(row.get("stock_name") or ""),
+        }
+    return out
+
+
+def _open_order_tickers() -> set[str] | None:
+    """Tickers with a working order; None means the check itself failed.
+
+    Today's list alone misses a GTC order submitted on a prior day, which would
+    let flat-state cleanup erase the state of a ticker that still has live
+    exposure. Query history as well; fail closed if either source is unreadable.
+    """
+    try:
+        ctx = _ctx_get()
+        ret, orders = ctx.order_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
+    except Exception as exc:
+        logger.warning(f"[trader] open-order query failed: {exc}")
+        return None
+    if ret != RET_OK or orders is None:
+        return None
+    frames = []
+    if not orders.empty:
+        frames.append(orders)
+    end = (datetime.now(timezone.utc) + timedelta(days=1)).date()
+    start = end - timedelta(days=RECONCILE_LOOKBACK_DAYS - 1)
+    try:
+        hret, hist = ctx.history_order_list_query(
+            trd_env=TRD_ENV, acc_id=ACC_ID,
+            start=f"{start.isoformat()} 00:00:00",
+            end=f"{end.isoformat()} 23:59:59")
+    except Exception as exc:
+        logger.warning(f"[trader] working-order history query failed: {exc}")
+        return None
+    if hret != RET_OK:
+        logger.warning(f"[trader] working-order history query rejected: {hist}")
+        return None
+    if hist is not None and not hist.empty:
+        frames.append(hist)
+    out: set[str] = set()
+    for frame in frames:
+        for _, o in frame.iterrows():
+            status = str(o.get("order_status", "")).upper().split(".")[-1]
+            if status in _OPEN_ORDER_STATUSES:
+                code = str(o.get("code") or "")
+                if code:
+                    out.add(code)
+    return out
+
+
+def _default_protective_stop(ticker: str, entry_price: float,
+                             entry_high: float) -> float | None:
+    """Fallback software stop for a held position that has none.
+
+    Tighter of (8%×√leverage below the post-entry high) and (5%×leverage
+    below cost), never within 2% of the current price at arming time.
+
+    entry_price is broker average_cost (purchase basis), not the diluted
+    cost_price; e.g. MSFT 2026-10-20: 497.07 vs 444.55.  The stop uses the
+    purchase basis and post-entry high, so the diluted figure cannot move it.
+    """
+    import math
+    from config import LEVERAGE_FACTORS
+    lev = float(LEVERAGE_FACTORS.get(ticker, 1.0) or 1.0)
+    high = max(float(entry_high or 0), float(entry_price or 0))
+    if high <= 0:
+        return None
+    candidate = max(
+        high * (1 - TRAILING_STOP_BASE_PCT * math.sqrt(lev)),
+        float(entry_price) * (1 - 0.05 * lev),
+    )
+    return round(candidate, 2) if candidate > 0 else None
+
+
+def reconcile_state_with_broker(*, apply: bool = False,
+                                repair_price: bool = False,
+                                reason: str = "") -> dict:
+    """Align persisted position state with broker position facts.
+
+    Fixes entry_qty after missed/partial fills, preserves the original lot size
+    once a TP level has fired, arms a software stop when a held position has
+    none, and removes stale execution metadata from flat tickers that have no
+    working order. Dry-run by default: `apply=True` writes one backup first.
+    """
+    positions = _broker_position_truth()
+    if positions is None:
+        return {"status": "unavailable", "reason": reason, "changes": []}
+    pending = _open_order_tickers()
+    state = _state_load()
+    changes: list[dict] = []
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    for ticker, pos in positions.items():
+        tstate = state.get(ticker)
+        if not isinstance(tstate, dict):
+            tstate = {}
+        # A delisted security can surface as an unknown broker placeholder
+        # (QRVO 2026-10-05 -> US.0000). Never create a normal trading state or
+        # arm a stop for it; keep the broker facts for audit and wait for the
+        # corporate action to settle.
+        if _is_unknown_broker_code(ticker, pos.get("stock_name")):
+            qty = int(round(pos["qty"]))
+            changed = False
+            if not _is_quarantined(tstate):
+                tstate.update({
+                    "quarantined": True,
+                    "pending_corporate_action": True,
+                    "quarantine_reason": "unknown broker code / delisted security",
+                    "quarantined_at_utc": now_iso,
+                })
+                changed = True
+            if (tstate.get("protective_stop_mode") != "quarantined"
+                    or "protective_stop_price" in tstate):
+                for key in ("protective_stop_price", "protective_stop_order_id",
+                            "protective_stop_updated_utc"):
+                    tstate.pop(key, None)
+                tstate["protective_stop_mode"] = "quarantined"
+                changed = True
+            if tstate.get("entry_qty") != qty:
+                tstate["entry_qty"] = qty
+                changed = True
+            if changed:
+                changes.append({"ticker": ticker, "position_qty": qty,
+                                "quarantined": True})
+                state[ticker] = tstate
+            continue
+        diff: dict[str, dict] = {}
+        qty = int(round(pos["qty"]))
+        broker_cost = float(pos["avg_cost"] or 0)
+        tp_hit = tstate.get("tp_levels_hit") or []
+        if not tp_hit or "entry_qty" not in tstate:
+            before = tstate.get("entry_qty")
+            if before != qty:
+                tstate["entry_qty"] = qty
+                diff["entry_qty"] = {"before": before, "after": qty}
+        if broker_cost > 0:
+            before = tstate.get("entry_price")
+            if before is None or repair_price:
+                if before is None or abs(float(before or 0) - broker_cost) > 0.005:
+                    tstate["entry_price"] = round(broker_cost, 4)
+                    tstate["entry_basis_source"] = "broker_state_reconcile"
+                    diff["entry_price"] = {"before": before,
+                                           "after": tstate["entry_price"]}
+            before_high = tstate.get("entry_high")
+            high = max(float(before_high or 0), broker_cost)
+            if high > 0 and abs(high - float(before_high or 0)) > 0.005:
+                tstate["entry_high"] = round(high, 4)
+                diff["entry_high"] = {"before": before_high,
+                                      "after": tstate["entry_high"]}
+        stop = float(tstate.get("protective_stop_price") or 0)
+        mode = tstate.get("protective_stop_mode")
+        if stop <= 0 or mode not in ("software", "broker", "software_triggered"):
+            new_stop = _default_protective_stop(
+                ticker, float(tstate.get("entry_price") or broker_cost or 0),
+                float(tstate.get("entry_high") or 0))
+            nominal = float(pos.get("nominal_price") or 0)
+            if new_stop and nominal > 0:
+                new_stop = min(new_stop, round(nominal * 0.98, 2))
+            if new_stop and new_stop > 0:
+                tstate.update({
+                    "protective_stop_price": new_stop,
+                    "protective_stop_mode": "software",
+                    "protective_stop_order_id": None,
+                    "protective_stop_updated_utc": now_iso,
+                })
+                diff["protective_stop"] = {"before": stop or None, "after": new_stop,
+                                           "mode": "software"}
+        if diff:
+            changes.append({"ticker": ticker, "position_qty": qty, "fields": diff})
+            state[ticker] = tstate
+
+    if pending is not None:
+        for ticker, tstate in list(state.items()):
+            if ticker.startswith("__") or not isinstance(tstate, dict):
+                continue
+            if ticker in positions or ticker in pending:
+                continue
+            removed = [k for k in _STATE_FLAT_CLEAR_KEYS if k in tstate]
+            if not removed:
+                continue
+            for k in removed:
+                tstate.pop(k, None)
+            changes.append({"ticker": ticker, "position_qty": 0,
+                            "cleared": removed})
+            state[ticker] = tstate
+
+    rep = {"status": "dry_run" if not apply else "applied",
+           "reason": reason, "n_changes": len(changes),
+           "changes": changes, "backup": None}
+    if not changes:
+        rep["status"] = "no_changes"
+        return rep
+    if not apply:
+        return rep
+    try:
+        backup_dir = STATE_PATH.parent / "state_backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        backup = backup_dir / (
+            "trader_state."
+            + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + ".json")
+        backup.write_bytes(STATE_PATH.read_bytes())
+        rep["backup"] = str(backup)
+    except Exception as exc:
+        logger.error(f"[trader] state backup failed, refusing to write: {exc}")
+        rep["status"] = "backup_failed"
+        return rep
+    _state_save(state)
+    logger.warning(f"[trader] state reconciled from broker ({reason}): "
+                   f"{len(changes)} tickers, backup={rep['backup']}")
+    return rep
+
+
 def monitor_software_stops() -> list[str]:
     with _TRADER_LOCK:
         return _monitor_software_stops_unlocked()
@@ -2002,6 +2474,8 @@ def _monitor_software_stops_unlocked() -> list[str]:
     dirty = False
     for ticker, tstate in list(state.items()):
         if not isinstance(tstate, dict):
+            continue
+        if _is_quarantined(tstate):
             continue
         if tstate.get("protective_stop_mode") != "software":
             continue
@@ -2048,6 +2522,8 @@ def _monitor_software_stops_unlocked() -> list[str]:
         if oid is None:
             logger.error(f"[trader] SOFTWARE STOP exit failed for {ticker}; remains armed")
             continue
+        import stop_line_guard
+        stop_line_guard.record(ticker, stop_price, "software_stop", current_price)
 
         now_iso = datetime.now(timezone.utc).isoformat()
         tstate.update({
@@ -2169,6 +2645,8 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
                          buffer=win_cfg.get("buffer", 0.005),
                          fill_outside_rth=win_cfg.get("fill_outside_rth", False))
             if oid:
+                import stop_line_guard
+                stop_line_guard.record(ticker, stop_line_guard.trailing_line(entry_high, ts_pct), "trailing_stop", cur_price)
                 tstate.update({"last_action":"TRAILING_STOP","last_qty":qty,
                                "last_price":cur_price,
                                "last_time_utc": datetime.now(timezone.utc).isoformat(),
@@ -2555,16 +3033,20 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
 # ---------- Universe lifecycle ----------
 
 def _list_satellite_positions() -> list[dict]:
-    """返回当前账户的卫星持仓（排除核心仓 + 0 仓位）。"""
+    """返回当前账户的卫星持仓（排除核心仓 + 0 仓位 + 隔离仓）。"""
     ctx = _ctx_get()
     ret, pos = ctx.position_list_query(trd_env=TRD_ENV, acc_id=ACC_ID)
     if ret != RET_OK or pos is None or pos.empty:
         return []
+    state = _state_load()
     out = []
     for _, row in pos.iterrows():
-        code = row.get("code")
+        code = str(row.get("code") or "")
         qty  = float(row.get("can_sell_qty", 0))
         if qty <= 0 or code in CORE_TICKERS:
+            continue
+        if _is_quarantined(state.get(code)) or _is_unknown_broker_code(
+                code, row.get("stock_name")):
             continue
         out.append({"code": code, "qty": qty,
                     "nominal_price": float(row.get("nominal_price", 0))})
@@ -2699,6 +3181,16 @@ def _refresh_nav_peak_unlocked() -> None:
         refresh_execution_ledger()
     except Exception as exc:
         logger.warning(f"[trader] execution reconciliation skipped: {exc}")
+    # Runs at every cycle start (before new orders), after startup, and from the
+    # post-close tick: missed fills and cash-floor sells otherwise drift state
+    # away from broker quantities until the next manual repair.
+    try:
+        rep = reconcile_state_with_broker(apply=True, reason="cycle")
+        if rep.get("n_changes"):
+            logger.warning(f"[trader] broker state repair: {rep['n_changes']} tickers "
+                           f"({rep.get('status')}) backup={rep.get('backup')}")
+    except Exception as exc:
+        logger.warning(f"[trader] broker state repair skipped: {exc}")
 
 
 # ---------- CLI ----------
@@ -2797,6 +3289,15 @@ def _cli_reset():
         print("state 不存在，无需清理")
 
 
+def _cli_reconcile_state():
+    apply = "--apply" in sys.argv[2:]
+    rep = reconcile_state_with_broker(apply=apply, repair_price=True,
+                                      reason="cli")
+    print(json.dumps(rep, ensure_ascii=False, indent=2))
+    if not apply:
+        print("\nDRY-RUN: 未写文件. 确认后加 --apply 应用 (会先备份).")
+
+
 def _cli_picks():
     uni = _universe_load()
     print(f"DRY_RUN={DRY_RUN}  caps: total<={MAX_TOTAL_POSITIONS}  satellite<={MAX_SATELLITE_POSITIONS}")
@@ -2818,12 +3319,15 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     try:
         {
-            "status":  _cli_status,
-            "flatten": _cli_flatten,
-            "reset":   _cli_reset,
-            "picks":   _cli_picks,
+            "status":          _cli_status,
+            "flatten":         _cli_flatten,
+            "reset":           _cli_reset,
+            "picks":           _cli_picks,
+            "reconcile-state": _cli_reconcile_state,
         }[cmd]()
     except KeyError:
-        print(f"用法: python paper_trader.py {{status|flatten|reset|picks}}"); sys.exit(2)
+        print(f"用法: python paper_trader.py "
+              f"{{status|flatten|reset|picks|reconcile-state [--apply]}}")
+        sys.exit(2)
     finally:
         _ctx_close()

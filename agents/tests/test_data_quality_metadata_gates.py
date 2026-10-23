@@ -83,5 +83,78 @@ class StalePriceStillBlockedTests(unittest.TestCase):
         self.assertIn("stale_price", codes)
 
 
+class QuoteTimestampTests(unittest.TestCase):
+    """broker 行情时间 (quote_ts) 应优先于信号生成时间 (ts)."""
+
+    def setUp(self):
+        self.now = datetime(2026, 10, 22, 16, 0, tzinfo=timezone.utc)
+
+    def _codes(self, result):
+        return [i["code"] for i in result["issues"]]
+
+    def test_stale_quote_ts_blocks_buy_even_when_generated_now(self):
+        market = {
+            "price": 100.0,
+            "ts": self.now.isoformat(),
+            "quote_ts": (self.now - timedelta(hours=40)).isoformat(),
+        }
+        r = data_quality.assess_market_snapshot(market, now=self.now)
+        self.assertIn("stale_price", self._codes(r))
+        self.assertFalse(r["allow_new_risk"])
+        self.assertFalse(data_quality.order_data_gate(market, "BUY", now=self.now)["allow_order"])
+        sell = data_quality.order_data_gate(market, "SELL", now=self.now)
+        self.assertTrue(sell["allow_order"], "保护性退出仍应放行")
+        self.assertTrue(sell["risk_reducing_override"])
+
+    def test_fresh_quote_ts_overrides_old_generation_ts(self):
+        market = {
+            "price": 100.0,
+            "ts": (self.now - timedelta(hours=100)).isoformat(),
+            "quote_ts": (self.now - timedelta(minutes=2)).isoformat(),
+        }
+        r = data_quality.assess_market_snapshot(market, now=self.now)
+        self.assertNotIn("stale_price", self._codes(r))
+        self.assertTrue(r["allow_new_risk"])
+
+    def test_explicit_empty_quote_ts_is_missing_timestamp(self):
+        market = {"price": 100.0, "ts": self.now.isoformat(), "quote_ts": ""}
+        r = data_quality.assess_market_snapshot(market, now=self.now)
+        self.assertIn("missing_timestamp", self._codes(r))
+        self.assertFalse(r["allow_new_risk"])
+
+    def test_legacy_snapshot_without_quote_ts_falls_back_to_ts(self):
+        market = {"price": 100.0, "ts": (self.now - timedelta(minutes=5)).isoformat()}
+        r = data_quality.assess_market_snapshot(market, now=self.now)
+        self.assertNotIn("missing_timestamp", self._codes(r))
+        self.assertTrue(r["allow_new_risk"])
+
+
+class QuoteTsHelperTests(unittest.TestCase):
+    """moomoo update_time 是 ET 墙钟, 必须带偏移输出."""
+
+    def test_edt_wall_clock_converted_with_offset(self):
+        got = data_quality.quote_ts_from_update_time("2026-10-22 12:28:37")
+        self.assertEqual(got, "2026-10-22T12:28:37-04:00")
+        parsed = datetime.fromisoformat(got)
+        self.assertEqual(parsed.astimezone(timezone.utc).hour, 16)
+
+    def test_est_wall_clock_converted_with_offset(self):
+        got = data_quality.quote_ts_from_update_time("2026-01-15 09:30:00")
+        self.assertEqual(got, "2026-01-15T09:30:00-05:00")
+        parsed = datetime.fromisoformat(got)
+        self.assertEqual(parsed.astimezone(timezone.utc).hour, 14)
+
+    def test_aware_value_kept_as_is(self):
+        got = data_quality.quote_ts_from_update_time("2026-10-22T12:28:37+00:00")
+        self.assertEqual(got, "2026-10-22T12:28:37+00:00")
+
+    def test_invalid_values_return_none(self):
+        for value in (None, "", "NaT", "nan", "not-a-time"):
+            self.assertIsNone(data_quality.quote_ts_from_update_time(value))
+
+
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(
+        "Run the suite from agents/: python -m unittest discover -s tests -t . "
+        "Direct runs bypass tests/__init__.py isolation and can touch live files."
+    )

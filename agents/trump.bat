@@ -9,7 +9,7 @@ set "PYTHONIOENCODING=utf-8"
 
 cd /d "%SCRIPT_DIR%"
 
-REM Trump Truth Social signal (last 24h) via Claude CLI
+REM Trump Truth Social signal (last 24h) via AI CLI (Claude first, Codex fallback)
 "%PY%" -X utf8 -u trump_signal.py --hours 24
 
 echo.

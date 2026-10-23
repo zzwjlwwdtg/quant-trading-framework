@@ -27,12 +27,22 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+from atomic_io import atomic_write_json
 from config import _cfg, SIGNALS_DIR
 
+ET           = ZoneInfo("America/New_York")
 DEDUP_PATH   = Path(SIGNALS_DIR) / "notify_dedup.json"
+ALERTS_PATH  = Path(SIGNALS_DIR) / "critical_alerts.jsonl"
+ALERT_DEDUPE_PATH = Path(SIGNALS_DIR) / "alert_dedupe.json"
 DEDUP_WINDOW = 300   # 5 分钟内相同消息只推一次
+ALERT_DEDUPE_RETENTION_DAYS = 8
 TIMEOUT      = 8
+
+# EVO-20261015-1: AI Gate 不可用告警 30 分钟内合并一次, 避免 orchestrator
+# 每轮循环都刷 "AI 挂了" ×N; 恢复由 _ai_cli_diag 实际探测成功时另行推送.
+AI_GATE_ALERT_WINDOW = 1800
 
 LEVEL_EMOJI = {
     "info":     "ℹ️",
@@ -44,7 +54,7 @@ LEVEL_EMOJI = {
 }
 
 
-def _dedup_check(msg_hash: str) -> bool:
+def _dedup_check(msg_hash: str, window: int = DEDUP_WINDOW) -> bool:
     """True = 已在 dedup window 内发过（应跳过），False = 可以发。"""
     if not DEDUP_PATH.exists():
         return False
@@ -53,10 +63,10 @@ def _dedup_check(msg_hash: str) -> bool:
     except Exception:
         return False
     ts = data.get(msg_hash, 0)
-    return (time.time() - ts) < DEDUP_WINDOW
+    return (time.time() - ts) < window
 
 
-def _dedup_record(msg_hash: str) -> None:
+def _dedup_record(msg_hash: str, window: int = DEDUP_WINDOW) -> None:
     """记录 msg_hash 发送时间。同时清理老的（超过 window 的）。"""
     try:
         DEDUP_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -68,9 +78,52 @@ def _dedup_record(msg_hash: str) -> None:
                 data = {}
         now = time.time()
         data[msg_hash] = now
-        # 清理老 entry
-        data = {k: v for k, v in data.items() if now - v < DEDUP_WINDOW * 2}
+        # 清理老 entry — 保留 2× 当前 window, 保证不同 window 的 key 不被误删
+        cutoff = max(window, DEDUP_WINDOW) * 2
+        data = {k: v for k, v in data.items() if now - v < cutoff}
         DEDUP_PATH.write_text(json.dumps(data), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _alert_day_key(event: str, level: str, day: str | None = None) -> str:
+    day = day or datetime.now(ET).date().isoformat()
+    return f"{event}|{day}|{level}"
+
+
+def _load_alert_dedupe() -> dict:
+    try:
+        data = json.loads(ALERT_DEDUPE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _prune_alert_dedupe(data: dict, now: datetime | None = None) -> dict:
+    now = now or datetime.now(timezone.utc)
+    kept = {}
+    for key, ts in data.items():
+        try:
+            sent = datetime.fromisoformat(str(ts))
+            if sent.tzinfo is None:
+                sent = sent.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            continue
+        if (now - sent).total_seconds() < ALERT_DEDUPE_RETENTION_DAYS * 86400:
+            kept[key] = ts
+    return kept
+
+
+def _alert_sent_today(event: str, level: str) -> bool:
+    return _alert_day_key(event, level) in _load_alert_dedupe()
+
+
+def _record_alert_sent(event: str, level: str) -> None:
+    """Mark one event as pushed for the current ET date; survives restarts."""
+    data = _load_alert_dedupe()
+    data[_alert_day_key(event, level)] = datetime.now(timezone.utc).isoformat()
+    try:
+        atomic_write_json(ALERT_DEDUPE_PATH, _prune_alert_dedupe(data))
     except Exception:
         pass
 
@@ -155,7 +208,7 @@ def send_alert(msg: str, level: str = "info", dedup: bool = True) -> dict:
     # 避免 verdict change / thesis invalidation 静默漏发.
     if not result["sent"] and level in ("crisis", "warning", "error", "trade"):
         try:
-            crit_path = Path(SIGNALS_DIR) / "critical_alerts.jsonl"
+            crit_path = ALERTS_PATH
             crit_path.parent.mkdir(parents=True, exist_ok=True)
             entry = {
                 "ts":       datetime.now(timezone.utc).isoformat(),
@@ -187,8 +240,20 @@ def notify_trade(ticker: str, side: str, qty: int, price: float,
 
 
 def notify_crisis(ticker: str, pct_chg: float, reason: str = "") -> dict:
+    """Push one crisis alert per ticker per ET day.
+
+    Restarts used to resend the same event because send_alert only dedups for
+    five minutes.  The daily marker is persisted before returning; a later
+    higher level uses a different key and is allowed through.
+    """
+    event = f"crisis:{ticker}"
+    if _alert_sent_today(event, "crisis"):
+        return {"sent": [], "skipped": ["daily_dedup"], "dedup": True,
+                "date": datetime.now(ET).date().isoformat()}
     msg = f"**CRISIS** {ticker} 单日 {pct_chg:+.2f}% → 触发 crisis regime\n{reason}"
-    return send_alert(msg, level="crisis")
+    result = send_alert(msg, level="crisis")
+    _record_alert_sent(event, "crisis")
+    return result
 
 
 def notify_jp_guidance_opportunity(ticker: str, name: str, rsi: float,
@@ -213,6 +278,67 @@ def notify_jp_guidance_opportunity(ticker: str, name: str, rsi: float,
         f"→ 技术 + 基本面双重共振，可关注反弹机会（人工判断）"
     )
     return send_alert(msg, level="jp_catalyst")
+
+
+def _format_duration(seconds: int) -> str:
+    secs = max(0, int(seconds or 0))
+    if secs < 60:
+        return f"{secs}s"
+    m, s = divmod(secs, 60)
+    if m < 60:
+        return f"{m}m{s:02d}s"
+    h, m = divmod(m, 60)
+    return f"{h}h{m:02d}m"
+
+
+def notify_ai_gate_unavailable(
+    classification: str,
+    duration_s: int = 0,
+    channel: str = "unknown",
+    status_text: str = "",
+    overall: str | None = None,
+) -> dict:
+    """AI Gate 不可用告警 — EVO-20261015-1 合并重复故障.
+
+    同 (channel, classification) 组合在 AI_GATE_ALERT_WINDOW (默认 30 min) 内只发一次,
+    超时后或分类切换时会再次推送. 恢复告警由 _ai_cli_diag 探测成功后通过
+    ``notify_ai_recovery`` 发送, 不在本函数里揣测可用性.
+    """
+    key = f"ai_gate_unavailable:{channel}:{classification}"
+    key_hash = hashlib.md5(key.encode("utf-8")).hexdigest()[:12]
+    if _dedup_check(key_hash, window=AI_GATE_ALERT_WINDOW):
+        return {"sent": [], "skipped": ["merged"], "merged": True, "key": key}
+
+    short = (status_text or "").strip().replace("\n", " ")[:160]
+    overall_tag = f" · overall=`{overall}`" if overall else ""
+    msg = (
+        f"**AI Gate 不可用 ({classification})** 通道 `{channel}`, "
+        f"已持续 {_format_duration(duration_s)}{overall_tag}\n"
+        f"原始状态: {short or classification}\n"
+        f"下单路径沿用 fail-closed → 本次结果不代表模型给出 HOLD, "
+        f"model_confidence=N/A, 请以原始规则信号为准."
+    )
+    r = send_alert(msg, level="warning", dedup=False)
+    _dedup_record(key_hash, window=AI_GATE_ALERT_WINDOW)
+    r["merged"] = False
+    r["key"] = key
+    return r
+
+
+def notify_ai_recovery(
+    channel: str,
+    duration_s: int = 0,
+    classification: str = "",
+    overall: str | None = None,
+) -> dict:
+    """AI Gate 探测成功后的恢复告警. 必须由 _ai_cli_diag 持有的实际探测触发."""
+    overall_tag = f" · overall=`{overall}`" if overall else ""
+    class_tag = f" (之前故障分类 {classification})" if classification else ""
+    msg = (
+        f"**AI Gate 恢复** 通道 `{channel}` 探测成功, "
+        f"故障持续 {_format_duration(duration_s)}{class_tag}{overall_tag}"
+    )
+    return send_alert(msg, level="recovery", dedup=False)
 
 
 def notify_watchdog(event: str, old_pid=None, new_pid=None) -> dict:

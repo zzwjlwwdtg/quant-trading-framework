@@ -176,7 +176,8 @@ def audit_script(script_path: Path, timeout: int = 300) -> dict:
     try:
         from ai_prompt import query_ai_cli
         output, status, provider, _ = query_ai_cli(prompt, timeout=timeout,
-                                                    complexity="complex")
+                                                    complexity="complex",
+                                                    caller="backtest_reviewer")
     except Exception as e:
         return {
             "script":     stem,

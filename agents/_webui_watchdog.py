@@ -76,6 +76,8 @@ JOBS = {
     "credit_warning_test": {"bat": "_credit_warning_test.bat", "market_quiet": True},
     # 2026-10-08: 只读 AI CLI 诊断 (codex / claude 版本与试跑), 按需触发
     "ai_cli_diag": {"bat": "_ai_cli_diag.bat"},
+    # 2026-10-15: 用户同意交易 AI 用 Codex 作备选 → npm 升级过旧的 Codex CLI (只装 @openai/codex)
+    "codex_update": {"bat": "_codex_update.bat"},
     # 2026-10-08: 每日收盘后 AI 卖出复盘 (5 条理由 + 3 条局限性)
     "trade_postmortem": {"bat": "_sell_review_ai.bat", "market_quiet": True, "auto_every_days": 1},
     # 2026-10-08: 强美元阶段资产表现 预注册检验, 按需触发
@@ -84,8 +86,31 @@ JOBS = {
     "usd_theme": {"bat": "_usd_theme.bat", "market_quiet": True, "auto_every_days": 1},
     # 2026-10-12: 系统自我进化. 提案每日收盘后自动; 开发/合并只在用户批准后 (批准时写 job 请求)
     "evo_propose": {"bat": "_evolution_propose.bat", "market_quiet": True, "auto_every_days": 1},
-    # 每 6 小时兜底跑一次 (Claude 额度用完退回 approved 的提案会在额度恢复后自动重试; 无待办时秒退)
-    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True, "auto_every_days": 0.25},
+    # 2026-10-15: 每小时兜底跑一次. 额度用完退回 approved 的提案在额度恢复后 (下一个整点) 自动重试;
+    # 窗口外/无待办时秒退, 不调用 Claude. (原 6 小时会错过开发窗口, 拖到第二天)
+    "evo_worker": {"bat": "_evolution_worker.bat", "market_quiet": True, "auto_every_days": 1 / 24},
+    # 2026-10-19: EVO-3 退回后重做的长周期回测 (盘前止盈延迟, ~2 年 1h 盘前数据), 只读, 按需触发
+    "premarket_tp_long": {"bat": "_premarket_tp_long.bat", "market_quiet": True},
+    # 2026-10-19: EVO-20261014-1 合并后的预注册回测 (固定 8% vs ATR 倍数移动止损), 只读, 按需触发
+    "stop_distance_atr": {"bat": "_stop_distance_atr.bat", "market_quiet": True},
+    # 2026-10-19: A股研报 + 中美日重大经济数据. tick 每 5 分钟 (到点汇报/公布前 30 分钟提醒/公布后补发);
+    # 不设 market_quiet: 21:00 JST 的晚间时段在美股时段内, 且 tick 很轻 (只读、无事时秒退)
+    "cn_brief_tick": {"bat": "_cn_brief_tick.bat", "auto_every_days": 4 / 1440},
+    "cn_brief_now": {"bat": "_cn_brief_now.bat"},
+    "cn_brief_morning": {"bat": "_cn_brief_morning.bat"},
+    # 2026-10-19: 机器人只读接入. bot_feed_tick 每 ~5 分钟把新操作推到 BOT_WEBHOOK_URL (美股时段也要跑, 不设 market_quiet)
+    "bot_feed_tick": {"bat": "_bot_feed_tick.bat", "auto_every_days": 4 / 1440},
+    "bot_selftest": {"bat": "_bot_selftest.bat"},
+    # Public news only; one bounded cached classifier batch per ~30 minutes. No QQ pushes/trading.
+    "market_radar_tick": {"bat": "_market_radar_tick.bat", "auto_every_days": 30 / 1440,
+                          "stale_hours": 0.1},
+    "market_outlook_tick": {"bat": "_market_outlook_tick.bat", "auto_every_days": 30 / 1440,
+                            "stale_hours": 0.1},
+    # 2026-10-19: A股研报信号/经济数据意外 回测 (只读)
+    "ashare_bt_reports": {"bat": "_ashare_bt_reports.bat"},
+    "ashare_bt_econ": {"bat": "_ashare_bt_econ.bat"},
+    # 2026-10-19: 外围隔夜指标 → A股开盘/日内 预注册回测 (只读)
+    "overnight_bt": {"bat": "_overnight_bt.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
@@ -283,6 +308,17 @@ def _handle_restart_request(reason: str) -> int:
 def _launch_job(name: str) -> int | None:
     """隐藏窗口、脱离父进程启动白名单 .bat; 不等待."""
     try:
+        if name in ("market_radar_tick", "market_outlook_tick"):
+            # This small new worker needs no command shell/AutoRun or console. Keep all
+            # existing job launch paths unchanged, and capture actual worker completion.
+            (SCRIPT_DIR / "logs").mkdir(parents=True, exist_ok=True)
+            worker = "market_radar" if name == "market_radar_tick" else "market_outlook"
+            with open(SCRIPT_DIR / "logs" / f"{worker}_last.log", "w", encoding="utf-8") as out:
+                proc = subprocess.Popen(
+                    [sys.executable, "-X", "utf8", str(SCRIPT_DIR / f"{worker}.py"), "tick"],
+                    cwd=str(SCRIPT_DIR), stdin=subprocess.DEVNULL, stdout=out, stderr=out,
+                    creationflags=0x00000200 | 0x08000000, close_fds=True)
+            return proc.pid
         proc = subprocess.Popen(
             ["cmd.exe", "/c", str(SCRIPT_DIR / JOBS[name]["bat"])], cwd=str(SCRIPT_DIR),
             creationflags=0x00000008 | 0x00000200 | 0x08000000,
@@ -317,8 +353,9 @@ def _process_job_requests() -> None:
         if name in JOBS and JOBS[name].get("market_quiet") and _in_us_market_window():
             continue          # 保留请求, 收盘后的下一轮再启动
         _run_flag = JOB_DIR / f"job_{name}.running"
+        stale_hours = JOBS.get(name, {}).get("stale_hours", JOB_STALE_HOURS)
         if (name in JOBS and _run_flag.exists()
-                and (time.time() - _run_flag.stat().st_mtime) < JOB_STALE_HOURS * 3600):
+                and (time.time() - _run_flag.stat().st_mtime) < stale_hours * 3600):
             _log("job_already_running", f"{name}: request kept until it finishes")
             continue          # 2026-10-13: 任务还在跑 → 请求保留到它结束 (以前会被消费掉然后丢弃)
         try:
@@ -330,7 +367,7 @@ def _process_job_requests() -> None:
             _log("job_rejected", f"{name}: not in whitelist")
             continue
         running = JOB_DIR / f"job_{name}.running"
-        if running.exists() and (time.time() - running.stat().st_mtime) < JOB_STALE_HOURS * 3600:
+        if running.exists() and (time.time() - running.stat().st_mtime) < stale_hours * 3600:
             _log("job_already_running", name)
             continue
         pid = _launch_job(name)

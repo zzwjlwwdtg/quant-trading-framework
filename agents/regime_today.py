@@ -93,6 +93,31 @@ def nyse_holidays(year: int) -> set[date]:
     return {d for d in out if d.year == year}
 
 
+def nyse_early_closes(year: int) -> set[date]:
+    """NYSE 13:00 ET early closes (rule-based, no network).
+
+    Day after Thanksgiving, Christmas Eve, and July 3, whenever those fall on
+    a weekday that is not itself a full holiday. 2026-10-20 audit P1-2.
+    """
+    candidates = {
+        _nth_weekday(year, 11, 3, 4) + timedelta(days=1),
+        date(year, 12, 24),
+        date(year, 7, 3),
+    }
+    holidays = nyse_holidays(year)
+    return {d for d in candidates
+            if d.year == year and d.weekday() < 5 and d not in holidays}
+
+
+def is_nyse_early_close(d: date) -> bool:
+    return d in nyse_early_closes(d.year)
+
+
+def nyse_close_minute(d: date) -> int:
+    """Regular-session close in ET minutes since midnight (780 early, 960 normal)."""
+    return 13 * 60 if is_nyse_early_close(d) else 16 * 60
+
+
 def is_nyse_session(d: date) -> bool:
     return d.weekday() < 5 and d not in nyse_holidays(d.year)
 
