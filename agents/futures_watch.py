@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from moomoo import KLType, AuType, RET_OK
 
 from moomoo_pool import get_quote_ctx
+from data_quality import quote_ts_from_update_time
 
 
 def _psar_trend(high: np.ndarray, low: np.ndarray,
@@ -105,6 +106,7 @@ def get_futures_signal(ticker: str = "US.GCmain") -> dict:
             return {"ticker": ticker, "error": f"snapshot: {snap}"}
 
         row        = snap.iloc[0]
+        quote_ts   = quote_ts_from_update_time(row.get("update_time"))
         price      = float(row["last_price"])
         prev_close = float(row["prev_close_price"])
         vol_today  = float(row["volume"])
@@ -128,6 +130,7 @@ def get_futures_signal(ticker: str = "US.GCmain") -> dict:
             return {
                 "ticker":     ticker.split(".")[-1],
                 "ts":         datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "quote_ts":   quote_ts,
                 "price":      round(price, 2),
                 "settle":     round(settle, 2),
                 "pct_chg":    round(pct_chg, 2),
@@ -223,6 +226,7 @@ def get_futures_signal(ticker: str = "US.GCmain") -> dict:
         return {
             "ticker":          ticker.split(".")[-1],
             "ts":              datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "quote_ts":        quote_ts,
             "price":           round(price, 2),
             "settle":          round(settle, 2),
             "pct_chg":         round(pct_chg, 2),

@@ -3134,12 +3134,112 @@ def _row_times(*, signal: dict, signal_mtime: float, broker_checked_at,
     }
 
 
+def _tlt_hint_from_interpretation(interp: dict | None) -> dict | None:
+    """债券宏观 AI 解读 → dashboard TLT 附注 (只读展示, 不进入下单路径)."""
+    if not isinstance(interp, dict) or interp.get("error"):
+        return None
+    action = str(interp.get("tlt_action") or "").strip().lower()
+    if action not in {"buy", "sell", "hold"}:
+        action = None
+    return {
+        "action": action,
+        "reason": str(interp.get("tlt_reason") or "").strip()[:160],
+        "source": interp.get("_source"),
+        "generated_at": interp.get("generated_at"),
+        "stale": bool((interp.get("_meta") or {}).get("stale")),
+    }
+
+
+_TLT_TICKER = "US.TLT"
+_TLT_SIGNAL_TTL_SEC = 600
+# 与 api_ai_targets 里五只标地的 buy_actions 保持同一口径。
+_TLT_BUY_ACTIONS = frozenset({"BUY", "WATCH_BUY", "WATCH_BUY_PROBE", "CRISIS_PROBE"})
+
+
+def _tlt_signal_payload(market: dict, decision: dict,
+                        score: dict | None = None) -> dict:
+    """把 TLT 的 market/decision 整理成 dashboard 行; 不写信号文件、不下单."""
+    market = market if isinstance(market, dict) else {}
+    decision = decision if isinstance(decision, dict) else {}
+    score = score if isinstance(score, dict) else {}
+    action = str(decision.get("action") or "UNKNOWN").upper()
+    buy_like = action in _TLT_BUY_ACTIONS
+    return {
+        "ticker": _TLT_TICKER,
+        "action": action,
+        "confidence": decision.get("confidence"),
+        "reason": str(decision.get("reason") or "")[:240],
+        "regime": decision.get("regime"),
+        "entry_ref": decision.get("entry_ref") if buy_like else None,
+        "stop_ref": decision.get("stop_ref") if buy_like else None,
+        "target_ref": decision.get("target_ref") if buy_like else None,
+        "price": market.get("price"),
+        "pct_chg": market.get("pct_chg"),
+        "quote_ts": market.get("quote_ts") or market.get("ts"),
+        "score": score.get("score"),
+        "score_why": " · ".join(score.get("why") or [])[:200],
+        "whitelist": bool(score.get("whitelist")),
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+
+def _compute_tlt_system_signal() -> dict:
+    """TLT 展示信号: 与五只标地共用 market_watch + decision_agent 纯计算.
+
+    只读: 不调用 notifier.emit、不写 signals/、不进入 paper_trader。
+    宏观分与 15m/Claude gate 未接入, 与系统 live 决策的差异在 UI 中注明。
+    """
+    from confluence import get_confluence
+    from decision_agent import get_decision
+    from market_watch import get_market_signal
+    from regime_today import get_today_regime
+    from top_picks import _score_signal
+
+    market = get_market_signal(_TLT_TICKER)
+    if not isinstance(market, dict) or market.get("error"):
+        detail = market.get("error") if isinstance(market, dict) else None
+        return {"ticker": _TLT_TICKER,
+                "error": str(detail or "market data unavailable")[:200]}
+    confluence = get_confluence(market)
+    decision = get_decision(
+        market, {}, {},
+        confluence=confluence,
+        board_regime=get_today_regime("unknown"),
+    )
+    if not isinstance(decision, dict):
+        return {"ticker": _TLT_TICKER, "error": "decision unavailable"}
+    decision = {**decision, "confluence": confluence}
+    try:
+        score = _score_signal({"market": market, "decision": decision})
+    except Exception:
+        score = None
+    return _tlt_signal_payload(market, decision, score)
+
+
+def api_tlt_system_signal() -> dict:
+    """Dashboard TLT 行; 10 分钟缓存, 首次异步避免阻塞页面."""
+    placeholder = {
+        "ticker": _TLT_TICKER,
+        "action": None,
+        "reason": "正在计算 TLT 系统信号…",
+        "generated_at": None,
+    }
+    return _cached(
+        "tlt_system_signal",
+        ttl_sec=_TLT_SIGNAL_TTL_SEC,
+        compute_fn=_compute_tlt_system_signal,
+        first_call_async=True,
+        first_call_placeholder=placeholder,
+    )
+
+
 def api_ai_targets() -> dict:
     """AI 价位计划 + 最新规则决策 + broker 实际未结订单。
 
     旧实现只返回最近一份 AI JSON，页面因此会把已经被新规则决策覆盖的
     价位计划误称为“实际挂单”。现在以 broker 未结订单为事实源；AI 只
     提供 entry/stop/target 参考，规则引擎的最新 action 决定计划是否仍有效。
+    TLT 行用同一套技术决策引擎纯计算，仅展示，不进入下单路径。
     """
     files = sorted(SIGNALS_DIR.glob("ai_targets_*.json"),
                    key=lambda p: p.stat().st_mtime, reverse=True)
@@ -3299,6 +3399,15 @@ def api_ai_targets() -> dict:
             })
             merged_targets.append(target)
 
+        try:
+            tlt_hint = _tlt_hint_from_interpretation(api_bond_ai_interpret())
+        except Exception:
+            tlt_hint = None
+        try:
+            tlt_signal = api_tlt_system_signal()
+        except Exception:
+            tlt_signal = None
+
         return {
             "exists": bool(latest is not None or system_pending),
             "path": latest.name if latest is not None else None,
@@ -3314,6 +3423,8 @@ def api_ai_targets() -> dict:
             ]),
             **content,
             "targets": merged_targets,
+            "tlt_hint": tlt_hint,
+            "tlt_signal": tlt_signal,
         }
     except Exception as e:
         return {"exists": False, "error": str(e)}
@@ -3350,13 +3461,17 @@ def api_bond_ai_interpret() -> dict:
                 _append_hist(bond)
             except Exception:
                 pass
-            return interpret_bond_context(bond)
+            result = interpret_bond_context(bond)
+            if isinstance(result, dict):
+                result["_schema_version"] = 2
+            return result
         except Exception as e:
-            return {"error": str(e)[:200]}
+            return {"error": str(e)[:200], "_schema_version": 2}
     return _cached("bond_ai_interpret", ttl_sec=6 * 3600,
                    compute_fn=_compute,
                    first_call_async=True,
-                   first_call_placeholder=placeholder)
+                   first_call_placeholder=placeholder,
+                   cache_validator=lambda d: d.get("_schema_version") == 2)
 
 
 def api_thesis_history(days: int = 180) -> dict:

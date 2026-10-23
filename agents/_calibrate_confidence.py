@@ -30,6 +30,7 @@ import pandas as pd
 from backtest_engine import (
     load_history,
     add_indicators,
+    WARMUP_CALENDAR_DAYS,
     _classify_rsi_zone,
     _classify_cci_zone,
     _classify_vol_zone,
@@ -219,7 +220,10 @@ def calibrate(tickers: list[str], days: int = 250) -> dict:
         cls = get_asset_class(tk_full)
         ticker_class[tk] = cls
         print(f"[{tk}] class={cls} 拉历史...")
-        df = load_history(tk, days=days + 60)
+        df = load_history(
+            tk, days=days + 60,
+            warmup_days=WARMUP_CALENDAR_DAYS,
+        )
         if df.empty:
             print(f"  {tk}: 无历史，跳过")
             continue

@@ -40,6 +40,9 @@ SOX_TICKERS = [
     "STM", "IPGP", "SLAB", "RMBS",
 ]
 
+# 最后成交日落后同批最新日期超过该天数的序列视为停更 (退市/停牌), 不参与矩阵.
+STALE_SERIES_DAYS = 5
+
 
 # 业务板块归类（用于残差动量分析的主题聚合）
 SOX_THEME = {
@@ -118,6 +121,22 @@ def fetch_returns(tickers: list[str] = SOX_TICKERS,
                 missing.append(tk)
                 continue
 
+    # 退市后 yfinance 仍会返回一段旧数据 (如 QRVO). 这类序列非空但最后成交日
+    # 停在过去, DataFrame.dropna() 会把整个矩阵截断到最旧的那条 K 线, 必须剔除.
+    stale: list[str] = []
+    last_dates = {
+        tk: pd.Timestamp(series.index.max()).date()
+        for tk, series in closes.items() if len(series)
+    }
+    if last_dates:
+        latest_date = max(last_dates.values())
+        stale = [
+            tk for tk, last_date in last_dates.items()
+            if (latest_date - last_date).days > STALE_SERIES_DAYS
+        ]
+        for tk in stale:
+            closes.pop(tk, None)
+
     # 登记本轮每只票的拉取结果; 连续失败 N 天自动 retire, 不再刷日志
     try:
         from _data_source_health import record_fetch_result as _rec
@@ -125,6 +144,8 @@ def fetch_returns(tickers: list[str] = SOX_TICKERS,
             _rec(tk, True)
         for tk in missing:
             _rec(tk, False, reason="yfinance_empty")
+        for tk in stale:
+            _rec(tk, False, reason="yfinance_stale")
     except Exception:
         pass
 

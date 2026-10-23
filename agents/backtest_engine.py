@@ -69,10 +69,21 @@ def _pyramid_add_qty(pos_qty, price, size_usd, power, add_frac=0.50, pos_max=0.4
 
 
 # ── 数据加载 ────────────────────────────────────────────────────────────────
-def load_history(ticker: str, days: int = 350) -> pd.DataFrame:
-    """yfinance 拉一段 daily K，返回带常用列的 DataFrame。"""
+# 52 周指标需要 252 个交易日; 350 个日历日只有 ~240 个交易日, rolling(252)
+# 全为 NaN. 评估窗口前额外多拉这么多日历日作为 warm-up (~276 个交易日).
+WARMUP_CALENDAR_DAYS = 400
+
+
+def load_history(
+    ticker: str, days: int = 350, *, warmup_days: int = 0,
+) -> pd.DataFrame:
+    """yfinance 拉一段 daily K，返回带常用列的 DataFrame.
+
+    warmup_days 只为指标预热而多拉, 调用方仍按自己的窗口截取评估区间.
+    """
     import yfinance as yf
-    df = yf.Ticker(ticker).history(period=f"{days}d", interval="1d", auto_adjust=True)
+    period = f"{days + max(0, warmup_days)}d"
+    df = yf.Ticker(ticker).history(period=period, interval="1d", auto_adjust=True)
     if df.empty:
         return df
     df = df.rename(columns={"Open":"open","High":"high","Low":"low",
@@ -110,8 +121,8 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     # pct_chg + 前一日 pct_chg（V 型反转判定用）
     d["pct_chg"] = d["close"].pct_change() * 100
     d["prev_pct"] = d["pct_chg"].shift(1)
-    # 52w 高
-    d["high_52w"] = d["high"].rolling(252).max()
+    # 52w 高 (显式 min_periods: 不足 252 个交易日时保持 NaN, 不伪造新高)
+    d["high_52w"] = d["high"].rolling(252, min_periods=252).max()
     d["dist_from_high"] = (d["close"] - d["high_52w"]) / d["high_52w"] * 100
     d["is_new_52w_high"] = (d["close"] >= d["high_52w"] * 0.999).astype(int)
     # MACD
@@ -265,7 +276,9 @@ def run_lite(tickers=None, days=BACKTEST_DAYS) -> dict:
 
     all_events: dict[str, list[SignalEvent]] = {}
     for tk in tickers:
-        df = add_indicators(load_history(tk, days=days + 50))
+        df = add_indicators(load_history(
+            tk, days=days + 50, warmup_days=WARMUP_CALENDAR_DAYS,
+        ))
         # 取最后 days 个有完整指标的交易日
         df = df.dropna(subset=["rsi_14","ma20","ma50","bb_pct","cci_20","vol_ratio"])
         if len(df) < days:
@@ -477,11 +490,15 @@ def _run_mid_impl(tickers=None, days=BACKTEST_DAYS) -> dict:
     # 准备所有 ticker 的历史数据 (对齐到共同日期范围)
     histories = {}
     for tk in tickers:
-        df = add_indicators(load_history(tk, days=days + 60))
+        df = add_indicators(load_history(
+            tk, days=days + 60, warmup_days=WARMUP_CALENDAR_DAYS,
+        ))
         df = df.dropna(subset=["rsi_14","ma20","ma50","bb_pct","cci_20"])
         histories[tk] = df
     # 拉 SPY 用于每日 sub-regime 判定
-    spy = add_indicators(load_history("SPY", days=days + 60))
+    spy = add_indicators(load_history(
+        "SPY", days=days + 60, warmup_days=WARMUP_CALENDAR_DAYS,
+    ))
     common_dates = None
     for tk, df in histories.items():
         d_set = set(df.index)

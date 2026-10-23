@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 from moomoo import KLType, AuType, RET_OK
 
 from moomoo_pool import get_quote_ctx
+from data_quality import quote_ts_from_update_time
 
 # GLD/USO 覆盖 overnight_pct 为 GC=F / CL=F 24h 期货真实动量
 # （NYSE extended-hours 太稀薄，抓不到 Asia/London 商品期货移动）
@@ -358,6 +359,7 @@ def get_market_signal(ticker: str) -> dict:
             return {"ticker": ticker, "error": f"snapshot: {snap}"}
 
         row = snap.iloc[0]
+        quote_ts   = quote_ts_from_update_time(row.get("update_time"))
         price      = float(row["last_price"])
         prev_close = float(row["prev_close_price"])
         vol_today  = float(row["volume"])
@@ -403,6 +405,7 @@ def get_market_signal(ticker: str) -> dict:
             return {
                 "ticker": ticker.split(".")[-1],
                 "ts": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "quote_ts": quote_ts,
                 "price": round(price, 2),
                 "pct_chg": round((price - prev_close) / prev_close * 100, 2),
                 "rsi_14": None, "ma20": None, "vol_ratio": None,
@@ -660,6 +663,7 @@ def get_market_signal(ticker: str) -> dict:
         result = {
             "ticker":          ticker.split(".")[-1],
             "ts":              datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "quote_ts":        quote_ts,
             "price":           round(price, 2),
             "bid_price":       bid_price,
             "ask_price":       ask_price,
