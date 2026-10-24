@@ -1,0 +1,44 @@
+{
+  "exists": true,
+  "label": "bull_low_vol",
+  "prob": 0.793,
+  "state": 0,
+  "ts": "2026-10-23T22:24:40.398053",
+  "state_probs": {
+    "0": 0.793,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.207
+  },
+  "scope": "slow_macro_background",
+  "warning": "慢周期背景，不是当前买入或加仓信号",
+  "trading": {
+    "regime": "crisis",
+    "regime_zh": "危机防御",
+    "base_regime": "crisis",
+    "style": {
+      "style": "chop_weak",
+      "style_zh": "震荡偏弱",
+      "chop_score": 6,
+      "is_choppy": true,
+      "reason": "10日趋势效率偏低(0.23)；ADX偏低(13.7)；10日涨跌反转5次；10日穿越MA20 5次；净涨跌小但路径反复；短期ATR放大(1.28x)",
+      "metrics": {
+        "pct_5d": -1.01,
+        "pct_20d": -0.42,
+        "dist_ma20_pct": -0.88,
+        "dist_ma50_pct": -0.42,
+        "efficiency_10": 0.23,
+        "efficiency_20": 0.041,
+        "adx_14": 13.7,
+        "reversal_count_10d": 5,
+        "ma20_crossings_10d": 5,
+        "atr_5_20_ratio": 1.28
+      },
+      "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
+    },
+    "date": "2026-10-23",
+    "expected_date": "2026-10-26",
+    "stale": true,
+    "ts": "2026-10-23T13:24:34.291627+00:00"
+  }
+}

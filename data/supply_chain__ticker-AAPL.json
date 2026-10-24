@@ -1,0 +1,126 @@
+{
+  "ticker": "AAPL",
+  "sector": "消费电子/智能硬件与数字服务",
+  "business": "苹果公司设计、销售 iPhone、Mac、iPad、可穿戴设备，并通过 App Store、iCloud、AppleCare、支付和内容订阅等服务变现。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为 A 系列、M 系列等核心 SoC 提供先进制程代工，是苹果高端芯片最关键制造伙伴",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "鸿海精密工业",
+      "ticker": "2317.TW",
+      "note": "承担 iPhone 等硬件整机组装，是苹果最大 EMS 代工伙伴之一",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "立讯精密",
+      "ticker": "002475.SZ",
+      "note": "提供 AirPods、Apple Watch、iPhone 相关组装及连接器等零部件",
+      "weight": 72,
+      "confidence": "medium"
+    },
+    {
+      "name": "索尼集团",
+      "ticker": "6758.T",
+      "note": "供应 iPhone 图像传感器等相机核心零部件",
+      "weight": 68,
+      "confidence": "medium"
+    },
+    {
+      "name": "村田制作所",
+      "ticker": "6981.T",
+      "note": "供应 MLCC、射频与被动元件等关键电子元件",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "LG Display",
+      "ticker": "LPL",
+      "note": "供应 OLED/LCD 显示面板，主要用于 iPhone、iPad、Mac 等产品线",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Verizon Communications",
+      "ticker": "VZ",
+      "note": "作为美国主要运营商渠道销售 iPhone，并绑定蜂窝网络服务",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "AT&T",
+      "ticker": "T",
+      "note": "通过运营商补贴、合约和零售渠道销售 iPhone 与蜂窝版设备",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "T-Mobile US",
+      "ticker": "TMUS",
+      "note": "美国核心运营商渠道，采购和销售 iPhone 以获取高价值移动用户",
+      "weight": 68,
+      "confidence": "high"
+    },
+    {
+      "name": "Best Buy",
+      "ticker": "BBY",
+      "note": "作为大型零售渠道销售 iPhone、Mac、iPad、Apple Watch 与配件",
+      "weight": 45,
+      "confidence": "medium"
+    },
+    {
+      "name": "Ingram Micro",
+      "ticker": null,
+      "note": "作为分销商服务企业、教育和零售客户的苹果硬件采购需求",
+      "weight": 35,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在智能手机、平板、可穿戴和生态硬件上与苹果竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过 Android、Pixel、云服务和数字服务生态与苹果竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "在个人电脑操作系统、生产力软件、云服务和部分硬件生态上竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "小米集团",
+      "ticker": "1810.HK",
+      "note": "在智能手机、可穿戴、IoT 与消费电子生态上竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "华为",
+      "ticker": null,
+      "note": "在高端智能手机、可穿戴设备和自有操作系统生态上竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-28T08:03:32.846267+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-28T17:03:32.871674",
+    "age_sec": 2266187,
+    "stale": false,
+    "refreshing": false
+  }
+}

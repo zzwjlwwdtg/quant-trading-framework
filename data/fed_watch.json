@@ -1,0 +1,85 @@
+{
+  "current_target_range": "3.75-4.00",
+  "meetings": [
+    {
+      "date": "2026-10-28",
+      "days_until": 4,
+      "probabilities": {
+        "hold": 92.8,
+        "hike_25": 7.2,
+        "hike_50": 0,
+        "cut_25": 0,
+        "cut_50": 0
+      },
+      "most_likely": "hold",
+      "consensus_direction": "neutral"
+    },
+    {
+      "date": "2026-12-09",
+      "days_until": 46,
+      "probabilities": {
+        "hold": 19.5,
+        "hike_25": 74.8,
+        "hike_50": 5.7,
+        "cut_25": 0,
+        "cut_50": 0
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 95,
+      "probabilities": {
+        "hold": 19.5,
+        "hike_25": 74.8,
+        "hike_50": 5.7,
+        "cut_25": 0,
+        "cut_50": 0
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    }
+  ],
+  "probability_basis": "各标签表示相对当前3.75%-4.00%目标区间、截至该会议的累计变动，不能解释为该次会议单独行动的概率；仅凭FedWatch目标区间边际分布无法确定后续会议的单次行动概率。",
+  "implied_terminal_rate": null,
+  "implied_terminal_date": null,
+  "data_snapshot_date": "2026-10-23",
+  "recent_event_impact": "检索2026-10-17至2026-10-24，未发现新的NFP、CPI、PPI发布、FOMC决议或主席Warsh讲话；10月17日起进入会议前静默期。最近CPI于10月14日发布，9月环比上涨0.6%；PPI于10月15日发布，9月环比上涨1.3%。这些通胀数据支持偏鹰预期，10月23日快照晚于上述发布及Warsh于10月16日的讲话，但无法核实各事件单独造成的概率变化。",
+  "commentary": "实际数据快照为2026-10-23，采用OANDA当日更新的CME FedWatch转载表，满足最近一个交易日要求，但页面未注明盘中时刻；市场倾向10月维持、截至12月累计加息25基点，近期CPI和PPI上行支持这一偏鹰方向。CME官方动态组件访问被拒，未能直接复核；其他同日来源概率略有差异，因此置信度为medium，且未将远期曲线某一会议利率冒充终点利率。",
+  "sources": [
+    {
+      "url": "https://www.oanda.jp/lab-education/dictionary/fedwatchtool/",
+      "type": "cme_fedwatch_secondary"
+    },
+    {
+      "url": "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html",
+      "type": "cme_fedwatch_official_dynamic_data_unavailable"
+    },
+    {
+      "url": "https://www.bls.gov/schedule/2026/",
+      "type": "official_release_calendar"
+    },
+    {
+      "url": "https://www.bls.gov/?trk=keyword-landing-page-text",
+      "type": "official_inflation_release_summary"
+    },
+    {
+      "url": "https://www.kiplinger.com/investing/economy/this-weeks-economic-calendar",
+      "type": "event_calendar_and_fed_blackout"
+    },
+    {
+      "url": "https://apnews.com/article/4c80750c113a82a464a46f58a4fdab43",
+      "type": "fed_chair_speech_report"
+    }
+  ],
+  "confidence": "medium",
+  "source_via": "codex_cli_websearch",
+  "fetched_at": "2026-10-24T03:33:56+00:00",
+  "_meta": {
+    "cached_at": "2026-10-24T12:33:56.439343",
+    "age_sec": 35946,
+    "stale": true,
+    "refreshing": true
+  }
+}

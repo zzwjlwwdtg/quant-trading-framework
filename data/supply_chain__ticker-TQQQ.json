@@ -1,0 +1,126 @@
+{
+  "ticker": "TQQQ",
+  "sector": "杠杆型纳斯达克100ETF",
+  "business": "TQQQ 是 ProShares 发行的 3 倍做多纳斯达克100指数的杠杆ETF，核心风险收益来自 QQQ/纳斯达克100中大型科技与成长股敞口。",
+  "upstream": [
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "QQQ/纳斯达克100最大权重成分之一，提供AI芯片、GPU与数据中心计算敞口，是TQQQ净值波动的核心来源",
+      "weight": 100,
+      "confidence": "high"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "提供消费电子、服务与生态系统敞口，是纳斯达克100的重要权重股",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "提供云计算、企业软件与AI基础设施敞口，对指数收益贡献较高",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "Amazon.com",
+      "ticker": "AMZN",
+      "note": "提供电商、云服务AWS与数字广告敞口，是主要成长股权重来源",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "提供社交平台、数字广告与AI资本开支相关敞口",
+      "weight": 50,
+      "confidence": "high"
+    },
+    {
+      "name": "Tesla",
+      "ticker": "TSLA",
+      "note": "提供电动车、能源存储与自动驾驶预期敞口，波动性对杠杆ETF影响较大",
+      "weight": 45,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Robinhood Markets",
+      "ticker": "HOOD",
+      "note": "面向活跃零售交易者提供TQQQ等杠杆ETF交易入口，用于短线方向性交易和高波动敞口",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Charles Schwab",
+      "ticker": "SCHW",
+      "note": "券商和托管平台客户可买入TQQQ，用于战术性纳斯达克100杠杆配置",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "Morgan Stanley",
+      "ticker": "MS",
+      "note": "财富管理和机构客户可能通过平台使用TQQQ进行短期指数增强或对冲组合调整",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "Interactive Brokers Group",
+      "ticker": "IBKR",
+      "note": "活跃交易客户使用TQQQ获取纳斯达克100日内或短周期3倍杠杆敞口",
+      "weight": 60,
+      "confidence": "medium"
+    },
+    {
+      "name": "JPMorgan Chase",
+      "ticker": "JPM",
+      "note": "通过经纪、财富管理和机构渠道服务使用杠杆ETF的投资者，主要用于战术配置而非长期持有",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "ProShares Ultra QQQ",
+      "ticker": "QLD",
+      "note": "2倍做多纳斯达克100ETF，与TQQQ竞争较低杠杆的同类指数产品",
+      "confidence": "high"
+    },
+    {
+      "name": "ProShares UltraPro Short QQQ",
+      "ticker": "SQQQ",
+      "note": "3倍做空纳斯达克100ETF，是TQQQ的反向杠杆交易替代品",
+      "confidence": "high"
+    },
+    {
+      "name": "Invesco QQQ Trust",
+      "ticker": "QQQ",
+      "note": "非杠杆纳斯达克100ETF，是TQQQ追踪敞口的核心基准替代品",
+      "confidence": "high"
+    },
+    {
+      "name": "Invesco NASDAQ 100 ETF",
+      "ticker": "QQQM",
+      "note": "低费率非杠杆纳斯达克100ETF，面向长期配置需求",
+      "confidence": "high"
+    },
+    {
+      "name": "Direxion Daily Technology Bull 3X Shares",
+      "ticker": "TECL",
+      "note": "3倍做多科技板块ETF，与TQQQ在高杠杆科技成长股敞口上竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-09-27T09:33:35.384654+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-09-27T18:33:35.388731",
+    "age_sec": 2347185,
+    "stale": false,
+    "refreshing": false
+  }
+}
