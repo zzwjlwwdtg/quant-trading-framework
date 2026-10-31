@@ -1,0 +1,106 @@
+{
+  "ticker": "TQQQ",
+  "sector": "纳斯达克大型科技股／半导体与云计算产业链",
+  "business": "TQQQ寻求纳斯达克100指数单日收益的三倍，非长期累计收益的三倍；以下按QQQ前十大重仓股所代表的业务分析供应链，包含成分股之间的交易关系，权重为战略重要度估计而非基金持仓或营收占比，产品依据：[ProShares官方说明](https://www.proshares.com/our-etfs/leveraged-and-inverse/tqqq)。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为英伟达、苹果等代表性成分股提供先进制程晶圆代工及先进封装，是芯片供应的重要环节。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "既是代表性成分股，也是微软、亚马逊、谷歌等云平台的GPU及AI计算平台供应商；存在组合内部供应关系。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "鸿海精密",
+      "ticker": null,
+      "note": "为苹果提供电子产品组装，并参与AI服务器制造；主要在台湾上市，按指定市场范围不填写代码。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "SK海力士",
+      "ticker": null,
+      "note": "提供AI加速器所需的高带宽存储器及服务器内存；主要在韩国上市，按指定市场范围不填写代码。",
+      "weight": 75,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "采购GPU、服务器和网络设备，用于Azure与AI服务；也是组合内部客户，不能将该关系重复计为组合外部收入。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "采购AI加速器、服务器及相关基础设施，用于AWS云计算与模型训练推理；属于组合内部客户。",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购GPU、网络及数据中心设备，用于谷歌云和AI计算，并采用自研芯片；属于组合内部客户。",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "采购AI服务器与网络设备，用于推荐系统、广告模型及生成式AI；其采购连接半导体与互联网业务。",
+      "weight": 84,
+      "confidence": "medium"
+    },
+    {
+      "name": "甲骨文",
+      "ticker": "ORCL",
+      "note": "部署英伟达GPU及配套系统，为OCI客户提供AI训练和推理算力；云平台部署关系参考：[英伟达公开资料](https://nvidianews.nvidia.com/_gallery/download_pdf/69b86af13d633234492e70ab/)。",
+      "weight": 72,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "超威半导体",
+      "ticker": "AMD",
+      "note": "在数据中心GPU与CPU领域与代表性成分股竞争，也可能同时属于指数成分股；此处比较底层业务竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在智能手机、存储芯片和晶圆代工领域与苹果及半导体成分股竞争；主要在韩国上市。",
+      "confidence": "medium"
+    },
+    {
+      "name": "阿里巴巴",
+      "ticker": "BABA",
+      "note": "在云计算、AI服务与电子商务领域，与微软、亚马逊及Alphabet的相关业务竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "腾讯控股",
+      "ticker": "0700.HK",
+      "note": "在数字广告、云服务、游戏及AI应用领域，与互联网和软件类代表性成分股竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-27T10:04:14.099143+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-27T19:04:14.104208",
+    "age_sec": 372547,
+    "stale": false,
+    "refreshing": false
+  }
+}

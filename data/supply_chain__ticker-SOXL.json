@@ -1,0 +1,119 @@
+{
+  "ticker": "SOXL",
+  "sector": "半导体产业链（日度三倍杠杆ETF）",
+  "business": "SOXL寻求实现NYSE半导体指数每日收益的三倍，以下按半导体产业链分析而非基金自身购销关系；权重为战略重要度估计，不代表持仓或营收占比，长期收益不等于指数累计收益的三倍。[基金说明](https://www.direxion.com/product/daily-semiconductor-bull-bear-3x-etfs)",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为半导体设计企业提供先进制程晶圆代工与先进封装，是人工智能及高性能计算芯片的重要制造环节。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "向晶圆制造企业提供光刻设备，支撑先进逻辑及存储芯片制造。[年度报告](https://www.asml.com/investors/annual-report/2025)",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "应用材料",
+      "ticker": "AMAT",
+      "note": "提供薄膜沉积、材料工程等晶圆制造设备；在全产业链口径下属于制造端上游。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "泛林集团",
+      "ticker": "LRCX",
+      "note": "提供刻蚀、沉积及清洗设备，支持逻辑芯片与存储芯片制造。",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "新思科技",
+      "ticker": "SNPS",
+      "note": "提供电子设计自动化软件与半导体设计知识产权，支持芯片设计和验证。",
+      "weight": 75,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "采购人工智能加速器、服务器处理器及网络芯片，用于云计算和人工智能基础设施；采购可经服务器及系统供应商完成。",
+      "weight": 94,
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "采购服务器及人工智能芯片，并为自研云端芯片使用设计与制造服务，服务于云计算业务。",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "谷歌母公司",
+      "ticker": "GOOGL",
+      "note": "采购服务器、网络及人工智能芯片，并为自研加速器使用芯片设计与制造服务。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "采购存储、射频及模拟芯片，并为自研处理器采购晶圆代工服务，用于手机、电脑及其他终端。",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "采购人工智能加速器、服务器处理器及网络芯片，用于推荐系统、广告和大模型训练推理。",
+      "weight": 85,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "按标的行业列示代表性竞争企业；在人工智能加速器、数据中心计算及互连平台领域与其他芯片企业竞争，并非SOXL基金本身的竞争者。",
+      "confidence": "medium"
+    },
+    {
+      "name": "超威半导体",
+      "ticker": "AMD",
+      "note": "在服务器及个人电脑处理器、图形处理器和人工智能加速器领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "在定制人工智能芯片、交换芯片及高速互连领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "高通",
+      "ticker": "QCOM",
+      "note": "在移动处理器、无线通信及汽车计算芯片领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "英特尔",
+      "ticker": "INTC",
+      "note": "在个人电脑及服务器处理器领域竞争，并参与晶圆代工市场竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-27T10:04:08.418983+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-27T19:04:08.432070",
+    "age_sec": 372553,
+    "stale": false,
+    "refreshing": false
+  }
+}

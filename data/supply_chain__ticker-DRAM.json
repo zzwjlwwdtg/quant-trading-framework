@@ -1,0 +1,99 @@
+{
+  "ticker": "DRAM",
+  "sector": "半导体存储芯片与数据存储",
+  "business": "DRAM 为 Roundhill Memory ETF，投资全球存储相关企业，以下按其存储产业敞口分析供应链，权重为战略重要度估计而非采购或营收占比；产品依据：[基金官网](https://www.roundhillinvestments.com/etf/dram/)。",
+  "upstream": [
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "向存储芯片制造企业提供光刻设备，先进DRAM制程对其技术依赖较高；参考：[三星合作公告](https://www.investor.asml.com/news-releases/news-release-details/samsung-electronics-and-asml-expand-strategic-collaboration-next-generation-semiconductor-manufacturing)。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "泛林集团",
+      "ticker": "LRCX",
+      "note": "提供刻蚀、薄膜沉积等设备，是DRAM与3D NAND扩产及制程升级的重要上游；参考：[DRAM设备方案](https://www.lamresearch.com/products/our-solutions/dram/)。",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "应用材料",
+      "ticker": "AMAT",
+      "note": "提供存储芯片制造所需的薄膜沉积、材料工程及相关工艺设备；按行业供应链判断，不代表基金与其存在采购关系。",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "东京电子",
+      "ticker": "8035.T",
+      "note": "提供涂胶显影、刻蚀、沉积和清洗设备，服务存储晶圆制造环节。",
+      "weight": 82,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "其人工智能加速器平台采用HBM，带动存储厂商高带宽内存需求；具体采购金额与封装采购路径未在此量化；参考：[美光产品合作公告](https://micron.gcs-web.com/news-releases/news-release-details/micron-innovates-data-center-edge-nvidia)。",
+      "weight": 96,
+      "confidence": "medium"
+    },
+    {
+      "name": "超威半导体",
+      "ticker": "AMD",
+      "note": "人工智能加速器需要HBM，显卡产品需要图形存储器，是存储产业的重要下游应用客户。",
+      "weight": 83,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "手机、平板及电脑使用移动DRAM和NAND闪存；具体供应商组合与采购份额随产品代际变化。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "戴尔科技",
+      "ticker": "DELL",
+      "note": "服务器、个人电脑及存储系统使用DRAM内存模组和固态硬盘；属于存储产业下游，部分采购通过模组及整机供应链完成。",
+      "weight": 73,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "作为底层存储产业竞争格局的代表，与其他存储厂商竞争DRAM、HBM及NAND市场；也可能属于基金持仓，非基金发行商竞争对手；韩国上市代码按要求不列。",
+      "confidence": "medium"
+    },
+    {
+      "name": "爱思开海力士",
+      "ticker": null,
+      "note": "竞争HBM、服务器DRAM及NAND市场；属于底层产业同行，也可能属于基金持仓；韩国上市代码按要求不列。",
+      "confidence": "medium"
+    },
+    {
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "竞争DRAM、HBM、NAND和数据中心存储市场；属于底层产业同行，也可能属于基金持仓。",
+      "confidence": "medium"
+    },
+    {
+      "name": "铠侠控股",
+      "ticker": "285A.T",
+      "note": "主要竞争NAND闪存及固态硬盘市场，与DRAM和HBM厂商的直接竞争范围不同。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-27T10:04:13.838998+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-27T19:04:13.857395",
+    "age_sec": 372548,
+    "stale": false,
+    "refreshing": false
+  }
+}

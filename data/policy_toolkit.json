@@ -1,0 +1,252 @@
+{
+  "as_of": "2026-10-31T18:36:19.722305",
+  "count_total_actions": 837,
+  "tools": [
+    {
+      "tool_key": "qra_wording",
+      "zh": "季度再融资声明措辞",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "把 '增加发债' 改成 '变化', 暗示可能减少长债供给",
+      "invalidation": "只是预期管理, 未实际减少融资需求",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "qra_wording",
+        "action_type": "signaled",
+        "date": "2026-08-24",
+        "actor": "Treasury",
+        "amount_desc": "",
+        "commentary": "“进一步财政部行动”推动收益率下行，像是市场押注后续QRA或供给措辞变化。",
+        "verbatim": "Global Bond Yields Fall on Declining Oil, Prospects of Further Treasury Action",
+        "source": "GoogleNews: TGA Treasury General Account debt buyback",
+        "url": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxQTVhNb1pHcVR0dkxQRlRQeThpeFZrZUp6VEFrTHJyNEN6YWladF9jMHZaRnVkMU5zN0pRTEJJVE9fXzVDS2F6UFZ5Ul95Wm9oNWVITXJORlJZbEpwa0ItWFQ3ZnV6cnZITlJOcmxhUjZGSjR6dmxSX1Q5TDdWbjZtRTZmQWJ0c3lrNGpUZHdURkJCQkZVaXNIMnIwa0JPcEdyZGVEZDhwUzA2Nmh4czdfblMyTnJsaUxPSURKVmI3ZzZOeEV5X3lpbzhTYTQ4c3dKa2t3bll6TkJQbEl3ZXB3?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 6
+    },
+    {
+      "tool_key": "slr_exemption",
+      "zh": "SLR 豁免 (银行持债)",
+      "owner": "Fed/OCC/FDIC",
+      "feasibility": "medium",
+      "canonical_desc": "豁免银行 SLR 里的国债, 让银行可大量吸纳长债",
+      "invalidation": "放松金融监管的道德风险 + Fed 内部意见分歧",
+      "status": "已用",
+      "last_action": {
+        "tool_key": "slr_exemption",
+        "action_type": "announced",
+        "date": "2026-09-30",
+        "actor": "Fed",
+        "amount_desc": "",
+        "commentary": "压力测试规则定稿，降低资本要求波动性，间接释放大行承接国债的资本空间，对债市偏利好。",
+        "verbatim": "finalizes changes to enhance the transparency and public accountability of its stress test and reduce volatility in its stress test-related capital requirements",
+        "source": "Federal Reserve",
+        "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260930a.htm",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {
+        "t0_bp": 4.4,
+        "yield_at_close": 5.638,
+        "t1d_bp": -3.5
+      },
+      "event_count_180d": 1
+    },
+    {
+      "tool_key": "ycc",
+      "zh": "收益率曲线控制 (YCC)",
+      "owner": "Fed",
+      "feasibility": "low",
+      "canonical_desc": "Fed 承诺买入长债直到收益率降到目标",
+      "invalidation": "破坏央行独立性 + USD 崩盘风险 → 核弹级",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "ycc",
+        "action_type": "signaled",
+        "date": "2026-08-23",
+        "actor": "Warsh",
+        "amount_desc": "",
+        "commentary": "黄金重定价暗示市场不相信 Warsh 能终结宽松政策体制，YCC 式压制预期仍主导贵金属定价。",
+        "verbatim": "Gold Is Repricing the Policy Regime Warsh Was Supposed to End",
+        "source": "GoogleNews: yield curve control QE Federal Reserve",
+        "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNYXIySjVBMkFRal92ZUxQYnM2aEVPS1k5MmdtLVFQeHo4ay16RVRaNEpFVDVHSXM1d0dfbVRSMHBrUER1R0ZOaXhKZHE0RTNQc2pXQnFGTjQ5ZExxczVUMTRHRWNRaTE2LTRVQkRzcFYyMVpzZkRNQkpvbHFiVllNWElqUWI3aXdPbXdLUlBzRl9XTDU3SkNJLVlwajFRNHZIOXY0M0RaNk1COWMwQjJv?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 8
+    },
+    {
+      "tool_key": "tga_deployment",
+      "zh": "TGA 财政存款回购",
+      "owner": "Treasury",
+      "feasibility": "medium",
+      "canonical_desc": "动用 TGA (~$940B) 回购老券, 一次性释放流动性",
+      "invalidation": "一次性弹药, 用完就没了",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "tga_deployment",
+        "action_type": "signaled",
+        "date": "2026-09-14",
+        "actor": "Treasury",
+        "amount_desc": "",
+        "commentary": "暗示财政部已在投放流动性，缓冲前端和黄金定价。",
+        "verbatim": "Gold Doesn’t Need a Rate Cut. It Needs What the Treasury Is Already Doing.",
+        "source": "GoogleNews: yield curve control QE Federal Reserve",
+        "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNci04dDE0TzB3cWhvd2VTNFBxdG1GaWZzMENReVc1WmtCTXByMDVFWWJDSHlURmVMZjJveVNRZ050cHoyUnB0RnZhS1RoMWtHYlJqYXQ5NjhaZUp2d2ktekM2V2xKdm9YQzg4TmhoUF9hdDNxVU1CdW5SUTRiSi1JbnBPQjE?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 47
+    },
+    {
+      "tool_key": "fx_intervention",
+      "zh": "汇市干预 (支撑日元)",
+      "owner": "Treasury/G7",
+      "feasibility": "medium",
+      "canonical_desc": "联合日本央行买日元, 减少日本抛售美债换美元",
+      "invalidation": "只缓解流量, 存量抛压 (JGB 收益率高企) 未变",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fx_intervention",
+        "action_type": "signaled",
+        "date": "2026-09-18",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "Bessent 向日本施压扩张财政/购债, 外部需求端配合救长端, 间接减压美债。",
+        "verbatim": "How Bessent, America's bond salesman, cornered Japan on big spending",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOM1l2aTVxZmpyM2FYbWhjSUJ6d0IzaE16TDA2a0xLTDlnUUFhcEVPbW9relE0aVBDSUJIZ0NBS0ZXNTZwT3JDbUVTWHozbHlPSGFzU0JHMFhRWlJ4TFgzcm9KeHJhNVNaT210QUNNY1VqR2E3aUt1M2dJNHlSTG9UZGxRak1ITlRzV0VRQjNnTVpiQUI5MG43aDFRa2p3bkJsemVaYUN2U3lITXZ4ZFJSbGVjc2Iwc25Z?oc=5",
+        "confidence": 5
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 5
+    },
+    {
+      "tool_key": "duration_shortening",
+      "zh": "缩短发债久期",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "多发 T-bill 少发长债, 压制长端供给",
+      "invalidation": "短端供给爆棚, 靠 MMF/RRP 吸收; RRP 见底就断供",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "duration_shortening",
+        "action_type": "signaled",
+        "date": "2026-10-12",
+        "actor": "Treasury",
+        "amount_desc": "",
+        "commentary": "华尔街重提砍掉 20Y 债券，等同于被动期限缩短，减轻长端供给压力。",
+        "verbatim": "Wall Street Revives the Case for Scrapping the US 20-Year Bond",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQM0lSWUo5Ri1jd2Z2blpWQ0ZMR3pZYkR4SE80YkFTTVpQUUFsTEFqZ181aDZJS1JtNkFRcWZBOGJUMHRFUUxJV3JfczJZazBJUEJGVkFWMGFDZFBUUG01U3M5bmZpU2xTYlg3U1B3YmtqVUNEbEM5MmFCREEwLVJfcHV3N2dIdkdSaDY4cUd2aWhsWFVHWWZZV0dHb2dPODZs?oc=5",
+        "confidence": 8
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 13
+    },
+    {
+      "tool_key": "long_end_buyback",
+      "zh": "长端回购扩容",
+      "owner": "Treasury",
+      "feasibility": "high",
+      "canonical_desc": "定期回购 10-30Y 老券, 压制长端 term premium",
+      "invalidation": "结构性发债需求未减 → 通常 T+1d 收益率反弹回来",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "long_end_buyback",
+        "action_type": "signaled",
+        "date": "2026-10-16",
+        "actor": "Bessent",
+        "amount_desc": "",
+        "commentary": "收益率仍压不住，市场预期 11 月有新一轮干预动作。",
+        "verbatim": "Bessent Fails to Tame Yields, Wall Street Braces for November Move",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOeVVTOWVTd01PYkdIaU16RUV4YUU5UkM1UjVjcTNpWWRfWlROU29JMmpSTXVkSk11MFdVbEViVU43aDdKUTZpYjd0bm5HN1UwVVMxMHQyQktLVHRpQnoySXBOTVFpbWRWREpnNGtta3E0aTNBbElvQkdWVndld3ZfUTdkZEsta2pmMVlvUjlJUXNxREkySmdrUEdlQWpwbTNi?oc=5",
+        "confidence": 8
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 265
+    },
+    {
+      "tool_key": "fed_dovish_signal",
+      "zh": "Fed 官员鸽派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示降息倾向, 前瞻指引",
+      "invalidation": "口头 → 若数据不配合, 反被 hawkish surprise 抹平",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fed_dovish_signal",
+        "action_type": "signaled",
+        "date": "2026-10-28",
+        "actor": "FOMC",
+        "amount_desc": "",
+        "commentary": "媒体将决议解读为略偏鸽，或压低收益率；美元下跌本身不代表汇市干预。",
+        "verbatim": "Dollar Falls Back After FOMC Results Have a Dovish Tint",
+        "source": "GoogleNews: Federal Reserve rate cut dovish hawkish",
+        "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOU1F1SHZjbDJWVUJQV2FtLVVBdnNybDRPdlZPeXh4YUphWk1OVXVOQnJCXzltUVVJWU5BXzhDcGg3a0NDT05XRlhTTzR6Qmxvel9HZ05PWWpfekVoRlYwOGZCQmlibm9hLUl2dEhxN2NFYThVNEdJZXNscmJ1OERsM09VUVljcjlPOXRlc19TSkdXbnJNNzIza01lVUpkYkZN?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 37
+    },
+    {
+      "tool_key": "fed_hawkish_signal",
+      "zh": "Fed 官员鹰派信号",
+      "owner": "Fed (口头)",
+      "feasibility": "high",
+      "canonical_desc": "官员讲话暗示维持高利率或加息",
+      "invalidation": "会推高长端收益率 → 反救市信号",
+      "status": "口头/待发",
+      "last_action": {
+        "tool_key": "fed_hawkish_signal",
+        "action_type": "signaled",
+        "date": "2026-10-30",
+        "actor": "Fed",
+        "amount_desc": "3名联储成员主张提高利率，幅度未披露",
+        "commentary": "多名官员主张更高利率，强化紧缩预期，对美债价格构成压力。",
+        "verbatim": "Rates need to be higher, 3 Fed members say. The question is how much.",
+        "source": "GoogleNews: Fed Chair speech rate policy",
+        "url": "https://news.google.com/rss/articles/CBMiygFBVV95cUxQeDZEZjlNVkVmT3QydUZXYTlkOEs5dGxCSHBqb3VKVWJwVFA3dVB2MTh3NDk5ZWxVdTdaOUlrZUQycnp6OEw2MXNwSnVTaGZmdjNJYWJHdl90YjBNem5SSWFJSFNsRmQ5bC1kdnVXSWFDUmt3S3BPSzhGTkZYZVJMdUQ4dzZicFhEOHZKRnFfWGxWR2xERzJXX1FSOU5pQVhpSjRLY0lEZWxnZXc0a1hSSmpJX1VqMFY3NHk4X1FBdm5hQkJHbUNaOW1n?oc=5",
+        "confidence": 10
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 454
+    },
+    {
+      "tool_key": "qe_restart",
+      "zh": "重启 QE / 扩表",
+      "owner": "Fed",
+      "feasibility": "low",
+      "canonical_desc": "Fed 直接买国债扩表, 压制收益率",
+      "invalidation": "与抗通胀目标直接冲突, Warsh 明确反对",
+      "status": "被否",
+      "last_action": {
+        "tool_key": "qe_restart",
+        "action_type": "opposed",
+        "date": "2026-09-16",
+        "actor": "Fed",
+        "amount_desc": "",
+        "commentary": "报道称联储介入可能性低，削弱市场对QE式救长端的押注。",
+        "verbatim": "Bond market woes likely a factor for Fed, but intervention seen as unlikely",
+        "source": "GoogleNews: Treasury bond market intervention Bessent",
+        "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNWHQzSC11Z3EtOUFVMG9sQnYwOHhnZkJGM2VoVWtFNWp1Y0ZlM2lIMEhoSnkzaExSQlZ4SzVFRkk0aHR3S0NUWC1ZdWQ0MXdJNmxoYWdxdGJJcmtDWENDa0JvNE9fQjFCTFhqTVZZR0NuQmNDNE03dHVEcUVmZDdpaUhXUTFWdzdmeXJUVkxGdThDaG8wNGRWSXl3V09DZVNDN1BzbllrN0tSZw?oc=5",
+        "confidence": 6
+      },
+      "yield_reaction_30y": {},
+      "event_count_180d": 1
+    },
+    {
+      "tool_key": "fima_repo",
+      "zh": "FIMA 回购便利",
+      "owner": "Fed",
+      "feasibility": "high",
+      "canonical_desc": "外国央行以美债抵押向 Fed 借美元, 避免直接抛售美债",
+      "invalidation": "只对央行有效, 私人机构抛压不减",
+      "status": "观察",
+      "last_action": null,
+      "yield_reaction_30y": {},
+      "event_count_180d": 0
+    }
+  ]
+}

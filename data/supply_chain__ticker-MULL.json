@@ -1,0 +1,79 @@
+{
+  "ticker": "MULL",
+  "sector": "半导体存储芯片（DRAM、NAND及高带宽内存）",
+  "business": "MULL 是追求美光科技（MU）每日股价收益两倍的杠杆ETF，以下按其标的美光分析：美光研发、制造并销售用于数据中心、电脑和移动终端的内存及存储产品；权重均为关系战略重要度估计，并非实际采购或营收占比。[基金说明](https://graniteshares.com/etfs/mull/)",
+  "upstream": [
+    {
+      "name": "泛林集团",
+      "ticker": "LRCX",
+      "note": "提供刻蚀、薄膜沉积等晶圆制造设备，对高层数NAND及先进DRAM制造具有重要作用；获美光前道设备供应商奖。[公司公告](https://newsroom.lamresearch.com/lam-earns-2025-micron-top-supplier-award)",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "提供光刻设备，其独有的EUV技术支持美光先进DRAM工艺升级；美光已披露采用EUV的1γ工艺。[美光工艺说明](https://www.micron.com/products/memory/1gamma-dram-technology)、[设备说明](https://www.asml.com/en/products/euv-lithography-systems)",
+      "weight": 88,
+      "confidence": "medium"
+    },
+    {
+      "name": "迪恩士",
+      "ticker": "7735.T",
+      "note": "提供晶圆清洗等半导体制造设备，支持存储芯片生产中的缺陷控制；获美光供应商奖。[公司公告](https://hdjp-corporateweb-files-spe.screen.co.jp/5017/3371/6570/Micron_SPE241209E.pdf)",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "采用美光HBM3E等内存产品，用于人工智能GPU及加速计算平台；这里代表产品供应关系，具体采购可能涉及封装和系统合作方。[美光公告](https://micron.gcs-web.com/news-releases/news-release-details/micron-innovates-data-center-edge-nvidia)",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "戴尔科技",
+      "ticker": "DELL",
+      "note": "服务器平台采用美光内存和企业级SSD，用于虚拟化、数据中心及人工智能工作负载；公开参考架构确认产品使用，未披露采购规模。[美光产品说明](https://www.micron.com/products/storage/ssd/data-center-ssd/9550-ssd)",
+      "weight": 72,
+      "confidence": "medium"
+    },
+    {
+      "name": "联想集团",
+      "ticker": "0992.HK",
+      "note": "采用美光LPCAMM2低功耗内存，用于ThinkPad移动工作站等电脑产品；公开合作确认特定机型采用，未披露采购规模。[联想公告](https://news.lenovo.com/pressroom/press-releases/lenovo-unveils-its-new-ai-ready-thinkpad-p1-gen-7-mobile-workstation/)",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在DRAM、NAND及HBM领域与美光竞争；主要上市地为韩国，按指定市场范围不填写代码。",
+      "confidence": "medium"
+    },
+    {
+      "name": "SK海力士",
+      "ticker": null,
+      "note": "在服务器DRAM、HBM及NAND领域与美光竞争；主要上市地为韩国，按指定市场范围不填写代码。",
+      "confidence": "medium"
+    },
+    {
+      "name": "铠侠控股",
+      "ticker": "285A.T",
+      "note": "主要在NAND闪存及企业级、客户端SSD领域与美光竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-27T10:04:23.799526+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-27T19:04:23.822111",
+    "age_sec": 372538,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "ticker": "TLT",
+  "sector": "美国长期国债",
+  "business": "TLT为持有剩余期限超过20年的美国国债的交易所交易基金，以下按其底层国债资产分析，将发行、指数及管理服务列为上游，将投资者交易渠道列为下游；渠道不代表已披露的直接客户。",
+  "upstream": [
+    {
+      "name": "美国财政部",
+      "ticker": null,
+      "note": "发行底层美国长期国债，是本金偿还及利息支付的来源；属于证券发行人关系，不是传统供应商。",
+      "weight": 100,
+      "confidence": "high"
+    },
+    {
+      "name": "贝莱德",
+      "ticker": "BLK",
+      "note": "通过旗下基金管理机构提供TLT的投资管理与运营服务；重要度体现基金运作依赖，不代表国债发行人的供应关系。",
+      "weight": 85,
+      "confidence": "high"
+    },
+    {
+      "name": "洲际交易所",
+      "ticker": "ICE",
+      "note": "通过旗下指数业务提供基金所跟踪的美国20年以上国债指数及相关指数服务。",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "嘉信理财",
+      "ticker": "SCHW",
+      "note": "其经纪平台可供终端投资者交易TLT，用于长期国债配置、利率敞口管理等；属于渠道举例，未确认其自身为直接客户或主要持有人。",
+      "weight": 50,
+      "confidence": "low"
+    },
+    {
+      "name": "富达投资",
+      "ticker": null,
+      "note": "其经纪及财富管理平台可供终端投资者交易TLT；属于潜在投资渠道，未确认实际交易或持仓占比。",
+      "weight": 45,
+      "confidence": "low"
+    },
+    {
+      "name": "盈透证券",
+      "ticker": "IBKR",
+      "note": "其交易平台可供投资者交易TLT，用于国债投资及组合风险管理；属于渠道关系推测，未确认直接采购关系。",
+      "weight": 35,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "先锋长期美国国债ETF",
+      "ticker": "VGLT",
+      "note": "同样提供长期美国国债敞口，竞争方向为久期配置、费用及交易便利性；期限规则与TLT存在差异。",
+      "confidence": "medium"
+    },
+    {
+      "name": "施瓦布长期美国国债ETF",
+      "ticker": "SCHQ",
+      "note": "提供长期美国国债投资敞口，与TLT竞争长期国债资产配置需求。",
+      "confidence": "medium"
+    },
+    {
+      "name": "SPDR Portfolio长期美国国债ETF",
+      "ticker": "SPTL",
+      "note": "以长期美国国债为投资标的，在费用及长期利率敞口配置方面与TLT竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "先锋超长期美国国债ETF",
+      "ticker": "EDV",
+      "note": "主要投资美国国债分离本金及利息证券，以更高久期争夺长期利率敞口需求，风险特征与TLT不同。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-23T04:03:59.944937+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-23T13:03:59.945936",
+    "age_sec": 739761,
+    "stale": false,
+    "refreshing": false
+  }
+}

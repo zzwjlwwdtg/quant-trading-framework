@@ -1,0 +1,79 @@
+{
+  "ticker": "GLD",
+  "sector": "实物黄金投资／黄金产业链",
+  "business": "GLD通过持有实物金条追踪扣除费用后的黄金价格表现；以下按黄金标的产业链列示代表企业，并非GLD已披露的直接供应商或客户，weight为战略重要度估计。[基金说明](https://www.spdrgoldshares.com/usa/gld/)",
+  "upstream": [
+    {
+      "name": "纽蒙特",
+      "ticker": "NEM",
+      "note": "通过黄金开采提供矿产金，属于黄金市场供给端代表企业，不代表其直接向GLD供货。[公司资料](https://www.newmont.com/investors/default.aspx)",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿格尼科伊格尔矿业",
+      "ticker": "AEM",
+      "note": "大型黄金生产商，通过矿山开采补充黄金市场供给，未确认与GLD存在直接供货关系。[公司资料](https://s205.q4cdn.com/243646470/files/doc_presentation/2026/AEM-2026-AGM-PRESENTATION-FINAL.pdf)",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "紫金矿业",
+      "ticker": "601899.SS",
+      "note": "通过黄金矿山开发及生产参与原料供应，属于黄金产业链上游代表企业，未确认直接向GLD供货。[公司报告](https://www.hkexnews.hk/listedco/listconews/sehk/2023/0428/2023042801168.pdf)",
+      "weight": 75,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "周大福珠宝集团",
+      "ticker": "1929.HK",
+      "note": "采购黄金用于金饰制造与销售，是黄金消费端代表企业，并非GLD客户。[公司资料](https://www.ctfjewellerygroup.com/en/investor-relations/dashboard/)",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "老凤祥",
+      "ticker": "600612.SS",
+      "note": "采购黄金用于足金首饰加工和零售，属于黄金终端需求链，未确认与GLD存在交易关系。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "周生生",
+      "ticker": "0116.HK",
+      "note": "采购黄金用于足金饰品及金宝等产品销售，是黄金消费端代表企业，并非GLD客户。[公司产品资料](https://cn.chowsangsang.com/)",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "iShares黄金信托",
+      "ticker": "IAU",
+      "note": "以实物黄金提供金价敞口，在投资用途、费用及交易便利性方面与GLD竞争。[基金资料](https://www.ishares.com/us/literature/fact-sheet/iau-ishares-gold-trust-fund-fact-sheet-en-us.pdf)",
+      "confidence": "medium"
+    },
+    {
+      "name": "SPDR黄金迷你股份信托",
+      "ticker": "GLDM",
+      "note": "同属SPDR黄金产品系列，为黄金投资提供替代工具，与GLD存在资金配置层面的替代关系。[年度报告](https://www.sec.gov/Archives/edgar/data/1618181/000143774925036313/gldm20250930_10k.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "安本实物黄金股份ETF",
+      "ticker": "SGOL",
+      "note": "通过实物黄金追踪扣除费用后的金价表现，与GLD争取黄金资产配置资金。[基金资料](https://www.aberdeeninvestments.com/en-us/investor/funds/view-all-funds/abrdn-physical-gold-shares-etf-us00326a1043?subTab=keyInformationTab)",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-27T10:04:11.498337+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-27T19:04:11.499340",
+    "age_sec": 372550,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "ticker": "NVDA",
+  "sector": "半导体设计/人工智能计算平台",
+  "business": "英伟达设计GPU、网络芯片及配套系统与软件，为人工智能训练和推理、数据中心、游戏及专业可视化提供加速计算平台。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "提供先进制程晶圆代工及先进封装，是核心算力芯片量产的关键供应商；权重为战略重要度估计。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "weight": 98,
+      "confidence": "high"
+    },
+    {
+      "name": "SK海力士",
+      "ticker": null,
+      "note": "提供存储器，尤其是人工智能加速器所需的高带宽内存；权重为战略重要度估计。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "提供存储器，包括人工智能加速器所需的高带宽内存；权重为战略重要度估计。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "weight": 78,
+      "confidence": "high"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "提供存储器及部分晶圆代工服务；年报确认供应关系，但不代表其承担旗舰GPU主要生产份额；权重为战略重要度估计。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "weight": 65,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "部署英伟达GPU及网络系统，用于Azure人工智能云服务与大模型算力；可能经服务器厂商采购，非已披露直接客户收入排名；权重为战略重要度估计。[来源：英伟达公告](https://investor.nvidia.com/news/press-release-details/2025/NVIDIA-Blackwell-Ultra-AI-Factory-Platform-Paves-Way-for-Age-of-AI-Reasoning/default.aspx)",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta平台",
+      "ticker": "META",
+      "note": "部署英伟达计算平台，用于Llama模型训练、人工智能助手及消费产品；权重为战略重要度估计，非营收占比。[来源：英伟达公告](https://investor.nvidia.com/news/press-release-details/2024/NVIDIA-Blackwell-Platform-Arrives-to-Power-a-New-Era-of-Computing/)",
+      "weight": 92,
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "通过AWS部署英伟达GPU实例，为客户提供人工智能训练与推理服务；权重为战略重要度估计，非直接采购额排名。[来源：英伟达公告](https://investor.nvidia.com/news/press-release-details/2025/NVIDIA-Blackwell-Ultra-AI-Factory-Platform-Paves-Way-for-Age-of-AI-Reasoning/default.aspx)",
+      "weight": 89,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过谷歌云及内部团队使用英伟达GPU，用于云端人工智能服务和模型研发；权重为战略重要度估计，非营收占比。[来源：英伟达公告](https://investor.nvidia.com/news/press-release-details/2024/NVIDIA-Blackwell-Platform-Arrives-to-Power-a-New-Era-of-Computing/)",
+      "weight": 86,
+      "confidence": "medium"
+    },
+    {
+      "name": "甲骨文",
+      "ticker": "ORCL",
+      "note": "部署英伟达GPU集群，用于OCI云平台的大模型训练、推理与人工智能代理服务；权重为战略重要度估计，非营收占比。[来源：英伟达官方博客](https://blogs.nvidia.com/blog/oracle-cloud-infrastructure-blackwell-gpus-agentic-ai-reasoning-models/)",
+      "weight": 83,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "超威半导体",
+      "ticker": "AMD",
+      "note": "在数据中心人工智能加速器、游戏GPU及专业图形计算领域竞争。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "在定制人工智能芯片及数据中心网络芯片领域竞争。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "英特尔",
+      "ticker": "INTC",
+      "note": "在数据中心计算、人工智能加速及图形处理领域竞争。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "自研人工智能芯片及云端计算平台形成替代竞争，同时也是英伟达下游客户。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "自研人工智能加速器及云端计算平台形成替代竞争，同时也是英伟达下游客户。[来源：英伟达2026财年10-K](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm)",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-10-27T10:04:09.720164+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-27T19:04:09.727213",
+    "age_sec": 372549,
+    "stale": false,
+    "refreshing": false
+  }
+}

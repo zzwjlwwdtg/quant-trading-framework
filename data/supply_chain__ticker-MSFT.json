@@ -1,0 +1,91 @@
+{
+  "ticker": "MSFT",
+  "sector": "云计算、企业软件与人工智能",
+  "business": "微软通过Azure云平台、Microsoft 365办公软件、Windows操作系统及人工智能、企业应用和游戏服务获取收入。",
+  "upstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "提供Azure人工智能训练及推理所需的GPU、网络与软件平台；权重为战略重要度估计，不代表采购占比。[微软技术文档](https://learn.microsoft.com/en-us/azure/confidential-computing/gpu-options)",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "超威半导体",
+      "ticker": "AMD",
+      "note": "提供Azure服务器使用的EPYC处理器及Instinct人工智能加速器；权重为战略重要度估计。[公司合作公告](https://ir.amd.com/news-events/press-releases/detail/1291/microsoft-to-deploy-next-gen-amd-instinct-and-amd-epyc-processors-as-the-companies-expand-their-long-term-strategic-partnership)",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "OpenAI",
+      "ticker": null,
+      "note": "提供支撑Azure人工智能服务及Copilot部分功能的模型和技术，同时也是微软云服务客户；属于双向战略合作，权重为分析估计。",
+      "weight": 78,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "OpenAI",
+      "ticker": null,
+      "note": "购买Azure计算资源用于模型训练、推理与服务部署，同时向微软提供模型技术；权重反映战略重要度估计，不代表微软营收占比。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "沃尔玛",
+      "ticker": "WMT",
+      "note": "公开合作涉及Azure及Microsoft 365，用于零售数字化、电商和员工协作；当前采购规模未披露，权重为分析估计。[客户合作公告](https://corporate.walmart.com/news/2018/07/17/walmart-establishes-strategic-partnership-with-microsoft-to-further-accelerate-digital-innovation-in-retail)",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "美国电话电报公司",
+      "ticker": "T",
+      "note": "公开合作涉及Azure及企业软件，用于非网络应用迁移、数据中心整合与员工协作；当前采购规模未披露，权重为分析估计。[微软合作说明](https://blogs.microsoft.com/blog/2019/07/17/looking-back-looking-ahead-customers-are-driving-capabilities-for-their-business-and-people/)",
+      "weight": 60,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "旗下AWS与Azure竞争云基础设施、数据库和人工智能平台市场。",
+      "confidence": "medium"
+    },
+    {
+      "name": "谷歌母公司Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过谷歌云、办公协作套件、搜索及人工智能产品与微软竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "甲骨文",
+      "ticker": "ORCL",
+      "note": "在云基础设施、数据库及企业应用市场与微软竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "赛富时",
+      "ticker": "CRM",
+      "note": "在客户关系管理、企业人工智能及业务应用市场与Dynamics 365和Copilot竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "索尼集团",
+      "ticker": "6758.T",
+      "note": "通过PlayStation与Xbox竞争游戏主机、内容及订阅服务市场。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-28T02:34:01.990417+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-28T11:34:01.990418",
+    "age_sec": 313158,
+    "stale": false,
+    "refreshing": false
+  }
+}

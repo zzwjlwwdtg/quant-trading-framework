@@ -1,0 +1,106 @@
+{
+  "ticker": "XLV",
+  "sector": "美国医疗保健（制药、生物科技、医疗器械及医疗服务）",
+  "business": "XLV追踪美国医疗保健精选行业指数，以下按其成分股代表的医疗产业链分析，所列关系并非基金直接采购或销售关系，weight为战略重要度估计且不代表持仓权重；基金资料见https://www.ssga.com/us/en/individual/etfs/state-street-health-care-select-sector-spdr-etf-xlv。",
+  "upstream": [
+    {
+      "name": "赛默飞世尔科技",
+      "ticker": "TMO",
+      "note": "为制药及生物科技企业提供科研仪器、试剂、临床研究及药物开发生产服务；自身亦属于医疗保健板块，存在板块内部供给关系。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "丹纳赫",
+      "ticker": "DHR",
+      "note": "通过旗下业务提供生物制药生产设备、过滤耗材和生命科学工具，支持生物药研发与规模化制造。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "默克集团",
+      "ticker": null,
+      "note": "通过生命科学业务提供实验室试剂、细胞培养材料和生物工艺耗材；此处为德国默克，并非美国默沙东，德国上市代码不符合限定市场。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "龙沙集团",
+      "ticker": null,
+      "note": "提供生物药及其他药物的合同开发与生产服务，属于板块制药企业可使用的外包产能；瑞士上市不符合限定市场。",
+      "weight": 70,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "麦克森",
+      "ticker": "MCK",
+      "note": "采购并分销药品至药房、医院和专科诊所，是制药企业通往终端的重要渠道；自身亦属于医疗保健板块。业务说明见https://www.mckesson.com/。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "Cencora",
+      "ticker": "COR",
+      "note": "采购及分销品牌药、仿制药和特药，并为药企提供渠道与物流服务；属于板块内部的下游分销环节。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "康德乐",
+      "ticker": "CAH",
+      "note": "向药企及器械厂商采购药品和医疗用品，供应医院、药房及其他医疗机构；属于板块内部的下游渠道。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "CVS健康",
+      "ticker": "CVS",
+      "note": "通过零售药房及特药业务承接药品需求，通常经分销商采购；旗下药品福利管理业务参与处方目录和价格谈判。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "HCA医疗",
+      "ticker": "HCA",
+      "note": "旗下医院及门诊机构采购药品、医疗器械和耗材用于诊疗，通常通过分销商或集中采购组织完成采购。",
+      "weight": 70,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "诺和诺德",
+      "ticker": "NVO",
+      "note": "作为标的产业链的外部同行，与礼来等成分股在糖尿病、肥胖症及相关代谢疾病治疗领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "阿斯利康",
+      "ticker": "AZN",
+      "note": "与板块制药成分股在肿瘤、心血管、肾脏及呼吸系统疾病药物领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "诺华",
+      "ticker": "NVS",
+      "note": "与板块创新药企业在肿瘤、免疫及心血管疾病治疗领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "赛诺菲",
+      "ticker": "SNY",
+      "note": "与板块制药企业在免疫疾病、疫苗和罕见病治疗领域竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-22T08:04:05.375995+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-22T17:04:05.377045",
+    "age_sec": 811753,
+    "stale": false,
+    "refreshing": false
+  }
+}

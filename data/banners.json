@@ -1,0 +1,86 @@
+{
+  "exists": true,
+  "snapshot_path": "snapshot_20260816_122756.txt",
+  "snapshot_mtime": "2026-08-16T12:27:56.507641",
+  "trump": {
+    "posts": 11,
+    "direction": "neutral",
+    "magnitude": "small",
+    "score": 0,
+    "event_counts": {
+      "GEOPOLITICAL": 1,
+      "NOISE": 10,
+      "MEDIA_ATTACK": 6,
+      "DOMESTIC_POLICY": 4
+    },
+    "breaking": [],
+    "summary": {
+      "text": "三条均为噪音标记链接与转发，缺乏明确政策信号，市场情绪偏中性。",
+      "state": "cached",
+      "post_ids": [
+        "117529624881658729",
+        "117529620076918108",
+        "117529618350160774"
+      ]
+    }
+  },
+  "gold_macro": {
+    "direction": "bullish",
+    "score": 2,
+    "conf": "6/10",
+    "factors": [
+      {
+        "arrow": "·",
+        "name": "实际利率",
+        "direction": "neutral",
+        "weight": 1,
+        "value": "2.39",
+        "trend": "flat"
+      },
+      {
+        "arrow": "·",
+        "name": "美元指数",
+        "direction": "neutral",
+        "weight": 0,
+        "value": "99.67",
+        "trend": "flat"
+      },
+      {
+        "arrow": "·",
+        "name": "10Y名义利率",
+        "direction": "neutral",
+        "weight": 0,
+        "value": "4.63",
+        "trend": "flat"
+      },
+      {
+        "arrow": "▲",
+        "name": "Fed 资产负债表",
+        "direction": "bullish",
+        "weight": 1,
+        "value": null,
+        "trend": "expanding"
+      },
+      {
+        "arrow": "▲",
+        "name": "WTI 原油",
+        "direction": "bullish",
+        "weight": 1,
+        "value": "84.77",
+        "trend": "rising"
+      },
+      {
+        "arrow": "·",
+        "name": "FOMC 政策",
+        "direction": "neutral",
+        "weight": 0,
+        "value": null,
+        "trend": null
+      }
+    ]
+  },
+  "options_risk": {
+    "level": "low",
+    "days_to_witching": 34
+  }
+}

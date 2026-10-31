@@ -1,0 +1,99 @@
+{
+  "ticker": "AAPL",
+  "sector": "消费电子与软件服务",
+  "business": "设计并销售智能手机、个人电脑、平板及可穿戴设备，通过操作系统、应用商店和订阅服务构建软硬件生态。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为苹果自研芯片提供先进制程代工，是核心算力供应环节；权重为战略重要度估计，不代表采购占比，各项无需合计为100。[苹果官方](https://www.apple.com/newsroom/2025/08/apple-increases-us-commitment-to-600-billion-usd-announces-ambitious-program/)",
+      "weight": 98,
+      "confidence": "medium"
+    },
+    {
+      "name": "鸿海精密",
+      "ticker": null,
+      "note": "通过富士康承担大量苹果设备组装，是关键制造合作伙伴；仅在台湾上市，按指定市场范围不填写代码。",
+      "weight": 94,
+      "confidence": "medium"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "通过旗下业务供应显示面板、存储器等关键部件；主要在韩国上市，按指定市场范围不填写代码。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "索尼集团",
+      "ticker": "SONY",
+      "note": "供应图像传感器，影响苹果手机摄像系统的成像能力。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "供应无线连接与射频相关芯片，是重要半导体合作伙伴。[苹果官方](https://www.apple.com/newsroom/2026/07/apple-to-increase-spend-with-broadcom-to-produce-billions-more-us-chips/)",
+      "weight": 77,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "威瑞森通信",
+      "ticker": "VZ",
+      "note": "作为运营商渠道销售苹果手机，配合通信套餐及设备分期吸引用户；权重为渠道战略重要度估计，不代表苹果披露的客户营收占比。[官方产品页](https://www.verizon.com/smartphones/apple-iphone-17/)",
+      "weight": 82,
+      "confidence": "medium"
+    },
+    {
+      "name": "美国电话电报公司",
+      "ticker": "T",
+      "note": "作为运营商渠道销售苹果手机，用于套餐销售、用户升级及客户留存；与其他运营商的权重差异属于估计。[官方产品页](https://www.att.com/buy/phones/apple-iphone-17.html)",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "美国移动",
+      "ticker": "TMUS",
+      "note": "作为运营商渠道销售苹果手机及其他联网设备，通过套餐优惠推动新增用户与换机；这三家公司仅代表部分企业渠道，苹果另有大量终端消费者。[官方销售页面](https://www.t-mobile.com/offers/apple-iphone-deals)",
+      "weight": 78,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在高端智能手机、平板及可穿戴设备领域竞争，同时也是苹果上游供应商。",
+      "confidence": "medium"
+    },
+    {
+      "name": "谷歌母公司Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过安卓生态、智能手机、应用分发及人工智能服务与苹果竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "小米集团",
+      "ticker": "1810.HK",
+      "note": "在智能手机、平板、可穿戴设备及互联设备生态领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "通过个人电脑操作系统、电脑硬件、生产力软件和人工智能助手与苹果竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-10-28T08:34:10.837005+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-10-28T17:34:10.853058",
+    "age_sec": 291550,
+    "stale": false,
+    "refreshing": false
+  }
+}
