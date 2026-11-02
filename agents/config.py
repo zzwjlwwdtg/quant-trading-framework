@@ -177,6 +177,12 @@ TRACKED_TICKERS = [
 # 调度、仓位和轮换模块都会自动识别，不再维护独立白名单。
 TRADE_ELIGIBLE_TICKERS = frozenset((*TICKERS, *TRACKED_TICKERS, "US.GLD"))
 
+# 只展示、不开新仓的标的：照常计算决策并在看板显示，但 paper_trader._place 拒绝 BUY。
+# 卖出/止损不受影响（万一已有持仓仍可正常退出）。
+# US.TLT: 2026-10-23 由 AI 未经用户审批改为核心交易标的；用户 2026-10-30 确认未批准，
+# 2026-11-02 撤回为只展示，待用户审阅事后变更说明后再决定是否开放交易。
+DISPLAY_ONLY_TICKERS = frozenset({"US.TLT"})
+
 # --- Leverage Factors ---
 # 杠杆 ETF 单日波动是标的的 N 倍 → 各种"暴跌/暴涨"绝对阈值要按倍数缩放
 # 否则 SOXL 一天 -5% (正常 1σ 波动) 就误触发 crisis

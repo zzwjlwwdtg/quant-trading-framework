@@ -301,10 +301,14 @@ def _week_count(items: list[dict]) -> int:
 
 def propose(ai=None) -> dict:
     if not enabled():
+        _log("propose_skipped", reason="kill switch")
         return {"skipped": "kill switch"}
     items = load()
     room = min(MAX_PER_RUN, WEEKLY_PROPOSAL_CAP - _week_count(items))
     if room <= 0:
+        # 2026-11-02: 10/23–10/26 因周上限静默跳过 4 天, 用户无从得知. 跳过也要留痕 (机器人会推送)
+        pending = [x["id"] for x in items if x.get("status") == "proposed"]
+        _log("propose_skipped", reason="weekly cap", pending=pending)
         return {"skipped": "weekly cap"}
     if ai is None:
         from ai_prompt import query_ai_cli
@@ -434,6 +438,79 @@ def _claude_dev(worktree: Path, prompt: str, model: str | None = None) -> tuple[
         return False, "timeout"
 
 
+def _dev_with_fallback(pid: str, model: str | None, wt: Path, prompt: str) -> tuple[bool, str]:
+    fn = _claude_dev                      # 运行时取 (测试可能替换成只收两个参数的函数)
+    import inspect
+    try:
+        takes_model = "model" in inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        takes_model = False
+    ok, out = fn(wt, prompt, model=model) if takes_model else fn(wt, prompt)
+    # 2026-11-02: Claude 登录失效/额度用完/未安装时改用 Codex 开发 (用户 10/18 定的
+    # "Claude 优先, Codex 备选"). 交易关键文件照旧只到 ready_for_review, 需用户二次确认.
+    if not ok and _claude_unavailable(out):
+        _log("dev_fallback", id=pid, provider="codex", reason=str(out)[-160:])
+        claude_out = out
+        ok, cx_out = _codex_dev(wt, prompt)
+        if ok:
+            out = "[Codex 兜底开发] " + (cx_out or "")
+        else:
+            # 两边都失败: 保留 Claude 的原始错误在前, 额度用完时仍按"稍后自动重试"处理
+            out = f"{claude_out} | codex 兜底也失败: {str(cx_out or '')[-200:]}"
+    return ok, out
+
+
+def _claude_unavailable(out: str) -> bool:
+    """Claude 开发失败是否属于"通道不可用" (换 Codex 有意义), 而非开发本身失败."""
+    text = str(out or "")
+    if "CLI 未安装" in text:
+        return True
+    try:
+        from claude_gate import classify_cli_failure
+        return classify_cli_failure(text) in ("auth", "quota", "unavailable")
+    except Exception:
+        return False
+
+
+def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
+    """Codex CLI 在 worktree 里改文件 (workspace-write 沙箱, 只写本 worktree)."""
+    import tempfile
+    from ai_prompt import (_codex_safe_env, _find_codex_cli, _hidden_cli_subprocess_kwargs,
+                           _resolve_codex_model)
+    cli = _find_codex_cli()
+    if not cli:
+        return False, "codex CLI 未安装"
+    with tempfile.TemporaryDirectory(prefix="evo_codex_") as tmp:
+        out_path = Path(tmp) / "last_message.txt"
+        cmd = [cli, "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+               "--skip-git-repo-check", "--sandbox", "workspace-write",
+               "--cd", str(worktree), "--output-last-message", str(out_path)]
+        model = _resolve_codex_model("complex")
+        if model:
+            cmd += ["--model", model]
+        cmd.append("-")
+        try:
+            r = subprocess.run(cmd, input=prompt, cwd=str(worktree), capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=DEV_TIMEOUT_SEC,
+                               env=_codex_safe_env(), **_hidden_cli_subprocess_kwargs())
+        except subprocess.TimeoutExpired:
+            return False, "codex timeout"
+        try:
+            msg = out_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            msg = ""
+        return r.returncode == 0, (msg or r.stdout or r.stderr or "")[-4000:]
+
+
+def _approval_notes(p: dict) -> list[str]:
+    """用户在审批时写下的范围限定/补充要求 (2026-11-02: 之前不进开发指令, 存在被忽略的风险)."""
+    notes = []
+    for h in p.get("history") or []:
+        if h.get("by") in ("chat", "user") and h.get("note"):
+            notes.append(str(h["note"])[:400])
+    return notes[-5:]
+
+
 def build_dev_prompt(p: dict, test_failures: str = "") -> str:
     base = f"""你在一个美股模拟盘量化系统的仓库副本里工作 (当前目录就是仓库根目录, 代码在 agents/).
 请实现下面这条已获批准的提案。只用读写文件, 不要运行命令。
@@ -451,6 +528,10 @@ def build_dev_prompt(p: dict, test_failures: str = "") -> str:
 - 注释和说明用中文, 沿用仓库现有风格.
 - 最后用 3-5 行中文总结你改了什么.
 """
+    notes = _approval_notes(p)
+    if notes:
+        base += ("\n用户审批时的范围限定与补充要求 (优先于上面的提案描述, 必须遵守):\n"
+                 + "\n".join(f"- {n}" for n in notes) + "\n")
     if test_failures:
         base += f"\n上一次改动后有测试失败, 请修复 (不要删除或跳过测试):\n{test_failures[-2500:]}\n"
     return base
@@ -468,13 +549,7 @@ def develop(pid: str, dev=None, tests=None) -> dict:
         _log("dev_model", id=pid, model=_model)
 
         def dev(wt_, prompt_):
-            fn = _claude_dev                      # 运行时取 (测试可能替换成只收两个参数的函数)
-            import inspect
-            try:
-                takes_model = "model" in inspect.signature(fn).parameters
-            except (TypeError, ValueError):
-                takes_model = False
-            return fn(wt_, prompt_, model=_model) if takes_model else fn(wt_, prompt_)
+            return _dev_with_fallback(pid, _model, wt_, prompt_)
     _set_status(p, "developing"); save(items)
     branch, wt = f"evo/{pid}", WORKTREES / pid
     WORKTREES.mkdir(parents=True, exist_ok=True)

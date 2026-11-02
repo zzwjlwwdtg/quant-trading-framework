@@ -690,6 +690,10 @@ def get_regime(macro: dict, market: dict) -> str:
 # 高信心信号），把它降级为 HOLD 并标 uncertain=True。理由：低信心的多/空
 # 信号在事件不确定的市场里大概率被打脸；同时防止"TQQQ CAUTION + SQQQ
 # WATCH_BUY"这种对称矛盾（对方向 ETF 不知道自己是反向的）。
+_UNCERTAIN_KEEP_KEYS = ("regime", "engine", "confluence", "regime_detail", "model_versions",
+                        "price_snapshot", "ticker")
+
+
 def _apply_uncertain_guard(result: dict, ev: int) -> dict:
     if _is_technical_only():
         return result    # 技术面 only：不让消息面 ev 把多头降级
@@ -701,7 +705,11 @@ def _apply_uncertain_guard(result: dict, ev: int) -> dict:
         return result    # 防御性动作 (REDUCE/SELL) 始终允许
     if conf >= 8:
         return result    # 高信心信号 override 不确定性
+    # 2026-11-02 (审计 P2-7): 降级时保留上下文字段. 原来返回全新 dict, 丢掉 regime/engine/
+    # confluence, 下游 crisis 推送与 claude_gate 的 regime 判断对这类决策静默失效.
+    context = {k: result[k] for k in _UNCERTAIN_KEEP_KEYS if k in result}
     return {
+        **context,
         "action":           "HOLD",
         "confidence":       conf,
         "reason":           f"market_uncertain (event={ev}, {action} conf={conf}<8)",

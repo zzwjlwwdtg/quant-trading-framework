@@ -158,6 +158,19 @@ def _send_telegram(bot_token: str, chat_id: str, msg: str) -> bool:
         return False
 
 
+def alert_delivered(result) -> bool:
+    """send_alert 结果是否可视为已送达: 有渠道发送成功, 或所有渠道都只是未配置.
+
+    任一已配置渠道失败 (``*_failed``) 且没有成功渠道 → False, 调用方应保留重试机会.
+    """
+    if not isinstance(result, dict):
+        return True
+    if result.get("sent"):
+        return True
+    skipped = [str(x) for x in (result.get("skipped") or [])]
+    return all(x.endswith("_no_config") or x == "dedup" for x in skipped)
+
+
 def send_alert(msg: str, level: str = "info", dedup: bool = True) -> dict:
     """推送主入口。
 
@@ -252,7 +265,10 @@ def notify_crisis(ticker: str, pct_chg: float, reason: str = "") -> dict:
                 "date": datetime.now(ET).date().isoformat()}
     msg = f"**CRISIS** {ticker} 单日 {pct_chg:+.2f}% → 触发 crisis regime\n{reason}"
     result = send_alert(msg, level="crisis")
-    _record_alert_sent(event, "crisis")
+    # 2026-11-02: 只有送达 (或根本没配推送渠道、已写入 critical_alerts) 才记当日已发;
+    # 渠道推送失败时不记, 下一轮重试, 避免当天的危机告警被静默吞掉.
+    if alert_delivered(result):
+        _record_alert_sent(event, "crisis")
     return result
 
 

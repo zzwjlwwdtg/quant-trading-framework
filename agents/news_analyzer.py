@@ -99,6 +99,15 @@ event_type 枚举（必须从中选一个）：
 
 
 # ── 缓存 ──────────────────────────────────────────────────────────────────
+
+def _as_bool(v) -> bool:
+    """宽松布尔解析: 只有明确的真值才算 True."""
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return v == 1
+    return str(v or "").strip().lower() in ("true", "yes", "y", "1")
+
 def _cache_key(rss_items: list, today: str, events: str, tickers: str) -> str:
     text = json.dumps([rss_items, today, events, tickers],
                        sort_keys=True, ensure_ascii=False)
@@ -176,7 +185,8 @@ def _normalize_item(raw: dict, source: str, radar_mode: bool = False) -> dict:
     if magnitude not in _MAGNITUDES:
         magnitude = "small"
     # is_landed 仅 RELEASE/FOMC 才允许 true
-    is_landed = bool(raw.get("is_landed", False)) and et in _RELEASE_TYPES
+    # 2026-11-02 (审计 P2-20): bool("false") 为 True, LLM 输出字符串时会把未公布数据判成已落地
+    is_landed = _as_bool(raw.get("is_landed", False)) and et in _RELEASE_TYPES
     period = (raw.get("period") or "").strip()
     # period 格式校验：YYYY-MM 或 YYYY-Qn
     if period and not re.match(r"^\d{4}-(\d{2}|Q[1-4])$", period):

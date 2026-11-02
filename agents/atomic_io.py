@@ -10,6 +10,26 @@ from pathlib import Path
 from typing import Any, Callable
 
 
+_REPLACE_RETRY_DELAYS = (0.05, 0.1, 0.2, 0.4, 0.8)
+
+
+def _replace_with_retry(src: str, dst: Path) -> None:
+    """os.replace with short retries (审计 P2-13, 2026-11-02).
+
+    Windows 上目标文件正被另一进程/线程以不共享 DELETE 的方式打开时 (例如 webui
+    每分钟读 trader_state), os.replace 会抛 PermissionError(WinError 5/32).
+    原来没有重试: 券商已下单但本地状态落盘失败, 幂等标记丢失. 这里最多重试约 1.5 秒,
+    仍失败才抛出, 调用方行为不变.
+    """
+    for delay in _REPLACE_RETRY_DELAYS:
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            time.sleep(delay)
+    os.replace(src, dst)
+
+
 def atomic_write_json(path: str | Path, value: Any, *, indent: int = 2) -> None:
     """Atomically replace *path* with durable UTF-8 JSON.
 
@@ -35,7 +55,7 @@ def atomic_write_json(path: str | Path, value: Any, *, indent: int = 2) -> None:
             tmp.write("\n")
             tmp.flush()
             os.fsync(tmp.fileno())
-        os.replace(tmp_name, destination)
+        _replace_with_retry(tmp_name, destination)
         tmp_name = None
     finally:
         if tmp_name is not None:

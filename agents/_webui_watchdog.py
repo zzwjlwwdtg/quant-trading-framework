@@ -111,6 +111,11 @@ JOBS = {
     "ashare_bt_econ": {"bat": "_ashare_bt_econ.bat"},
     # 2026-10-19: 外围隔夜指标 → A股开盘/日内 预注册回测 (只读)
     "overnight_bt": {"bat": "_overnight_bt.bat"},
+    # 2026-11-02: AI 通道持续故障告警 (Claude 登录失效 12 天无人发现). 只读 ai_calls.jsonl, 不调 AI;
+    # 美股时段也要跑 (交易复核依赖它), 不设 market_quiet
+    "ai_channel_monitor": {"bat": "_ai_channel_monitor.bat", "auto_every_days": 30 / 1440},
+    # 2026-11-02: 每天核对 main 上改动交易关键文件的提交是否登记了用户批准 (只读 git, 不调 AI)
+    "merge_audit": {"bat": "_merge_audit.bat", "auto_every_days": 1},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 

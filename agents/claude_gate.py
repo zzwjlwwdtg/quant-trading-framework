@@ -17,7 +17,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from atomic_io import atomic_write_json
-from config import SIGNALS_DIR, is_sim_active_trading
+from config import DISPLAY_ONLY_TICKERS, SIGNALS_DIR, is_sim_active_trading
 from notifier import logger
 from trading_contracts import (
     BUY_ACTIONS,
@@ -34,7 +34,7 @@ ALLOWED_VERDICTS = {"APPROVE", "HOLD", "CAUTION"}
 # 基础设施不可用必须和"模型给出 HOLD"分开记录, 否则 dashboard / 复盘会把
 # 服务故障误读成高置信度观望. 这里统一一个只读的分类器, _ai_cli_diag 与
 # notifications 共享, 保证日志与告警用同一套标签.
-FAILURE_CLASSES = ("quota", "protocol", "network", "unavailable", "unknown")
+FAILURE_CLASSES = ("auth", "quota", "protocol", "network", "unavailable", "unknown")
 
 HEALTH_STATE_PATH = Path(SIGNALS_DIR) / "ai_gate_health.json"
 GATE_CACHE_PATH = Path(SIGNALS_DIR) / "claude_gate_cache.json"
@@ -46,12 +46,21 @@ _TIMESTAMP_RE = re.compile(r'"timestamp_local"\s*:\s*"[^"]*"')
 def classify_cli_failure(status: str) -> str:
     """把 ai_prompt 返回的 status 字符串归一到故障分类之一.
 
-    返回 FAILURE_CLASSES 之一: quota / protocol / network / unavailable / unknown.
+    返回 FAILURE_CLASSES 之一: auth / quota / protocol / network / unavailable / unknown.
     空输入或完全未知的 status → "unknown"; 不抛异常, 调用方可安全存盘.
     """
     s = (status or "").lower()
     if not s:
         return "unknown"
+    # 登录失效 (2026-11-02): CLI 的 OAuth 令牌过期后每次都 401, 需要人工 /login,
+    # 不会像额度那样自动恢复, 必须单独分类才能告警 (10/21–11/02 失效 12 天无人发现)
+    auth_kw = (
+        "failed to authenticate", "401", "oauth", "token has expired",
+        "unauthorized", "not logged in", "please run /login", "re-authenticate",
+        "invalid api key", "authentication_error",
+    )
+    if any(k in s for k in auth_kw):
+        return "auth"
     # 配额 / 账户限额 — 复用 ai_prompt._is_claude_quota_status 的关键词
     quota_kw = (
         "quota", "usage limit", "limit reached", "rate limit", "rate_limit",
@@ -680,6 +689,11 @@ def apply_claude_gate(
     if window not in TRADE_WINDOWS:
         out = deepcopy(decision)
         out["ai_gate_status"] = "skipped_outside_window"
+        return out
+    if ticker in DISPLAY_ONLY_TICKERS:
+        # 只展示标的不会下单, 不花 AI 额度做复核 (2026-11-02)
+        out = deepcopy(decision)
+        out["ai_gate_status"] = "skipped_display_only"
         return out
     if (decision or {}).get("action") not in ORDER_ACTIONS:
         return decision

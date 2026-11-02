@@ -42,6 +42,7 @@ from config import (
     MOOMOO_ACC_ID,
     TICKERS,
     TRADE_ELIGIBLE_TICKERS,
+    DISPLAY_ONLY_TICKERS,
     TRADING_ACCOUNT_MODE,
     is_sim_active_trading,
 )
@@ -1563,6 +1564,11 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     side_label = "BUY " if side == TrdSide.BUY else "SELL"
     # 2026-10-19 止损线守卫 (用户: "总之是有一条线"): 止损线未收复前不买回. 必须在现金筹措之前,
     # 否则会为一笔被拦下的买单先卖掉 SHY. 只拦买入, 不碰任何卖出/止损.
+    if side == TrdSide.BUY and code in DISPLAY_ONLY_TICKERS:
+        # 2026-11-02: 只展示标的不开新仓 (见 config.DISPLAY_ONLY_TICKERS)。放在一切买入路径的
+        # 共同入口, 早于现金筹措, 不会为被拒的买单先卖 SHY。
+        logger.warning(f"[trader] SKIP BUY {code}: display-only ticker (未经用户批准交易)")
+        return None
     if side == TrdSide.BUY:
         import stop_line_guard
         _ok_line, _why_line = stop_line_guard.check_buy(code, price, tag)
@@ -1673,10 +1679,14 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     # check uses the daily reference and runs before cash funding; this one
     # catches a realtime quote below the stop line (2026-10-16 TQQQ: ref > line,
     # actual order 67.86 <= 68.50).
+    # 2026-11-02: 用加缓冲之前的实时参考价检查. 原来查的是 order_price = ref×(1+buffer),
+    # 实时价比止损线低不到 buffer (约 0.5%) 时会被放过, 成交落在线下.
     if side == TrdSide.BUY:
-        _ok_final, _why_final = stop_line_guard.check_buy(code, order_price, tag)
+        _chk_price = min(ref_price, order_price)
+        _ok_final, _why_final = stop_line_guard.check_buy(code, _chk_price, tag)
         if not _ok_final:
-            logger.warning(f"[trader] SKIP BUY {code} at order price ${order_price:.2f}: {_why_final}")
+            logger.warning(f"[trader] SKIP BUY {code} at live ${_chk_price:.2f} "
+                           f"(order ${order_price:.2f}): {_why_final}")
             return None
     rth_label = "+RTHx" if fill_outside_rth else ""
     ref_label = f"ref {ref_price:.2f}" + (f" / daily {price:.2f}" if ref_price != price else "")
@@ -2647,7 +2657,7 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
             if oid:
                 import stop_line_guard
                 stop_line_guard.record(ticker, stop_line_guard.trailing_line(entry_high, ts_pct), "trailing_stop", cur_price)
-                tstate.update({"last_action":"TRAILING_STOP","last_qty":qty,
+                tstate.update({"last_action":"TRAILING_STOP","last_side":"SELL","last_qty":qty,
                                "last_price":cur_price,
                                "last_time_utc": datetime.now(timezone.utc).isoformat(),
                                "last_window_key": window_key,
@@ -2684,7 +2694,7 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
                 if oid:
                     tp_hit.add(label)
                     tstate["tp_levels_hit"] = list(tp_hit)
-                    tstate.update({"last_action":f"TP_{label}","last_qty":qty,
+                    tstate.update({"last_action":f"TP_{label}","last_side":"SELL","last_qty":qty,
                                    "last_price":cur_price,
                                    "last_time_utc": datetime.now(timezone.utc).isoformat(),
                                    "last_window_key": window_key,

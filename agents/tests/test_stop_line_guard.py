@@ -85,12 +85,12 @@ class PlaceIntegration(unittest.TestCase):
         self.assertLess(i_guard, i_fund)
         self.assertIn("if side == TrdSide.BUY:", src[max(0, i_guard - 200):i_guard])
 
-    def test_final_guard_uses_actual_order_price(self):
+    def test_final_guard_uses_live_price_before_buffer(self):
         import inspect
         import paper_trader as pt
         src = inspect.getsource(pt._place)
         i_order = src.index("order_price = round(ref_price * (1 + buffer), 2)")
-        i_final = src.index("stop_line_guard.check_buy(code, order_price, tag)", i_order)
+        i_final = src.index("stop_line_guard.check_buy(code, _chk_price, tag)", i_order)
         self.assertLess(i_order, i_final)
 
 

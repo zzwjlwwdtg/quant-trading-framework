@@ -47,6 +47,11 @@ _REDIRECTS = (
     ("notifications", "ALERTS_PATH", "critical_alerts.jsonl"),
     ("notifications", "ALERT_DEDUPE_PATH", "alert_dedupe.json"),
     ("notifications", "DEDUP_PATH", "notify_dedup.json"),
+    ("ai_channel_monitor", "STATE_PATH", "ai_channel_monitor.json"),
+    ("_merge_audit", "STATE_PATH", "merge_audit.json"),
+    ("_merge_audit", "APPROVALS_PATH", "merge_approvals.jsonl"),
+    ("auto_rebalance", "REBAL_LOG", "rebalance_plan.jsonl"),
+    ("overnight_signal", "_HEALTH_PATH", "overnight_signal_health.json"),
     ("supply_calendar", "OUT_PATH", "supply_calendar.json"),
     ("supply_calendar", "DOC_CACHE", "supply_calendar_docs"),
     ("semi_risk_guard", "STATE_PATH", "semi_risk_guard.json"),
@@ -81,6 +86,16 @@ for _module_name, _attr, _filename in _REDIRECTS:
     _patch = patch.object(_module, _attr, TMP_DIR / _filename)
     _patch.start()
     _PATCHES.append(_patch)
+
+# 2026-11-02: orchestrator 在导入时就创建了指向实盘 point_in_time_market.jsonl 的 store 对象,
+# 只重定向路径常量不够, 必须替换对象本身.
+import orchestrator as _orch  # noqa: E402
+from data_quality import PointInTimeStore as _PIT  # noqa: E402
+_LIVE_PIT = Path(_orch.SIGNALS_PATH) / "point_in_time_market.jsonl"
+LIVE_SNAPSHOT[str(_LIVE_PIT)] = snapshot_path(_LIVE_PIT)
+_pit_patch = patch.object(_orch, "_PIT_MARKET_STORE", _PIT(TMP_DIR / "point_in_time_market.jsonl"))
+_pit_patch.start()
+_PATCHES.append(_pit_patch)
 
 # Fail-closed supply guard: without a fresh healthy fixture, every equity
 # decision in the suite would be demoted to HOLD.  Tests that exercise

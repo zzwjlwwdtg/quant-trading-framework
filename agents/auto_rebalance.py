@@ -244,7 +244,7 @@ def _load_event_triggers() -> list[dict]:
 def _check_event_trigger_cooldown(trigger_name: str, cooldown_hours: int = 24) -> bool:
     """检查过去 24h 是否已 fire 同名 trigger. 返回 True = 可以 fire, False = 冷却中."""
     from datetime import datetime, timedelta
-    log = Path(SIGNALS_DIR) / "rebalance_plan.jsonl"
+    log = REBAL_LOG    # 2026-11-02: 与写入同一常量, 测试隔离可整体重定向
     if not log.exists():
         return True
     try:

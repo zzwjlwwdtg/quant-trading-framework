@@ -68,10 +68,33 @@ def _s_rebal(d):
             f"回撤 {d.get('drawdown_pct')}%，regime {d.get('regime')}，{len(d.get('orders') or [])} 笔订单")
 
 
+def _evo_titles() -> dict:
+    try:
+        items = json.loads((SIGNALS / "evolution" / "proposals.json").read_text(encoding="utf-8"))
+        items = items if isinstance(items, list) else items.get("proposals", [])
+        return {x.get("id"): x.get("title", "") for x in items if isinstance(x, dict)}
+    except (OSError, ValueError):
+        return {}
+
+
 def _s_evo(d):
-    if d.get("event") == "propose":
-        return f"进化提案：新增 {d.get('added')}（{d.get('provider')}）"
-    return f"进化 {d.get('id')} → {d.get('status') or d.get('event')}（{d.get('by', '')}）{_clip(d.get('note', ''), 120)}"
+    # 2026-11-02: 原来只推 "新增 [ID]", 用户看不出要做什么, 10/20–10/29 提案全部无人审批.
+    ev, status = d.get("event"), d.get("status")
+    if ev == "propose":
+        added = d.get("added") or []
+        if not added:
+            return f"进化提案：今日无新增（{d.get('provider')}，{_clip(str(d.get('status', '')), 80)}）"
+        titles = _evo_titles()
+        lines = "；".join(f"{i} {_clip(titles.get(i, ''), 40)}" for i in added)
+        return f"【待你批准】进化提案 {len(added)} 条：{lines}。请在对话里回复批准/驳回"
+    if ev == "propose_skipped":
+        pend = d.get("pending") or []
+        return f"进化提案今日跳过（{d.get('reason')}）；仍有 {len(pend)} 条待你批准：{', '.join(pend[:8])}"
+    if ev == "dev_fallback":
+        return f"进化 {d.get('id')}：Claude 不可用，改用 Codex 开发（{_clip(d.get('reason', ''), 80)}）"
+    if status == "ready_for_review":
+        return f"【待你确认合并】进化 {d.get('id')} 开发完成，涉及交易关键文件，需要你确认后才合并"
+    return f"进化 {d.get('id')} → {status or ev}（{d.get('by', '')}）{_clip(d.get('note', ''), 120)}"
 
 
 def _s_pm(d):
