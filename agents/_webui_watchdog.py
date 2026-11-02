@@ -122,6 +122,10 @@ PORT_RELEASE_WAIT_S = 30
 UNRESPONSIVE_LIMIT = 3          # 连续 3 次 (5 分钟一次) 无响应才判定卡死
 # 任务计划用 pythonw 运行; 子进程 (netstat/powershell/taskkill) 不加这个会闪出控制台窗口
 _HIDDEN = {"creationflags": 0x08000000} if os.name == "nt" else {}
+# CREATE_NO_WINDOW is ignored when combined with DETACHED_PROCESS.  Windows
+# children can outlive their launcher without DETACHED_PROCESS; preserve the
+# existing process group while preventing cmd and batch children from flashing.
+_BACKGROUND_FLAGS = 0x00000200 | 0x08000000 if os.name == "nt" else 0
 
 # Env vars 保持与 webui.bat 一致
 WEBUI_ENV = {
@@ -245,14 +249,12 @@ def _launch_webui() -> int | None:
     env = os.environ.copy()
     env.update(WEBUI_ENV)
     try:
-        DETACHED = 0x00000008
-        NEW_GROUP = 0x00000200
-        NO_WINDOW = 0x08000000       # CREATE_NO_WINDOW — 关键: 让 cmd/webui 完全不弹窗
         proc = subprocess.Popen(
             ["cmd.exe", "/c", str(WEBUI_BAT)],
             cwd=str(SCRIPT_DIR),
             env=env,
-            creationflags=DETACHED | NEW_GROUP | NO_WINDOW,
+            creationflags=_BACKGROUND_FLAGS,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             close_fds=True,
@@ -317,11 +319,11 @@ def _launch_job(name: str) -> int | None:
                 proc = subprocess.Popen(
                     [sys.executable, "-X", "utf8", str(SCRIPT_DIR / f"{worker}.py"), "tick"],
                     cwd=str(SCRIPT_DIR), stdin=subprocess.DEVNULL, stdout=out, stderr=out,
-                    creationflags=0x00000200 | 0x08000000, close_fds=True)
+                    creationflags=_BACKGROUND_FLAGS, close_fds=True)
             return proc.pid
         proc = subprocess.Popen(
             ["cmd.exe", "/c", str(SCRIPT_DIR / JOBS[name]["bat"])], cwd=str(SCRIPT_DIR),
-            creationflags=0x00000008 | 0x00000200 | 0x08000000,
+            creationflags=_BACKGROUND_FLAGS, stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
         return proc.pid
     except Exception as e:
