@@ -118,6 +118,8 @@ JOBS = {
     "merge_audit": {"bat": "_merge_audit.bat", "auto_every_days": 1},
     # 2026-11-03: 用户请求时弹出一个可见的命令行窗口执行 Claude CLI 登录 (浏览器授权需用户本人点击)
     "claude_login": {"bat": "_claude_login.bat"},
+    # 只读: 列出 python/cmd/OpenD 进程到 logs/proc_report_last.txt (排查重复进程)
+    "proc_report": {"bat": "_proc_report.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
