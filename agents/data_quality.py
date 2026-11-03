@@ -119,6 +119,89 @@ def assess_market_snapshot(
     }
 
 
+def diagnose_fundamental_fields(
+    ticker: str,
+    market: dict,
+    fundamentals: dict,
+    *,
+    now: datetime | None = None,
+) -> dict:
+    """基本面字段诊断，仅供复盘；不得作为交易门或标的失效判据。
+
+    fundamentals 使用显式结构:
+    fields 为字段值，error 为原始错误，http_status 为独立状态码。
+    未提供接口能力依据时，即使 ETF 返回 404，也只记待核实缺失。
+    identity 只有同时包含 invalid 状态和 evidence 时才记录失效依据。
+    本函数不推断退市、不修改输入，也不调整行情质量或既有隔离。
+    """
+    from copy import deepcopy
+    from instrument_registry import get, normalize
+
+    inst = get(ticker)
+    asset_class = inst.asset_class if inst else "unknown"
+    identity = fundamentals.get("identity")
+    identity = identity if isinstance(identity, dict) else {}
+    invalid = (
+        identity.get("status") == "invalid"
+        and bool(identity.get("evidence"))
+    )
+    fields = fundamentals.get("fields")
+    fields = fields if isinstance(fields, dict) else {}
+    capabilities = fundamentals.get("field_capabilities")
+    capabilities = capabilities if isinstance(capabilities, dict) else {}
+    # fields 中的 None 与显式 missing_fields 均视为字段缺失；
+    # 整个接口失败且没有字段清单时，用 * 保留接口级缺失。
+    missing = fundamentals.get("missing_fields")
+    missing = missing if isinstance(missing, list) else []
+    names = sorted(
+        set(fields)
+        | {name for name in missing if isinstance(name, str)}
+    )
+    if not names and (
+        fundamentals.get("error") is not None
+        or fundamentals.get("http_status") == 404
+    ):
+        names = ["*"]
+
+    diagnostics = {}
+    for name in names:
+        if fields.get(name) is not None:
+            diagnostics[name] = {"status": "available", "reason": None}
+            continue
+        capability = capabilities.get(name)
+        capability = capability if isinstance(capability, dict) else {}
+        # 资产类型与接口能力必须分别有依据；HTTP 404 本身不是能力依据。
+        not_applicable = (
+            inst is not None
+            and capability.get("asset_class") == asset_class
+            and capability.get("supported") is False
+            and bool(capability.get("source"))
+        )
+        diagnostics[name] = {
+            "status": "not_applicable" if not_applicable else "missing_pending_verification",
+            "reason": (
+                "documented_field_capability" if not_applicable
+                else "http_404" if fundamentals.get("http_status") == 404
+                else "field_missing"
+            ),
+            "capability_evidence": deepcopy(capability) if not_applicable else None,
+        }
+
+    return {
+        "ticker": normalize(ticker),
+        "asset_identity": {
+            "asset_class": asset_class,
+            "metadata_source": "instrument_registry" if inst else None,
+            # 注册表仅证明元数据已知，不证明标的当前仍有效。
+            "status": "invalid" if invalid else "unverified",
+            "evidence": deepcopy(identity.get("evidence")),
+        },
+        "market_health": assess_market_snapshot(market, now=now),
+        "fundamental_fields": diagnostics,
+        "raw_response": deepcopy(fundamentals),
+    }
+
+
 def order_data_gate(market: dict, side: str, *, now: datetime | None = None) -> dict:
     result = assess_market_snapshot(market, now=now)
     reducing = str(side).upper().startswith("SELL")
@@ -378,6 +461,13 @@ def audit_latest_signal_files(signals_dir: Path, max_age_hours: float = 36.0) ->
             quality = assess_market_snapshot(
                 market, now=now, max_age_hours=max_age_hours,
             )
+            # 可选复盘字段：只接受显式结构，不猜测其他生产者的字段含义。
+            # 不参与 status、allow_new_risk 或 critical_files 的计算。
+            fundamentals = data.get("fundamentals")
+            if isinstance(fundamentals, dict):
+                quality["fundamental_diagnostics"] = diagnose_fundamental_fields(
+                    ticker, market, fundamentals, now=now,
+                )
         except Exception as exc:
             quality = {
                 "status": "critical",
