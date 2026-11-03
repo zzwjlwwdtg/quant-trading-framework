@@ -41,6 +41,50 @@ def _signal_icon(action: str) -> str:
     return icons.get(action, action)
 
 
+def postmortem_coverage_lines(path: Path) -> list[str]:
+    """展示已生成的同口径快照，不触发复盘、行情或交易。"""
+    import json
+    try:
+        latest = json.loads(path.read_text(encoding="utf-8"))
+        coverage = latest.get("sell_review_coverage")
+        if not isinstance(coverage, dict) or coverage.get("error"):
+            return ["  判定覆盖未知：缺少有效对账快照，请重新生成复盘"]
+        total = coverage["total"]
+        judged = coverage["judged"]
+        unjudged = coverage["unjudged"]
+        categories = coverage["categories"]
+        if (total != judged + unjudged
+                or sum(categories.values()) != judged):
+            return ["  判定覆盖未知：对账快照分母不平衡，需核实"]
+        rate = coverage["coverage"]
+        rate_text = f"{rate:.1%}" if rate is not None else "无卖出，未定义"
+        scope = coverage["scope"]
+        result = [
+            f"  快照生成时间：{latest.get('generated_at', '未知')}",
+            f"  统计单位：{coverage['unit']}",
+            f"  请求起点：{scope['requested_since_utc']}",
+            f"  采集区间：{scope['collection_started_at_utc']} 至 "
+            f"{scope['collection_finished_at_utc']}",
+            f"  取数口径：{scope['selection']}",
+            f"  卖出总数 {total} = 已判定 {judged} + 未判定 {unjudged}；覆盖率 {rate_text}",
+            "  判定分布：" + "；".join(f"{k} {v}" for k, v in categories.items()),
+            f"  合理率分母：{coverage['reasonable_rate_denominator']}",
+            f"  成交映射：{coverage['mapping']}；源行数 {coverage['source_rows']}",
+            f"  完整性：{scope['completeness']}",
+            f"  口径提醒：{scope['comparison']}",
+            f"  历史30/24核实：{scope['historical_30_vs_24']}",
+        ]
+        for record in coverage["records"]:
+            outcome = record["verdict"] or record["missing_reason"]
+            result.append(
+                f"  订单 {record['order_id']} / {record['ticker']}："
+                f"{record['processing_status']}，{outcome}；"
+                f"映射源行 {len(record['source_rows'])}")
+        return result
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return ["  判定覆盖未知：对账快照缺失或格式错误"]
+
+
 def generate_report(session_type: str = "定时") -> str:
     now_et = datetime.now(ET)
     now_str = now_et.strftime("%Y-%m-%d %H:%M ET")
@@ -251,6 +295,10 @@ def generate_report(session_type: str = "定时") -> str:
     except Exception:
         # 证据展示失败不影响原报告，必须明确保留未知状态。
         lines.append("  告警：运行证据展示失败；运行身份与验收状态未知")
+
+    section("七、卖出复盘判定覆盖（只读）")
+    lines.extend(postmortem_coverage_lines(
+        Path(SIGNALS_DIR) / "postmortem" / "latest.json"))
 
     # ── 尾部 ────────────────────────────────────────────────────────────────────
     lines.append("\n" + "=" * W)
