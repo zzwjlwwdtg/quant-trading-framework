@@ -116,6 +116,8 @@ JOBS = {
     "ai_channel_monitor": {"bat": "_ai_channel_monitor.bat", "auto_every_days": 30 / 1440},
     # 2026-11-02: 每天核对 main 上改动交易关键文件的提交是否登记了用户批准 (只读 git, 不调 AI)
     "merge_audit": {"bat": "_merge_audit.bat", "auto_every_days": 1},
+    # 2026-11-03: 用户请求时弹出一个可见的命令行窗口执行 Claude CLI 登录 (浏览器授权需用户本人点击)
+    "claude_login": {"bat": "_claude_login.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
