@@ -490,6 +490,8 @@ def _claude_unavailable(out: str) -> bool:
 _CODEX_DEV_SUFFIX = """
 
 [Codex 执行说明] 你所在的会话是只读沙箱 (本机 Windows 上 Codex 无法写文件), 所以不要尝试直接修改文件.
+上文"不要运行命令"在这里放宽为: **可以运行只读命令来读取和搜索文件** (例如 Get-Content / type / cat /
+rg / findstr / dir / git show / git diff), 沙箱本身不允许写入和联网; 但不要跑测试、不要安装任何东西.
 请读取当前目录 (git worktree 根目录) 里需要的文件, 然后把全部改动输出为**一个**统一 diff,
 放在 ```diff 代码块里, 路径用 a/... b/... 形式且相对仓库根目录 (例如 a/agents/trade_postmortem.py),
 必须能被 `git apply` 直接应用 (新文件用 --- /dev/null). 不要跑测试、不要联网.
