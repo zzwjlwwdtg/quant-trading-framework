@@ -242,6 +242,16 @@ def generate_report(session_type: str = "定时") -> str:
     for i, r in enumerate(risks[:4], 1):
         lines.append(f"  {'⚠️' if i <= 2 else '📌'} {r}")
 
+    # 仅展示核对材料，不采集进程、不修改决策、不根据 merged 推定验收通过。
+    section("六、运行版本与验收证据（只读）")
+    try:
+        from model_versions import runtime_acceptance_lines
+        lines.extend(runtime_acceptance_lines(
+            Path(SIGNALS_DIR) / "runtime_acceptance_evidence.json"))
+    except Exception:
+        # 证据展示失败不影响原报告，必须明确保留未知状态。
+        lines.append("  告警：运行证据展示失败；运行身份与验收状态未知")
+
     # ── 尾部 ────────────────────────────────────────────────────────────────────
     lines.append("\n" + "=" * W)
     lines.append(t(
