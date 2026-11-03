@@ -83,6 +83,22 @@ class CodexDiffApplyTests(unittest.TestCase):
         self.assertIn("check", how2)
 
 
+class CodexContextTests(unittest.TestCase):
+    def test_listed_files_are_attached_and_budgeted(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "agents" / "tests").mkdir(parents=True)
+        (d / "agents" / "a.py").write_text("x = 1\n", encoding="utf-8")
+        (d / "agents" / "tests" / "__init__.py").write_text("# iso\n", encoding="utf-8")
+        ctx = evo._codex_file_context(d, ["agents/a.py", "agents/missing.py"])
+        self.assertIn("=== FILE: agents/a.py ===\nx = 1", ctx)
+        self.assertIn("agents/missing.py === (不存在", ctx)
+        self.assertIn("=== FILE: agents/tests/__init__.py ===", ctx)
+        with patch.object(evo, "CODEX_CONTEXT_MAX_CHARS", 3000):
+            (d / "agents" / "big.py").write_text("y" * 10000, encoding="utf-8")
+            ctx2 = evo._codex_file_context(d, ["agents/big.py"])
+        self.assertIn("截断", ctx2)
+
+
 class PromptNotesTests(unittest.TestCase):
     def test_approval_note_reaches_dev_prompt(self):
         p = {"id": "EVO-1", "title": "t", "change": {"description": "改 paper_trader"},

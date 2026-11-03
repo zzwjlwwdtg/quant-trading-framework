@@ -452,7 +452,12 @@ def _dev_with_fallback(pid: str, model: str | None, wt: Path, prompt: str) -> tu
     if not ok and _claude_unavailable(out):
         _log("dev_fallback", id=pid, provider="codex", reason=str(out)[-160:])
         claude_out = out
-        ok, cx_out = _codex_dev(wt, prompt)
+        try:
+            _p = get(load(), pid) or {}
+            _files = list(((_p.get("change") or {}).get("files")) or [])
+        except Exception:
+            _files = []
+        ok, cx_out = _codex_dev(wt, prompt, files=_files)
         _save_dev_output(pid, "codex", ok, cx_out)
         if ok:
             out = "[Codex 兜底开发] " + (cx_out or "")
@@ -489,10 +494,10 @@ def _claude_unavailable(out: str) -> bool:
 
 _CODEX_DEV_SUFFIX = """
 
-[Codex 执行说明] 你所在的会话是只读沙箱 (本机 Windows 上 Codex 无法写文件), 所以不要尝试直接修改文件.
-上文"不要运行命令"在这里放宽为: **可以运行只读命令来读取和搜索文件** (例如 Get-Content / type / cat /
-rg / findstr / dir / git show / git diff), 沙箱本身不允许写入和联网; 但不要跑测试、不要安装任何东西.
-请读取当前目录 (git worktree 根目录) 里需要的文件, 然后把全部改动输出为**一个**统一 diff,
+[Codex 执行说明] 本机 Windows 上 Codex 的沙箱既不能写文件, 也不能执行任何命令 (连读文件的命令都会被拒绝).
+所以提案涉及的文件内容已经附在下面 "=== FILE: 路径 ===" 段落里, 请只依据这些内容工作, 不要尝试运行命令.
+附件里没有的文件如需新建 (例如新的测试文件), 用 --- /dev/null 新建; 不要修改附件以外的已有文件.
+请把全部改动输出为**一个**统一 diff,
 放在 ```diff 代码块里, 路径用 a/... b/... 形式且相对仓库根目录 (例如 a/agents/trade_postmortem.py),
 必须能被 `git apply` 直接应用 (新文件用 --- /dev/null). 不要跑测试、不要联网.
 diff 之后用 3-5 行中文总结改了哪些文件.
@@ -528,7 +533,38 @@ def _apply_patch(worktree: Path, patch_text: str) -> tuple[bool, str]:
             pass
 
 
-def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
+CODEX_CONTEXT_MAX_CHARS = 600_000
+
+
+def _codex_file_context(worktree: Path, files: list[str]) -> str:
+    """把提案列出的文件 (以及测试隔离入口) 原文附进 prompt. 超出预算的文件只给前段并注明截断."""
+    paths = []
+    for f in list(files or []) + ["agents/tests/__init__.py"]:
+        f = str(f).replace("\\", "/").lstrip("/")
+        if f and f not in paths:
+            paths.append(f)
+    out, used = [], 0
+    for f in paths:
+        fp = worktree / f
+        if not fp.is_file():
+            out.append(f"\n=== FILE: {f} === (不存在, 如需要请新建)\n")
+            continue
+        try:
+            text = fp.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        room = CODEX_CONTEXT_MAX_CHARS - used
+        if room <= 2000:
+            out.append(f"\n=== FILE: {f} === (超出附件预算, 未附, 不要修改此文件)\n")
+            continue
+        if len(text) > room:
+            text = text[:room] + "\n... [截断: 附件预算用完, 不要修改截断之后的部分] ...\n"
+        used += len(text)
+        out.append(f"\n=== FILE: {f} ===\n{text}")
+    return "".join(out)
+
+
+def _codex_dev(worktree: Path, prompt: str, files: list[str] | None = None) -> tuple[bool, str]:
     """Codex 兜底开发 (2026-11-03 改为"只读 + 输出 diff + git apply").
 
     11/02–11/03 实测: 本机 Windows 上 `--sandbox workspace-write` 实际仍是只读会话, Codex 回复
@@ -551,7 +587,8 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
         if model:
             cmd += ["--model", model]
         cmd.append("-")
-        prompt = prompt + _CODEX_DEV_SUFFIX
+        prompt = prompt + _CODEX_DEV_SUFFIX + "\n\n----- 附件: 相关文件原文 -----" + \
+            _codex_file_context(worktree, files or [])
         try:
             r = subprocess.run(cmd, input=prompt, cwd=str(worktree), capture_output=True, text=True,
                                encoding="utf-8", errors="replace", timeout=DEV_TIMEOUT_SEC,
