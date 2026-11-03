@@ -52,6 +52,37 @@ class FallbackTests(EvoTmp):
         self.assertFalse(evo._claude_unavailable("timeout"))
 
 
+class CodexDiffApplyTests(unittest.TestCase):
+    def _repo(self):
+        import subprocess
+        d = Path(tempfile.mkdtemp())
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True)
+        (d / "agents").mkdir()
+        (d / "agents" / "x.py").write_bytes(b"a = 1\r\nb = 2\r\n")   # Windows checkout: CRLF
+        return d
+
+    def test_extract_fenced_diff(self):
+        txt = "说明\n```diff\n--- a/agents/x.py\n+++ b/agents/x.py\n@@ -1,2 +1,2 @@\n a = 1\n-b = 2\n+b = 3\n```\n总结"
+        self.assertTrue(evo._extract_diff(txt).startswith("--- a/agents/x.py"))
+        self.assertEqual(evo._extract_diff("没有 diff"), "")
+
+    def test_lf_diff_applies_to_crlf_file(self):
+        d = self._repo()
+        patch_text = "--- a/agents/x.py\n+++ b/agents/x.py\n@@ -1,2 +1,2 @@\n a = 1\n-b = 2\n+b = 3\n"
+        ok, how = evo._apply_patch(d, patch_text)
+        self.assertTrue(ok, how)
+        self.assertIn(b"b = 3", (d / "agents" / "x.py").read_bytes())
+
+    def test_new_file_and_bad_patch(self):
+        d = self._repo()
+        ok, _ = evo._apply_patch(d, "--- /dev/null\n+++ b/agents/new.py\n@@ -0,0 +1 @@\n+z = 1\n")
+        self.assertTrue(ok)
+        self.assertTrue((d / "agents" / "new.py").exists())
+        ok2, how2 = evo._apply_patch(d, "--- a/agents/x.py\n+++ b/agents/x.py\n@@ -1 +1 @@\n-nope\n+q\n")
+        self.assertFalse(ok2)
+        self.assertIn("check", how2)
+
+
 class PromptNotesTests(unittest.TestCase):
     def test_approval_note_reaches_dev_prompt(self):
         p = {"id": "EVO-1", "title": "t", "change": {"description": "改 paper_trader"},

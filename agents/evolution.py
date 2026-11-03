@@ -489,14 +489,51 @@ def _claude_unavailable(out: str) -> bool:
 
 _CODEX_DEV_SUFFIX = """
 
-[Codex 执行说明] 上文"只用读写文件, 不要运行命令"的意思是: 不要跑测试、不要联网、不要执行与改代码无关的命令.
-你必须实际修改当前目录 (git worktree) 里的文件来完成提案 —— 用你的文件编辑能力 (apply_patch) 直接写入,
-不要只回复方案文字. 改完后用 3-5 行中文总结改了哪些文件.
+[Codex 执行说明] 你所在的会话是只读沙箱 (本机 Windows 上 Codex 无法写文件), 所以不要尝试直接修改文件.
+请读取当前目录 (git worktree 根目录) 里需要的文件, 然后把全部改动输出为**一个**统一 diff,
+放在 ```diff 代码块里, 路径用 a/... b/... 形式且相对仓库根目录 (例如 a/agents/trade_postmortem.py),
+必须能被 `git apply` 直接应用 (新文件用 --- /dev/null). 不要跑测试、不要联网.
+diff 之后用 3-5 行中文总结改了哪些文件.
 """
 
 
+def _extract_diff(text: str) -> str:
+    """取出 ```diff 代码块 (可能有多个, 依次拼接); 没有代码块时尝试从第一行 'diff --git' 开始截取."""
+    import re
+    blocks = re.findall(r"```(?:diff|patch)\s*\n(.*?)```", text or "", flags=re.S)
+    if blocks:
+        return "\n".join(b.rstrip("\n") for b in blocks) + "\n"
+    k = (text or "").find("diff --git ")
+    return (text[k:].rstrip("\n") + "\n") if k >= 0 else ""
+
+
+def _apply_patch(worktree: Path, patch_text: str) -> tuple[bool, str]:
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".patch", delete=False, encoding="utf-8",
+                                     newline="\n") as fh:
+        fh.write(patch_text)
+        pf = fh.name
+    try:
+        chk = _git(["apply", "--check", "--recount", "--ignore-whitespace", "--whitespace=nowarn", pf], cwd=worktree)
+        if chk.returncode != 0:
+            return False, f"git apply --check 失败: {(chk.stderr or chk.stdout)[-600:]}"
+        r = _git(["apply", "--recount", "--ignore-whitespace", "--whitespace=nowarn", pf], cwd=worktree)
+        return r.returncode == 0, (r.stderr or "applied")[-600:]
+    finally:
+        try:
+            Path(pf).unlink()
+        except OSError:
+            pass
+
+
 def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
-    """Codex CLI 在 worktree 里改文件 (workspace-write 沙箱, 只写本 worktree)."""
+    """Codex 兜底开发 (2026-11-03 改为"只读 + 输出 diff + git apply").
+
+    11/02–11/03 实测: 本机 Windows 上 `--sandbox workspace-write` 实际仍是只读会话, Codex 回复
+    "文件系统权限为只读, 无法修改". 不放开沙箱 (那等于允许在用户电脑上执行任意命令),
+    改为让 Codex 只读代码、输出统一 diff, 由这里用 git apply 应用到隔离 worktree;
+    之后照常走测试、guard_diff 护栏和 (交易关键文件的) 用户二次确认.
+    """
     import tempfile
     from ai_prompt import (_codex_safe_env, _find_codex_cli, _hidden_cli_subprocess_kwargs,
                            _resolve_codex_model)
@@ -506,7 +543,7 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
     with tempfile.TemporaryDirectory(prefix="evo_codex_") as tmp:
         out_path = Path(tmp) / "last_message.txt"
         cmd = [cli, "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
-               "--skip-git-repo-check", "--sandbox", "workspace-write",
+               "--skip-git-repo-check", "--sandbox", "read-only",
                "--cd", str(worktree), "--output-last-message", str(out_path)]
         model = _resolve_codex_model("complex")
         if model:
@@ -523,9 +560,15 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
             msg = out_path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             msg = ""
-        detail = (f"{msg or r.stdout or ''}\n--- codex exit={r.returncode} stderr ---\n"
-                  f"{(r.stderr or '')[-1500:]}")
-        return r.returncode == 0, detail[-5000:]
+        msg = msg or r.stdout or ""
+        stderr_tail = (r.stderr or "")[-1500:]
+    if r.returncode != 0:
+        return False, f"codex exit={r.returncode}\n{msg[-2000:]}\n--- stderr ---\n{stderr_tail}"
+    patch_text = _extract_diff(msg)
+    if not patch_text.strip():
+        return False, f"codex 没有输出 diff:\n{msg[-2500:]}"
+    ok, how = _apply_patch(worktree, patch_text)
+    return ok, f"{msg[-3000:]}\n--- git apply: {how}"
 
 
 def _approval_notes(p: dict) -> list[str]:

@@ -1009,12 +1009,13 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
 
     power = _get_account_power()
     # 1) 当前 regime → 目标组合波动率
+    # 2026-11-02 (审计 P2-3): unknown / 读取失败 → 保守 risk_off (原来按 neutral 0.12 开仓)
     try:
-        from regime_today import get_today_regime
-        regime = get_today_regime()
+        from regime_today import conservative_if_unknown, get_today_regime
+        regime = conservative_if_unknown(get_today_regime())
     except Exception:
-        regime = "neutral"
-    target_vol = TARGET_PORT_VOL.get(regime, 0.12)
+        regime = "risk_off"
+    target_vol = TARGET_PORT_VOL.get(regime, TARGET_PORT_VOL["risk_off"])
 
     # WATCH_BUY_PROBE 例外：crisis 下允许极小 probe 仓位（1/2 normal probe）
     # 模拟仓积极模式下 WATCH_BUY 统一按小试探仓处理；明确 BUY 仍按正常仓位。
@@ -1026,7 +1027,7 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
         if is_probe:
             target_vol = CRISIS_PROBE_TARGET_VOL
         else:
-            return 0.0   # crisis / 未知 regime → 不开新仓
+            return 0.0   # crisis → 不开新仓 (未知 regime 已在上面映射为 risk_off)
 
     # 2) 单股年化波动
     asset_vol = _annual_vol(ticker)

@@ -232,6 +232,11 @@ def _classify(inp: dict) -> str:
       bull_chop     : 宏观/日线偏多，但短线多项震荡指标共振
       neutral_chop  : 日线中性且短线震荡，收紧加仓并降低目标波动
     """
+    # 2026-11-02 (审计 P2-6): SOX 多周期输入缺失时不能用 0 兜底 —— 那会把趋势伪造成 down、
+    # 均线排列伪造成 bear, 照常写出一个"正常"标签. 缺失就如实返回 unknown, 由下游按保守处理.
+    if inp.get("sox_mkt_5d_pct") is None or inp.get("sox_mkt_20d_pct") is None or (
+            inp.get("sox_mkt_today_pct") is None and inp.get("spy_today_pct") is None):
+        return "unknown"
     sox_today = inp.get("sox_mkt_today_pct") or 0
     spy_today = inp.get("spy_today_pct")     or 0
     sox_5d    = inp.get("sox_mkt_5d_pct")    or 0
@@ -288,6 +293,24 @@ def _classify(inp: dict) -> str:
     return "bull_trending"           # 默认还是粗 bull
 
 
+def _alert_unknown_regime(inputs: dict) -> None:
+    """系统级 regime 无法计算时每个 ET 日告警一次 (下游已按保守 risk_off 处理)."""
+    try:
+        import notifications
+        event = "regime:unknown"
+        if notifications._alert_sent_today(event, "warning"):
+            return
+        missing = [k for k in ("sox_mkt_today_pct", "sox_mkt_5d_pct", "sox_mkt_20d_pct", "spy_today_pct")
+                   if inputs.get(k) is None]
+        res = notifications.send_alert(
+            f"⚠️ 今日系统级 regime 无法计算（缺少 {', '.join(missing)}），已按保守 risk_off 处理："
+            f"仍可小仓位开仓（目标波动 0.08），请检查 SOX/SPY 数据源。", level="warning", dedup=False)
+        if notifications.alert_delivered(res):
+            notifications._record_alert_sent(event, "warning")
+    except Exception as e:
+        logger.warning(f"[regime] unknown 告警失败: {e}")
+
+
 def detect_and_save_regime() -> dict:
     """pre-open 调用：算一次 → 写文件 → 返回 dict。"""
     inputs = _build_board_inputs()
@@ -302,8 +325,11 @@ def detect_and_save_regime() -> dict:
         "ts":     now_utc.isoformat(),
         "ts_et":  now_utc.astimezone(ET).isoformat(),
         "inputs": inputs,
+        "data_ok": regime != "unknown",
     }
     atomic_write_json(REGIME_STATE_PATH, info)
+    if regime == "unknown":
+        _alert_unknown_regime(inputs)
     return info
 
 
@@ -316,7 +342,7 @@ def _warn_stale(data: dict, expected: str) -> None:
     _STALE_WARNED_FOR = key
     logger.warning(
         f"[regime] regime_state.json 已过期: date={actual!r}, "
-        f"expected_market_date={expected!r}; fallback neutral"
+        f"expected_market_date={expected!r}; 按 unknown → 保守 {CONSERVATIVE_FALLBACK_REGIME} 处理"
     )
 
 
@@ -334,6 +360,21 @@ def _load_state(*, allow_stale: bool = False) -> dict | None:
         _warn_stale(data, expected)
         return None
     return data
+
+
+# 2026-11-02 (审计 P2-3): regime 未知 (数据缺失/状态过期/计算失败) 时的统一保守口径.
+# 原来 "unknown" 是非空字符串, decision_agent 的 `if board_regime:` 把它当成正常标签,
+# 规则落到 neutral 分支、仓位按 neutral 0.12 计算 —— 数据最不可靠时反而按中性开仓.
+# 现在统一按 risk_off 处理 (仍允许小仓位, 目标波动 0.08), 不是停止交易.
+UNKNOWN_REGIMES = frozenset({"", "unknown"})
+CONSERVATIVE_FALLBACK_REGIME = "risk_off"
+
+
+def conservative_if_unknown(regime: str | None) -> str:
+    """None / "" / "unknown" → risk_off; 其余原样返回."""
+    if regime is None or str(regime).strip().lower() in UNKNOWN_REGIMES:
+        return CONSERVATIVE_FALLBACK_REGIME
+    return regime
 
 
 def get_today_regime(default: str = "unknown") -> str:
