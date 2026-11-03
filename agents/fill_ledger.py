@@ -467,6 +467,120 @@ def get_order_price_trio(order_id: str,
     return out
 
 
+def sell_execution_evidence(
+    path: Optional[Path] = None,
+    fees_path: Optional[Path] = None,
+) -> list[dict]:
+    """EVO-20261021-2：全历史卖出证据，只读，不改变既有交割单和持仓口径。
+
+    显式传 path 时只读该账本，便于隔离回放。累计回报沿用公共 reducer；
+    effective_ts 的下单/对账兜底不能作为真实逐笔成交时间。
+    报价、止损线和窗口信息只保留明确字段，不从限价或参考价猜测。
+    """
+    import math
+    from execution_analytics import evidence_time
+
+    rows = _load_ledger(path)
+    fees = load_order_fees(fees_path)
+    grouped = defaultdict(list)
+    for row in rows:
+        oid = str(row.get("order_id") or "")
+        if oid:
+            grouped[oid].append(row)
+    output = []
+    for oid, events in grouped.items():
+        fills = [r for r in events if r.get("event") in ("partial", "filled")]
+        if not fills:
+            continue
+        final = fills[-1]
+        side = str(final.get("side") or "").upper()
+        if side not in ("SELL", "SELL_ALL", "REDUCE"):
+            continue
+        anomalies = []
+        valid_fills = []
+        for row in fills:
+            try:
+                qty = float(row.get("dealt_qty") or 0)
+                price = float(row.get("average_fill_price") or 0)
+                if not math.isfinite(qty) or not math.isfinite(price) or qty <= 0 or price <= 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                anomalies.append("invalid_fill_numbers")
+                continue
+            valid_fills.append(row)
+        submitted = [r for r in events if r.get("event") == "submitted"]
+        triggered = [r for r in events if r.get("event") == "triggered"]
+        confirmed = [r for r in events if r.get("event") == "confirmed"]
+        if len(submitted) > 1:
+            anomalies.append("multiple_submitted_events")
+        # 同一订单内冲突上下文不静默选取。
+        context = {}
+        keys = ("tag", "reason", "trigger_ts", "confirmed_ts", "stop_line",
+                "trigger_quote", "submit_quote", "window_start_ts",
+                "previous_window_end_ts", "between_window_quotes",
+                "session", "leveraged", "oversold")
+        for row in events:
+            for key in keys:
+                if row.get(key) is None:
+                    continue
+                if key in context and context[key] != row[key]:
+                    anomalies.append(f"conflicting_context:{key}")
+                context[key] = row[key]
+        increments, meta = fill_increments(valid_fills, corporate_actions=[])
+        if meta["qty_reversals"]:
+            anomalies.append("qty_reversal")
+        if any(inc["side"] not in ("SELL", "SELL_ALL", "REDUCE") for inc in increments):
+            anomalies.append("mixed_order_sides")
+        if len({canonical_ticker(r.get("ticker")) for r in fills}) > 1:
+            anomalies.append("mixed_order_tickers")
+        qty = sum(inc["qty"] for inc in increments)
+        amount = sum(inc["qty"] * inc["price"] for inc in increments)
+        price = amount / qty if qty else None
+        if valid_fills:
+            final = valid_fills[-1]
+            if (round(qty, 8) != round(float(final["dealt_qty"]), 8)
+                    or price is None
+                    or round(price, 4) != round(float(final["average_fill_price"]), 4)):
+                anomalies.append("weighted_fill_mismatch")
+        fee = fees.get(oid)
+        if fee is not None and not math.isfinite(fee):
+            fee = None
+            anomalies.append("invalid_fee")
+        fill_times = [evidence_time(r.get("broker_time")) for r in valid_fills]
+        # 没有券商时间时不把 submitted/effective_ts 当作真实成交时间。
+        known_times = [ts for ts in fill_times if ts is not None]
+        if any(a > b for a, b in zip(known_times, known_times[1:])):
+            anomalies.append("broker_fill_time_reversal")
+        all_fill_times_known = bool(fill_times) and all(ts is not None for ts in fill_times)
+        result = {
+            **context,
+            "order_id": oid,
+            "ticker": canonical_ticker(final.get("ticker")),
+            "side": "SELL",
+            "qty": qty,
+            "price": price,
+            "amount": round(amount, 2),
+            "fee": fee,
+            "submitted_ts": submitted[0].get("ts") if submitted else None,
+            "first_fill_ts": min(known_times).isoformat() if all_fill_times_known else None,
+            "last_fill_ts": max(known_times).isoformat() if all_fill_times_known else None,
+            "fills": increments,
+            "raw_fill_events": fills,
+            "price_revisions": meta["price_revisions"],
+            "anomalies": sorted(set(anomalies)),
+        }
+        if triggered:
+            result.setdefault("trigger_ts", triggered[0].get("ts"))
+            if isinstance(triggered[0].get("quote"), dict):
+                result.setdefault("trigger_quote", triggered[0]["quote"])
+        if confirmed:
+            result.setdefault("confirmed_ts", confirmed[0].get("ts"))
+        if submitted and isinstance(submitted[0].get("quote"), dict):
+            result.setdefault("submit_quote", submitted[0]["quote"])
+        output.append(result)
+    return output
+
+
 def statement_rows(n: int = 50, since: Optional[str] = None) -> list[dict]:
     """交割单 (2026-10-07): 按订单聚合的券商成交, 最新在前.
 
