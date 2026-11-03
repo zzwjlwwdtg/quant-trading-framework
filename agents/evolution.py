@@ -452,7 +452,12 @@ def _dev_with_fallback(pid: str, model: str | None, wt: Path, prompt: str) -> tu
     if not ok and _claude_unavailable(out):
         _log("dev_fallback", id=pid, provider="codex", reason=str(out)[-160:])
         claude_out = out
-        ok, cx_out = _codex_dev(wt, prompt)
+        try:
+            _p = get(load(), pid) or {}
+            _files = list(((_p.get("change") or {}).get("files")) or [])
+        except Exception:
+            _files = []
+        ok, cx_out = _codex_dev(wt, prompt, files=_files)
         _save_dev_output(pid, "codex", ok, cx_out)
         if ok:
             out = "[Codex 兜底开发] " + (cx_out or "")
@@ -489,14 +494,143 @@ def _claude_unavailable(out: str) -> bool:
 
 _CODEX_DEV_SUFFIX = """
 
-[Codex 执行说明] 上文"只用读写文件, 不要运行命令"的意思是: 不要跑测试、不要联网、不要执行与改代码无关的命令.
-你必须实际修改当前目录 (git worktree) 里的文件来完成提案 —— 用你的文件编辑能力 (apply_patch) 直接写入,
-不要只回复方案文字. 改完后用 3-5 行中文总结改了哪些文件.
+[Codex 执行说明] 本机 Windows 上 Codex 的沙箱既不能写文件, 也不能执行任何命令 (连读文件的命令都会被拒绝).
+所以提案涉及的文件内容已经附在下面 "=== FILE: 路径 ===" 段落里, 请只依据这些内容工作, 不要尝试运行命令.
+附件里没有的文件如需新建 (例如新的测试文件), 用 --- /dev/null 新建; 不要修改附件以外的已有文件.
+请用"搜索/替换块"格式输出全部改动 (不要输出 diff), 每个块:
+
+FILE: agents/路径.py
+<<<<<<< SEARCH
+(从附件里**原样复制**的连续若干行, 要足够长以便唯一定位; 新建文件时留空)
+=======
+(替换后的内容)
+>>>>>>> REPLACE
+
+同一文件可以有多个块, 按文件中出现的顺序给出. SEARCH 必须与附件原文逐字一致 (含缩进).
+不要跑测试、不要联网. 所有块之后用 3-5 行中文总结改了哪些文件.
 """
 
 
-def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
-    """Codex CLI 在 worktree 里改文件 (workspace-write 沙箱, 只写本 worktree)."""
+def _parse_search_replace(text: str) -> list[tuple[str, str, str]]:
+    """解析 FILE: / <<<<<<< SEARCH / ======= / >>>>>>> REPLACE 块 → [(path, search, replace)]."""
+    import re
+    blocks = []
+    pat = re.compile(r"FILE:\s*(\S+)\s*\n<<<<<<< SEARCH\n(.*?)\n?=======\n(.*?)\n?>>>>>>> REPLACE",
+                     flags=re.S)
+    for m in pat.finditer((text or "").replace("\r\n", "\n")):
+        blocks.append((m.group(1).strip().strip("`").replace("\\", "/").lstrip("/"),
+                       m.group(2), m.group(3)))
+    return blocks
+
+
+def _apply_search_replace(worktree: Path, blocks: list[tuple[str, str, str]]) -> tuple[bool, str]:
+    """全部块先在内存里校验/应用, 全部成功才写盘 (要么全改, 要么不改)."""
+    root = worktree.resolve()
+    staged: dict[Path, str] = {}
+    for path, search, replace in blocks:
+        fp = (worktree / path).resolve()
+        if root not in fp.parents:
+            return False, f"路径越界: {path}"
+        if fp in staged:
+            text = staged[fp]
+        elif fp.exists():
+            text = fp.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        else:
+            text = None
+        if not search.strip():
+            if text is None:
+                staged[fp] = replace if replace.endswith("\n") else replace + "\n"
+            else:
+                staged[fp] = text + ("" if text.endswith("\n") else "\n") + replace + "\n"
+            continue
+        if text is None:
+            return False, f"{path}: 文件不存在, SEARCH 无法匹配"
+        n = text.count(search)
+        if n == 1:
+            staged[fp] = text.replace(search, replace, 1)
+            continue
+        # 退一步: 忽略每行行尾空白再匹配
+        def norm(t):
+            return "\n".join(line.rstrip() for line in t.split("\n"))
+        ntext, nsearch = norm(text), norm(search)
+        if ntext.count(nsearch) == 1:
+            staged[fp] = ntext.replace(nsearch, norm(replace), 1)
+            continue
+        return False, f"{path}: SEARCH 匹配 {n} 处 (需唯一): {search[:120]!r}"
+    for fp, text in staged.items():
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(text, encoding="utf-8", newline="\n")
+    return True, f"applied {len(blocks)} blocks to {len(staged)} files"
+
+
+def _extract_diff(text: str) -> str:
+    """取出 ```diff 代码块 (可能有多个, 依次拼接); 没有代码块时尝试从第一行 'diff --git' 开始截取."""
+    import re
+    blocks = re.findall(r"```(?:diff|patch)\s*\n(.*?)```", text or "", flags=re.S)
+    if blocks:
+        return "\n".join(b.rstrip("\n") for b in blocks) + "\n"
+    k = (text or "").find("diff --git ")
+    return (text[k:].rstrip("\n") + "\n") if k >= 0 else ""
+
+
+def _apply_patch(worktree: Path, patch_text: str) -> tuple[bool, str]:
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".patch", delete=False, encoding="utf-8",
+                                     newline="\n") as fh:
+        fh.write(patch_text)
+        pf = fh.name
+    try:
+        chk = _git(["apply", "--check", "--recount", "--ignore-whitespace", "--whitespace=nowarn", pf], cwd=worktree)
+        if chk.returncode != 0:
+            return False, f"git apply --check 失败: {(chk.stderr or chk.stdout)[-600:]}"
+        r = _git(["apply", "--recount", "--ignore-whitespace", "--whitespace=nowarn", pf], cwd=worktree)
+        return r.returncode == 0, (r.stderr or "applied")[-600:]
+    finally:
+        try:
+            Path(pf).unlink()
+        except OSError:
+            pass
+
+
+CODEX_CONTEXT_MAX_CHARS = 600_000
+
+
+def _codex_file_context(worktree: Path, files: list[str]) -> str:
+    """把提案列出的文件 (以及测试隔离入口) 原文附进 prompt. 超出预算的文件只给前段并注明截断."""
+    paths = []
+    for f in list(files or []) + ["agents/tests/__init__.py"]:
+        f = str(f).replace("\\", "/").lstrip("/")
+        if f and f not in paths:
+            paths.append(f)
+    out, used = [], 0
+    for f in paths:
+        fp = worktree / f
+        if not fp.is_file():
+            out.append(f"\n=== FILE: {f} === (不存在, 如需要请新建)\n")
+            continue
+        try:
+            text = fp.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        room = CODEX_CONTEXT_MAX_CHARS - used
+        if room <= 2000:
+            out.append(f"\n=== FILE: {f} === (超出附件预算, 未附, 不要修改此文件)\n")
+            continue
+        if len(text) > room:
+            text = text[:room] + "\n... [截断: 附件预算用完, 不要修改截断之后的部分] ...\n"
+        used += len(text)
+        out.append(f"\n=== FILE: {f} ===\n{text}")
+    return "".join(out)
+
+
+def _codex_dev(worktree: Path, prompt: str, files: list[str] | None = None) -> tuple[bool, str]:
+    """Codex 兜底开发 (2026-11-03 改为"只读 + 输出 diff + git apply").
+
+    11/02–11/03 实测: 本机 Windows 上 `--sandbox workspace-write` 实际仍是只读会话, Codex 回复
+    "文件系统权限为只读, 无法修改". 不放开沙箱 (那等于允许在用户电脑上执行任意命令),
+    改为让 Codex 只读代码、输出统一 diff, 由这里用 git apply 应用到隔离 worktree;
+    之后照常走测试、guard_diff 护栏和 (交易关键文件的) 用户二次确认.
+    """
     import tempfile
     from ai_prompt import (_codex_safe_env, _find_codex_cli, _hidden_cli_subprocess_kwargs,
                            _resolve_codex_model)
@@ -506,13 +640,14 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
     with tempfile.TemporaryDirectory(prefix="evo_codex_") as tmp:
         out_path = Path(tmp) / "last_message.txt"
         cmd = [cli, "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
-               "--skip-git-repo-check", "--sandbox", "workspace-write",
+               "--skip-git-repo-check", "--sandbox", "read-only",
                "--cd", str(worktree), "--output-last-message", str(out_path)]
         model = _resolve_codex_model("complex")
         if model:
             cmd += ["--model", model]
         cmd.append("-")
-        prompt = prompt + _CODEX_DEV_SUFFIX
+        prompt = prompt + _CODEX_DEV_SUFFIX + "\n\n----- 附件: 相关文件原文 -----" + \
+            _codex_file_context(worktree, files or [])
         try:
             r = subprocess.run(cmd, input=prompt, cwd=str(worktree), capture_output=True, text=True,
                                encoding="utf-8", errors="replace", timeout=DEV_TIMEOUT_SEC,
@@ -523,9 +658,19 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
             msg = out_path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             msg = ""
-        detail = (f"{msg or r.stdout or ''}\n--- codex exit={r.returncode} stderr ---\n"
-                  f"{(r.stderr or '')[-1500:]}")
-        return r.returncode == 0, detail[-5000:]
+        msg = msg or r.stdout or ""
+        stderr_tail = (r.stderr or "")[-1500:]
+    if r.returncode != 0:
+        return False, f"codex exit={r.returncode}\n{msg[-2000:]}\n--- stderr ---\n{stderr_tail}"
+    blocks = _parse_search_replace(msg)
+    if blocks:
+        ok, how = _apply_search_replace(worktree, blocks)
+        return ok, f"{msg[-3000:]}\n--- search/replace: {how}"
+    patch_text = _extract_diff(msg)
+    if not patch_text.strip():
+        return False, f"codex 没有输出可应用的改动:\n{msg[-2500:]}"
+    ok, how = _apply_patch(worktree, patch_text)
+    return ok, f"{msg[-3000:]}\n--- git apply: {how}"
 
 
 def _approval_notes(p: dict) -> list[str]:

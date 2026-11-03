@@ -110,8 +110,18 @@ def check_buy(ticker: str, price: float, tag: str = "") -> tuple[bool, str]:
         return True, "guard_error"
 
 
+def _parse_utc(v):
+    if not v:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def confirm_buy_fill(ticker: str, fill_price: float,
-                     order_id: str = "") -> tuple[bool, str]:
+                     order_id: str = "", fill_time: str | None = None) -> tuple[bool, str]:
     """成交后处理止损线: 成交价 > 线才清除; ≤ 线保留并返回 False 供告警.
 
     2026-10-16 TQQQ 的买单在 68.50 线下成交 (67.86); 当时守卫尚未上线,
@@ -128,6 +138,15 @@ def confirm_buy_fill(ticker: str, fill_price: float,
         fp = float(fill_price or 0)
         if line <= 0:
             return True, "no_line"
+        # 2026-11-03: 只有在止损线产生之后成交的买单才能解除它. 10/29 NBIS: 10/28 的买单到
+        # 10/29 21:30 才对账确认, 把 17:48 止损新记的线 (172.16) 清掉了, 4 分钟后在线下又买入.
+        ft, lt = _parse_utc(fill_time), _parse_utc(rec.get("ts"))
+        if ft is not None and lt is not None and ft <= lt:
+            _log_event({"ts": datetime.now(timezone.utc).isoformat(),
+                        "event": "fill_predates_line", "ticker": k, "order_id": order_id,
+                        "fill_price": fp, "fill_time": ft.isoformat(), "line": line,
+                        "line_ts": lt.isoformat()})
+            return True, "fill_predates_line; line kept"
         if fp <= 0:
             _log_event({"ts": datetime.now(timezone.utc).isoformat(),
                         "event": "fill_price_missing", "ticker": k,

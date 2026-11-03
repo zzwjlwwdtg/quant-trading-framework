@@ -52,6 +52,85 @@ class FallbackTests(EvoTmp):
         self.assertFalse(evo._claude_unavailable("timeout"))
 
 
+class CodexDiffApplyTests(unittest.TestCase):
+    def _repo(self):
+        import subprocess
+        d = Path(tempfile.mkdtemp())
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True)
+        (d / "agents").mkdir()
+        (d / "agents" / "x.py").write_bytes(b"a = 1\r\nb = 2\r\n")   # Windows checkout: CRLF
+        return d
+
+    def test_extract_fenced_diff(self):
+        txt = "说明\n```diff\n--- a/agents/x.py\n+++ b/agents/x.py\n@@ -1,2 +1,2 @@\n a = 1\n-b = 2\n+b = 3\n```\n总结"
+        self.assertTrue(evo._extract_diff(txt).startswith("--- a/agents/x.py"))
+        self.assertEqual(evo._extract_diff("没有 diff"), "")
+
+    def test_lf_diff_applies_to_crlf_file(self):
+        d = self._repo()
+        patch_text = "--- a/agents/x.py\n+++ b/agents/x.py\n@@ -1,2 +1,2 @@\n a = 1\n-b = 2\n+b = 3\n"
+        ok, how = evo._apply_patch(d, patch_text)
+        self.assertTrue(ok, how)
+        self.assertIn(b"b = 3", (d / "agents" / "x.py").read_bytes())
+
+    def test_new_file_and_bad_patch(self):
+        d = self._repo()
+        ok, _ = evo._apply_patch(d, "--- /dev/null\n+++ b/agents/new.py\n@@ -0,0 +1 @@\n+z = 1\n")
+        self.assertTrue(ok)
+        self.assertTrue((d / "agents" / "new.py").exists())
+        ok2, how2 = evo._apply_patch(d, "--- a/agents/x.py\n+++ b/agents/x.py\n@@ -1 +1 @@\n-nope\n+q\n")
+        self.assertFalse(ok2)
+        self.assertIn("check", how2)
+
+
+class SearchReplaceTests(unittest.TestCase):
+    TXT = ("说明\nFILE: agents/x.py\n<<<<<<< SEARCH\nb = 2\n=======\nb = 3\n>>>>>>> REPLACE\n"
+           "FILE: agents/tests/test_new.py\n<<<<<<< SEARCH\n=======\nimport unittest\n>>>>>>> REPLACE\n总结")
+
+    def _wt(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "agents").mkdir()
+        (d / "agents" / "x.py").write_bytes(b"a = 1\r\nb = 2   \r\nc = 3\r\n")
+        return d
+
+    def test_parse_and_apply_with_crlf_and_trailing_space(self):
+        d = self._wt()
+        blocks = evo._parse_search_replace(self.TXT)
+        self.assertEqual([b[0] for b in blocks], ["agents/x.py", "agents/tests/test_new.py"])
+        ok, how = evo._apply_search_replace(d, blocks)
+        self.assertTrue(ok, how)
+        self.assertIn("b = 3", (d / "agents" / "x.py").read_text(encoding="utf-8"))
+        self.assertTrue((d / "agents" / "tests" / "test_new.py").exists())
+
+    def test_all_or_nothing(self):
+        d = self._wt()
+        blocks = [("agents/x.py", "a = 1", "a = 9"), ("agents/x.py", "nope", "z")]
+        ok, how = evo._apply_search_replace(d, blocks)
+        self.assertFalse(ok)
+        self.assertIn("a = 1", (d / "agents" / "x.py").read_text(encoding="utf-8"))
+
+    def test_path_escape_rejected(self):
+        ok, how = evo._apply_search_replace(self._wt(), [("../evil.py", "", "x")])
+        self.assertFalse(ok)
+        self.assertIn("越界", how)
+
+
+class CodexContextTests(unittest.TestCase):
+    def test_listed_files_are_attached_and_budgeted(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "agents" / "tests").mkdir(parents=True)
+        (d / "agents" / "a.py").write_text("x = 1\n", encoding="utf-8")
+        (d / "agents" / "tests" / "__init__.py").write_text("# iso\n", encoding="utf-8")
+        ctx = evo._codex_file_context(d, ["agents/a.py", "agents/missing.py"])
+        self.assertIn("=== FILE: agents/a.py ===\nx = 1", ctx)
+        self.assertIn("agents/missing.py === (不存在", ctx)
+        self.assertIn("=== FILE: agents/tests/__init__.py ===", ctx)
+        with patch.object(evo, "CODEX_CONTEXT_MAX_CHARS", 3000):
+            (d / "agents" / "big.py").write_text("y" * 10000, encoding="utf-8")
+            ctx2 = evo._codex_file_context(d, ["agents/big.py"])
+        self.assertIn("截断", ctx2)
+
+
 class PromptNotesTests(unittest.TestCase):
     def test_approval_note_reaches_dev_prompt(self):
         p = {"id": "EVO-1", "title": "t", "change": {"description": "改 paper_trader"},

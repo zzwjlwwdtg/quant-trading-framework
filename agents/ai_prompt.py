@@ -1425,7 +1425,11 @@ def query_codex_cli(prompt: str, timeout: int = 300, *,
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip(), "ok"
             err = _redact_cli_text((result.stderr or result.stdout or "").strip())
-            return None, f"codex_error: exit={result.returncode} stderr={err[:500]}"
+            # 2026-11-03: Codex 的 stderr 开头是固定的版本/配置横幅, 只留前 500 字会把真正的错误截掉
+            # (11/02 Codex 连续失败 4 小时, 审计里只看得到横幅). 改为横幅摘要 + 末尾错误.
+            if len(err) > 700:
+                err = err[:150] + " … " + err[-550:]
+            return None, f"codex_error: exit={result.returncode} stderr={err}"
     except subprocess.TimeoutExpired:
         return None, "codex_timeout"
     except Exception as e:

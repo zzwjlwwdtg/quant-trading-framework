@@ -1009,12 +1009,13 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
 
     power = _get_account_power()
     # 1) 当前 regime → 目标组合波动率
+    # 2026-11-02 (审计 P2-3): unknown / 读取失败 → 保守 risk_off (原来按 neutral 0.12 开仓)
     try:
-        from regime_today import get_today_regime
-        regime = get_today_regime()
+        from regime_today import conservative_if_unknown, get_today_regime
+        regime = conservative_if_unknown(get_today_regime())
     except Exception:
-        regime = "neutral"
-    target_vol = TARGET_PORT_VOL.get(regime, 0.12)
+        regime = "risk_off"
+    target_vol = TARGET_PORT_VOL.get(regime, TARGET_PORT_VOL["risk_off"])
 
     # WATCH_BUY_PROBE 例外：crisis 下允许极小 probe 仓位（1/2 normal probe）
     # 模拟仓积极模式下 WATCH_BUY 统一按小试探仓处理；明确 BUY 仍按正常仓位。
@@ -1026,7 +1027,7 @@ def _position_size_usd(ticker: str, conf: int = 6, action: str = "BUY") -> float
         if is_probe:
             target_vol = CRISIS_PROBE_TARGET_VOL
         else:
-            return 0.0   # crisis / 未知 regime → 不开新仓
+            return 0.0   # crisis → 不开新仓 (未知 regime 已在上面映射为 risk_off)
 
     # 2) 单股年化波动
     asset_vol = _annual_vol(ticker)
@@ -1679,6 +1680,18 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     # check uses the daily reference and runs before cash funding; this one
     # catches a realtime quote below the stop line (2026-10-16 TQQQ: ref > line,
     # actual order 67.86 <= 68.50).
+    # 2026-11-03: 买入价已经在本单自己的止损参考之下 → 进场前提已失效, 成交后会被软件止损
+    # 立刻卖出 (10/29 NBIS: 日线参考 182.34 算出止损 173.22, 盘前实时 169.55 买入 170.39,
+    # 56 秒后止损卖出 168.16). 只拦买入, 不碰卖出.
+    _entry_stop = (extra or {}).get("entry_stop_ref") if side == TrdSide.BUY else None
+    try:
+        _entry_stop = float(_entry_stop) if _entry_stop else None
+    except (TypeError, ValueError):
+        _entry_stop = None
+    if _entry_stop and ref_price and ref_price <= _entry_stop:
+        logger.warning(f"[trader] SKIP BUY {code}: live ${ref_price:.2f} ≤ own stop_ref "
+                       f"${_entry_stop:.2f} (daily ref ${price:.2f}); entry premise invalid")
+        return None
     # 2026-11-02: 用加缓冲之前的实时参考价检查. 原来查的是 order_price = ref×(1+buffer),
     # 实时价比止损线低不到 buffer (约 0.5%) 时会被放过, 成交落在线下.
     if side == TrdSide.BUY:
@@ -1918,7 +1931,9 @@ def refresh_execution_ledger() -> None:
             try:
                 import stop_line_guard
                 line_ok, line_why = stop_line_guard.confirm_buy_fill(
-                    base.get("ticker") or "", avg_fill, oid)
+                    base.get("ticker") or "", avg_fill, oid,
+                    fill_time=broker_time_to_utc_iso(row.get("updated_time") or row.get("create_time"))
+                    or base.get("ts"))
                 if not line_ok and line_why != "no_line":
                     logger.error(f"[trader] STOP-LINE {base.get('ticker')} order={oid}: {line_why}")
                     try:
@@ -2943,7 +2958,8 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
         buffer=place_buffer,
         fill_outside_rth=win_cfg.get("fill_outside_rth", False),
         decision=decision, mkt=mkt, window=window,
-        extra={"is_core": is_core, "size_usd": size_usd},
+        extra={"is_core": is_core, "size_usd": size_usd,
+               "entry_stop_ref": stop if side == TrdSide.BUY else None},
         resting_limit=(
             side == TrdSide.BUY
             and 'ai_use_limit' in locals()

@@ -690,6 +690,23 @@ def get_regime(macro: dict, market: dict) -> str:
 # 高信心信号），把它降级为 HOLD 并标 uncertain=True。理由：低信心的多/空
 # 信号在事件不确定的市场里大概率被打脸；同时防止"TQQQ CAUTION + SQQQ
 # WATCH_BUY"这种对称矛盾（对方向 ETF 不知道自己是反向的）。
+def _unknown_board_to_conservative(board_regime, market: dict):
+    """审计 P2-3 (2026-11-02): 系统级 regime 为 "unknown"/"" 时按保守 risk_off 处理并告警.
+
+    None 不在此处理: None 表示"没有系统级前提" (回测上下文), 维持原有逐票 get_regime 回退.
+    """
+    if not isinstance(board_regime, str) or board_regime.strip().lower() not in ("", "unknown"):
+        return board_regime
+    from regime_today import CONSERVATIVE_FALLBACK_REGIME
+    try:
+        from notifier import logger as _lg
+        _lg.warning(f"[decision_agent] board_regime=unknown for {market.get('ticker')} "
+                    f"→ 保守按 {CONSERVATIVE_FALLBACK_REGIME} (检查 regime_state.json / SOX 数据)")
+    except Exception:
+        pass
+    return CONSERVATIVE_FALLBACK_REGIME
+
+
 _UNCERTAIN_KEEP_KEYS = ("regime", "engine", "confluence", "regime_detail", "model_versions",
                         "price_snapshot", "ticker")
 
@@ -1686,6 +1703,7 @@ def _get_decision_impl(market: dict, events: dict, macro: dict | None,
                     _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
                 except Exception:
                     pass
+    board_regime = _unknown_board_to_conservative(board_regime, market)
     if board_regime:
         pct_eff_t = _scaled_pct(market.get("pct_chg", 0) or 0, market.get("ticker"))
         regime = "crisis" if pct_eff_t <= -5 else board_regime
@@ -1779,6 +1797,7 @@ def _get_gold_decision_impl(market: dict, events: dict, macro: dict | None,
                     _lg.error(f"[decision_agent] regime_today.get_today_regime 失败 for {market.get('ticker')}: {_e}")
                 except Exception:
                     pass
+    board_regime = _unknown_board_to_conservative(board_regime, market)
     if board_regime:
         pct_eff_t = _scaled_pct(market.get("pct_chg", 0) or 0, market.get("ticker"))
         regime = "crisis" if pct_eff_t <= -5 else board_regime

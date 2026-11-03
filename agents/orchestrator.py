@@ -689,6 +689,17 @@ def _build_macro() -> dict:
     return macro
 
 
+def _board_today_pct() -> float:
+    """系统级 regime 的板块当日涨跌 (min(SOX, SPY)), 读不到返回 0."""
+    try:
+        from regime_today import get_today_info
+        inp = (get_today_info(allow_stale=True) or {}).get("inputs") or {}
+        vals = [v for v in (inp.get("sox_mkt_today_pct"), inp.get("spy_today_pct")) if v is not None]
+        return float(min(vals)) if vals else 0.0
+    except Exception:
+        return 0.0
+
+
 def _etf_cycle(events_signal: dict, macro: dict, window: str | None = None,
                tickers: list[str] | None = None) -> None:
     from market_watch import get_intraday_context, get_shortterm_context
@@ -750,12 +761,19 @@ def _etf_cycle(events_signal: dict, macro: dict, window: str | None = None,
             except Exception:
                 pass
 
-            # 主动推送 crisis regime（dedup 5 min，避免同一 crisis 每 cycle 都推）
+            # 主动推送 crisis regime（每个事件每 ET 日一次）
+            # 2026-11-03: 系统级 regime=crisis 时所有标的都会继承 crisis, 原来逐票各推一条
+            # (11/02 一天 15 条, 连 TLT +0.43% 也写成"触发 crisis"), 改为板块级只推一条;
+            # 只有个股自身跌幅触发 crisis 时才逐票推.
             if decision.get("regime") == "crisis":
                 try:
                     from notifications import notify_crisis
-                    notify_crisis(ticker, mkt.get("pct_chg", 0) or 0,
-                                   reason=decision.get("reason", "")[:80])
+                    if board_regime == "crisis":
+                        notify_crisis("系统级(板块)", _board_today_pct(),
+                                      reason="系统级 regime=crisis：全部标的暂停新开仓（probe 除外）")
+                    else:
+                        notify_crisis(ticker, mkt.get("pct_chg", 0) or 0,
+                                      reason=decision.get("reason", "")[:80])
                 except Exception:
                     pass
 
