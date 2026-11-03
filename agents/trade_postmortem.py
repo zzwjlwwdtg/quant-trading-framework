@@ -227,8 +227,74 @@ def classify_sell(tag: str, decision: dict | None = None) -> str:
     return "信号卖出"
 
 
+# ── 超卖研究证据：仅供复盘，不读取或写入交易状态 ────────────────────────────────
+_UNVERIFIED_OVERSOLD = re.compile(
+    r"高概率反弹|大概率反弹|必然反弹|必涨|卖在底部|卖在最低|局部底部|"
+    r"超卖.{0,16}(?:反弹|底部)|(?:反弹|底部).{0,16}超卖|"
+    r"high[- ]probability rebound|sold at (?:the )?bottom",
+    re.I,
+)
+
+
+def oversold_review_evidence(bundle: dict | None = None) -> dict:
+    """仅接受协议和原始离线材料，重新检验，不信任外部传入的 passed 标志。"""
+    if bundle is None:
+        return {
+            "proposal": "EVO-20261028-1", "status": "证据不足", "passed": False,
+            "research_only": True, "trading_authorized": False,
+            "execution_improvement_verified": False,
+            "reason": "未提供开发前登记协议及全量历史规则重放材料",
+        }
+    from research_validation import evaluate_oversold_study
+    try:
+        result = evaluate_oversold_study(
+            bundle["protocol"], bundle["dataset"], code_version=bundle["code_version"])
+    except (KeyError, TypeError, ValueError) as exc:
+        return {
+            "proposal": "EVO-20261028-1", "status": "证据不足", "passed": False,
+            "research_only": True, "trading_authorized": False,
+            "execution_improvement_verified": False, "reason": str(exc),
+        }
+    # 完整分钟路径留在独立研究结果中，避免复盘提示词膨胀。
+    periods = {}
+    for name, period in result.get("periods", {}).items():
+        periods[name] = {
+            k: period[k] for k in (
+                "bounds", "eligible", "independent", "exclusion_rate",
+                "oversold", "control", "primary", "status")
+        }
+    return {
+        k: v for k, v in result.items() if k != "periods"
+    } | {"periods": periods}
+
+
+def label_oversold_claims(analysis: dict) -> dict:
+    """逐字段标记强结论；研究均值差即便通过也不验证个别交易卖在底部。"""
+    claims = []
+
+    def visit(value, path):
+        if isinstance(value, str):
+            if _UNVERIFIED_OVERSOLD.search(value):
+                claims.append({"path": path, "original": value,
+                               "label": "未验证假设"})
+                return "【未验证假设】" + value
+            return value
+        if isinstance(value, list):
+            return [visit(v, f"{path}[{i}]") for i, v in enumerate(value)]
+        if isinstance(value, dict):
+            return {k: visit(v, f"{path}.{k}") for k, v in value.items()}
+        return value
+
+    result = visit(analysis, "analysis")
+    result["oversold_evidence_labels"] = claims
+    if claims and isinstance(result.get("hindsight"), dict):
+        result["hindsight"]["verdict"] = "难判断"
+    return result
+
+
 # ── AI ───────────────────────────────────────────────────────────────────────
-def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: list[str], after_closes: list[dict]) -> str:
+def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: list[str], after_closes: list[dict],
+                 *, research_evidence: dict | None = None) -> str:
     return f"""你是交易复盘分析师。下面是一个自动交易系统的一笔**卖出**和当时的原始材料。
 只依据这些材料作答, 不要编造材料里没有的新闻或数字; 材料不足就明确写"材料不足".
 
@@ -255,6 +321,10 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 4. 事后走势一句话 + 这次卖出事后看是否合理 (合理/不合理/难判断).
 5. 不要建议把这只标的拉黑、永久禁止交易或"以后别碰": 亏损本身不是拉黑的理由 (交易是反人性的, 亏得多恰恰容易情绪化).
 6. 超卖仅为复盘分组标签，不得作为暂停止损的理由。没有同期可得买卖报价，不得把价格差称为精确执行滑点；止损线到成交价的偏离不能全部归因于窗口检查、跳空或执行。
+7. 超卖研究证据: {json.dumps(research_evidence or oversold_review_evidence(), ensure_ascii=False)}
+   未通过或证据不足时，任何“高概率反弹”“局部底部”“卖在底部”等结论必须明确标为“未验证假设”。
+   即便研究通过，也只可引用相应样本、收益均值差和置信区间；均值差不证明反弹概率很高或个别卖出错误。
+   必须区分统计反弹与含报价、费用、再入场成本的可执行卖出改进；不得据此建议放松或暂停止损。
 只输出 JSON, 不要任何其他文字:
 {{"context": {{"technical": "...", "news": "..."}},
  "reasons": [{{"type": "技术面|消息面", "reason": "...", "evidence": "..."}}],
@@ -280,7 +350,7 @@ def parse_ai(text: str | None) -> dict | None:
         return None
     if any(not l.get("limitation") for l in lims):
         return None
-    return d
+    return label_oversold_claims(d)
 
 
 def collect_news_structured_for(sell: dict, t: datetime, *, window_hours: float = 48.0) -> dict:
@@ -301,7 +371,8 @@ def collect_news_structured_for(sell: dict, t: datetime, *, window_hours: float 
                 "error": str(e)[:200]}
 
 
-def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
+def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
+               oversold_research: dict | None = None) -> dict:
     t = datetime.fromisoformat(sell["decision_ts"].replace("Z", "+00:00"))
     rows = load_log_window(t, BEFORE_H, AFTER_H)
     excerpt = select_excerpt(rows, sell["ticker"])
@@ -313,7 +384,9 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
                         if live_fetch else
                         {"items": [], "fetched": 0, "fallback": None,
                          "skipped": "live_fetch=False"})
-    prompt = build_prompt(sell, excerpt, news, after_log, after_closes)
+    research_evidence = oversold_review_evidence(oversold_research)
+    prompt = build_prompt(sell, excerpt, news, after_log, after_closes,
+                          research_evidence=research_evidence)
     if ai is None:
         from ai_prompt import query_ai_cli
         ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex",
@@ -332,6 +405,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True) -> dict:
             "ok": parsed is not None, "analysis": parsed,
             "material": {"excerpt_lines": len(excerpt), "news_items": len(news), "after_closes": after_closes},
             "news_structured": news_structured,
+            "oversold_research": research_evidence,
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 
 
@@ -537,7 +611,8 @@ def replay_execution_audit(
     }
 
 
-def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True) -> dict:
+def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
+        oversold_research: dict | None = None) -> dict:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     reviewed = json.loads(REVIEWED.read_text(encoding="utf-8")) if REVIEWED.exists() else {}
     sells = collect_sells(days)
@@ -550,7 +625,8 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True) -> dict:
             continue
         if str(s["order_id"]) in reviewed:
             continue
-        r = review_one(s, ai=ai, live_fetch=live_fetch)
+        r = review_one(s, ai=ai, live_fetch=live_fetch,
+                       oversold_research=oversold_research)
         print(f"[postmortem] {s['ticker']} {s['order_id']} ok={r['ok']} provider={r['provider']} status={str(r['status'])[:80]}")
         if r["ok"]:
             day = r["ts"][:10]
