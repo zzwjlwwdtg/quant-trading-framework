@@ -611,13 +611,117 @@ def replay_execution_audit(
     }
 
 
+def reconcile_sell_reviews(sells: list[dict], reviews: list[dict],
+                           reviewed: dict | None = None) -> dict:
+    """按卖出订单对账；成交行映射保留，不把复盘成功等同于已有判定。"""
+    reviewed = reviewed or {}
+    groups, by_order = {}, {}
+    unidentified = []
+    for number, sell in enumerate(sells, 1):
+        oid = sell.get("order_id")
+        if oid is None or str(oid).strip() == "":
+            # 缺少标识时不能猜测两行属于同一订单。
+            key = f"missing_order_id:{number}"
+            unidentified.append(key)
+        else:
+            key = str(oid)
+        groups.setdefault(key, []).append(dict(sell))
+    for review in reviews:
+        oid = review.get("order_id")
+        if oid is not None:
+            by_order.setdefault(str(oid), []).append(review)
+
+    categories = dict.fromkeys(("合理", "不合理", "难判断"), 0)
+    states, missing_reasons, records = {}, {}, []
+    for oid, rows in groups.items():
+        candidates = by_order.get(oid, [])
+        # 不以追加顺序覆盖人工或历史结论；冲突时明确等待核实。
+        verdicts = set()
+        for review in candidates:
+            analysis = review.get("analysis")
+            hindsight = analysis.get("hindsight") if isinstance(analysis, dict) else None
+            verdict = hindsight.get("verdict") if isinstance(hindsight, dict) else None
+            if review.get("ok") is True and verdict in categories:
+                verdicts.add(verdict)
+        verdict = None
+        if oid in unidentified:
+            state, reason = "证据不足", "成交行缺少订单标识，无法关联复盘"
+        elif len({r.get("ticker") for r in rows}) > 1:
+            state, reason = "证据不足", "同一订单标识对应多个标的，需核实映射"
+        elif len(verdicts) > 1:
+            state, reason = "证据不足", "同一订单存在冲突判定，保留原文等待核实"
+        elif verdicts:
+            verdict = next(iter(verdicts))
+            state, reason = "已判定", None
+            categories[verdict] += 1
+        elif any(r.get("ok") is True for r in candidates):
+            state, reason = "证据不足", "复盘已归档，但无有效事后判定（含机械现金归档）"
+        elif candidates:
+            state, reason = "处理失败", "存在失败复盘记录，尚无有效判定"
+        elif oid in reviewed:
+            state, reason = "证据不足", "已复盘索引存在，但缺少可核实的归档判定"
+        else:
+            state, reason = "未完成", "无复盘记录"
+        states[state] = states.get(state, 0) + 1
+        if reason:
+            missing_reasons[reason] = missing_reasons.get(reason, 0) + 1
+        records.append({
+            "order_id": oid, "ticker": rows[0].get("ticker"),
+            "verdict": verdict, "processing_status": state,
+            "missing_reason": reason, "source_rows": rows,
+            "review_records": len(candidates),
+        })
+    total = len(records)
+    judged = sum(categories.values())
+    return {
+        "unit": "卖出订单（order_id）；缺少标识的源行单列，订单总数待核实",
+        "mapping": "同一 order_id 的多行成交映射到一笔订单判定；不累加成交行中的数量",
+        "source_rows": len(sells), "total": total,
+        "judged": judged, "unjudged": total - judged,
+        "coverage": judged / total if total else None,
+        "reasonable_rate": categories["合理"] / judged if judged else None,
+        "reasonable_rate_denominator": "已判定订单数（含难判断）；未判定不进入分母",
+        "categories": categories, "processing_states": states,
+        "missing_reasons": missing_reasons, "records": records,
+        "unidentified_rows": unidentified,
+        "identities_verified": not unidentified,
+        "balanced": total == judged + sum(
+            r["verdict"] is None for r in records),
+    }
+
+
+def load_review_archive(path: Path | None = None) -> list[dict]:
+    """只读归档；坏行明确报错，避免静默丢失后误报覆盖完整。"""
+    path = Path(path or ARCHIVE)
+    if not path.exists():
+        return []
+    rows = []
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if not isinstance(row, dict):
+            raise ValueError(f"复盘归档第 {number} 行不是对象")
+        rows.append(row)
+    return rows
+
+
 def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
         oversold_research: dict | None = None) -> dict:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     reviewed = json.loads(REVIEWED.read_text(encoding="utf-8")) if REVIEWED.exists() else {}
+    window_end = datetime.now(timezone.utc)
     sells = collect_sells(days)
     done, mechanical = [], []
+    attempted = set()
     for s in sells:
+        oid = s.get("order_id")
+        if oid is None or str(oid).strip() == "":
+            continue
+        oid = str(oid)
+        if oid in attempted:
+            continue
+        attempted.add(oid)
         if s["mechanical_cash"]:
             rec = cash_sell_record(s)
             mechanical.append(rec)
@@ -625,8 +729,14 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
             continue
         if str(s["order_id"]) in reviewed:
             continue
-        r = review_one(s, ai=ai, live_fetch=live_fetch,
-                       oversold_research=oversold_research)
+        try:
+            r = review_one(s, ai=ai, live_fetch=live_fetch,
+                           oversold_research=oversold_research)
+        except Exception as exc:
+            # 单笔处理失败仍进入对账，不阻断其余卖出；不改变交易行为。
+            r = {"order_id": s["order_id"], "ticker": s["ticker"],
+                 "ok": False, "analysis": None, "provider": None,
+                 "status": f"复盘处理异常：{type(exc).__name__}"}
         print(f"[postmortem] {s['ticker']} {s['order_id']} ok={r['ok']} provider={r['provider']} status={str(r['status'])[:80]}")
         if r["ok"]:
             day = r["ts"][:10]
@@ -642,6 +752,26 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
               "reviews": [json.loads(f.read_text(encoding="utf-8")) for f in files],
               "mechanical_cash_sells": mechanical[:20],
               "last_run": {"new": sum(1 for r in done if r["ok"]), "failed": sum(1 for r in done if not r["ok"])}}
+    try:
+        coverage = reconcile_sell_reviews(
+            sells, load_review_archive() + done + mechanical, reviewed)
+        coverage["scope"] = {
+            "requested_since_utc": (window_end - timedelta(days=days)).isoformat(),
+            "collection_started_at_utc": window_end.isoformat(),
+            "collection_finished_at_utc": datetime.now(timezone.utc).isoformat(),
+            "selection": "collect_sells：近 days 天，statement_rows(n=500) 后筛选 SELL",
+            "limit": 500,
+            "completeness": "未核实：源读取有 500 行上限，不能据此声称窗口全量",
+            "latest_display_limit": 20,
+            "comparison": "latest 的最近20份展示与本窗口订单总数不可直接相减",
+            "historical_30_vs_24": "待使用同一窗口原始材料核实；不得预设差额原因",
+        }
+        latest["sell_review_coverage"] = coverage
+    except (OSError, ValueError, TypeError) as exc:
+        latest["sell_review_coverage"] = {
+            "error": f"对账材料读取失败：{type(exc).__name__}",
+            "coverage": None,
+        }
     LATEST.write_text(json.dumps(latest, ensure_ascii=False, indent=1), encoding="utf-8")
     return latest
 
