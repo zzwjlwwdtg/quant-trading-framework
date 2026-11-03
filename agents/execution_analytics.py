@@ -231,6 +231,160 @@ def verify_execution_log(path: Path) -> dict:
     return {"valid": True, "checked": checked, "legacy_unhashed": legacy, "last_hash": previous or None}
 
 
+# EVO-20261021-2：只读测量范围；不接入下单、重试或止损判断。
+CHANGE_DESCRIPTION = (
+    "止损成交成本分解与复盘覆盖校验；合并全部历史 TRAILING_STOP "
+    "窗口检查偏离统计。只测量，不改订单类型、重试链路与止损逻辑；"
+    "超卖仅作分组标签，缺少同期报价或完整窗口证据时明确标记未知。"
+)
+
+
+def evidence_time(value):
+    """仅接受带时区的时间；不把对账时间或无时区文本猜成成交时间。"""
+    try:
+        result = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return result.astimezone(timezone.utc) if result.utcoffset() is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def sell_cost_breakdown(evidence: dict) -> dict:
+    """卖出成本为正表示不利偏离；各项共用同一数量，互不重复计量。
+
+    同期报价必须显式包含 bid、ask、行情时间 ts、可得时间 available_ts。
+    保守要求行情时间等于事件时间；历史日线参考价、限价不能替代报价。
+    """
+    anomalies = list(evidence.get("anomalies") or [])
+    missing = []
+    times = {key: evidence_time(evidence.get(key)) for key in
+             ("trigger_ts", "submitted_ts", "confirmed_ts", "first_fill_ts", "last_fill_ts")}
+    for key, value in times.items():
+        if value is None:
+            missing.append(key)
+    pairs = (
+        ("trigger_ts", "submitted_ts"),
+        ("submitted_ts", "confirmed_ts"),
+        ("submitted_ts", "first_fill_ts"),
+        ("confirmed_ts", "first_fill_ts"),
+        ("first_fill_ts", "last_fill_ts"),
+    )
+    for left, right in pairs:
+        if times[left] is not None and times[right] is not None and times[left] > times[right]:
+            anomalies.append(f"time_order:{left}>{right}")
+
+    def bid_at(name, event_time):
+        quote = evidence.get(name)
+        if not isinstance(quote, dict) or event_time is None:
+            missing.append(name)
+            return None
+        bid, ask = _num(quote.get("bid"), None), _num(quote.get("ask"), None)
+        quote_time = evidence_time(quote.get("ts"))
+        available = evidence_time(quote.get("available_ts"))
+        if (bid is None or ask is None or bid <= 0 or ask < bid
+                or quote_time != event_time or available is None or available > event_time):
+            missing.append(f"{name}:无同期可得买卖报价")
+            return None
+        return bid
+
+    trigger_bid = bid_at("trigger_quote", times["trigger_ts"])
+    submit_bid = bid_at("submit_quote", times["submitted_ts"])
+    qty = _num(evidence.get("qty"), None)
+    fill = _num(evidence.get("price"), None)
+    stop = _num(evidence.get("stop_line"), None)
+    fee = _num(evidence.get("fee"), None)
+    if qty is None or qty <= 0:
+        missing.append("qty")
+    if fill is None or fill <= 0:
+        missing.append("price")
+    if stop is None or stop <= 0:
+        stop = None
+        missing.append("stop_line")
+    if fee is None:
+        missing.append("fee")
+
+    # 只有相邻基准都有证据才计算；止损线至触发价不是纯粹的开盘跳空。
+    usable = not anomalies and qty is not None and qty > 0 and fill is not None and fill > 0
+    components = {
+        "stop_to_trigger_usd": (
+            (stop - trigger_bid) * qty
+            if usable and stop is not None and trigger_bid is not None else None),
+        "trigger_to_submit_usd": (
+            (trigger_bid - submit_bid) * qty
+            if usable and trigger_bid is not None and submit_bid is not None else None),
+        "submit_to_fill_usd": (
+            (submit_bid - fill) * qty
+            if usable and submit_bid is not None else None),
+        "fees_usd": fee,
+    }
+    complete = usable and all(value is not None for value in components.values())
+    total = sum(components.values()) if complete else None
+    expected = (stop - fill) * qty + fee if complete else None
+    if complete and not math.isclose(total, expected, rel_tol=1e-10, abs_tol=1e-8):
+        anomalies.append("cost_components_do_not_reconcile")
+    return {
+        "order_id": evidence.get("order_id"),
+        "status": "invalid" if anomalies else ("complete" if complete else "unknown"),
+        "components": components,
+        "total_cost_usd": total,
+        "execution_slippage_bps": (
+            (submit_bid - fill) / submit_bid * 10_000
+            if usable and submit_bid is not None else None),
+        "submission_delay_seconds": (
+            (times["submitted_ts"] - times["trigger_ts"]).total_seconds()
+            if not anomalies and times["trigger_ts"] and times["submitted_ts"] else None),
+        "gap_usd": None,
+        "gap_reason": "止损线至触发报价含观察间隔内市场移动，不能直接认定为跳空",
+        "missing": sorted(set(missing)),
+        "anomalies": sorted(set(anomalies)),
+        "quotes": {name: evidence.get(name) for name in ("trigger_quote", "submit_quote")},
+        "times": {name: evidence.get(name) for name in times},
+        "fills": evidence.get("fills", []),
+    }
+
+
+def trailing_stop_measurement(evidence: dict) -> dict:
+    """窗口信息只消费显式历史证据，不臆造交易窗口或盘中价格路径。
+
+    离散样本只能给出最早观察到跌穿的时间，不能证明真正首次跌穿时间。
+    窗口损失是反事实，止损线与成交价之差不直接归因于窗口检查。
+    """
+    stop = _num(evidence.get("stop_line"), None)
+    price = _num(evidence.get("price"), None)
+    qty = _num(evidence.get("qty"), None)
+    start = evidence_time(evidence.get("window_start_ts"))
+    previous_end = evidence_time(evidence.get("previous_window_end_ts"))
+    trigger = evidence_time(evidence.get("trigger_ts"))
+    observations = []
+    for row in evidence.get("between_window_quotes") or []:
+        if not isinstance(row, dict):
+            continue
+        ts = evidence_time(row.get("ts"))
+        available = evidence_time(row.get("available_ts"))
+        bid, ask = _num(row.get("bid"), None), _num(row.get("ask"), None)
+        if (previous_end and start and previous_end < start and ts and available
+                and previous_end < ts < start and available <= ts
+                and bid is not None and ask is not None and 0 < bid <= ask
+                and stop is not None and stop > 0 and bid < stop):
+            observations.append(ts)
+    valid = stop is not None and stop > 0 and price is not None and price > 0
+    return {
+        "order_id": evidence.get("order_id"),
+        "stop_line": stop,
+        "fill_price": price,
+        "deviation_bps": (stop - price) / stop * 10_000 if valid else None,
+        "stop_to_fill_usd": (
+            (stop - price) * qty if valid and qty is not None and qty > 0 else None),
+        "minutes_from_window_start": (
+            (trigger - start).total_seconds() / 60
+            if start and trigger and trigger >= start else None),
+        "first_observed_breach_ts": min(observations).isoformat() if observations else None,
+        "earliest_breach_ts": None,
+        "window_extra_loss_usd": None,
+        "status": "unknown",
+        "reason": "缺少连续行情覆盖及可执行反事实；离散观察与止损线偏离不等于窗口额外损失",
+    }
+
+
 def summarize_execution_log(path: Path, limit: int = 500) -> dict:
     if not path.exists():
         return {"orders": 0, "filled_orders": 0, "avg_fill_ratio": None, "avg_shortfall_bps": None,

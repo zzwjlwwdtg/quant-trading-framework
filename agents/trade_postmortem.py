@@ -254,6 +254,7 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 3. 正好 3 条局限性: 这些理由或这次卖出本身可能错在哪里 (例如流动性、信号滞后、数据缺失、只看单一指标、规则机械).
 4. 事后走势一句话 + 这次卖出事后看是否合理 (合理/不合理/难判断).
 5. 不要建议把这只标的拉黑、永久禁止交易或"以后别碰": 亏损本身不是拉黑的理由 (交易是反人性的, 亏得多恰恰容易情绪化).
+6. 超卖仅为复盘分组标签，不得作为暂停止损的理由。没有同期可得买卖报价，不得把价格差称为精确执行滑点；止损线到成交价的偏离不能全部归因于窗口检查、跳空或执行。
 只输出 JSON, 不要任何其他文字:
 {{"context": {{"technical": "...", "news": "..."}},
  "reasons": [{{"type": "技术面|消息面", "reason": "...", "evidence": "..."}}],
@@ -363,6 +364,177 @@ def append_archive(rec: dict, path: Path | None = None) -> bool:
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     return True
+
+
+def replay_execution_audit(
+    *,
+    ledger_path: Path | None = None,
+    fees_path: Path | None = None,
+    trade_log_path: Path | None = None,
+    archive_path: Path | None = None,
+    reviewed_path: Path | None = None,
+    expected_sells: int = 30,
+) -> dict:
+    """EVO-20261021-2：离线只读回放，不调用 AI、行情、订单或任何写盘函数。
+
+    最近 expected_sells 笔用于覆盖检验；全部历史卖出用于跟踪止损统计。
+    独立传入所有路径即可回放隔离材料，缺失材料明确列出。
+    """
+    import fill_ledger
+    from execution_analytics import (
+        CHANGE_DESCRIPTION, evidence_time, sell_cost_breakdown,
+        trailing_stop_measurement,
+    )
+
+    errors = []
+
+    def read_rows(path):
+        try:
+            lines = Path(path).read_text(encoding="utf-8").splitlines()
+        except OSError:
+            errors.append(f"missing_file:{path}")
+            return []
+        result = []
+        for number, line in enumerate(lines, 1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+                if not isinstance(row, dict):
+                    raise ValueError
+                result.append(row)
+            except (ValueError, TypeError):
+                errors.append(f"invalid_json:{path}:{number}")
+        return result
+
+    ledger = Path(ledger_path) if ledger_path is not None else fill_ledger.EXEC_LEDGER_PATH
+    fee_file = Path(fees_path) if fees_path is not None else fill_ledger.FEES_PATH
+    # 先验证原始文件，避免读取器跳过坏行后仍误报通过。
+    read_rows(ledger)
+    read_rows(fee_file)
+    if ledger_path is None:
+        read_rows(fill_ledger.BROKER_HISTORY_PATH)
+    trades = read_rows(trade_log_path or SIGNALS / "trade_log.jsonl")
+    archives = read_rows(archive_path or ARCHIVE)
+    reviewed_file = Path(reviewed_path or REVIEWED)
+    try:
+        reviewed = json.loads(reviewed_file.read_text(encoding="utf-8"))
+        if not isinstance(reviewed, dict):
+            raise ValueError
+    except (OSError, ValueError, TypeError):
+        reviewed = {}
+        errors.append(f"missing_or_invalid_reviewed:{reviewed_file}")
+    by_trade, by_archive = {}, {}
+    for row in trades:
+        if row.get("order_id"):
+            by_trade.setdefault(str(row["order_id"]), []).append(row)
+    for row in archives:
+        if row.get("order_id"):
+            by_archive.setdefault(str(row["order_id"]), []).append(row)
+
+    evidence = fill_ledger.sell_execution_evidence(ledger_path, fees_path)
+    records, groups, trailing = [], {}, []
+    unknown_reason = 0
+    for original in evidence:
+        item = dict(original)
+        oid = item["order_id"]
+        contexts = by_trade.get(oid, [])
+        if len(contexts) > 1:
+            item["anomalies"] = list(item["anomalies"]) + ["multiple_trade_contexts"]
+        if contexts:
+            trade = contexts[-1]
+            # trade_log.ts 是决策/日志时间，不能补成真实触发时间。
+            for key in ("tag", "reason", "trigger_ts", "confirmed_ts", "stop_line",
+                        "trigger_quote", "submit_quote", "window_start_ts",
+                        "previous_window_end_ts", "between_window_quotes",
+                        "session", "leveraged", "oversold"):
+                value = trade.get(key)
+                if value is None:
+                    continue
+                if key in item and item[key] != value:
+                    item["anomalies"] = list(item["anomalies"]) + [f"conflicting_trade_context:{key}"]
+                else:
+                    item[key] = value
+        reason = item.get("tag") or item.get("reason")
+        if not reason:
+            unknown_reason += 1
+        reviews = by_archive.get(oid, [])
+        successful = [r for r in reviews if r.get("ok") is True]
+        if successful:
+            review_status, missing_reason = "reviewed", None
+        elif reviews:
+            review_status, missing_reason = "failed", "归档复盘未成功"
+        elif oid in reviewed:
+            review_status, missing_reason = "missing", "已复盘索引存在，但缺少成功归档"
+        else:
+            review_status, missing_reason = "missing", "无复盘归档及成功索引"
+        cost = sell_cost_breakdown(item)
+        record = {
+            "order_id": oid, "ticker": item["ticker"],
+            "review_status": review_status, "missing_reason": missing_reason,
+            "reason": reason or "unknown",
+            "session": item.get("session") or "unknown",
+            "leveraged": item.get("leveraged") if isinstance(item.get("leveraged"), bool) else "unknown",
+            "oversold": item.get("oversold") if isinstance(item.get("oversold"), bool) else "unknown",
+            "cost": cost,
+            "sort_ts": item.get("last_fill_ts") or item.get("submitted_ts"),
+        }
+        records.append(record)
+        key = json.dumps([record[k] for k in ("reason", "session", "leveraged", "oversold")],
+                         ensure_ascii=False)
+        group = groups.setdefault(key, {
+            "reason": record["reason"], "session": record["session"],
+            "leveraged": record["leveraged"], "oversold": record["oversold"],
+            "orders": 0, "complete_cost_orders": 0, "known_total_cost_usd": 0.0,
+        })
+        group["orders"] += 1
+        if cost["status"] == "complete":
+            group["complete_cost_orders"] += 1
+            group["known_total_cost_usd"] += cost["total_cost_usd"]
+        if "TRAILING_STOP" in str(reason or "").upper():
+            measurement = trailing_stop_measurement(item)
+            if cost["anomalies"]:
+                measurement["window_extra_loss_usd"] = None
+                measurement["status"] = "invalid"
+            trailing.append(measurement)
+
+    # 时区统一后再排序；无法排序的订单也进入覆盖清单，并阻止验证通过。
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    records.sort(key=lambda r: evidence_time(r["sort_ts"]) or epoch, reverse=True)
+    selected = records[:max(0, expected_sells)]
+    missing_sort_time = [r["order_id"] for r in records if evidence_time(r["sort_ts"]) is None]
+    invalid = [r["order_id"] for r in records if r["cost"]["anomalies"]]
+    coverage_ok = (
+        expected_sells > 0 and len(selected) == expected_sells
+        and all(r["review_status"] == "reviewed" or r["missing_reason"] for r in selected)
+    )
+    return {
+        "proposal": "EVO-20261021-2",
+        "change": {"description": CHANGE_DESCRIPTION},
+        "read_only": True,
+        "validation_passed": coverage_ok and not errors and not invalid and not missing_sort_time,
+        "coverage": {
+            "expected": expected_sells, "found": len(selected), "complete": coverage_ok,
+            "reviewed": sum(r["review_status"] == "reviewed" for r in selected),
+            "records": selected,
+        },
+        "all_sell_count": len(records),
+        "groups": list(groups.values()),
+        "all_historical_trailing_stops": trailing,
+        "trailing_stop_summary": {
+            "orders": len(trailing),
+            "unknown_sell_reason_orders": unknown_reason,
+            "historical_classification_complete": unknown_reason == 0 and not errors,
+            "window_extra_loss_usd": None,
+            "known_window_extra_loss_orders": 0,
+            "unknown_window_extra_loss_orders": len(trailing),
+            "reason": "不能将止损线至成交价偏离直接认定为窗口检查造成的额外损失",
+        },
+        "invalid_orders": invalid,
+        "unknown_order_times": missing_sort_time,
+        "source_errors": errors,
+        "publication_authorized": False,
+    }
 
 
 def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True) -> dict:
