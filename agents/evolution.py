@@ -446,18 +446,33 @@ def _dev_with_fallback(pid: str, model: str | None, wt: Path, prompt: str) -> tu
     except (TypeError, ValueError):
         takes_model = False
     ok, out = fn(wt, prompt, model=model) if takes_model else fn(wt, prompt)
+    _save_dev_output(pid, "claude", ok, out)
     # 2026-11-02: Claude 登录失效/额度用完/未安装时改用 Codex 开发 (用户 10/18 定的
     # "Claude 优先, Codex 备选"). 交易关键文件照旧只到 ready_for_review, 需用户二次确认.
     if not ok and _claude_unavailable(out):
         _log("dev_fallback", id=pid, provider="codex", reason=str(out)[-160:])
         claude_out = out
         ok, cx_out = _codex_dev(wt, prompt)
+        _save_dev_output(pid, "codex", ok, cx_out)
         if ok:
             out = "[Codex 兜底开发] " + (cx_out or "")
         else:
             # 两边都失败: 保留 Claude 的原始错误在前, 额度用完时仍按"稍后自动重试"处理
             out = f"{claude_out} | codex 兜底也失败: {str(cx_out or '')[-200:]}"
     return ok, out
+
+
+def _save_dev_output(pid: str, provider: str, ok: bool, out: str) -> None:
+    """2026-11-03: 保存开发 CLI 的完整输出. 11/02 夜里 Codex 兜底 7 次都"没有产生任何改动",
+    但输出没留下, 无法判断是沙箱拒写、模型只回了文字还是别的原因."""
+    try:
+        d = HERE / "logs" / "evo_tests"
+        d.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with open(d / f"{pid}_dev_output.txt", "a", encoding="utf-8") as fh:
+            fh.write(f"\n===== {stamp} {provider} ok={ok} =====\n{out or ''}\n")
+    except Exception:
+        pass
 
 
 def _claude_unavailable(out: str) -> bool:
@@ -470,6 +485,14 @@ def _claude_unavailable(out: str) -> bool:
         return classify_cli_failure(text) in ("auth", "quota", "unavailable")
     except Exception:
         return False
+
+
+_CODEX_DEV_SUFFIX = """
+
+[Codex 执行说明] 上文"只用读写文件, 不要运行命令"的意思是: 不要跑测试、不要联网、不要执行与改代码无关的命令.
+你必须实际修改当前目录 (git worktree) 里的文件来完成提案 —— 用你的文件编辑能力 (apply_patch) 直接写入,
+不要只回复方案文字. 改完后用 3-5 行中文总结改了哪些文件.
+"""
 
 
 def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
@@ -489,6 +512,7 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
         if model:
             cmd += ["--model", model]
         cmd.append("-")
+        prompt = prompt + _CODEX_DEV_SUFFIX
         try:
             r = subprocess.run(cmd, input=prompt, cwd=str(worktree), capture_output=True, text=True,
                                encoding="utf-8", errors="replace", timeout=DEV_TIMEOUT_SEC,
@@ -499,7 +523,9 @@ def _codex_dev(worktree: Path, prompt: str) -> tuple[bool, str]:
             msg = out_path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             msg = ""
-        return r.returncode == 0, (msg or r.stdout or r.stderr or "")[-4000:]
+        detail = (f"{msg or r.stdout or ''}\n--- codex exit={r.returncode} stderr ---\n"
+                  f"{(r.stderr or '')[-1500:]}")
+        return r.returncode == 0, detail[-5000:]
 
 
 def _approval_notes(p: dict) -> list[str]:
@@ -606,7 +632,8 @@ def develop(pid: str, dev=None, tests=None) -> dict:
     changed = [f for f in _git(["diff", "--cached", "--name-only", "main"], cwd=wt).stdout.splitlines() if f]
     diff = _git(["diff", "--cached", "main"], cwd=wt, timeout=60).stdout
     if not changed:
-        return _finish(pid, "dev_failed", "没有产生任何改动", cleanup=wt)
+        return _finish(pid, "dev_failed", f"没有产生任何改动 (开发输出见 logs/evo_tests/{pid}_dev_output.txt): "
+                       f"{str(out or '')[-200:]}", cleanup=wt)
     report = {"changed_files": changed, "tests_before": base["ran"], "tests_after": after["ran"],
               "new_failures": new_fail, "dev_summary": out[-1500:],
               "diffstat": _git(["diff", "--cached", "--stat", "main"], cwd=wt).stdout[-2000:],
