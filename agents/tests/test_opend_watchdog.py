@@ -98,6 +98,16 @@ class MainFlowTests(unittest.TestCase):
         events = [e["event"] for e in self._read_log()]
         self.assertIn("healthy", events)
 
+    def test_port_open_but_process_lookup_failed_never_relaunches(self):
+        # 2026-11-03: tasklist 超时 → pid None, 但 OpenD 实际在监听端口 → 不能再启动一个
+        with patch.object(ow, "_opend_process_alive", return_value=None), \
+             patch.object(ow, "_port_open", return_value=True), \
+             patch.object(ow, "_launch_opend") as fake_launch:
+            rc = ow.main()
+        self.assertEqual(rc, 0)
+        self.assertEqual(fake_launch.call_count, 0)
+        self.assertIn("healthy_port_only", [e["event"] for e in self._read_log()])
+
     def test_process_alive_but_port_dead_waits_no_relaunch(self):
         with patch.object(ow, "_opend_process_alive", return_value=777), \
              patch.object(ow, "_port_open", return_value=False), \

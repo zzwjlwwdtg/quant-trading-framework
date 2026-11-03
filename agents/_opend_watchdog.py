@@ -57,11 +57,15 @@ def _port_open(host: str, port: int, timeout: float = 2.0) -> bool:
 
 
 def _opend_process_alive() -> int | None:
-    """tasklist 查 moomoo_OpenD/FutuOpenD 进程. 返 PID 或 None."""
+    """tasklist 查 moomoo_OpenD/FutuOpenD 进程. 返 PID 或 None.
+
+    2026-11-03: 原来 10 秒超时, 机器忙 (自我进化跑测试/Codex) 时 tasklist 超时 → None →
+    main() 把正常运行的 OpenD 当成死了又启动一个. 超时放宽到 30 秒.
+    """
     try:
         r = subprocess.run(
             ["tasklist", "/FO", "CSV", "/NH"],
-            capture_output=True, text=True, timeout=10, **_HIDDEN,
+            capture_output=True, text=True, timeout=30, **_HIDDEN,
             encoding="utf-8", errors="replace",
         )
     except Exception:
@@ -120,6 +124,15 @@ def main() -> int:
     if pid and port_ok:
         _log("healthy", pid)
         print(f"[{now_str}] OpenD healthy PID={pid} port {OPEND_PORT} ok")
+        return 0
+
+    # 2026-11-03: 进程没查到但端口通 —— OpenD 实际在跑 (端口只由已登录的 OpenD 监听),
+    # 只是 tasklist 失败/超时. 11/03 这种情况下 4 次误判 "已死" 并重复启动 OpenD
+    # (旧进程 PID 41200 一直健康). 端口通就绝不再启动.
+    if not pid and port_ok:
+        _log("healthy_port_only", None,
+             f"port {OPEND_PORT} ok but process lookup failed; not relaunching")
+        print(f"[{now_str}] OpenD port {OPEND_PORT} ok (进程查询失败), 不重复启动")
         return 0
 
     # 进程活但端口未通: 大概率还在启动 / 登录中, 不重复 launch
