@@ -497,11 +497,70 @@ _CODEX_DEV_SUFFIX = """
 [Codex 执行说明] 本机 Windows 上 Codex 的沙箱既不能写文件, 也不能执行任何命令 (连读文件的命令都会被拒绝).
 所以提案涉及的文件内容已经附在下面 "=== FILE: 路径 ===" 段落里, 请只依据这些内容工作, 不要尝试运行命令.
 附件里没有的文件如需新建 (例如新的测试文件), 用 --- /dev/null 新建; 不要修改附件以外的已有文件.
-请把全部改动输出为**一个**统一 diff,
-放在 ```diff 代码块里, 路径用 a/... b/... 形式且相对仓库根目录 (例如 a/agents/trade_postmortem.py),
-必须能被 `git apply` 直接应用 (新文件用 --- /dev/null). 不要跑测试、不要联网.
-diff 之后用 3-5 行中文总结改了哪些文件.
+请用"搜索/替换块"格式输出全部改动 (不要输出 diff), 每个块:
+
+FILE: agents/路径.py
+<<<<<<< SEARCH
+(从附件里**原样复制**的连续若干行, 要足够长以便唯一定位; 新建文件时留空)
+=======
+(替换后的内容)
+>>>>>>> REPLACE
+
+同一文件可以有多个块, 按文件中出现的顺序给出. SEARCH 必须与附件原文逐字一致 (含缩进).
+不要跑测试、不要联网. 所有块之后用 3-5 行中文总结改了哪些文件.
 """
+
+
+def _parse_search_replace(text: str) -> list[tuple[str, str, str]]:
+    """解析 FILE: / <<<<<<< SEARCH / ======= / >>>>>>> REPLACE 块 → [(path, search, replace)]."""
+    import re
+    blocks = []
+    pat = re.compile(r"FILE:\s*(\S+)\s*\n<<<<<<< SEARCH\n(.*?)\n?=======\n(.*?)\n?>>>>>>> REPLACE",
+                     flags=re.S)
+    for m in pat.finditer((text or "").replace("\r\n", "\n")):
+        blocks.append((m.group(1).strip().strip("`").replace("\\", "/").lstrip("/"),
+                       m.group(2), m.group(3)))
+    return blocks
+
+
+def _apply_search_replace(worktree: Path, blocks: list[tuple[str, str, str]]) -> tuple[bool, str]:
+    """全部块先在内存里校验/应用, 全部成功才写盘 (要么全改, 要么不改)."""
+    root = worktree.resolve()
+    staged: dict[Path, str] = {}
+    for path, search, replace in blocks:
+        fp = (worktree / path).resolve()
+        if root not in fp.parents:
+            return False, f"路径越界: {path}"
+        if fp in staged:
+            text = staged[fp]
+        elif fp.exists():
+            text = fp.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        else:
+            text = None
+        if not search.strip():
+            if text is None:
+                staged[fp] = replace if replace.endswith("\n") else replace + "\n"
+            else:
+                staged[fp] = text + ("" if text.endswith("\n") else "\n") + replace + "\n"
+            continue
+        if text is None:
+            return False, f"{path}: 文件不存在, SEARCH 无法匹配"
+        n = text.count(search)
+        if n == 1:
+            staged[fp] = text.replace(search, replace, 1)
+            continue
+        # 退一步: 忽略每行行尾空白再匹配
+        def norm(t):
+            return "\n".join(line.rstrip() for line in t.split("\n"))
+        ntext, nsearch = norm(text), norm(search)
+        if ntext.count(nsearch) == 1:
+            staged[fp] = ntext.replace(nsearch, norm(replace), 1)
+            continue
+        return False, f"{path}: SEARCH 匹配 {n} 处 (需唯一): {search[:120]!r}"
+    for fp, text in staged.items():
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(text, encoding="utf-8", newline="\n")
+    return True, f"applied {len(blocks)} blocks to {len(staged)} files"
 
 
 def _extract_diff(text: str) -> str:
@@ -603,9 +662,13 @@ def _codex_dev(worktree: Path, prompt: str, files: list[str] | None = None) -> t
         stderr_tail = (r.stderr or "")[-1500:]
     if r.returncode != 0:
         return False, f"codex exit={r.returncode}\n{msg[-2000:]}\n--- stderr ---\n{stderr_tail}"
+    blocks = _parse_search_replace(msg)
+    if blocks:
+        ok, how = _apply_search_replace(worktree, blocks)
+        return ok, f"{msg[-3000:]}\n--- search/replace: {how}"
     patch_text = _extract_diff(msg)
     if not patch_text.strip():
-        return False, f"codex 没有输出 diff:\n{msg[-2500:]}"
+        return False, f"codex 没有输出可应用的改动:\n{msg[-2500:]}"
     ok, how = _apply_patch(worktree, patch_text)
     return ok, f"{msg[-3000:]}\n--- git apply: {how}"
 

@@ -83,6 +83,38 @@ class CodexDiffApplyTests(unittest.TestCase):
         self.assertIn("check", how2)
 
 
+class SearchReplaceTests(unittest.TestCase):
+    TXT = ("说明\nFILE: agents/x.py\n<<<<<<< SEARCH\nb = 2\n=======\nb = 3\n>>>>>>> REPLACE\n"
+           "FILE: agents/tests/test_new.py\n<<<<<<< SEARCH\n=======\nimport unittest\n>>>>>>> REPLACE\n总结")
+
+    def _wt(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "agents").mkdir()
+        (d / "agents" / "x.py").write_bytes(b"a = 1\r\nb = 2   \r\nc = 3\r\n")
+        return d
+
+    def test_parse_and_apply_with_crlf_and_trailing_space(self):
+        d = self._wt()
+        blocks = evo._parse_search_replace(self.TXT)
+        self.assertEqual([b[0] for b in blocks], ["agents/x.py", "agents/tests/test_new.py"])
+        ok, how = evo._apply_search_replace(d, blocks)
+        self.assertTrue(ok, how)
+        self.assertIn("b = 3", (d / "agents" / "x.py").read_text(encoding="utf-8"))
+        self.assertTrue((d / "agents" / "tests" / "test_new.py").exists())
+
+    def test_all_or_nothing(self):
+        d = self._wt()
+        blocks = [("agents/x.py", "a = 1", "a = 9"), ("agents/x.py", "nope", "z")]
+        ok, how = evo._apply_search_replace(d, blocks)
+        self.assertFalse(ok)
+        self.assertIn("a = 1", (d / "agents" / "x.py").read_text(encoding="utf-8"))
+
+    def test_path_escape_rejected(self):
+        ok, how = evo._apply_search_replace(self._wt(), [("../evil.py", "", "x")])
+        self.assertFalse(ok)
+        self.assertIn("越界", how)
+
+
 class CodexContextTests(unittest.TestCase):
     def test_listed_files_are_attached_and_budgeted(self):
         d = Path(tempfile.mkdtemp())
