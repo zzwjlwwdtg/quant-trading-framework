@@ -1680,6 +1680,18 @@ def _place(code: str, side, qty: int, price: float, tag: str = "",
     # check uses the daily reference and runs before cash funding; this one
     # catches a realtime quote below the stop line (2026-10-16 TQQQ: ref > line,
     # actual order 67.86 <= 68.50).
+    # 2026-11-03: 买入价已经在本单自己的止损参考之下 → 进场前提已失效, 成交后会被软件止损
+    # 立刻卖出 (10/29 NBIS: 日线参考 182.34 算出止损 173.22, 盘前实时 169.55 买入 170.39,
+    # 56 秒后止损卖出 168.16). 只拦买入, 不碰卖出.
+    _entry_stop = (extra or {}).get("entry_stop_ref") if side == TrdSide.BUY else None
+    try:
+        _entry_stop = float(_entry_stop) if _entry_stop else None
+    except (TypeError, ValueError):
+        _entry_stop = None
+    if _entry_stop and ref_price and ref_price <= _entry_stop:
+        logger.warning(f"[trader] SKIP BUY {code}: live ${ref_price:.2f} ≤ own stop_ref "
+                       f"${_entry_stop:.2f} (daily ref ${price:.2f}); entry premise invalid")
+        return None
     # 2026-11-02: 用加缓冲之前的实时参考价检查. 原来查的是 order_price = ref×(1+buffer),
     # 实时价比止损线低不到 buffer (约 0.5%) 时会被放过, 成交落在线下.
     if side == TrdSide.BUY:
@@ -1919,7 +1931,9 @@ def refresh_execution_ledger() -> None:
             try:
                 import stop_line_guard
                 line_ok, line_why = stop_line_guard.confirm_buy_fill(
-                    base.get("ticker") or "", avg_fill, oid)
+                    base.get("ticker") or "", avg_fill, oid,
+                    fill_time=broker_time_to_utc_iso(row.get("updated_time") or row.get("create_time"))
+                    or base.get("ts"))
                 if not line_ok and line_why != "no_line":
                     logger.error(f"[trader] STOP-LINE {base.get('ticker')} order={oid}: {line_why}")
                     try:
@@ -2944,7 +2958,8 @@ def _execute_unlocked(ticker: str, decision: dict, mkt: dict, window: str | None
         buffer=place_buffer,
         fill_outside_rth=win_cfg.get("fill_outside_rth", False),
         decision=decision, mkt=mkt, window=window,
-        extra={"is_core": is_core, "size_usd": size_usd},
+        extra={"is_core": is_core, "size_usd": size_usd,
+               "entry_stop_ref": stop if side == TrdSide.BUY else None},
         resting_limit=(
             side == TrdSide.BUY
             and 'ai_use_limit' in locals()
