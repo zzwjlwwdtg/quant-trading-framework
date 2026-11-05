@@ -120,6 +120,8 @@ JOBS = {
     "claude_login": {"bat": "_claude_login.bat"},
     # 只读: 列出 python/cmd/OpenD 进程到 logs/proc_report_last.txt (排查重复进程)
     "proc_report": {"bat": "_proc_report.bat"},
+    # 2026-11-05: 用户请求时启动久留美 QQ 机器人 (D:\\personal plan, 沿用已保存的生产参数; 脚本自带防重复启动)
+    "kurumi_start": {"bat": "_kurumi_start.bat"},
 }
 QUIET_BLOCK_UTC_HOURS = (12, 21)
 
