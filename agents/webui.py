@@ -543,6 +543,7 @@ def api_positions() -> dict:
     """
     def _compute():
         mm_positions = _fetch_moomoo_live_positions()
+        observed_at = datetime.now(timezone.utc).isoformat() if mm_positions is not None else None
         state = {}
         if STATE_PATH.exists():
             try:
@@ -629,6 +630,7 @@ def api_positions() -> dict:
             "current_nav":  peak_meta.get("current_nav"),
             "sync_source":  "moomoo_live" if mm_positions is not None else "state_only_fallback",
             "moomoo_ok":    mm_positions is not None,
+            "observed_at":  observed_at,
         }
 
     return _cached("positions_live", ttl_sec=60, compute_fn=_compute)
@@ -1344,6 +1346,27 @@ def api_fills(n: int = 40) -> dict:
         return {"rows": rows, "flow_30d": flow, "account": _fetch_account_cash(),
                 "note": "券商成交记录 (未成交/撤单不列); 手续费: 券商未提供时显示'未计入'"}
     return _cached(f"fills_v1_{n}", ttl_sec=300, compute_fn=_compute)
+
+
+_STOP_FAIL_REPORT = {"at": 0.0, "data": None}
+_STOP_FAIL_REPORT_LOCK = threading.Lock()
+
+
+def api_stop_fail_monitor() -> dict:
+    """只读本地材料；一分钟内复用内存结果，不触发券商、行情或外部告警。"""
+    with _STOP_FAIL_REPORT_LOCK:
+        now = time.monotonic()
+        if _STOP_FAIL_REPORT["data"] is not None and now - _STOP_FAIL_REPORT["at"] < 60:
+            return copy.deepcopy(_STOP_FAIL_REPORT["data"])
+        from _stop_fail_monitor import report_from_files
+        report = report_from_files(
+            logs_dir=LOGS_DIR, state_path=STATE_PATH,
+            positions_path=_WEBUI_CACHE_DIR / "positions_live.json",
+        )
+        # 覆盖率和计数仍针对完整固定窗口，仅限制面板事件数量。
+        report["events"] = list(reversed(report["events"][-50:]))
+        _STOP_FAIL_REPORT.update(at=now, data=report)
+        return copy.deepcopy(report)
 
 
 def api_evolution() -> dict:
@@ -5516,6 +5539,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_postmortem())
             elif path == "/api/usd_theme":
                 self._json(api_usd_theme())
+            elif path == "/api/stop_fail_monitor":
+                self._json(api_stop_fail_monitor())
             elif path == "/api/evolution":
                 self._json(api_evolution())
             elif path == "/api/evolution_token":

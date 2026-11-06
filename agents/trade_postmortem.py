@@ -758,6 +758,98 @@ def load_review_archive(path: Path | None = None) -> list[dict]:
     return rows
 
 
+def replay_cash_attribution(
+    *, trade_log_path: Path, evidence_path: Path, expected_sells: int = 6,
+) -> dict:
+    """EVO-20261022-1：独立离线研究报告，不写归档、索引或交易状态。
+
+    开发前固定验收：六笔逐笔有证据链或缺失清单；完整记录残差不超过
+    币种最小记账单位；正式报告仍须另行完成连续十个交易日前向核对。
+    这里不接入 run，避免自动归档把旧的固定理由当作已完成资金归因。
+    """
+    from _broker_history_reconcile import read_cash_evidence
+    from portfolio_analytics import cash_event_attribution
+
+    errors, trades = [], {}
+    try:
+        lines = Path(trade_log_path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        lines = []
+        errors.append("缺失历史交易日志")
+    for number, line in enumerate(lines, 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+            if not isinstance(row, dict):
+                raise ValueError
+            if "REBALANCE CASH" not in str(row.get("tag") or "").upper():
+                continue
+            if row.get("side") not in (None, "SELL"):
+                continue
+            oid = str(row.get("order_id") or "")
+            if not oid:
+                raise ValueError
+            if oid in trades and trades[oid][0] != row:
+                errors.append(f"现金卖出决策冲突:{oid}")
+            trades[oid] = (row, f"{Path(trade_log_path).name}:{number}")
+        except (ValueError, TypeError):
+            errors.append(f"历史交易日志格式错误:{number}")
+
+    loaded = read_cash_evidence(evidence_path)
+    errors.extend(loaded["errors"])
+    materials = {}
+    for row in loaded["rows"]:
+        oid = str(row.get("order_id") or "")
+        if not oid:
+            errors.append("现金材料缺失订单号")
+        elif oid in materials:
+            errors.append(f"现金材料包重复:{oid}")
+        else:
+            materials[oid] = row
+
+    records = []
+    for oid, (trade, ref) in sorted(trades.items()):
+        material = dict(materials.get(oid) or {})
+        material["order_id"] = oid
+        # 只接受决策日志时间，不以成交时间或当前账户状态替代。
+        if material.get("decision_ts") not in (None, trade.get("ts")):
+            errors.append(f"材料与决策时间冲突:{oid}")
+        material["decision_ts"] = trade.get("ts")
+        record = cash_event_attribution(material)
+        record["decision_source"] = ref
+        record["tag"] = trade.get("tag")
+        if oid not in materials:
+            record["missing_evidence"].append("缺失该笔历史资金材料包")
+        records.append(record)
+
+    return {
+        "proposal": "EVO-20261022-1", "read_only": True,
+        "acceptance": {
+            "expected_historical_sells": expected_sells,
+            "residual_limit": "账户币种最小记账单位",
+            "forward_required_trading_days": 10,
+            "no_new_trigger_policy": "仅验收核算功能，不宣称归因有效性",
+        },
+        "coverage": {
+            "found": len(records),
+            "complete": expected_sells == 6 and len(records) == expected_sells,
+        },
+        "records": records, "source_errors": errors,
+        "historical_accounting_passed": (
+            expected_sells == 6 and len(records) == expected_sells and not errors
+            and all(not r["missing_evidence"] and not r["anomalies"]
+                    and len(r["intervals"]) == 2
+                    and all(i["accounting_passed"] for i in r["intervals"])
+                    for r in records)
+        ),
+        "forward_validation": {
+            "status": "待连续十个交易日只读前向核对",
+            "attribution_effectiveness_validated": False,
+        },
+        "publication_authorized": False,
+    }
+
 def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
         oversold_research: dict | None = None) -> dict:
     OUT_DIR.mkdir(parents=True, exist_ok=True)

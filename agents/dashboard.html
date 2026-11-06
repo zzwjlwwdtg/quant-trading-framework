@@ -230,6 +230,13 @@
   </div>
 </div>
 
+<div class="grid" id="stop-fail-card" style="display:none">
+  <div class="card" style="border-left:4px solid #d29922">
+    <h2>止损拒单与保护配置 <small id="stop-fail-meta"></small></h2>
+    <div id="stop-fail-monitor"><small>读取本地记录中…</small></div>
+  </div>
+</div>
+
 <!-- Row 0-top-1c: 系统自我进化 (2026-10-12; 提案需所有者批准, 本机看板才有按钮) -->
 <div class="grid">
   <div class="card" id="evo-card" style="border-left:4px solid #1f6feb">
@@ -4292,6 +4299,23 @@ async function evoAct(id, action) {
   const r = await fetchJson(`/api/evolution_action?id=${encodeURIComponent(id)}&action=${action}&token=${encodeURIComponent((t || {}).token || '')}&note=${encodeURIComponent(note)}`);
   if (r && r.ok) loadEvolution(); else alert((r && r.error) || '操作失败');
 }
+async function loadStopFailMonitor() {
+  if (window.STATIC_SNAPSHOT_MODE) return;
+  const card = $('stop-fail-card'), el = $('stop-fail-monitor');
+  if (!card || !el) return;
+  card.style.display = '';
+  const d = await fetchJson('/api/stop_fail_monitor');
+  if (!d || d.error) { el.textContent = '本地止损监控记录暂不可用'; return; }
+  const escape = v => String(v == null ? '未知' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const labels = {broker:'券商保护单已配置', software:'软件止损已配置', software_triggered:'退出已触发，成交待核实', unprotected:'明确未配置保护', flat:'券商快照已清仓', unknown:'当前状态未知'};
+  const c = d.coverage || {}, rate = c.parse_rate == null ? '无候选行' : (100*c.parse_rate).toFixed(1)+'%';
+  $('stop-fail-meta').textContent = `${c.unique_events || 0} 次历史事件 · 解析 ${rate}`;
+  const configs = (d.protection || []).map(r => `<div><b>${escape(r.ticker)}</b> · ${escape(labels[r.status] || '未知')} · 持仓 ${escape(r.position_qty)} · 止损价 ${escape(r.stop_price)}${r.configured_mode ? ' · 配置 '+escape(r.configured_mode) : ''}<small style="display:block;color:var(--muted)">持仓时间 ${escape(r.position_observed_at)}；保护有效性：未知${(r.unknown_reasons || []).length ? '；'+escape(r.unknown_reasons.join('；')) : ''}</small></div>`).join('');
+  const events = (d.events || []).map(e => `<details style="padding:4px 0;border-bottom:1px solid var(--border)"><summary>${escape(e.ts)} · ${escape(e.ticker)} · STOP ${escape(e.kind)} · ${e.software_armed_at_event ? '同秒已配置软件止损' : '当时后续保护待核实'}</summary><small>${escape(e.message)}<br>来源 ${escape((e.sources || []).join('；'))}<br>1 / 5 / 15 分钟收益：${[1,5,15].map(m => {const p=(e.markouts || {})[m] || {}; return p.return_pct == null ? '未知' : Number(p.return_pct).toFixed(3)+'%';}).join(' / ')}</small></details>`).join('');
+  const health = d.risk_monitor_evidence || {};
+  el.innerHTML = `<small style="color:var(--muted)">${escape(d.note)}<br>区间 ${escape((d.window || {}).start)} 至 ${escape((d.window || {}).end)}；解析 ${c.parsed_lines || 0}/${c.candidate_lines || 0} 行；缺日志文件 ${d.missing_log_files || 0}；读取错误 ${(d.source_errors || []).length}。缓存文件时间不代替券商查询时间。<br>最近可见监控记录 ${escape(health.ts)} · ${escape(health.source)}；这不是最近成功轮询的证明。</small><div style="margin:8px 0;font-size:12px">${configs || '没有可核实的当前保护配置'}</div>${events || '<small>区间内未发现拒单；不代表保护有效。</small>'}`;
+}
+
 async function loadEvolution() {
   const d = await fetchJson('/api/evolution');
   const el = $('evo');
@@ -4354,7 +4378,7 @@ async function loadAll() {
   ];
   // Owner-only endpoints skip in static mode
   if (!window.STATIC_SNAPSHOT_MODE) {
-    promises.push(loadNav(), loadInstitutional(), loadTrades(), loadLog());
+    promises.push(loadNav(), loadInstitutional(), loadTrades(), loadLog(), loadStopFailMonitor());
   }
   await Promise.all(promises);
 }

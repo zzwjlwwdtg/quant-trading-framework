@@ -467,6 +467,193 @@ def analyze_portfolio(
     }
 
 
+def cash_event_attribution(material: dict) -> dict:
+    """只读核算历史现金字段；独立研究入口，不接入交易和组合门。
+
+    snapshots 必须按 before / decision / after 提供历史快照：
+    ts、value、source_ref、pending_orders（含剩余占款证据）。
+    postings 是该 cash_field 的实际记账增量，不是成交累计值：
+    posting_id、ts、delta、kind、source_ref、currency、cash_field。
+    coverage 的每项须明确说明对应区间的流水完整，不能由空列表推定。
+    """
+    from decimal import Decimal, InvalidOperation
+
+    def amount(value):
+        if value is None or isinstance(value, bool):
+            raise ValueError("缺失金额")
+        try:
+            result = Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            raise ValueError("无效金额") from None
+        if not result.is_finite():
+            raise ValueError("非有限金额")
+        return result
+
+    def instant(value):
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("时间缺少时区")
+        return parsed.astimezone(timezone.utc)
+
+    missing, anomalies = [], []
+    report = {
+        "order_id": material.get("order_id"),
+        "status": "无法归因",
+        "cash_field": material.get("cash_field"),
+        "currency": material.get("currency"),
+        "field_definition": material.get("field_definition"),
+        "source_ref": material.get("source_ref"),
+        "trigger_shortfall": None,
+        "intervals": [],
+        "snapshots": [],
+        "missing_evidence": missing,
+        "anomalies": anomalies,
+        "avoidable_turnover": "无法判断；不依据盈亏或事后反弹推断",
+    }
+    try:
+        unit = amount(material.get("minor_unit"))
+        expected_unit = {"USD": Decimal("0.01"), "HKD": Decimal("0.01"), "JPY": Decimal("1")}.get(material.get("currency"))
+        if unit <= 0 or expected_unit is None or unit != expected_unit:
+            raise ValueError
+    except ValueError:
+        missing.append("账户币种最小记账单位")
+        unit = None
+    for key in ("order_id", "cash_field", "currency", "field_definition", "source_ref"):
+        if not material.get(key):
+            missing.append(key)
+    try:
+        decision_time = instant(material.get("decision_ts"))
+    except (ValueError, TypeError):
+        decision_time = None
+        missing.append("带时区的真实决策时间")
+
+    snapshots = {}
+    raw_snapshots = material.get("snapshots")
+    if not isinstance(raw_snapshots, dict):
+        missing.append("历史快照材料结构")
+        raw_snapshots = {}
+    raw_coverage = material.get("coverage")
+    if not isinstance(raw_coverage, dict):
+        missing.append("历史流水完整性材料结构")
+        raw_coverage = {}
+    for role in ("before", "decision", "after"):
+        raw = raw_snapshots.get(role)
+        try:
+            if not isinstance(raw, dict) or not raw.get("source_ref"):
+                raise ValueError
+            ts, value = instant(raw.get("ts")), amount(raw.get("value"))
+            if raw.get("currency") != material.get("currency"):
+                raise ValueError
+            if raw.get("cash_field") != material.get("cash_field"):
+                raise ValueError
+            snapshots[role] = (ts, value)
+            # 各时点的剩余占款仅展示，不跨快照相加，不再从现金字段扣除。
+            pending = raw.get("pending_orders")
+            if not isinstance(pending, list):
+                missing.append(f"{role}:未成交订单历史占款明细")
+                pending = None
+            else:
+                ids = set()
+                for order in pending:
+                    try:
+                        if not isinstance(order, dict) or not isinstance(order.get("order_id"), str):
+                            raise ValueError
+                        oid = order["order_id"]
+                        if not oid or oid in ids or not order.get("source_ref"):
+                            raise ValueError
+                        ids.add(oid)
+                        if amount(order.get("reserved_remaining")) < 0:
+                            raise ValueError
+                    except (ValueError, TypeError, KeyError):
+                        anomalies.append(f"{role}:占款证据无效或订单重复")
+            report["snapshots"].append({
+                "role": role, "ts": ts.isoformat(), "value": str(value),
+                "source_ref": raw["source_ref"], "pending_orders": pending,
+            })
+        except (ValueError, TypeError, AttributeError):
+            missing.append(f"{role}:同币种同字段的历史快照及来源")
+
+    if decision_time is not None and "decision" in snapshots:
+        if snapshots["decision"][0] != decision_time:
+            anomalies.append("决策快照时间与决策时间不一致")
+        try:
+            required = amount(material.get("required_cash"))
+            if required < 0 or not material.get("required_cash_source"):
+                raise ValueError
+            report["trigger_shortfall"] = str(max(
+                Decimal("0"), required - snapshots["decision"][1]))
+        except ValueError:
+            missing.append("当时规则要求的现金金额及原始依据")
+
+    postings, seen = [], {}
+    raw_postings = material.get("postings")
+    if not isinstance(raw_postings, list):
+        missing.append("实际现金记账流水")
+        raw_postings = []
+    for raw in raw_postings:
+        try:
+            if not isinstance(raw, dict) or not isinstance(raw.get("posting_id"), str):
+                raise ValueError
+            pid = raw["posting_id"]
+            if not pid or not raw.get("source_ref") or not raw.get("kind"):
+                raise ValueError
+            if raw.get("currency") != material.get("currency"):
+                raise ValueError
+            if raw.get("cash_field") != material.get("cash_field"):
+                raise ValueError
+            ts, delta = instant(raw.get("ts")), amount(raw.get("delta"))
+            signature = (ts, delta, raw["kind"], raw["currency"], raw["cash_field"], raw.get("order_id"), raw.get("settlement_ref"))
+            if pid in seen:
+                if seen[pid] != signature:
+                    anomalies.append(f"同一记账编号冲突:{pid}")
+                continue
+            seen[pid] = signature
+            postings.append({
+                "posting_id": pid, "ts": ts.isoformat(), "delta": str(delta),
+                "kind": raw["kind"], "source_ref": raw["source_ref"],
+                "order_id": raw.get("order_id"), "settlement_ref": raw.get("settlement_ref"),
+            })
+        except (ValueError, TypeError, KeyError):
+            anomalies.append("现金流水缺失字段、口径冲突或金额无效")
+
+    for left, right in (("before", "decision"), ("decision", "after")):
+        label = f"{left}_to_{right}"
+        if left not in snapshots or right not in snapshots:
+            continue
+        start, opening = snapshots[left]
+        end, closing = snapshots[right]
+        if start > end:
+            anomalies.append(f"{label}:快照时间倒置")
+            continue
+        coverage = raw_coverage.get(label) or {}
+        complete = isinstance(coverage, dict) and (
+            coverage.get("complete") is True
+            and bool(coverage.get("source_ref"))
+            and coverage.get("start") == start.isoformat()
+            and coverage.get("end") == end.isoformat()
+            and coverage.get("cash_field") == material.get("cash_field")
+            and coverage.get("currency") == material.get("currency")
+        )
+        if not complete:
+            missing.append(f"{label}:同字段区间流水完整性证据")
+        # 左开右闭：跨日结算与分段回放不重复入账。
+        events = [p for p in postings if start < instant(p["ts"]) <= end]
+        delta = sum((amount(p["delta"]) for p in events), Decimal("0"))
+        residual = closing - opening - delta
+        passed = complete and unit is not None and abs(residual) <= unit and not anomalies
+        report["intervals"].append({
+            "name": label, "opening": str(opening), "closing": str(closing),
+            "posted_delta": str(delta), "unexplained_difference": str(residual),
+            "events": events, "coverage_source": coverage.get("source_ref") if isinstance(coverage, dict) else None,
+            "accounting_passed": passed,
+        })
+        if complete and unit is not None and abs(residual) > unit:
+            anomalies.append(f"{label}:核算残差超过最小记账单位")
+    if (not missing and not anomalies and len(report["intervals"]) == 2
+            and all(row["accounting_passed"] for row in report["intervals"])):
+        report["status"] = "资金变动已核对；事件关联不等于责任归因"
+    return report
+
 def pretrade_portfolio_gate(
     positions: list[dict],
     *,

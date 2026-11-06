@@ -212,6 +212,31 @@ def positions_by_ticker(pos) -> dict:
 
 
 # ---------- 对账 ----------
+def read_cash_evidence(path: Path) -> dict:
+    """读取研究材料并保留文件行号；不查询当前账户，不推测历史现金口径。
+
+    每行是一笔现金纪律卖出的材料包，包含 order_id、decision_ts、
+    cash_field、currency、minor_unit、field_definition、snapshots、
+    postings、coverage。原始账务字段须由材料提供者明确映射，不能把
+    累计成交额直接视为现金流水，也不能把当前订单状态补成历史状态。
+    """
+    rows, errors = [], []
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {"rows": [], "errors": ["缺失现金历史材料文件"]}
+    for number, line in enumerate(lines, 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+            if not isinstance(row, dict):
+                raise ValueError
+            rows.append({**row, "source_ref": f"{Path(path).name}:{number}"})
+        except (ValueError, TypeError):
+            errors.append(f"现金材料格式错误:{Path(path).name}:{number}")
+    return {"rows": rows, "errors": errors}
+
 def reconcile(local_events, broker_events, broker_pos, tickers):
     import fill_ledger as fl
     import cohort_tracker as ct
