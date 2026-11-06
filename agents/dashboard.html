@@ -225,6 +225,7 @@
 <div class="grid">
   <div class="card" style="border-left:4px solid #a371f7">
     <h2 title="每天美股收盘后，AI 读取卖出前后的 log 和新闻：概括当时技术面/消息面，给出 5 条当时卖出的理由（标注技术面/消息面并附证据）和 3 条局限性；事后走势只作参考。补现金卖单是机械操作，不复盘。">🔍 卖出复盘 <small id="postmortem-meta">AI Post-mortem</small></h2>
+    <div id="execution-evidence"><small>成交原始指标证据尚未加载</small></div>
     <div id="postmortem"><small style="color:var(--muted)">加载中...</small></div>
   </div>
 </div>
@@ -4165,9 +4166,64 @@ async function loadIndexWatch() {
   el.innerHTML = blocks + `<div style="font-size:10px; color:var(--muted); line-height:1.45">⚠ ${w.caveat || ''}</div>`;
 }
 
+/* EVO-20261104-2：独立展示原始指标；数值大小不代表证据是否完整。 */
+function renderExecutionEvidence(report) {
+  const el = $('execution-evidence');
+  if (!el) return;
+  const esc = value => String(value ?? 'unknown').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+  if (!report || !report.fields) {
+    el.innerHTML = `<small>成交原始指标：unknown · ${esc(report?.error || '尚无独立证据报告')}</small>`;
+    return;
+  }
+  const labels = {
+    volume_pct_of_20d_avg: '全日量/前20日均量（事后）%',
+    spread_pct_at_fill: '成交时价差%',
+    slippage_vs_mid_bps: '成交对mid偏离bps',
+  };
+  const fields = Object.keys(labels);
+  const number = value => typeof value === 'number' && Number.isFinite(value)
+    ? esc(value.toFixed(4)) : 'null / unknown';
+  const coverage = fields.map(field => {
+    const stats = report.fields[field] || {};
+    return `${esc(labels[field])}：${esc(stats.known)}/${esc(stats.denominator)} ` +
+      `(${stats.coverage == null ? 'unknown' : number(stats.coverage * 100) + '%'})`;
+  }).join(' · ');
+  const rows = (report.records || []).map(row => `<tr>
+    <td>${esc(row.order_id)} · ${esc(row.ticker)}</td>
+    ${fields.map(field => `<td>${number(row[field])}</td>`).join('')}
+    <td>${esc(row.data_completeness)}</td>
+    <td><details><summary>缺失/来源/时间</summary>
+      <pre style="white-space:pre-wrap">${esc(JSON.stringify({
+        missing_fields: row.missing_fields,
+        missing_reasons: row.missing_reasons,
+        source: row.source,
+        timestamps: row.timestamps,
+        reconciliation: row.reconciliation,
+      }, null, 2))}</pre></details></td>
+  </tr>`).join('');
+  el.innerHTML = `<details style="margin-bottom:8px">
+    <summary>成交原始指标与证据完整性 · ${esc(report.found)}/30笔</summary>
+    <div style="margin:5px 0">${coverage}</div>
+    <small>全日量比仅为事后统计；报价缺失、不同期或过期时为null/unknown。
+    买卖侧向分别计算对mid偏离；证据完整性独立于事后判定，不生成执行优劣评级。</small>
+    <div style="overflow-x:auto"><table><thead><tr><th>订单</th>
+      ${fields.map(field => `<th>${esc(labels[field])}</th>`).join('')}
+      <th>证据完整性</th><th>证据明细</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <pre style="white-space:pre-wrap">${esc(JSON.stringify({
+      missing_reasons: Object.fromEntries(fields.map(field =>
+        [field, report.fields[field]?.missing_reasons || {}])),
+      selection_verified: report.selection_verified,
+      unknown_order_times: report.unknown_order_times,
+      acceptance_status: report.acceptance_status,
+    }, null, 2))}</pre>
+  </details>`;
+}
+
 // 卖出复盘 (2026-10-08): 每笔卖出 5 条理由 + 3 条局限性, 可展开
 async function loadPostmortem() {
   const d = await fetchJson('/api/postmortem');
+  renderExecutionEvidence(d && d.execution_evidence_report);
   const el = $('postmortem');
   if (!el) return;
   if (!d || !d.exists || !(d.reviews || []).length) {

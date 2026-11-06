@@ -611,6 +611,58 @@ def replay_execution_audit(
     }
 
 
+def replay_execution_evidence_metrics(
+    *, ledger_path: Path | None = None, fees_path: Path | None = None,
+    market_by_order: dict | None = None,
+) -> dict:
+    """EVO-20261104-2：固定最近30笔权威卖出，只读，不补行情、不改复盘。
+
+    直接使用权威读取器的量价、增量及拆股口径；未识别字段明确缺失，
+    不以 trade_log、计划估算或自建累计成交算法补齐。无法排序的订单
+    保留在 unknown_order_times，并阻止声称最近30笔选择已核实。
+    """
+    import fill_ledger
+    from execution_analytics import (
+        evidence_time, execution_evidence_metrics, execution_evidence_coverage,
+    )
+
+    evidence = fill_ledger.sell_execution_evidence(ledger_path, fees_path)
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    rows = sorted(
+        evidence,
+        key=lambda r: (
+            evidence_time(r.get("last_fill_ts")) or epoch,
+            str(r.get("order_id") or ""),
+        ),
+        reverse=True,
+    )
+    unknown_times = [
+        r.get("order_id") for r in rows
+        if evidence_time(r.get("last_fill_ts")) is None
+    ]
+    ids = [str(r.get("order_id") or "") for r in rows]
+    identities_verified = all(ids) and len(ids) == len(set(ids))
+    market_by_order = market_by_order or {}
+    records = [
+        execution_evidence_metrics(
+            row, market_by_order.get(str(row.get("order_id"))))
+        for row in rows[:30]
+    ]
+    report = execution_evidence_coverage(records)
+    report.update({
+        "proposal": "EVO-20261104-2",
+        "read_only": True,
+        "selection": "权威sell_execution_evidence全部订单按last_fill_ts降序，固定最近30笔",
+        "selection_verified": not unknown_times and identities_verified,
+        "unknown_order_times": unknown_times,
+        "identities_verified": identities_verified,
+        "all_sell_count": len(rows),
+        "records": records,
+        "hindsight_policy": "不读取、覆盖或改写历史事后结论",
+    })
+    return report
+
+
 def reconcile_sell_reviews(sells: list[dict], reviews: list[dict],
                            reviewed: dict | None = None) -> dict:
     """按卖出订单对账；成交行映射保留，不把复盘成功等同于已有判定。"""
@@ -771,6 +823,16 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
         latest["sell_review_coverage"] = {
             "error": f"对账材料读取失败：{type(exc).__name__}",
             "coverage": None,
+        }
+    # 只追加独立展示；不回写历史归档、不把证据完整性传给AI或事后判定。
+    try:
+        latest["execution_evidence_report"] = replay_execution_evidence_metrics()
+    except Exception as exc:
+        latest["execution_evidence_report"] = {
+            "proposal": "EVO-20261104-2", "read_only": True,
+            "data_completeness": "unknown", "validation_passed": False,
+            "publication_authorized": False,
+            "error": f"权威成交证据读取失败：{type(exc).__name__}",
         }
     LATEST.write_text(json.dumps(latest, ensure_ascii=False, indent=1), encoding="utf-8")
     return latest
