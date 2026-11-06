@@ -2,6 +2,8 @@
 
 时段 (日本时间):
   morning 09:00  隔夜/上个交易日以来的研报精选 + 昨夜已公布的重大数据 + 今天将公布的重大数据
+  early   11:00  开盘后行业板块涨跌与连续走势
+  midday  12:35  上午收盘行业板块涨跌与连续走势
   close   16:30  今天新出的研报精选 + 今天已公布的数据 (公布值 vs 预期/前值) + 今晚预告
   evening 21:00  今晚到明早将公布的中美日重大数据 (时间换算成日本时间)
   now            按需: 合并以上内容的即时版 (给机器人现场调用)
@@ -18,13 +20,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from . import sources  # noqa: E402
+from . import sectors, sources  # noqa: E402
 
 JST = timezone(timedelta(hours=9))
 BJT = timezone(timedelta(hours=8))
 OUT_DIR = Path(__file__).resolve().parents[1] / "signals" / "cn_brief"
-SLOTS = ("morning", "close", "evening", "now")
-SLOT_TITLES = {"morning": "A股盘前定调", "close": "A股收盘后研报 & 数据回顾",
+SLOTS = ("morning", *sectors.SECTOR_SLOTS, "close", "evening", "now")
+SLOT_TITLES = {"morning": "A股盘前定调", "early": "A股早盘行情", "midday": "A股午盘复盘",
+               "close": "A股收盘后研报 & 数据回顾",
                "evening": "今晚重大经济数据提醒", "now": "A股研报 & 经济数据 (即时)"}
 
 # ── 研报精选 ──────────────────────────────────────────────────────────────
@@ -239,6 +242,12 @@ def build_brief(slot: str = "now", now: datetime | None = None, use_ai: bool = T
             save(out)
         return out
     md = [f"## {SLOT_TITLES[slot]}  ·  {now.strftime('%Y-%m-%d %H:%M')} JST"]
+    if slot in sectors.SECTOR_SLOTS:
+        out["sectors"] = sectors.build(now, slot)
+        out["markdown"] = "\n".join([*md, *sectors.render(out["sectors"])])
+        if write_files and out["sectors"]["status"] == "READY":
+            save(out)
+        return out
 
     # 研报
     if slot != "evening":

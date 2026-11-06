@@ -7,7 +7,7 @@
     GET /api/bot/summary             一次拿全: 账户净值/回撤、持仓、今日操作、系统健康、AI 复核通道、待批提案
     GET /api/bot/events?since=ISO&kinds=order,execution&limit=200
                                      统一操作流 (按时间升序); 返回 next_since, 下次带上它只取新的
-    GET /api/bot/brief?slot=morning  cn_brief 最新汇报 (morning/close/evening/now)
+    GET /api/bot/brief?slot=morning  cn_brief 最新汇报 (morning/early/midday/close/evening/now)
   命令行:  python bot_gateway.py events --since 2026-10-19T00:00:00+09:00
            python bot_gateway.py summary | index | tick
   推送:    看门狗任务 bot_feed_tick 每 ~5 分钟把新事件 POST 到 BOT_WEBHOOK_URL (secrets.local.json)
@@ -228,7 +228,7 @@ def summary(positions: dict | None = None, nav: dict | None = None, health: dict
 
 
 def brief(slot: str = "morning") -> dict:
-    slot = slot if slot in ("morning", "close", "evening", "now") else "morning"
+    slot = slot if slot in ("morning", "early", "midday", "close", "evening", "now") else "morning"
     d = _read_json(f"cn_brief/latest_{slot}.json")
     if slot == "morning" and d and (d.get("overnight") or {}).get("change_scope") != "PREVIOUS_COMPLETED_SOURCE_SESSION_NOT_A_CLOSE":
         return {"slot":slot,"title":"旧晨报仅保留历史档案","generated_at":d.get("generated_at"),
@@ -243,7 +243,7 @@ ENDPOINTS = [
     ("/api/bot", R, "接口目录（本表）"),
     ("/api/bot/summary", R, "一次拿全：净值/回撤、持仓、今日操作、系统健康、AI 复核通道、待批提案、最近告警"),
     ("/api/bot/events", R, "统一操作流。参数 since=ISO时间 kinds=逗号分隔(" + ",".join(KINDS) + ") limit=默认200；返回 next_since"),
-    ("/api/bot/brief", R, "A股研报/经济数据汇报。参数 slot=morning|close|evening|now"),
+    ("/api/bot/brief", R, "A股行情/研报/经济数据汇报。参数 slot=morning|early|midday|close|evening|now"),
     ("/api/bot/radar", R, "公开重大新闻与机会线索缓存；附原文证据/时间/链接。无持仓，无原始Codex报告；GET不调用AI。"),
     ("/api/bot/research", R, "免费公开A股研报题摘与宏观日历；机构/日期/原链独立归因，未读正文。仅缓存，无AI分析/账户/交易。"),
     ("/api/bot/outlook", R, "固定版本公共市场观察框架：region=CN|US，宽基/风格ETF、量能代理、板块相对强度；完成日线，不是实时报价。GET仅缓存、无AI/账户/交易。"),

@@ -13,6 +13,8 @@ STATE_PATH = STATE_DIR / "state.json"
 # 固定汇报时段 (用户 2026-10-19 选定): 盘前 9:00 / 收盘后 16:30 / 晚间 21:00 (日本时间)
 SLOTS = {
     "morning": (9, 0),
+    "early": (11, 0),
+    "midday": (12, 35),
     "close": (16, 30),
     "evening": (21, 0),
 }
@@ -53,7 +55,8 @@ def due_slots(now: datetime, state: dict) -> list[str]:
         if not slot_runs_on(slot, now):
             continue
         start = now.replace(hour=h, minute=m, second=0, microsecond=0)
-        if start <= now < start + timedelta(minutes=SLOT_GRACE_MIN) and done.get(slot) != today:
+        grace = 25 if slot in ("early", "midday") else SLOT_GRACE_MIN
+        if start <= now < start + timedelta(minutes=grace) and done.get(slot) != today:
             out.append(slot)
     return out
 

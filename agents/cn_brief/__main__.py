@@ -1,6 +1,6 @@
 """命令行入口 (在 agents 目录下运行): python -m cn_brief <命令>
 
-  run --slot morning|close|evening|now [--no-push] [--no-ai] [--json]
+  run --slot morning|early|midday|close|evening|now [--no-ai] [--json]
         生成一份汇报; 默认打印 markdown 到标准输出并写 signals/cn_brief/latest_<slot>.md/.json
         --push 才会推送到已配置的渠道 (机器人自己转发时不用加)
   calendar [--days N] [--all] [--json]
@@ -46,11 +46,12 @@ def main(argv=None) -> int:
 
     if a.cmd == "run":
         b = B.build_brief(a.slot, use_ai=not a.no_ai)
-        if a.push:
+        sector_unavailable = a.slot in B.sectors.SECTOR_SLOTS and b["sectors"]["status"] != "READY"
+        if a.push and not sector_unavailable:
             from .push import push
-            b["push"] = push(b["title"], b["markdown"], slot=a.slot)
+            b["push"] = push(b["title"], b["markdown"], slot=a.slot, data={"generated_at": b["generated_at"]})
         print(_dump(b) if a.json else b["markdown"])
-        return 2 if b["errors"] else 0
+        return 2 if b["errors"] or sector_unavailable else 0
     if a.cmd == "calendar":
         from . import sources
         today_bjt = datetime.now(JST).astimezone(B.BJT).date()

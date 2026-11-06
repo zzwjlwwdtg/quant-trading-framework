@@ -66,7 +66,11 @@ def run_tick(now: datetime | None = None, dry_run: bool = False) -> dict:
 
     for slot in S.due_slots(now, state):
         b = B.build_brief(slot, now=now)
-        res = {"sent": [], "skipped": ["dry_run"]} if dry_run else push(b["title"], b["markdown"], slot=slot)
+        if slot in B.sectors.SECTOR_SLOTS and b["sectors"]["status"] != "READY":
+            done["slots"].append({"slot": slot, "push": {"sent": [], "skipped": ["sector_snapshot_unverified"]}})
+            continue
+        res = {"sent": [], "skipped": ["dry_run"]} if dry_run else push(
+            b["title"], b["markdown"], slot=slot, data={"generated_at": b["generated_at"]})
         _log(f"slot:{slot}", b["title"], res)
         S.mark_slot_done(state, slot, now)
         done["slots"].append({"slot": slot, "push": res})
