@@ -19,6 +19,7 @@ if str(AGENTS_DIR) not in sys.path:
     sys.path.insert(0, str(AGENTS_DIR))
 
 import ai_prompt
+import ai_cli_cooldown
 
 
 class AICallAuditLogTests(unittest.TestCase):
@@ -28,8 +29,11 @@ class AICallAuditLogTests(unittest.TestCase):
         self.log_path = Path(self.tmpdir) / "ai_calls.jsonl"
         self._orig = ai_prompt.AI_CALL_LOG_PATH
         ai_prompt.AI_CALL_LOG_PATH = self.log_path
+        self._cooldown_patch = patch.object(ai_cli_cooldown, "STATE_PATH", Path(self.tmpdir) / "cooldown.json")
+        self._cooldown_patch.start()
 
     def tearDown(self):
+        self._cooldown_patch.stop()
         ai_prompt.AI_CALL_LOG_PATH = self._orig
         import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)

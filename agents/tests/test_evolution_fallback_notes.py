@@ -16,7 +16,9 @@ class EvoTmp(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.p = [patch.object(evo, "PROPOSALS", self.tmp / "proposals.json"),
-                  patch.object(evo, "LOG", self.tmp / "log.jsonl")]
+                  patch.object(evo, "LOG", self.tmp / "log.jsonl"),
+                  patch.object(evo, "HERE", self.tmp),
+                  patch.object(evo.ai_cli_cooldown, "STATE_PATH", self.tmp / "ai_cli_cooldown.json")]
         for x in self.p:
             x.start()
 

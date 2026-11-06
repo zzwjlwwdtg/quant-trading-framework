@@ -346,6 +346,16 @@ class ClaudeGateTests(unittest.TestCase):
 
 
 class CliFallbackTests(unittest.TestCase):
+    def setUp(self):
+        import ai_cli_cooldown
+        import tempfile
+        from pathlib import Path
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        state = patch.object(ai_cli_cooldown, "STATE_PATH", Path(temp.name) / "cooldown.json")
+        state.start()
+        self.addCleanup(state.stop)
+
     def test_default_policy_routes_to_claude_without_calling_codex(self):
         # 2026-10-08 用户决定: 默认 Claude 优先
         with patch.dict(os.environ, {}, clear=True), patch.object(

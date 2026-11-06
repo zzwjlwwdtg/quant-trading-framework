@@ -41,6 +41,7 @@ class Base(unittest.TestCase):
                   patch.object(ev, "EVO_DIR", evo), patch.object(ev, "PROPOSALS", evo / "proposals.json"),
                   patch.object(ev, "LOG", evo / "log.jsonl"), patch.object(ev, "TOKEN", evo / ".token"),
                   patch.object(ev, "KILL_SWITCH", self.agents / ".evolution_off"),
+                  patch.object(ev.ai_cli_cooldown, "STATE_PATH", self.agents / "signals" / "ai_cli_cooldown.json"),
                   patch.object(ev, "WORKTREES", self.td / ".evo_worktrees"),
                   patch.object(ev, "in_dev_window", return_value=True)]
         for x in self.p:
@@ -90,6 +91,7 @@ class Guard(unittest.TestCase):
     def test_guard_diff(self):
         self.assertEqual(ev.guard_diff(["agents/dashboard.html"], "+<div>ok</div>\n"), [])
         self.assertTrue(ev.guard_diff(["agents/evolution.py"], ""))
+        self.assertTrue(ev.guard_diff(["agents/ai_cli_cooldown.py"], ""))
         self.assertTrue(ev.guard_diff(["docs/data/x.json"], ""))
         self.assertTrue(ev.guard_diff(["agents/paper_trader.py"], "-CASH_FLOOR_USD = 0.0\n+CASH_FLOOR_USD = -1e6\n"))
         self.assertTrue(ev.guard_diff(["agents/config.py"], "+TRADING_ACCOUNT_MODE = 'REAL'\n"))
@@ -97,6 +99,7 @@ class Guard(unittest.TestCase):
 
     def test_needs_review(self):
         self.assertTrue(ev.needs_review(["agents/paper_trader.py", "agents/dashboard.html"]))
+        self.assertTrue(ev.needs_review(["agents/ai_cli_cooldown.py"]))
         self.assertFalse(ev.needs_review(["agents/dashboard.html", "agents/tests/test_x.py"]))
 
 
@@ -174,10 +177,23 @@ class QuotaAndWip(Develop):
     def test_quota_failure_returns_to_approved_without_requeue(self):
         self._approve()
         quota = lambda wt, prompt: (False, "You've hit your limit · resets 2:30pm (Asia/Tokyo)")
-        with patch.object(ev, "_claude_dev", quota), patch.object(ev, "run_tests", self._tests()):
+        with patch.object(ev, "_claude_dev", quota), \
+             patch.object(ev, "_codex_dev", return_value=(False, "codex unavailable")), \
+             patch.object(ev, "run_tests", self._tests()):
             res = ev.work()
         self.assertEqual(ev.get(ev.load(), "EVO-1")["status"], "approved")
         self.assertNotIn({"requeued": True}, res)            # 不会立刻死循环重排
+
+    def test_cooldown_and_codex_failure_returns_to_approved(self):
+        self._approve()
+        with patch.object(ev.ai_cli_cooldown, "cooldown_reason", return_value="quota_cooldown: waiting for reset"), \
+             patch.object(ev, "_claude_dev") as claude, \
+             patch.object(ev, "_codex_dev", return_value=(False, "codex unavailable")), \
+             patch.object(ev, "run_tests", self._tests()):
+            res = ev.work()
+        claude.assert_not_called()
+        self.assertEqual(ev.get(ev.load(), "EVO-1")["status"], "approved")
+        self.assertNotIn({"requeued": True}, res)
 
     def test_failed_dev_kept_on_branch_and_retry(self):
         self._approve()

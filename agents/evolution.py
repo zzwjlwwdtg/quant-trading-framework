@@ -27,6 +27,8 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import ai_cli_cooldown
+
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 EVO_DIR = HERE / "signals" / "evolution"
@@ -45,6 +47,7 @@ TEST_TIMEOUT_SEC = 20 * 60
 # 改动若涉及这些文件 → 直接拒绝合并 (防止"自我进化"给自己放权)
 FORBIDDEN_FILES = (
     "agents/evolution.py", "agents/_evolution_propose.bat", "agents/_evolution_worker.bat",
+    "agents/ai_cli_cooldown.py",
     "agents/_webui_watchdog.py", "agents/_watchdog.py", "agents/.evolution_off",
     "agents/tests/test_evolution.py", "agents/secrets.local.json", ".gitignore",
     "agents/snap_public.bat", "agents/_publish_gh_pages.py",
@@ -63,6 +66,7 @@ TRADING_CRITICAL = (
     "agents/claude_gate.py", "agents/trading_contracts.py", "agents/auto_rebalance.py",
     "agents/thesis_config.py", "agents/signals/thesis_config.json", "agents/config.py",
     "agents/portfolio_analytics.py", "agents/option_flow.py", "agents/ai_prompt.py",
+    "agents/ai_cli_cooldown.py",
     "agents/decision_context.py", "agents/semi_risk_guard.py", "agents/supply_calendar.py",
     "agents/fill_ledger.py", "agents/cohort_tracker.py",
 )
@@ -439,18 +443,26 @@ def _claude_dev(worktree: Path, prompt: str, model: str | None = None) -> tuple[
 
 
 def _dev_with_fallback(pid: str, model: str | None, wt: Path, prompt: str) -> tuple[bool, str]:
-    fn = _claude_dev                      # 运行时取 (测试可能替换成只收两个参数的函数)
-    import inspect
-    try:
-        takes_model = "model" in inspect.signature(fn).parameters
-    except (TypeError, ValueError):
-        takes_model = False
-    ok, out = fn(wt, prompt, model=model) if takes_model else fn(wt, prompt)
-    _save_dev_output(pid, "claude", ok, out)
+    cooldown = ai_cli_cooldown.cooldown_reason()
+    if cooldown:
+        # 与审计/复盘共享额度状态; 到恢复时间后的下一项任务才重新尝试 Claude.
+        ok, out = False, cooldown
+    else:
+        fn = _claude_dev                  # 运行时取 (测试可能替换成只收两个参数的函数)
+        import inspect
+        try:
+            takes_model = "model" in inspect.signature(fn).parameters
+        except (TypeError, ValueError):
+            takes_model = False
+        started_at = datetime.now(timezone.utc)
+        ok, out = fn(wt, prompt, model=model) if takes_model else fn(wt, prompt)
+        ai_cli_cooldown.record_result(success=ok, status=out, started_at=started_at)
+        _save_dev_output(pid, "claude", ok, out)
     # 2026-11-02: Claude 登录失效/额度用完/未安装时改用 Codex 开发 (用户 10/18 定的
     # "Claude 优先, Codex 备选"). 交易关键文件照旧只到 ready_for_review, 需用户二次确认.
-    if not ok and _claude_unavailable(out):
-        _log("dev_fallback", id=pid, provider="codex", reason=str(out)[-160:])
+    if not ok and (cooldown or _claude_unavailable(out)):
+        _log("dev_fallback", id=pid, provider="codex", reason=str(out)[-160:],
+             claude_skipped=bool(cooldown))
         claude_out = out
         try:
             _p = get(load(), pid) or {}

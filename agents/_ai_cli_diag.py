@@ -18,9 +18,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import ai_prompt
+import ai_cli_cooldown
 import claude_gate
 
 OUT = Path(__file__).resolve().parent / "logs" / "ai_cli_diag_last.json"
+CLAUDE_HELP_OUT = Path(__file__).resolve().parent / "logs" / "claude_help_full.txt"
 PROMPT = "Reply with exactly the two letters OK and nothing else."
 
 
@@ -58,7 +60,7 @@ def codex_candidates():
 def _probe_status(exec_result: dict | None, last_message: str | None = None) -> tuple[bool, str]:
     """从 _run 的结果判断一次 CLI 探测是否算真实成功.
 
-    成功判据: rc==0 且输出里包含 PROMPT 要求的 'OK' (大小写忽略, 允许前后空白).
+    成功判据: rc==0 且输出正好是 PROMPT 要求的 'OK' (大小写忽略, 允许前后空白).
     其它一律视为失败, status 字符串尽量保留 rc + stderr 片段供事后追溯.
     """
     if not isinstance(exec_result, dict):
@@ -70,7 +72,7 @@ def _probe_status(exec_result: dict | None, last_message: str | None = None) -> 
         return False, f"error: {err}"
     rc = exec_result.get("rc")
     text = (last_message or "") or (exec_result.get("stdout") or "")
-    if rc == 0 and "ok" in (text or "").strip().lower():
+    if rc == 0 and (text or "").strip().lower() == "ok":
         return True, "ok"
     tail = (exec_result.get("stderr") or exec_result.get("stdout") or "")[-240:]
     return False, f"exit={rc} stderr={tail.strip()}"
@@ -148,26 +150,37 @@ def main():
     cl = ai_prompt._find_claude_cli()
     claude_probe_ok = False
     claude_probe_status = "not_installed"
-    if cl:
+    cooldown = ai_cli_cooldown.cooldown_reason()
+    if cooldown:
+        # A scheduled diagnostic must not spend a request on a known exhausted
+        # quota, nor report a skipped request as a new failed/successful probe.
+        res["claude"] = {"path": cl, "skipped": True, "reason": cooldown}
+    elif cl:
         res["claude_help"] = _run([cl, "--help"], timeout=30)   # 2026-10-12: 自我进化需要确认可用参数
         try:   # _run 只保留尾部 3000 字符；完整 help 另存一份供核对参数
             _h = subprocess.run([cl, "--help"], capture_output=True, text=True, timeout=30,
                                 encoding="utf-8", errors="replace")
-            (Path(__file__).parent / "logs" / "claude_help_full.txt").write_text(
+            CLAUDE_HELP_OUT.parent.mkdir(parents=True, exist_ok=True)
+            CLAUDE_HELP_OUT.write_text(
                 (_h.stdout or "") + "\n--- stderr ---\n" + (_h.stderr or ""), encoding="utf-8")
         except Exception as _e:
             res["claude_help_full_error"] = str(_e)
+        started_at = datetime.now(timezone.utc)
         claude_exec = _run([cl, "-p"], input_text=PROMPT, timeout=180)
         res["claude"] = {"path": cl, "version": _run([cl, "--version"], timeout=30),
                          "exec": claude_exec}
         claude_probe_ok, claude_probe_status = _probe_status(claude_exec)
+        ai_cli_cooldown.record_result(success=claude_probe_ok, status=claude_probe_status,
+                                      started_at=started_at)
         res["claude"]["probe_ok"] = claude_probe_ok
         res["claude"]["probe_status"] = claude_probe_status
     # EVO-20261015-1: 把两个通道的探测结果写进共用 health state
     try:
         res["health"] = {
             "codex":  _emit_probe_outcome("codex",  codex_probe_ok,  codex_probe_status),
-            "claude": _emit_probe_outcome("claude", claude_probe_ok, claude_probe_status),
+            "claude": ({"channel": "claude", "skipped": True, "reason": cooldown}
+                       if cooldown else
+                       _emit_probe_outcome("claude", claude_probe_ok, claude_probe_status)),
             "state":  claude_gate._load_health_state(),
         }
     except Exception as _e:

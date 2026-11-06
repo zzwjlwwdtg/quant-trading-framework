@@ -1,6 +1,7 @@
 """2026-10-08 用户决定: 默认 Claude (Codex 需要经常换账号), Claude 失败或限额时退回 Codex."""
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -10,9 +11,17 @@ if str(AGENTS_DIR) not in sys.path:
     sys.path.insert(0, str(AGENTS_DIR))
 
 import ai_prompt
+import ai_cli_cooldown
 
 
 class ClaudeFirstPolicy(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        state = patch.object(ai_cli_cooldown, "STATE_PATH", Path(temp.name) / "cooldown.json")
+        state.start()
+        self.addCleanup(state.stop)
+
     def test_all_launchers_claude_first(self):
         for f in ("_watchdog.py", "_webui_watchdog.py"):
             src = (AGENTS_DIR / f).read_text(encoding="utf-8")

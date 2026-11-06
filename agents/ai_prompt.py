@@ -22,11 +22,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from config import BASE_DIR, SIGNALS_DIR
+import ai_cli_cooldown
 
 
 # 交易日志、AI 分析和自动挂单目标都属于美股交易日。运行机器在 JST，
@@ -1442,16 +1443,9 @@ _AI_CLI_PROVIDERS = {"codex", "claude"}
 def get_ai_cli_policy() -> dict[str, str]:
     """Return the centrally configured CLI provider order.
 
-    ``AI_CLI_PRIMARY`` defaults to Codex. ``AI_CLI_FALLBACK`` defaults to
-    ``none`` so a transient Codex failure cannot silently spend Claude quota,
-    especially from the 30-minute public snapshot job.  Operators can opt in
-    to the old behavior with ``AI_CLI_PRIMARY=claude`` and
-    ``AI_CLI_FALLBACK=codex``, or allow exceptional Claude fallback with
-    ``AI_CLI_FALLBACK=claude``.
-
-    2026-10-08 用户决定: 默认 Claude 优先, Codex 兜底 (Codex 需要经常换账号, 登录易失效).
-    所有启动入口 (_watchdog / _webui_watchdog / run*.bat / snap*.bat / webui.bat) 与本函数默认一致;
-    显式设置环境变量仍可覆盖.
+    Claude is primary and Codex is fallback unless explicitly overridden.
+    This is the configured order; query_ai_cli skips Claude while its shared
+    quota cooldown is active and retries it on the first call after expiry.
     """
     primary = (
         os.environ.get("AI_CLI_PRIMARY")
@@ -1505,49 +1499,40 @@ def query_ai_cli(
     primary = policy["primary"]
     fallback = policy["fallback"]
 
-    # F11: 记录实际 model (若 env 空, 记 cli_internal_default 让人能看出)
-    model_used = _model_for(primary, complexity)
-
-    t0 = _time.monotonic()
-    output, status = _query_named_cli(primary, prompt, timeout, web_search, complexity)
-    dur = _time.monotonic() - t0
-    # F11: 每次调用后 log (无论成功/失败) — 如果 fallback 起飞我们要有两条 audit
-    _log_ai_call(provider=primary, model=model_used, complexity=complexity,
-                  status=status, duration_s=dur, caller=caller,
-                  model_reported=(getattr(_CODEX_RECEIPT, "model", None)
-                                  if primary == "codex" else None))
-    if output:
-        return output, status, primary.title(), ""
-
-    unavailable = status in {
-        "not_installed", "claude_not_installed", "codex_not_installed",
-    }
-    if fallback == "none" and fallback_on_unavailable and unavailable:
-        fallback = "claude" if primary == "codex" else "codex"
-    if fallback == "none":
-        return None, status, primary.title(), ""
-
-    fallback_reason = f"{primary}: {_redact_cli_text(status)}"
-    fb_model = _model_for(fallback, complexity)
-    t1 = _time.monotonic()
-    output, fallback_status = _query_named_cli(
-        fallback, prompt, timeout, web_search, complexity
-    )
-    fb_dur = _time.monotonic() - t1
-    if output:
-        _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
-                      status=fallback_status, duration_s=fb_dur,
-                      fallback_reason=fallback_reason, caller=caller,
-                      model_reported=(getattr(_CODEX_RECEIPT, "model", None)
-                                      if fallback == "codex" else None))
-        return output, fallback_status, fallback.title(), fallback_reason
-    combined = f"{fallback_reason}; {fallback}={fallback_status}"
-    _log_ai_call(provider=fallback, model=fb_model, complexity=complexity,
-                  status=fallback_status, duration_s=fb_dur,
-                  fallback_reason=fallback_reason, caller=caller,
-                  model_reported=(getattr(_CODEX_RECEIPT, "model", None)
-                                  if fallback == "codex" else None))
-    return None, _redact_cli_text(combined), fallback.title(), fallback_reason
+    providers = [primary] + ([fallback] if fallback != "none" else [])
+    fallback_reason = ""
+    for index, provider in enumerate(providers):
+        status = ai_cli_cooldown.cooldown_reason() if provider == "claude" else ""
+        output = None
+        if not status:
+            started_at = datetime.now(timezone.utc)
+            t0 = _time.monotonic()
+            output, status = _query_named_cli(provider, prompt, timeout, web_search, complexity)
+            duration = _time.monotonic() - t0
+            if provider == "claude":
+                ai_cli_cooldown.record_result(
+                    success=bool(output), status=status, started_at=started_at)
+            # Skipping a known quota outage is routing, not another failed CLI call.
+            _log_ai_call(
+                provider=provider, model=_model_for(provider, complexity),
+                complexity=complexity, status=status, duration_s=duration,
+                fallback_reason=fallback_reason, caller=caller,
+                model_reported=(getattr(_CODEX_RECEIPT, "model", None)
+                                if provider == "codex" else None))
+        if output:
+            return output, status, provider.title(), fallback_reason
+        if index == 0:
+            unavailable = status in {
+                "not_installed", "claude_not_installed", "codex_not_installed",
+            }
+            if len(providers) == 1 and fallback_on_unavailable and unavailable:
+                providers.append("claude" if primary == "codex" else "codex")
+            if len(providers) == 1:
+                return None, status, provider.title(), ""
+            fallback_reason = f"{provider}: {_redact_cli_text(status)}"
+        else:
+            combined = f"{fallback_reason}; {provider}={status}"
+            return None, _redact_cli_text(combined), provider.title(), fallback_reason
 
 
 def auto_analyze(mode: str = "review") -> dict:
