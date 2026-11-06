@@ -259,6 +259,25 @@ def report(trades: list[dict]):
             print(f"      {et:<16} n={c}")
 
 
+def report_execution_evidence():
+    """独立展示权威成交指标；不使用FIFO配对量价代替真实成交。"""
+    from trade_postmortem import replay_execution_evidence_metrics
+    try:
+        result = replay_execution_evidence_metrics()
+    except Exception as exc:
+        print(f"\n  成交原始指标：unknown（权威证据读取失败：{type(exc).__name__}）")
+        return
+    print("\n  ── 最近30笔真实卖出原始指标与证据完整性 ──")
+    print(f"    找到 {result['found']}/30；选择已核实={result['selection_verified']}")
+    for field, stats in result["fields"].items():
+        print(f"    {field}: {stats['known']}/{stats['denominator']} "
+              f"({stats['coverage']:.1%})")
+        for reason, count in stats["missing_reasons"].items():
+            print(f"      缺失 {count}：{reason}")
+    print("    全日量比仅为事后统计；证据完整性独立于原事后结论。")
+    print(f"    验收：{result['acceptance_status']}")
+
+
 def main():
     events = load_log()
     if not events:
@@ -266,6 +285,7 @@ def main():
         return 1
     trades = pair_trades(events)
     report(trades)
+    report_execution_evidence()
     return 0
 
 
