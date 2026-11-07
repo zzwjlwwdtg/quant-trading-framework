@@ -1,0 +1,119 @@
+{
+  "ticker": "SHY",
+  "sector": "固定收益ETF/短期美债",
+  "business": "iShares 1-3年期美国国债ETF，跟踪ICE美银1-3年期美国国债指数，持有短久期美国国债",
+  "upstream": [
+    {
+      "name": "美国财政部",
+      "ticker": null,
+      "note": "发行短期国债（1-3年期Treasury Notes）为ETF底层资产",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "BlackRock",
+      "ticker": "BLK",
+      "note": "ETF发行方和投资管理人，提供管理服务",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "State Street",
+      "ticker": "STT",
+      "note": "托管银行，提供资产托管和基金行政服务",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "纽约联储",
+      "ticker": null,
+      "note": "货币政策和公开市场操作影响短期利率曲线",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "授权参与商（APs）",
+      "ticker": null,
+      "note": "做市商如Citadel/Jane Street进行申购赎回维持折溢价",
+      "weight": 35,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "机构投资者/现金管理",
+      "ticker": null,
+      "note": "企业财资、养老金用于现金等价物和短久期配置",
+      "weight": 85,
+      "confidence": "high"
+    },
+    {
+      "name": "财务顾问/RIA",
+      "ticker": null,
+      "note": "为客户组合配置低波动固收底仓",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "零售投资者",
+      "ticker": null,
+      "note": "通过券商平台购买作为类现金工具",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金",
+      "ticker": null,
+      "note": "用于久期对冲、碳中性策略和抵押品",
+      "weight": 45,
+      "confidence": "medium"
+    },
+    {
+      "name": "保险公司",
+      "ticker": null,
+      "note": "短久期负债匹配和流动性管理",
+      "weight": 40,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Vanguard Short-Term Treasury ETF",
+      "ticker": "VGSH",
+      "note": "同类1-3年期美债ETF，费率更低",
+      "confidence": "high"
+    },
+    {
+      "name": "Schwab Short-Term US Treasury ETF",
+      "ticker": "SCHO",
+      "note": "同类1-3年期美债ETF，费率竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR Portfolio Short Term Treasury ETF",
+      "ticker": "SPTS",
+      "note": "State Street的1-3年期美债ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares 0-3 Month Treasury Bond ETF",
+      "ticker": "SGOV",
+      "note": "更短久期（T-Bills），同一发行方内部替代",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares 3-7 Year Treasury Bond ETF",
+      "ticker": "IEI",
+      "note": "稍长久期美债ETF，同一发行方的曲线相邻产品",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-04T04:34:48.240277+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-11-04T13:34:48.241278",
+    "age_sec": 295110,
+    "stale": false,
+    "refreshing": false
+  }
+}
