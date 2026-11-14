@@ -1,0 +1,133 @@
+{
+  "ticker": "LITE",
+  "sector": "光通信/光器件",
+  "business": "Lumentum 设计制造光通信模块、激光器与 3D 感测光源，服务数据中心、电信网络及消费电子",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "代工部分光电芯片与射频 IC",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "住友电工",
+      "ticker": "5802.T",
+      "note": "InP 衬底与化合物半导体材料",
+      "weight": 60,
+      "confidence": "medium"
+    },
+    {
+      "name": "II-VI/Coherent",
+      "ticker": "COHR",
+      "note": "部分光学元件与晶体材料供应",
+      "weight": 50,
+      "confidence": "medium"
+    },
+    {
+      "name": "信越化学",
+      "ticker": "4063.T",
+      "note": "高纯度化学材料与晶圆",
+      "weight": 45,
+      "confidence": "low"
+    },
+    {
+      "name": "MKS Instruments",
+      "ticker": "MKSI",
+      "note": "光学镀膜与真空工艺设备",
+      "weight": 40,
+      "confidence": "low"
+    },
+    {
+      "name": "IPG Photonics",
+      "ticker": "IPGP",
+      "note": "泵浦激光二极管与光纤组件",
+      "weight": 35,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Cisco Systems",
+      "ticker": "CSCO",
+      "note": "采购 400G/800G 光模块用于数据中心交换机",
+      "weight": 85,
+      "confidence": "high"
+    },
+    {
+      "name": "Ciena",
+      "ticker": "CIEN",
+      "note": "长距离相干光传输模块",
+      "weight": 75,
+      "confidence": "high"
+    },
+    {
+      "name": "Apple",
+      "ticker": "AAPL",
+      "note": "iPhone Face ID 的 VCSEL 3D 感测光源",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "Nokia",
+      "ticker": "NOK",
+      "note": "电信网络光传输组件",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "AI 数据中心 800G/1.6T 光模块需求",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "Google (Alphabet)",
+      "ticker": "GOOGL",
+      "note": "超大规模数据中心光互连",
+      "weight": 60,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Coherent",
+      "ticker": "COHR",
+      "note": "光通信模块与激光器全面竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Fabrinet",
+      "ticker": "FN",
+      "note": "光学制造与封装竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Marvell Technology",
+      "ticker": "MRVL",
+      "note": "光 DSP 与数据中心互连芯片竞争",
+      "confidence": "medium"
+    },
+    {
+      "name": "InnoLight/中际旭创",
+      "ticker": "300308.SZ",
+      "note": "高端 800G 光模块主要竞争对手",
+      "confidence": "high"
+    },
+    {
+      "name": "Applied Optoelectronics",
+      "ticker": "AAOI",
+      "note": "数据中心光模块竞争",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-08T04:33:37.198433+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-11-08T13:33:37.218300",
+    "age_sec": 547182,
+    "stale": false,
+    "refreshing": false
+  }
+}

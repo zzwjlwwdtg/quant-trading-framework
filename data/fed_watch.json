@@ -1,0 +1,76 @@
+{
+  "current_target_range": "3.75-4.00",
+  "meetings": [
+    {
+      "date": "2026-12-09",
+      "days_until": 27,
+      "probabilities": {
+        "hike_50": 12,
+        "hike_25": 88,
+        "hold": 0,
+        "cut_25": 0,
+        "cut_50": 0
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 76,
+      "probabilities": {
+        "hike_50": 15,
+        "hike_25": 63,
+        "hold": 22,
+        "cut_25": 0,
+        "cut_50": 0
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 125,
+      "probabilities": {
+        "hike_25": 35,
+        "hold": 50,
+        "cut_25": 15,
+        "cut_50": 0,
+        "hike_50": 0
+      },
+      "most_likely": "hold",
+      "consensus_direction": "uncertain"
+    }
+  ],
+  "implied_terminal_rate": "4.25-4.50",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-11-11",
+  "recent_event_impact": "11/10 Oct CPI +0.4% MoM (予想 +0.3% 超過, コア +0.3%) + 11/06 Oct NFP +165K / 失業率 4.1% → 12月ハイク確率 +16pp (72%→88%), 50bps ハイクリスク浮上 (BofA 警告)",
+  "commentary": "10月 CPI が予想を上回る 0.4% で着地 (コア 0.3%) し、Warsh 議長体制下 Fed の 12 月 9 日追加利上げはほぼ確実視 (25bps: 88%, 50bps リスク: 12%)。強い雇用 (10月 NFP +165K, U率 4.1%) と粘着インフレが重なり、2027年1月の追加ハイクも 63% と折り込み済み。市場の終端金利は 4.25-4.50% (2027Q1) に収束しつつある。なお 3月 2027 の確率は futures データが薄く推計値 (confidence: medium)。",
+  "sources": [
+    {
+      "url": "https://investing.com/news/economy-news/fed-rate-hike-odds-in-december-at-88-after-hot-cpi-cme-fedwatch-5017585",
+      "type": "cme_fedwatch"
+    },
+    {
+      "url": "https://www.fxstreet.com/news/us-consumer-price-index-rises-0-4-mom-in-october-vs-0-3-expected-202611100930",
+      "type": "cpi_report"
+    },
+    {
+      "url": "https://coinpaper.com/38496/us-inflation-report-becomes-next-test-for-fed-rate-hike-after-165-000-jobs-added-in-october",
+      "type": "nfp_report"
+    },
+    {
+      "url": "https://rateprobability.com/fed",
+      "type": "cme_fedwatch_mirror"
+    }
+  ],
+  "confidence": "high",
+  "source_via": "claude_cli_websearch",
+  "fetched_at": "2026-11-12T12:05:25+00:00",
+  "_meta": {
+    "cached_at": "2026-11-12T21:05:25.094583",
+    "age_sec": 30457,
+    "stale": true,
+    "refreshing": true
+  }
+}

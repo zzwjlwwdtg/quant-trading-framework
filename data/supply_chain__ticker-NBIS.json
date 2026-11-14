@@ -1,0 +1,133 @@
+{
+  "ticker": "NBIS",
+  "sector": "云计算/AI基础设施",
+  "business": "Nebius Group提供面向AI训练与推理的全栈GPU云服务，运营数据中心集群出租算力",
+  "upstream": [
+    {
+      "name": "NVIDIA",
+      "ticker": "NVDA",
+      "note": "H100/H200/B200 GPU核心算力芯片",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "Dell Technologies",
+      "ticker": "DELL",
+      "note": "服务器整机与机架集成",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "Super Micro Computer",
+      "ticker": "SMCI",
+      "note": "GPU服务器与液冷机架",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "Arista Networks",
+      "ticker": "ANET",
+      "note": "数据中心高速网络交换机",
+      "weight": 8,
+      "confidence": "medium"
+    },
+    {
+      "name": "Vertiv Holdings",
+      "ticker": "VRT",
+      "note": "数据中心电源与冷却基础设施",
+      "weight": 7,
+      "confidence": "medium"
+    },
+    {
+      "name": "TSMC",
+      "ticker": "TSM",
+      "note": "底层GPU芯片代工（间接）",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "note": "签署多年GPU算力租赁大单（约174亿美元框架）",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "AI训练算力采购客户",
+      "weight": 15,
+      "confidence": "medium"
+    },
+    {
+      "name": "Prosus/Avride等AI初创",
+      "ticker": null,
+      "note": "AI模型训练与推理租赁",
+      "weight": 15,
+      "confidence": "medium"
+    },
+    {
+      "name": "Cursor/Anthropic等AI公司",
+      "ticker": null,
+      "note": "推理算力与模型训练",
+      "weight": 15,
+      "confidence": "low"
+    },
+    {
+      "name": "企业AI客户（金融/医药/汽车）",
+      "ticker": null,
+      "note": "行业AI模型训练",
+      "weight": 10,
+      "confidence": "low"
+    },
+    {
+      "name": "自研业务Toloka/TripleTen",
+      "ticker": null,
+      "note": "内部数据标注与AI教育消耗算力",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "CoreWeave",
+      "ticker": "CRWV",
+      "note": "同类纯GPU云新贵，直接竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "Oracle",
+      "ticker": "ORCL",
+      "note": "OCI GPU云与大客户AI合同",
+      "confidence": "high"
+    },
+    {
+      "name": "Amazon Web Services",
+      "ticker": "AMZN",
+      "note": "AWS EC2 GPU/Trainium算力",
+      "confidence": "high"
+    },
+    {
+      "name": "Microsoft Azure",
+      "ticker": "MSFT",
+      "note": "Azure AI云（既是客户也是竞品）",
+      "confidence": "high"
+    },
+    {
+      "name": "Applied Digital",
+      "ticker": "APLD",
+      "note": "AI数据中心与GPU托管",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-04T04:34:45.630797+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-11-04T13:34:45.631315",
+    "age_sec": 892713,
+    "stale": false,
+    "refreshing": false
+  }
+}

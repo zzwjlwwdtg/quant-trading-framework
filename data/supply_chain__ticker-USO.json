@@ -1,0 +1,119 @@
+{
+  "ticker": "USO",
+  "sector": "原油商品ETF",
+  "business": "通过持有WTI原油近月期货合约追踪西德克萨斯中质原油(WTI)现货价格的商品型ETF",
+  "upstream": [
+    {
+      "name": "CME Group",
+      "ticker": "CME",
+      "note": "WTI原油期货合约交易所与清算方",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "United States Commodity Funds LLC",
+      "ticker": null,
+      "note": "基金发起人与管理人",
+      "weight": 25,
+      "confidence": "high"
+    },
+    {
+      "name": "Brown Brothers Harriman",
+      "ticker": null,
+      "note": "基金托管与行政服务",
+      "weight": 15,
+      "confidence": "high"
+    },
+    {
+      "name": "RBC Capital Markets",
+      "ticker": "RY",
+      "note": "期货经纪商(FCM)执行合约交易",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "Marketing Agent (ALPS Distributors)",
+      "ticker": null,
+      "note": "基金分销与营销代理",
+      "weight": 10,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "散户投资者",
+      "ticker": null,
+      "note": "通过经纪账户买入作为原油价格敞口工具",
+      "weight": 45,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金与CTA",
+      "ticker": null,
+      "note": "宏观/商品策略中的战术性原油配置与对冲",
+      "weight": 25,
+      "confidence": "high"
+    },
+    {
+      "name": "RIA财富管理机构",
+      "ticker": null,
+      "note": "客户组合中商品/通胀对冲配置",
+      "weight": 15,
+      "confidence": "medium"
+    },
+    {
+      "name": "能源相关企业",
+      "ticker": null,
+      "note": "航空/物流/炼化等行业对冲燃油成本",
+      "weight": 10,
+      "confidence": "medium"
+    },
+    {
+      "name": "量化/算法交易机构",
+      "ticker": null,
+      "note": "短线波动套利与价差交易",
+      "weight": 5,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Invesco DB Oil Fund",
+      "ticker": "DBO",
+      "note": "原油期货ETF,采用optimum yield规则减少contango损耗",
+      "confidence": "high"
+    },
+    {
+      "name": "United States Brent Oil Fund",
+      "ticker": "BNO",
+      "note": "同一发行方的布伦特原油ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "ProShares Ultra Bloomberg Crude Oil",
+      "ticker": "UCO",
+      "note": "2倍杠杆WTI原油ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "ProShares UltraShort Bloomberg Crude Oil",
+      "ticker": "SCO",
+      "note": "2倍反向WTI原油ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "Energy Select Sector SPDR Fund",
+      "ticker": "XLE",
+      "note": "能源股票ETF,替代性原油价格敞口工具",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-10T10:03:40.968422+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-11-10T19:03:40.969415",
+    "age_sec": 354577,
+    "stale": false,
+    "refreshing": false
+  }
+}

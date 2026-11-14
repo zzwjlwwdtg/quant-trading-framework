@@ -1,0 +1,92 @@
+{
+  "ticker": "NXPI",
+  "sector": "汽车与工业半导体",
+  "business": "恩智浦设计并制造微控制器、应用处理器、模拟与连接芯片及安全芯片，主要服务汽车、工业物联网、移动设备和通信基础设施市场。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "提供晶圆代工，是先进工艺及汽车处理器的重要制造伙伴；权重为战略重要度估计，并非采购占比。[供应商披露](https://www.nxp.com/docs/en/supporting-information/Corporate-Sustainability-Report-2025.pdf)",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "日月光投资控股",
+      "ticker": "ASX",
+      "note": "提供芯片封装与测试服务，支持外包后端制造；权重为战略重要度估计。[供应商披露](https://www.nxp.com/docs/en/supporting-information/Corporate-Sustainability-Report-2025.pdf)",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "安靠科技",
+      "ticker": "AMKR",
+      "note": "提供半导体封装与测试服务；权重为战略重要度估计，未披露具体采购份额。[供应商披露](https://www.nxp.com/docs/en/supporting-information/Corporate-Sustainability-Report-2025.pdf)",
+      "weight": 70,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "博世",
+      "ticker": null,
+      "note": "采购汽车处理器、微控制器等，用于电子控制单元及车辆计算平台；权重为战略重要度估计，并非营收占比。[合作披露](https://investors.nxp.com/news-releases/news-release-details/nxps-new-s32n7-unlocks-full-potential-sdvs)",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "电装",
+      "ticker": "6902.T",
+      "note": "采购汽车半导体，用于汽车电子控制系统；公开供应商奖项证实供货关系，权重为战略重要度估计。[客户关系披露](https://www.nxp.com/company/about-nxp/newsroom/NW-NXP-HONORED-WITH-AWARDS)",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "采购移动设备相关安全与连接芯片，用于近场通信等功能；年报列为主要终端客户，具体产品份额未披露，权重为战略重要度估计。[年报](https://www.sec.gov/Archives/edgar/data/1413447/000141344726000008/nxpi-20251231.htm)",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "伟世通",
+      "ticker": "VC",
+      "note": "采购汽车处理与控制芯片，用于座舱及汽车电子系统；年报列为主要终端客户，权重为战略重要度估计。[年报](https://www.sec.gov/Archives/edgar/data/1413447/000141344726000008/nxpi-20251231.htm)",
+      "weight": 70,
+      "confidence": "high"
+    }
+  ],
+  "peers": [
+    {
+      "name": "英飞凌科技",
+      "ticker": null,
+      "note": "在汽车微控制器、安全芯片及工业半导体领域竞争；德国上市普通股不符合指定市场范围。[年报](https://www.sec.gov/Archives/edgar/data/1413447/000141344726000008/nxpi-20251231.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "瑞萨电子",
+      "ticker": "6723.T",
+      "note": "在汽车与工业微控制器、嵌入式处理器及模拟芯片领域竞争。[年报](https://www.sec.gov/Archives/edgar/data/1413447/000141344726000008/nxpi-20251231.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "意法半导体",
+      "ticker": "STM",
+      "note": "在汽车电子、通用微控制器、模拟与连接芯片领域竞争。[年报](https://www.sec.gov/Archives/edgar/data/1413447/000141344726000008/nxpi-20251231.htm)",
+      "confidence": "high"
+    },
+    {
+      "name": "德州仪器",
+      "ticker": "TXN",
+      "note": "在汽车与工业模拟芯片、接口芯片及嵌入式处理领域竞争。[年报](https://www.sec.gov/Archives/edgar/data/1413447/000141344726000008/nxpi-20251231.htm)",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-09T14:34:01.863633+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-09T23:34:01.864632",
+    "age_sec": 424757,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "ticker": "IEI",
+  "sector": "美国国债ETF",
+  "business": "iShares 3-7 Year Treasury Bond ETF，追踪ICE美国3-7年期国债指数的中期国债ETF",
+  "upstream": [
+    {
+      "name": "美国财政部",
+      "ticker": null,
+      "note": "发行3-7年期美国国债（基础资产）",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "BlackRock",
+      "ticker": "BLK",
+      "note": "ETF发行方与管理人",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "State Street",
+      "ticker": "STT",
+      "note": "托管与清算服务",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "美联储",
+      "ticker": null,
+      "note": "货币政策决定利率环境影响标的价格",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "一级交易商（JPM/GS等）",
+      "ticker": "JPM",
+      "note": "国债一级市场做市与流动性提供",
+      "weight": 35,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "机构投资者/养老金",
+      "ticker": null,
+      "note": "久期配置与防御性资产持有",
+      "weight": 50,
+      "confidence": "high"
+    },
+    {
+      "name": "财富管理/RIA",
+      "ticker": null,
+      "note": "客户账户中期固收配置",
+      "weight": 40,
+      "confidence": "high"
+    },
+    {
+      "name": "保险公司",
+      "ticker": null,
+      "note": "资产负债匹配的中期久期需求",
+      "weight": 35,
+      "confidence": "medium"
+    },
+    {
+      "name": "个人投资者",
+      "ticker": null,
+      "note": "低风险收益与现金替代",
+      "weight": 30,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金",
+      "ticker": null,
+      "note": "利率曲线交易与对冲",
+      "weight": 25,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "iShares 7-10 Year Treasury Bond ETF",
+      "ticker": "IEF",
+      "note": "更长久期中期国债ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "Vanguard Intermediate-Term Treasury ETF",
+      "ticker": "VGIT",
+      "note": "同类中期美债ETF，费率更低",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR Portfolio Intermediate Term Treasury ETF",
+      "ticker": "SPTI",
+      "note": "低费率中期国债ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "Schwab Intermediate-Term U.S. Treasury ETF",
+      "ticker": "SCHR",
+      "note": "Schwab旗下中期美债ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares 1-3 Year Treasury Bond ETF",
+      "ticker": "SHY",
+      "note": "短久期美债ETF替代品",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-04T04:34:43.945608+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-11-04T13:34:43.946615",
+    "age_sec": 892715,
+    "stale": false,
+    "refreshing": false
+  }
+}

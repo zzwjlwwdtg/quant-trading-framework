@@ -1,0 +1,44 @@
+{
+  "exists": true,
+  "label": "bull_low_vol",
+  "prob": 0.999,
+  "state": 0,
+  "ts": "2026-11-13T23:21:40.571641",
+  "state_probs": {
+    "0": 0.999,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.001
+  },
+  "scope": "slow_macro_background",
+  "warning": "慢周期背景，不是当前买入或加仓信号",
+  "trading": {
+    "regime": "neutral_chop",
+    "regime_zh": "中性震荡",
+    "base_regime": "neutral",
+    "style": {
+      "style": "chop_weak",
+      "style_zh": "震荡偏弱",
+      "chop_score": 4,
+      "is_choppy": true,
+      "reason": "10日趋势效率很低(0.12)；ADX偏低(15.1)；10日涨跌反转6次",
+      "metrics": {
+        "pct_5d": 3.29,
+        "pct_20d": -1.9,
+        "dist_ma20_pct": -0.31,
+        "dist_ma50_pct": -0.96,
+        "efficiency_10": 0.121,
+        "efficiency_20": 0.099,
+        "adx_14": 15.1,
+        "reversal_count_10d": 6,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 1.05
+      },
+      "policy_note": "短线震荡：提高加仓门槛、降低目标波动，不把宏观偏多当追涨依据"
+    },
+    "date": "2026-11-13",
+    "expected_date": "2026-11-16",
+    "stale": true,
+    "ts": "2026-11-13T14:21:40.109555+00:00"
+  }
+}

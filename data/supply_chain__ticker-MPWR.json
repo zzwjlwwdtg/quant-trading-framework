@@ -1,0 +1,85 @@
+{
+  "ticker": "MPWR",
+  "sector": "半导体设计／模拟与电源管理芯片",
+  "business": "芯源系统设计并销售高性能电源管理芯片及电源模块，服务数据中心、汽车、工业、通信和消费电子市场。",
+  "upstream": [
+    {
+      "name": "世界先进",
+      "ticker": null,
+      "note": "提供功率半导体晶圆代工，合作涵盖台湾和新加坡的八英寸产能；公司公告确认合作，但未披露采购占比。来源：[合作公告](https://www.monolithicpower.com/media/investor-relations/press-releases/Vanguard_Foundry_Announcement_r5.pdf)。权重为战略重要度估计。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "潜在的电源管理芯片晶圆代工供应商；公开供应链资料有所提及，但缺乏可核实的一手具名披露，关系及采购规模均待确认。",
+      "weight": 30,
+      "confidence": "low"
+    },
+    {
+      "name": "日月光投控",
+      "ticker": "ASX",
+      "note": "潜在的芯片封装测试供应商；公司年报确认使用外部封测厂，但未具名确认日月光，具体供应关系为推测，权重仅表示潜在重要度。",
+      "weight": 20,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "下游平台及潜在间接客户，电源管理方案用于人工智能加速器供电；公司材料列示生态合作关系，但不能据此认定直接采购额或收入占比。来源：[公司投资者材料](https://www.monolithicpower.com/media/investor-relations/events/MPS_IR_Analyst_Presentation_2022-06-02.pdf)。权重为战略重要度估计。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "采购高性能、低功耗电源解决方案，用于存储相关产品；三星存储事业部供应商评价信息确认合作，具体采购额未披露。来源：[芯源系统公开说明](https://kr.linkedin.com/posts/monolithic-power-systems_mps-monolithicpowersystems-samsung-activity-7427501716717121537-qkhD)。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "爱思开海力士",
+      "ticker": null,
+      "note": "采购面向存储应用的电源管理方案；芯源系统公开披露获得其合作伙伴认可，未披露具体产品订单和收入占比。来源：[芯源系统公开说明](https://www.linkedin.com/posts/monolithic-power-systems_mps-monolithicpowersystems-skhynix-activity-7430400804789940224-rjDm)。",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "德州仪器",
+      "ticker": "TXN",
+      "note": "在模拟电源管理、直流转换器及汽车和工业电源芯片领域竞争；公司年报列为主要竞争对手。来源：[公司年报资料](https://thebuildout.co/company/MPWR)。",
+      "confidence": "medium"
+    },
+    {
+      "name": "亚德诺半导体",
+      "ticker": "ADI",
+      "note": "在高性能模拟芯片、电源管理及工业和汽车供电方案领域竞争；公司10-K明确列示。来源：[公司10-K](https://media.monolithicpower.com/mps_cms_document/m/p/mps_2023_form_10-k.pdf)。",
+      "confidence": "high"
+    },
+    {
+      "name": "瑞萨电子",
+      "ticker": "6723.T",
+      "note": "在数字多相电源、服务器供电及汽车电源管理领域竞争；公司10-K明确列示。来源：[公司10-K](https://media.monolithicpower.com/mps_cms_document/m/p/mps_2023_form_10-k.pdf)。",
+      "confidence": "high"
+    },
+    {
+      "name": "安森美",
+      "ticker": "ON",
+      "note": "在汽车、工业电源管理及功率半导体领域竞争；公司10-K明确列示。来源：[公司10-K](https://media.monolithicpower.com/mps_cms_document/m/p/mps_2023_form_10-k.pdf)。",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-10T14:33:57.611055+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-10T23:33:57.611055",
+    "age_sec": 338361,
+    "stale": false,
+    "refreshing": false
+  }
+}
