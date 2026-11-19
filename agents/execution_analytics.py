@@ -660,6 +660,93 @@ def execution_evidence_coverage(records: list[dict], expected: int = 30) -> dict
     }
 
 
+def stop_deviation_baseline(events: list[dict], target: dict) -> dict:
+    """只读比较同标的同分桶历史止损；偏离以止损线为分母，单位为基点。
+
+    输入须由离线材料提供已核实的订单号、成交时间、止损线、成交价、
+    regime、是否盘前及 ATR 分桶。ATR 分桶规则须另行预注册；
+    本函数不猜测缺失字段，不把偏离归因于滑点或执行问题。
+    """
+    result = {
+        "status": "证据不足", "sample_size": 0, "percentile": None,
+        "p50_bps": None, "p80_bps": None, "p95_bps": None,
+        "deviation_bps": None, "classification": None,
+        "research_only": True, "validation_passed": False,
+        "publication_authorized": False,
+    }
+
+    def valid(row):
+        if not isinstance(row, dict):
+            return False
+        stop = _num(row.get("stop_line"), None)
+        fill = _num(row.get("price"), None)
+        return (
+            bool(str(row.get("order_id") or "").strip())
+            and bool(str(row.get("ticker") or "").strip())
+            and evidence_time(row.get("last_fill_ts")) is not None
+            and row.get("regime") in ("risk_off", "risk_on", "unknown")
+            and isinstance(row.get("premarket"), bool)
+            and isinstance(row.get("atr_bucket"), str)
+            and bool(row["atr_bucket"].strip())
+            and stop is not None and stop > 0
+            and fill is not None and fill > 0
+            and not row.get("anomalies")
+        )
+
+    if not valid(target):
+        result["reason"] = "目标订单缺少有效分桶或成交证据"
+        return result
+
+    target_time = evidence_time(target["last_fill_ts"])
+    target_id = str(target["order_id"])
+    target_ticker = _ticker(target["ticker"])
+    keys = ("regime", "premarket", "atr_bucket")
+    seen = set()
+    values = []
+    for row in events:
+        if not valid(row):
+            continue
+        oid = str(row["order_id"])
+        if oid == target_id:
+            continue
+        if oid in seen:
+            result["reason"] = "历史订单标识重复，无法核实样本独立性"
+            return result
+        seen.add(oid)
+        ts = evidence_time(row["last_fill_ts"])
+        if (ts >= target_time or _ticker(row["ticker"]) != target_ticker
+                or any(row[k] != target[k] for k in keys)):
+            continue
+        stop = float(row["stop_line"])
+        values.append((stop - float(row["price"])) / stop * 10_000)
+
+    stop = float(target["stop_line"])
+    deviation = (stop - float(target["price"])) / stop * 10_000
+    result["deviation_bps"] = deviation
+    result["sample_size"] = len(values)
+    if not values:
+        result["reason"] = "没有同分桶的前序历史事件"
+        return result
+
+    values.sort()
+
+    def quantile(p):
+        position = (len(values) - 1) * p
+        lower = int(position)
+        upper = min(lower + 1, len(values) - 1)
+        return values[lower] + (values[upper] - values[lower]) * (position - lower)
+
+    result.update({
+        "status": "影子统计",
+        "percentile": 100 * sum(value <= deviation for value in values) / len(values),
+        "p50_bps": quantile(0.50),
+        "p80_bps": quantile(0.80),
+        "p95_bps": quantile(0.95),
+        "reason": "尚未完成预注册样本量与样本外验收，不作正式判定",
+    })
+    return result
+
+
 def summarize_execution_log(path: Path, limit: int = 500) -> dict:
     if not path.exists():
         return {"orders": 0, "filled_orders": 0, "avg_fill_ratio": None, "avg_shortfall_bps": None,
