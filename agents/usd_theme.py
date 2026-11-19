@@ -83,6 +83,62 @@ def theme_strength(m: dict) -> str:
     return "中性"
 
 
+def evidence_audit(metrics: dict, as_of: str | None = None) -> list[dict]:
+    """分期限、分市场展示只读核对证据。不产生交易评分，不修改主线结论。
+
+    每条记录包含: name, period, benchmark, value, as_of, direction(支持/相反),
+    verifiable, note。value 缺失、时点缺失或基准缺失时 verifiable=False，note 注明原因。
+    不同期限和市场分别展示，不合成为新的交易分数。
+    """
+    rows: list[dict] = []
+
+    def _row(name: str, period: str, benchmark, value, direction_fn):
+        notes = []
+        if value is None:
+            notes.append("数值缺失")
+        if as_of is None:
+            notes.append("数据时点缺失")
+        if benchmark is None:
+            notes.append("无跨市场比较基准")
+        verifiable = (value is not None) and (as_of is not None) and (benchmark is not None)
+        direction = direction_fn(value) if value is not None else None
+        return {
+            "name": name,
+            "period": period,
+            "benchmark": benchmark,
+            "value": value,
+            "as_of": as_of,
+            "direction": direction,
+            "verifiable": verifiable,
+            "note": ("不可核对：" + "；".join(notes)) if notes else None,
+        }
+
+    # DXY 多期限分项（20日与60日可能方向相反，不可合并为单一判断）
+    rows.append(_row("DXY 涨跌", "20日", "DXY 自身水平",
+                     metrics.get("dxy_20d_pct"),
+                     lambda v: "支持" if v > 0 else "相反"))
+    rows.append(_row("DXY 涨跌", "60日", "DXY 自身水平",
+                     metrics.get("dxy_60d_pct"),
+                     lambda v: "支持" if v > 0 else "相反"))
+
+    # 非美市场相对 SPY 超额（20 日，超额为负=非美跑输=支持强美元主线）
+    for tk, label in (("eem", "EEM 新兴市场"), ("fxi", "FXI 中国"), ("ewj", "EWJ 日本")):
+        rows.append(_row(f"{label} 相对 SPY 超额", "20日", "SPY 20日涨幅",
+                         metrics.get(f"{tk}_vs_spy_20d_pp"),
+                         lambda v: "支持" if v < 0 else "相反"))
+
+    # 亚洲主要指数 5 日绝对涨跌（无跨市场比较基准，单独展示体现地区分化）
+    asia = metrics.get("asia_5d_pct") or {}
+    for key, label in (("N225", "日经 N225"), ("HSI", "港股 HSI"),
+                       ("SSE", "上证 SSE"), ("KOSPI", "韩国 KOSPI")):
+        # 无统一跨市场比较基准；下跌=支持流动性回流美元，上涨=相反
+        rows.append(_row(f"{label} 绝对涨跌", "5日", None,
+                         asia.get(key),
+                         lambda v: "相反" if v > 0 else "支持"))
+
+    return rows
+
+
 def run(fetch=_closes) -> dict:
     m = compute_metrics(fetch)
     try:
@@ -91,9 +147,11 @@ def run(fetch=_closes) -> dict:
         version = get_thesis_version()
     except Exception as e:  # noqa: BLE001
         triggered, version = [{"id": "check_failed", "description": str(e)}], None
-    out = {"generated_at": datetime.now(timezone.utc).isoformat(), "theme": THEME,
+    generated_at = datetime.now(timezone.utc).isoformat()
+    out = {"generated_at": generated_at, "theme": THEME,
            "thesis_version": version, "metrics": m, "strength": theme_strength(m),
-           "invalidation_triggered": triggered}
+           "invalidation_triggered": triggered,
+           "evidence_audit": evidence_audit(m, generated_at)}
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     return out
 

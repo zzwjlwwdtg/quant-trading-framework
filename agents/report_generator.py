@@ -300,6 +300,33 @@ def generate_report(session_type: str = "定时") -> str:
     lines.extend(postmortem_coverage_lines(
         Path(SIGNALS_DIR) / "postmortem" / "latest.json"))
 
+    # ── 8. 美元主线期限与市场分项核对（只读）────────────────────────────────────────
+    section("八、美元主线期限与市场分项核对（只读）")
+    try:
+        import json as _j
+        import usd_theme as _ut
+        _usd_path = Path(SIGNALS_DIR) / "usd_theme.json"
+        if _usd_path.exists():
+            _usd_data = _j.loads(_usd_path.read_text(encoding="utf-8"))
+            _usd_metrics = _usd_data.get("metrics") or {}
+            _usd_as_of = _usd_data.get("generated_at")
+            # 若 JSON 已含 evidence_audit 则直接用；向后兼容旧格式则由 metrics 重算
+            _audit = _usd_data.get("evidence_audit") or _ut.evidence_audit(_usd_metrics, _usd_as_of)
+            lines.append(f"  数据时点: {_usd_as_of or '未知'}")
+            for _r in _audit:
+                _val_s = f"{_r['value']:+.2f}" if _r['value'] is not None else "N/A"
+                _bm_s = _r.get('benchmark') or "无跨市场比较基准"
+                _dir_s = _r.get('direction') or "—"
+                _veri_s = "✓" if _r.get('verifiable') else ("✗ " + (_r.get('note') or "不可核对"))
+                lines.append(
+                    f"  [{_r['period']}] {_r['name']}: {_val_s}"
+                    f"  → {_dir_s} | 基准:{_bm_s} | {_veri_s}"
+                )
+        else:
+            lines.append("  美元主线信号文件未生成，核对不可用 (请先运行 usd_theme.py)")
+    except Exception as _e_usd:
+        lines.append(f"  美元主线分项核对展示失败: {_e_usd}")
+
     # ── 尾部 ────────────────────────────────────────────────────────────────────
     lines.append("\n" + "=" * W)
     lines.append(t(
