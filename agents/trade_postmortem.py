@@ -609,12 +609,23 @@ def replay_execution_audit(
         if cost["status"] == "complete":
             group["complete_cost_orders"] += 1
             group["known_total_cost_usd"] += cost["total_cost_usd"]
-        if "TRAILING_STOP" in str(reason or "").upper():
+        if "TRAILING_STOP" in str(reason or "").upper().replace("-", "_"):
             measurement = trailing_stop_measurement(item)
             if cost["anomalies"]:
                 measurement["window_extra_loss_usd"] = None
                 measurement["status"] = "invalid"
             trailing.append(measurement)
+            record["trailing_stop_measurement"] = measurement
+            # 不按归档顺序覆盖冲突结论，也不把无判定当成“难判断”。
+            verdicts = set()
+            for review in successful:
+                analysis = review.get("analysis")
+                hindsight = analysis.get("hindsight") if isinstance(analysis, dict) else None
+                verdict = hindsight.get("verdict") if isinstance(hindsight, dict) else None
+                if verdict in ("合理", "不合理", "难判断"):
+                    verdicts.add(verdict)
+            record["hindsight_verdict"] = (
+                next(iter(verdicts)) if len(verdicts) == 1 else "unknown")
 
     # 时区统一后再排序；无法排序的订单也进入覆盖清单，并阻止验证通过。
     epoch = datetime.min.replace(tzinfo=timezone.utc)
@@ -639,6 +650,9 @@ def replay_execution_audit(
         "all_sell_count": len(records),
         "groups": list(groups.values()),
         "all_historical_trailing_stops": trailing,
+        "trailing_stop_records": [
+            r for r in records if "trailing_stop_measurement" in r
+        ],
         "trailing_stop_summary": {
             "orders": len(trailing),
             "unknown_sell_reason_orders": unknown_reason,
@@ -653,6 +667,115 @@ def replay_execution_audit(
         "source_errors": errors,
         "publication_authorized": False,
     }
+
+
+def trailing_stop_coverage_attribution(records: list[dict], *, expected: int = 30) -> dict:
+    """统计最近 N 笔止损材料缺失与既有事后判定的关联，不推断因果。"""
+    if not isinstance(expected, int) or isinstance(expected, bool) or expected <= 0:
+        raise ValueError("expected 必须是正整数")
+    from execution_analytics import evidence_time
+
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    ordered = sorted(
+        records,
+        key=lambda r: (evidence_time(r.get("sort_ts")) or epoch,
+                       str(r.get("order_id") or "")),
+        reverse=True,
+    )
+    unknown_times = [r.get("order_id") for r in ordered
+                     if evidence_time(r.get("sort_ts")) is None]
+    ids = [str(r.get("order_id") or "") for r in ordered]
+    identities_verified = bool(ids) and all(ids) and len(ids) == len(set(ids))
+    selected = ordered[:expected]
+    missing_counts, associations, output = {}, {}, []
+
+    def missing_fields(value, prefix):
+        """保留两个既有分析器返回的缺失字段；缺失格式无法识别时显式降级。"""
+        if not isinstance(value, dict):
+            return [prefix + ".unknown"]
+        missing = value.get("missing")
+        if missing is None:
+            missing = value.get("missing_fields")
+        if missing is None:
+            missing = value.get("missing_evidence")
+        if missing is None:
+            return [prefix + ".missing_metadata_unknown"]
+        if isinstance(missing, dict):
+            return [prefix + "." + str(k) for k, v in missing.items() if v]
+        if isinstance(missing, (list, tuple, set)):
+            return [prefix + "." + str(k) for k in missing]
+        return [prefix + ".missing_metadata_unknown"]
+
+    for row in selected:
+        cost = row.get("cost")
+        measurement = row.get("trailing_stop_measurement")
+        missing = sorted(set(missing_fields(cost, "cost")
+                             + missing_fields(measurement, "trailing_stop")))
+        verdict = row.get("hindsight_verdict")
+        if verdict not in ("合理", "不合理", "难判断"):
+            verdict = "unknown"
+        for field in missing:
+            missing_counts[field] = missing_counts.get(field, 0) + 1
+            group = associations.setdefault(field, {
+                "orders_with_missing": 0, "judged": 0, "hard_to_judge": 0,
+            })
+            group["orders_with_missing"] += 1
+            if verdict != "unknown":
+                group["judged"] += 1
+                if verdict == "难判断":
+                    group["hard_to_judge"] += 1
+        output.append({
+            "order_id": row.get("order_id"), "ticker": row.get("ticker"),
+            "sort_ts": row.get("sort_ts"), "hindsight_verdict": verdict,
+            "cost": cost if isinstance(cost, dict) else "unknown",
+            "trailing_stop_measurement": (
+                measurement if isinstance(measurement, dict) else "unknown"),
+            "missing": missing,
+            # 现有材料未证明四类成本可独立分离，不给出主因。
+            "components": {
+                "gap": "unknown", "detection_lag": "unknown",
+                "fill_slippage": "unknown", "spread": "unknown",
+            },
+            "primary_cause": "unknown",
+        })
+    for group in associations.values():
+        group["hard_to_judge_rate"] = (
+            group["hard_to_judge"] / group["judged"] if group["judged"] else None)
+    judged = sum(r["hindsight_verdict"] != "unknown" for r in output)
+    hard = sum(r["hindsight_verdict"] == "难判断" for r in output)
+    return {
+        "proposal": "EVO-20261105-2", "read_only": True,
+        "selection": "按已有成交时间降序选择最近 N 笔 TRAILING_STOP",
+        "expected": expected, "found": len(output),
+        "selection_verified": (
+            len(output) == expected and not unknown_times and identities_verified),
+        "unknown_order_times": unknown_times,
+        "identities_verified": identities_verified,
+        "missing_field_counts": missing_counts,
+        "missing_field_associations": associations,
+        "hindsight": {
+            "judged": judged, "unknown": len(output) - judged,
+            "hard_to_judge": hard,
+            "hard_to_judge_rate": hard / judged if judged else None,
+            "denominator": "有效事后判定订单数",
+        },
+        "records": output,
+        "interpretation": "缺失字段与事后判定仅作描述性关联，不代表因果。",
+        "publication_authorized": False,
+    }
+
+
+def replay_trailing_stop_coverage(*, expected: int = 30, **paths) -> dict:
+    """复用已有只读回放；不写归档、行情、成交或交易状态。"""
+    audit = replay_execution_audit(expected_sells=expected, **paths)
+    report = trailing_stop_coverage_attribution(
+        audit["trailing_stop_records"], expected=expected)
+    report["source_errors"] = audit["source_errors"]
+    if audit["source_errors"] or audit["unknown_order_times"]:
+        report["selection_verified"] = False
+    report["selection_limitation"] = (
+        "无法排序的卖出可能属于止损；缺失或错误的源文件也会使选择无法核实")
+    return report
 
 
 def replay_execution_evidence_metrics(
@@ -969,6 +1092,15 @@ def run(days: int = LOOKBACK_DAYS, *, ai=None, live_fetch: bool = True,
             "data_completeness": "unknown", "validation_passed": False,
             "publication_authorized": False,
             "error": f"权威成交证据读取失败：{type(exc).__name__}",
+        }
+    # 仅在现有复盘展示中附加只读统计，不改历史归档或事后判定。
+    try:
+        latest["trailing_stop_coverage_attribution"] = replay_trailing_stop_coverage()
+    except Exception as exc:
+        latest["trailing_stop_coverage_attribution"] = {
+            "proposal": "EVO-20261105-2", "read_only": True,
+            "selection_verified": False, "publication_authorized": False,
+            "error": f"止损证据读取失败：{type(exc).__name__}",
         }
     LATEST.write_text(json.dumps(latest, ensure_ascii=False, indent=1), encoding="utf-8")
     return latest
