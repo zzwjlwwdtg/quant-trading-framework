@@ -292,6 +292,49 @@ def label_oversold_claims(analysis: dict) -> dict:
     return result
 
 
+# ── 缺失证据分类：只用于展示，不参与复盘判定 ──────────────────────────────────
+EVIDENCE_GAP_DIMS = (
+    "slippage_attribution", "orderbook_missing", "signal_price_consistency",
+    "news_causality", "regime_mapping", "data_freshness", "其它-需人工",
+)
+
+
+def classify_evidence_gaps(limitations: list) -> list[dict]:
+    """保留原文；一条局限可对应多个维度，无法识别时交给人工。"""
+    if not isinstance(limitations, list):
+        return []
+    result = []
+    for item in limitations:
+        if isinstance(item, str):
+            excerpt = item.strip()
+        elif isinstance(item, dict):
+            excerpt = "；".join(
+                str(item[k]).strip() for k in ("limitation", "why")
+                if isinstance(item.get(k), str) and item[k].strip()
+            )
+        else:
+            continue
+        if not excerpt:
+            continue
+        text = excerpt.lower()
+        dims = []
+        if re.search(r"滑点|slippage|(?:止损线|止损参考价|参考价).{0,30}成交价.{0,30}(?:偏离|差|归因)|(?:偏离|价差).{0,20}(?:归因|分解)", text):
+            dims.append("slippage_attribution")
+        if re.search(r"bid\s*[/／-]\s*ask|bid.{0,10}ask|买卖(?:盘|报价)|盘口|order\s*book", text):
+            dims.append("orderbook_missing")
+        if re.search(r"信号.{0,20}(?:现货|实时价|价格).{0,20}(?:不一致|偏离|不符)|(?:stale\s*ref|陈旧参考价)", text):
+            dims.append("signal_price_consistency")
+        if re.search(r"(?:新闻|消息|事件).{0,30}(?:因果|权衡|影响|不足|缺失|无法|难以)|(?:因果|权衡).{0,20}(?:新闻|消息|事件)", text):
+            dims.append("news_causality")
+        if re.search(r"regime.{0,20}(?:映射|保守)|(?:市场状态|行情状态).{0,20}(?:映射|保守)", text):
+            dims.append("regime_mapping")
+        if re.search(r"新鲜度|时效性|数据.{0,10}(?:过期|陈旧|滞后)|staleness|stale|时间戳.{0,10}(?:缺失|不明)", text):
+            dims.append("data_freshness")
+        for dim in dims or ["其它-需人工"]:
+            result.append({"dim": dim, "excerpt": excerpt})
+    return result
+
+
 # ── AI ───────────────────────────────────────────────────────────────────────
 def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: list[str], after_closes: list[dict],
                  *, research_evidence: dict | None = None) -> str:
@@ -403,6 +446,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             "ts": sell["decision_ts"], "tag": sell["tag"], "nature": classify_sell(sell["tag"], sell.get("decision")),
             "provider": provider, "status": status,
             "ok": parsed is not None, "analysis": parsed,
+            "evidence_gaps": classify_evidence_gaps(parsed.get("limitations", [])) if parsed else [],
             "material": {"excerpt_lines": len(excerpt), "news_items": len(news), "after_closes": after_closes},
             "news_structured": news_structured,
             "oversold_research": research_evidence,

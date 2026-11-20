@@ -1411,6 +1411,16 @@ def api_usd_theme() -> dict:
         return {"exists": False, "error": str(e)}
 
 
+def api_evidence_gaps() -> dict:
+    """只读归档并即时聚合，不写缓存或交易状态。"""
+    try:
+        from _weekly_backtest_review import evidence_gap_report
+        return evidence_gap_report(archive_path=SIGNALS_DIR / "postmortem" / "archive.jsonl")
+    except Exception as exc:
+        return {"read_only": True, "source_status": "unavailable",
+                "error": type(exc).__name__, "top_gaps": [], "suggestions": []}
+
+
 def api_postmortem() -> dict:
     """卖出复盘 (2026-10-08): trade_postmortem 每日收盘后生成的 AI 复盘. 只读文件."""
     path = SIGNALS_DIR / "postmortem" / "latest.json"
@@ -5537,6 +5547,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(api_fills())
             elif path == "/api/postmortem":
                 self._json(api_postmortem())
+            elif path == "/api/evidence_gaps":
+                self._json(api_evidence_gaps())
             elif path == "/api/usd_theme":
                 self._json(api_usd_theme())
             elif path == "/api/stop_fail_monitor":

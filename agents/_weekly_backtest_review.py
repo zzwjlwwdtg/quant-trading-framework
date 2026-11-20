@@ -47,6 +47,81 @@ _CHANGE_LOG = Path(SIGNALS_DIR) / "verdict_change_log.jsonl"
 _HERE = Path(__file__).parent
 _PYTHON = sys.executable
 
+# 仅表示可能有助于补充证据；提案状态仍需人工核实。
+_GAP_EVOS = {
+    "slippage_attribution": ("EVO-20261105-2", "EVO-20261115-2"),
+    "orderbook_missing": ("EVO-20261112-1",),
+    "signal_price_consistency": ("EVO-20261112-1", "EVO-20261115-2"),
+    "data_freshness": ("EVO-20261112-2",),
+}
+
+
+def summarize_evidence_gaps(rows: list, *, limit: int = 30, top_n: int = 7) -> dict:
+    """按卖出时间取最近 N 份成功复盘；每笔每维度最多计一次。"""
+    from trade_postmortem import classify_evidence_gaps, EVIDENCE_GAP_DIMS
+
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+
+    def timestamp(row):
+        try:
+            value = datetime.fromisoformat(str(row.get("ts") or "").replace("Z", "+00:00"))
+            return value.astimezone(timezone.utc) if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        except ValueError:
+            return None
+
+    valid = [r for r in rows if isinstance(r, dict) and r.get("ok") is True]
+    unknown_time = sum(timestamp(r) is None for r in valid)
+    valid.sort(key=lambda r: (timestamp(r) or epoch, str(r.get("order_id") or "")), reverse=True)
+    selected = valid[:max(0, limit)]
+    counts = {dim: 0 for dim in EVIDENCE_GAP_DIMS}
+    for row in selected:
+        analysis = row.get("analysis")
+        limitations = analysis.get("limitations", []) if isinstance(analysis, dict) else []
+        gaps = classify_evidence_gaps(limitations)
+        for dim in {g["dim"] for g in gaps}:
+            counts[dim] += 1
+
+    ranking = sorted(
+        ({"dim": dim, "orders": count} for dim, count in counts.items() if count),
+        key=lambda x: (-x["orders"], x["dim"]),
+    )
+    priorities = {}
+    for row in ranking:
+        for evo in _GAP_EVOS.get(row["dim"], ()):
+            item = priorities.setdefault(evo, {"evo_id": evo, "gap_dims": [], "orders_by_dim": {}})
+            item["gap_dims"].append(row["dim"])
+            item["orders_by_dim"][row["dim"]] = row["orders"]
+    suggestions = sorted(
+        priorities.values(),
+        key=lambda x: (-max(x["orders_by_dim"].values()), x["evo_id"]),
+    )
+    return {
+        "proposal": "EVO-20261118-2", "read_only": True,
+        "selection": "成功复盘按卖出时间降序取最近 N 条；每条每维度最多计一次",
+        "limit": limit, "selected": len(selected), "unknown_time": unknown_time,
+        "counts": counts, "top_gaps": ranking[:max(0, top_n)],
+        "suggestions": suggestions,
+        "note": "关键词分类和映射仅供人工核查；提案当前状态未核实，新闻、regime 和其它缺口暂无指定映射。",
+    }
+
+
+def evidence_gap_report(*, archive_path: Path | None = None, limit: int = 30,
+                        top_n: int = 7) -> dict:
+    """只读归档，旧记录按原始 limitations 即时分类，不回写。"""
+    from trade_postmortem import load_review_archive
+
+    path = Path(archive_path) if archive_path is not None else Path(SIGNALS_DIR) / "postmortem" / "archive.jsonl"
+    try:
+        if not path.exists():
+            raise FileNotFoundError
+        result = summarize_evidence_gaps(load_review_archive(path), limit=limit, top_n=top_n)
+        result["source_status"] = "ok"
+    except (OSError, ValueError, TypeError) as exc:
+        result = summarize_evidence_gaps([], limit=limit, top_n=top_n)
+        result["source_status"] = "unavailable"
+        result["error"] = type(exc).__name__
+    return result
+
 
 def _archive_old(name: str, old_v: dict) -> None:
     """把旧 verdict 归档 (加时间戳, 供后续 diff)."""
@@ -113,6 +188,13 @@ def main():
     print("=" * 70)
     print(f"Weekly Backtest Review @ {datetime.now().isoformat(timespec='seconds')}")
     print("=" * 70)
+
+    # 即使没有到期回测，也输出只读证据缺口周报。
+    try:
+        print("\n证据缺口周报:")
+        print(json.dumps(evidence_gap_report(), ensure_ascii=False, indent=2))
+    except Exception as exc:
+        print(f"证据缺口周报不可用: {type(exc).__name__}")
 
     if args.force_all:
         candidates = list(_BACKTEST_SCRIPTS.keys())
