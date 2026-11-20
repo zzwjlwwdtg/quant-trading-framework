@@ -167,6 +167,52 @@ def classify_exit(tag: str) -> str:
     return "NORMAL"
 
 
+def post_exit_distributions(tracks: list[dict]) -> list[dict]:
+    """按原因和交易日统计有效收益；只供复盘，不用于交易决策。
+
+    每条轨迹对应一笔卖出事件，returns_pct 的键为 T+1、T+5、T+10。
+    四分位数使用排序后位置的线性插值；不足五个有效值时不显示统计量。
+    """
+    import math
+
+    buckets = ("ATR trailing", "现金纪律", "cohort", "unknown regime 保守映射", "unknown")
+    horizons = ("T+1", "T+5", "T+10")
+    result = []
+
+    def percentile(values, fraction):
+        position = (len(values) - 1) * fraction
+        lower = int(position)
+        upper = min(lower + 1, len(values) - 1)
+        return values[lower] + (values[upper] - values[lower]) * (position - lower)
+
+    for bucket in buckets:
+        members = [t for t in tracks if t.get("bucket", "unknown") == bucket]
+        for horizon in horizons:
+            values = []
+            for track in members:
+                returns = track.get("returns_pct")
+                value = returns.get(horizon) if isinstance(returns, dict) else None
+                if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+                    values.append(float(value))
+            values.sort()
+            row = {
+                "bucket": bucket, "horizon": horizon,
+                "events": len(members), "n": len(values),
+                "median": None, "p25": None, "p75": None,
+                "best": None, "worst": None,
+                "status": "样本不足" if len(values) < 5 else "可展示",
+            }
+            if len(values) >= 5:
+                row.update({
+                    "median": percentile(values, 0.5),
+                    "p25": percentile(values, 0.25),
+                    "p75": percentile(values, 0.75),
+                    "best": values[-1], "worst": values[0],
+                })
+            result.append(row)
+    return result
+
+
 def report(trades: list[dict]):
     if not trades:
         print("❌ trade_log.jsonl 无 BUY/SELL 配对（DRY_RUN 过滤后）。")
