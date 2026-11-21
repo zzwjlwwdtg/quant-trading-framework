@@ -1,0 +1,220 @@
+{
+  "cache_schema": 1,
+  "source_stock": "NBIS",
+  "state": "ready",
+  "analyst_consensus": {
+    "n_analysts": 20,
+    "recommendation": "buy",
+    "current_price": 81.31,
+    "forward_eps": -3.04,
+    "trailing_eps": -0.26,
+    "eps_growth_pct": null,
+    "forward_pe": -26.71,
+    "trailing_pe": null,
+    "target_mean": 231.6,
+    "target_high": 380.0,
+    "target_low": 84.0,
+    "target_upside_pct": 184.8,
+    "revenue_growth_pct": 571.3,
+    "earnings_growth_pct": null,
+    "next_earnings": "2027-02-11",
+    "implied_pe_hold": null,
+    "implied_pe_hold_upside": null,
+    "peg_fair_price": null,
+    "peg_ratio": null,
+    "hist_pe_median": null,
+    "hist_pe_p25": null,
+    "hist_pe_p75": null,
+    "hist_pe_n_days": null,
+    "implied_hist_median": null,
+    "implied_hist_p25": null,
+    "implied_hist_p75": null,
+    "implied_hist_upside": null,
+    "peer_pe_median": 20.02,
+    "peer_pe_n_peers": 3,
+    "peer_pe_details": [
+      {
+        "ticker": "ORCL",
+        "pe": 9.15
+      },
+      {
+        "ticker": "AMZN",
+        "pe": 22.59
+      },
+      {
+        "ticker": "MSFT",
+        "pe": 20.02
+      }
+    ],
+    "implied_peer_median": -60.94,
+    "implied_peer_upside": -174.9,
+    "source": "yfinance analyst aggregation",
+    "forward_estimates": {
+      "earnings": {
+        "0q": {
+          "avg": -1.434,
+          "low": -2.91,
+          "high": -0.73,
+          "yearAgoEps": -0.9865,
+          "numberOfAnalysts": 5.0,
+          "growth": -0.4536
+        },
+        "+1q": {
+          "avg": -1.5633,
+          "low": -3.58,
+          "high": -0.47,
+          "yearAgoEps": 2.11,
+          "numberOfAnalysts": 6.0,
+          "growth": -1.7409
+        },
+        "0y": {
+          "avg": -0.2938,
+          "low": -1.61,
+          "high": 0.59,
+          "numberOfAnalysts": 8.0
+        },
+        "+1y": {
+          "avg": -5.3059,
+          "low": -10.29,
+          "high": -1.89,
+          "yearAgoEps": -0.2938,
+          "numberOfAnalysts": 9.0,
+          "growth": -17.0628
+        }
+      },
+      "revenue": {
+        "0q": {
+          "avg": 1175558140.0,
+          "low": 1037900000.0,
+          "high": 1437400000.0,
+          "yearAgoRevenue": 227700000.0,
+          "numberOfAnalysts": 14.0,
+          "growth": 4.1627
+        },
+        "+1q": {
+          "avg": 1765098730.0,
+          "low": 1296800000.0,
+          "high": 2183200000.0,
+          "yearAgoRevenue": 399000000.0,
+          "numberOfAnalysts": 14.0,
+          "growth": 3.4238
+        },
+        "0y": {
+          "avg": 3162746040.0,
+          "low": 3000000000.0,
+          "high": 3388000000.0,
+          "yearAgoRevenue": 529800000.0,
+          "numberOfAnalysts": 20.0,
+          "growth": 4.9697
+        },
+        "+1y": {
+          "avg": 12363834290.0,
+          "low": 11423800000.0,
+          "high": 13580000000.0,
+          "yearAgoRevenue": 3162746040.0,
+          "numberOfAnalysts": 19.0,
+          "growth": 2.9092
+        }
+      },
+      "eps_trend": {
+        "0q": {
+          "current": -1.434,
+          "7daysAgo": -1.7775,
+          "30daysAgo": -1.7775,
+          "60daysAgo": -2.03,
+          "90daysAgo": -2.4067
+        },
+        "+1q": {
+          "current": -1.5633,
+          "7daysAgo": -1.7975,
+          "30daysAgo": -1.7975,
+          "60daysAgo": -2.0367,
+          "90daysAgo": -1.9933
+        },
+        "0y": {
+          "current": -0.2938,
+          "7daysAgo": -2.1132,
+          "30daysAgo": -2.1132,
+          "60daysAgo": -2.5183,
+          "90daysAgo": -2.3567
+        },
+        "+1y": {
+          "current": -5.3059,
+          "7daysAgo": -6.1573,
+          "30daysAgo": -6.1573,
+          "60daysAgo": -5.6486,
+          "90daysAgo": -4.6586
+        }
+      },
+      "eps_revisions": {
+        "0q": {
+          "upLast7days": 0.0,
+          "upLast30days": 1.0,
+          "downLast30days": 1.0
+        },
+        "+1q": {
+          "upLast7days": 0.0,
+          "upLast30days": 1.0,
+          "downLast30days": 2.0
+        },
+        "0y": {
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
+          "downLast30days": 1.0
+        },
+        "+1y": {
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
+          "downLast30days": 1.0
+        }
+      },
+      "revision_summary": {
+        "period": "+1y",
+        "signal": "downward",
+        "trend_signal": "downward",
+        "breadth_signal": "flat",
+        "eps_current": -5.3059,
+        "eps_30d_ago": -6.1573,
+        "eps_trend_pct_30d": -13.83,
+        "up_30d": 1,
+        "down_30d": 1,
+        "net_30d": 0
+      }
+    }
+  },
+  "pricing": {
+    "classification": "mixed",
+    "label": "估值与修正信号分歧",
+    "tone": "warn",
+    "confidence": "medium",
+    "anchor_count": 1,
+    "anchors": [
+      {
+        "key": "analyst_target",
+        "label": "分析师目标均值",
+        "implied_price": 231.6,
+        "gap_pct": 184.8
+      }
+    ],
+    "median_gap_pct": 184.8,
+    "revision_signal": "downward",
+    "required_eps_growth_pct": null,
+    "consensus_eps_growth_pct": null,
+    "growth_cushion_pct": null,
+    "rationale": [
+      "多口径隐含价中位数高于现价 184.8%",
+      "近 30 天 EPS 共识下修"
+    ]
+  },
+  "official_guidance_status": "not_connected",
+  "fetched_at": "2026-11-21T12:33:21.131440+00:00",
+  "source": "yfinance analyst aggregation",
+  "_meta": {
+    "cached_at": "2026-11-21T21:33:21.131440",
+    "age_sec": 21599,
+    "stale": false,
+    "refreshing": false
+  },
+  "ticker": "NBIS",
+  "is_proxy": false
+}

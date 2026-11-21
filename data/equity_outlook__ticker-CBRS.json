@@ -1,0 +1,201 @@
+{
+  "cache_schema": 1,
+  "source_stock": "CBRS",
+  "state": "ready",
+  "analyst_consensus": {
+    "n_analysts": 11,
+    "recommendation": "strong_buy",
+    "current_price": 82.67,
+    "forward_eps": 1.86,
+    "trailing_eps": -5.17,
+    "eps_growth_pct": null,
+    "forward_pe": 44.49,
+    "trailing_pe": null,
+    "target_mean": 210.18,
+    "target_high": 280.0,
+    "target_low": 155.0,
+    "target_upside_pct": 154.2,
+    "revenue_growth_pct": 55.3,
+    "earnings_growth_pct": null,
+    "next_earnings": "2026-11-13",
+    "implied_pe_hold": null,
+    "implied_pe_hold_upside": null,
+    "peg_fair_price": null,
+    "peg_ratio": null,
+    "hist_pe_median": null,
+    "hist_pe_p25": null,
+    "hist_pe_p75": null,
+    "hist_pe_n_days": null,
+    "implied_hist_median": null,
+    "implied_hist_p25": null,
+    "implied_hist_p75": null,
+    "implied_hist_upside": null,
+    "peer_pe_median": null,
+    "peer_pe_n_peers": null,
+    "peer_pe_details": null,
+    "implied_peer_median": null,
+    "implied_peer_upside": null,
+    "source": "yfinance analyst aggregation",
+    "forward_estimates": {
+      "earnings": {
+        "0q": {
+          "avg": 0.0814,
+          "low": -0.06,
+          "high": 0.2249,
+          "numberOfAnalysts": 7.0
+        },
+        "+1q": {
+          "avg": 0.1258,
+          "low": 0.04,
+          "high": 0.4,
+          "yearAgoEps": -0.0395,
+          "numberOfAnalysts": 7.0,
+          "growth": 4.1844
+        },
+        "0y": {
+          "avg": 0.2889,
+          "low": 0.11,
+          "high": 0.4743,
+          "numberOfAnalysts": 5.0
+        },
+        "+1y": {
+          "avg": 1.8584,
+          "low": 1.04,
+          "high": 2.83,
+          "yearAgoEps": 0.2889,
+          "numberOfAnalysts": 10.0,
+          "growth": 5.433
+        }
+      },
+      "revenue": {
+        "0q": {
+          "avg": 314932080.0,
+          "low": 275322000.0,
+          "high": 328375650.0,
+          "numberOfAnalysts": 8.0
+        },
+        "+1q": {
+          "avg": 407624500.0,
+          "low": 370000000.0,
+          "high": 446200000.0,
+          "yearAgoRevenue": 191348000.0,
+          "numberOfAnalysts": 6.0,
+          "growth": 1.1303
+        },
+        "0y": {
+          "avg": 945633640.0,
+          "low": 889849000.0,
+          "high": 960465650.0,
+          "numberOfAnalysts": 9.0
+        },
+        "+1y": {
+          "avg": 2982234220.0,
+          "low": 2750000000.0,
+          "high": 3226403310.0,
+          "yearAgoRevenue": 945633640.0,
+          "numberOfAnalysts": 10.0,
+          "growth": 2.1537
+        }
+      },
+      "eps_trend": {
+        "0q": {
+          "current": 0.0814,
+          "7daysAgo": -0.2262,
+          "30daysAgo": -0.2266,
+          "60daysAgo": -0.2266,
+          "90daysAgo": -0.2266
+        },
+        "+1q": {
+          "current": 0.1258,
+          "7daysAgo": -0.0907,
+          "30daysAgo": -0.0765,
+          "60daysAgo": -0.0765,
+          "90daysAgo": -0.0765
+        },
+        "0y": {
+          "current": 0.2889,
+          "7daysAgo": -0.4687,
+          "30daysAgo": -0.4694,
+          "60daysAgo": -0.4694,
+          "90daysAgo": -0.4704
+        },
+        "+1y": {
+          "current": 1.8584,
+          "7daysAgo": 1.2793,
+          "30daysAgo": 1.2737,
+          "60daysAgo": 1.2737,
+          "90daysAgo": 1.2971
+        }
+      },
+      "eps_revisions": {
+        "0q": {
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
+          "downLast30days": 0.0
+        },
+        "+1q": {
+          "upLast7days": 8.0,
+          "upLast30days": 9.0,
+          "downLast30days": 0.0
+        },
+        "0y": {
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
+          "downLast30days": 0.0
+        },
+        "+1y": {
+          "upLast7days": 1.0,
+          "upLast30days": 1.0,
+          "downLast30days": 0.0
+        }
+      },
+      "revision_summary": {
+        "period": "+1y",
+        "signal": "upward",
+        "trend_signal": "upward",
+        "breadth_signal": "upward",
+        "eps_current": 1.8584,
+        "eps_30d_ago": 1.2737,
+        "eps_trend_pct_30d": 45.91,
+        "up_30d": 1,
+        "down_30d": 0,
+        "net_30d": 1
+      }
+    }
+  },
+  "pricing": {
+    "classification": "underpriced",
+    "label": "市场预期偏低",
+    "tone": "ok",
+    "confidence": "medium",
+    "anchor_count": 1,
+    "anchors": [
+      {
+        "key": "analyst_target",
+        "label": "分析师目标均值",
+        "implied_price": 210.18,
+        "gap_pct": 154.2
+      }
+    ],
+    "median_gap_pct": 154.2,
+    "revision_signal": "upward",
+    "required_eps_growth_pct": null,
+    "consensus_eps_growth_pct": null,
+    "growth_cushion_pct": null,
+    "rationale": [
+      "多口径隐含价中位数高于现价 154.2%",
+      "近 30 天 EPS 共识上修"
+    ]
+  },
+  "official_guidance_status": "not_connected",
+  "fetched_at": "2026-11-21T12:33:20.062958+00:00",
+  "source": "yfinance analyst aggregation",
+  "_meta": {
+    "cached_at": "2026-11-21T21:33:20.062959",
+    "age_sec": 21600,
+    "stale": true,
+    "refreshing": true
+  },
+  "ticker": "CBRS",
+  "is_proxy": false
+}

@@ -1,0 +1,81 @@
+{
+  "current_target_range": "3.75-4.00",
+  "meetings": [
+    {
+      "date": "2026-12-09",
+      "days_until": 18,
+      "probabilities": {
+        "hold": 7,
+        "hike_25": 93
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 67,
+      "probabilities": {
+        "hold": 39,
+        "hike_25": 61
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 116,
+      "probabilities": {
+        "hold": 47,
+        "hike_25": 53
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-04-28",
+      "days_until": 158,
+      "probabilities": {
+        "hold": 85,
+        "hike_25": 15
+      },
+      "most_likely": "hold",
+      "consensus_direction": "neutral"
+    }
+  ],
+  "implied_terminal_rate": null,
+  "implied_terminal_date": null,
+  "data_snapshot_date": "2026-11-20",
+  "recent_event_impact": "11月10日公布的10月CPI环比上涨0.4%，高于预期的0.3%；核心CPI上涨0.3%，高于预期的0.2%，强化了加息预期。11月16日Warsh讲话和11月18日FOMC会议纪要均早于概率快照；Warsh讲话未明确指引下一步利率行动。",
+  "commentary": "数据快照为2026年11月20日，最近一个交易日。期货隐含12月加息25个基点的概率为93%；上述各次会议概率来自第三方按联邦基金期货计算的单次会议行动估计，并非直接提取的CME官方FedWatch数据，因此置信度为medium。",
+  "sources": [
+    {
+      "url": "https://www.frenzycap.com/fedwatch/meetings",
+      "type": "fed_funds_futures_derived"
+    },
+    {
+      "url": "https://www.frenzycap.com/fedwatch",
+      "type": "fed_funds_futures_snapshot"
+    },
+    {
+      "url": "https://kbvalbury.com/cfind/source/files/weekly-fixed-income-update--kbvs---26novw2.pdf",
+      "type": "cpi_and_market_analysis"
+    },
+    {
+      "url": "https://apnews.com/article/6f9dc54229bbdd80beb4ee3431a01641",
+      "type": "fed_chair_speech"
+    },
+    {
+      "url": "https://apnews.com/article/9e72f3b6e3484173471cc382d6918de0",
+      "type": "fomc_minutes"
+    }
+  ],
+  "confidence": "medium",
+  "source_via": "codex_cli_websearch",
+  "fetched_at": "2026-11-21T06:33:36+00:00",
+  "_meta": {
+    "cached_at": "2026-11-21T15:33:36.560520",
+    "age_sec": 35966,
+    "stale": true,
+    "refreshing": true
+  }
+}

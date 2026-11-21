@@ -1,0 +1,99 @@
+{
+  "ticker": "XLV",
+  "sector": "医疗保健",
+  "business": "XLV 是追踪医疗保健精选行业指数的 ETF，其标的涵盖制药、生物科技、医疗器械及医疗服务等公司，以下以主要持仓所处产业链为分析对象。",
+  "upstream": [
+    {
+      "name": "Thermo Fisher Scientific",
+      "ticker": "TMO",
+      "note": "为制药及生物科技企业提供实验室设备、试剂与药物研发生产服务。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Danaher",
+      "ticker": "DHR",
+      "note": "提供生命科学仪器、诊断产品及生物制药生产相关工具。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "Lonza Group",
+      "ticker": null,
+      "note": "为生物制药企业提供合同研发与生产服务。",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "West Pharmaceutical Services",
+      "ticker": "WST",
+      "note": "提供注射药物包装组件及给药系统。",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "McKesson",
+      "ticker": "MCK",
+      "note": "从药企采购药品并向药房、医院等医疗机构分销；礼来在 10-K 中披露其为重要批发客户。",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "Cencora",
+      "ticker": "COR",
+      "note": "采购并分销处方药及专科药品；礼来在 10-K 中披露其为重要批发客户。",
+      "weight": 88,
+      "confidence": "high"
+    },
+    {
+      "name": "Cardinal Health",
+      "ticker": "CAH",
+      "note": "采购药品并向药房和医疗机构分销；礼来在 10-K 中披露其为重要批发客户。",
+      "weight": 85,
+      "confidence": "high"
+    },
+    {
+      "name": "HCA Healthcare",
+      "ticker": "HCA",
+      "note": "医院运营商，采购药品、医疗器械及诊断产品用于患者治疗。",
+      "weight": 60,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Vanguard Health Care ETF",
+      "ticker": "VHT",
+      "note": "投资美国医疗保健股票，与 XLV 争夺医疗行业配置资金。",
+      "confidence": "medium"
+    },
+    {
+      "name": "iShares U.S. Healthcare ETF",
+      "ticker": "IYH",
+      "note": "投资美国医疗保健公司，与 XLV 在行业投资敞口上竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "Fidelity MSCI Health Care Index ETF",
+      "ticker": "FHLC",
+      "note": "提供美国医疗保健行业股票敞口，与 XLV 竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "Invesco S&P 500 Equal Weight Health Care ETF",
+      "ticker": "RSPH",
+      "note": "以等权方式投资标普 500 医疗保健成分股，与 XLV 竞争行业配置资金。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-21T08:33:42.280231+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-21T17:33:42.281235",
+    "age_sec": 35977,
+    "stale": false,
+    "refreshing": false
+  }
+}

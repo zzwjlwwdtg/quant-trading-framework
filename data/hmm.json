@@ -1,0 +1,44 @@
+{
+  "exists": true,
+  "label": "volatile_uncertain",
+  "prob": 0.999,
+  "state": 1,
+  "ts": "2026-11-20T23:23:33.730436",
+  "state_probs": {
+    "0": 0.0,
+    "1": 0.999,
+    "2": 0.001,
+    "3": 0.0
+  },
+  "scope": "slow_macro_background",
+  "warning": "慢周期背景，不是当前买入或加仓信号",
+  "trading": {
+    "regime": "risk_off",
+    "regime_zh": "风险收缩（价格/板块急跌）",
+    "base_regime": "risk_off",
+    "style": {
+      "style": "trend_down",
+      "style_zh": "短线趋势偏弱",
+      "chop_score": 2,
+      "is_choppy": false,
+      "reason": "10日趋势效率偏低(0.22)；ADX偏低(17.4)",
+      "metrics": {
+        "pct_5d": -5.45,
+        "pct_20d": -6.29,
+        "dist_ma20_pct": -4.72,
+        "dist_ma50_pct": -5.99,
+        "efficiency_10": 0.225,
+        "efficiency_20": 0.298,
+        "adx_14": 17.4,
+        "reversal_count_10d": 3,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 1.168
+      },
+      "policy_note": "短线承压：等待价格与动量重新确认"
+    },
+    "date": "2026-11-20",
+    "expected_date": "2026-11-23",
+    "stale": true,
+    "ts": "2026-11-20T14:23:33.020695+00:00"
+  }
+}

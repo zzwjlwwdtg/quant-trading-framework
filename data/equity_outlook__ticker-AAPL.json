@@ -1,0 +1,241 @@
+{
+  "cache_schema": 1,
+  "source_stock": "AAPL",
+  "state": "ready",
+  "analyst_consensus": {
+    "n_analysts": 39,
+    "recommendation": "buy",
+    "current_price": 342.56,
+    "forward_eps": 10.57,
+    "trailing_eps": 8.98,
+    "eps_growth_pct": 17.7,
+    "forward_pe": 32.4,
+    "trailing_pe": 38.15,
+    "target_mean": 345.63,
+    "target_high": 425.0,
+    "target_low": 250.0,
+    "target_upside_pct": 0.9,
+    "revenue_growth_pct": 11.7,
+    "earnings_growth_pct": 14.1,
+    "next_earnings": "2027-01-29",
+    "implied_pe_hold": 403.32,
+    "implied_pe_hold_upside": 17.7,
+    "peg_fair_price": 187.14,
+    "peg_ratio": 1.83,
+    "hist_pe_median": 36.12,
+    "hist_pe_p25": 32.89,
+    "hist_pe_p75": 38.3,
+    "hist_pe_n_days": 789,
+    "implied_hist_median": 381.89,
+    "implied_hist_p25": 347.74,
+    "implied_hist_p75": 404.94,
+    "implied_hist_upside": 11.5,
+    "peer_pe_median": 19.04,
+    "peer_pe_n_peers": 3,
+    "peer_pe_details": [
+      {
+        "ticker": "GOOGL",
+        "pe": 17.34
+      },
+      {
+        "ticker": "1810.HK",
+        "pe": 19.04
+      },
+      {
+        "ticker": "MSFT",
+        "pe": 20.02
+      }
+    ],
+    "implied_peer_median": 201.3,
+    "implied_peer_upside": -41.2,
+    "source": "yfinance analyst aggregation",
+    "forward_estimates": {
+      "earnings": {
+        "0q": {
+          "avg": 2.9117,
+          "low": 2.83,
+          "high": 3.18,
+          "yearAgoEps": 2.84,
+          "numberOfAnalysts": 25.0,
+          "growth": 0.0253
+        },
+        "+1q": {
+          "avg": 2.1504,
+          "low": 1.83,
+          "high": 2.49,
+          "yearAgoEps": 2.01,
+          "numberOfAnalysts": 23.0,
+          "growth": 0.0698
+        },
+        "0y": {
+          "avg": 9.4294,
+          "low": 8.16,
+          "high": 10.28,
+          "yearAgoEps": 8.98,
+          "numberOfAnalysts": 40.0,
+          "growth": 0.05
+        },
+        "+1y": {
+          "avg": 10.5991,
+          "low": 8.36,
+          "high": 12.2,
+          "yearAgoEps": 9.4294,
+          "numberOfAnalysts": 35.0,
+          "growth": 0.124
+        }
+      },
+      "revenue": {
+        "0q": {
+          "avg": 156429989490.0,
+          "low": 154257600000.0,
+          "high": 158132000000.0,
+          "yearAgoRevenue": 143756000000.0,
+          "numberOfAnalysts": 23.0,
+          "growth": 0.0882
+        },
+        "+1q": {
+          "avg": 124000418700.0,
+          "low": 110770000000.0,
+          "high": 142811158840.0,
+          "yearAgoRevenue": 111184000000.0,
+          "numberOfAnalysts": 21.0,
+          "growth": 0.1153
+        },
+        "0y": {
+          "avg": 528236958590.0,
+          "low": 479837000000.0,
+          "high": 557876000000.0,
+          "yearAgoRevenue": 478834000000.0,
+          "numberOfAnalysts": 34.0,
+          "growth": 0.1032
+        },
+        "+1y": {
+          "avg": 571120334580.0,
+          "low": 492192000000.0,
+          "high": 637905000000.0,
+          "yearAgoRevenue": 528236958590.0,
+          "numberOfAnalysts": 35.0,
+          "growth": 0.0812
+        }
+      },
+      "eps_trend": {
+        "0q": {
+          "current": 2.9117,
+          "7daysAgo": 2.9149,
+          "30daysAgo": 2.9019,
+          "60daysAgo": 2.9047,
+          "90daysAgo": 2.9086
+        },
+        "+1q": {
+          "current": 2.1504,
+          "7daysAgo": 2.1521,
+          "30daysAgo": 2.231,
+          "60daysAgo": 2.2375,
+          "90daysAgo": 2.2071
+        },
+        "0y": {
+          "current": 9.4294,
+          "7daysAgo": 9.4177,
+          "30daysAgo": 9.5908,
+          "60daysAgo": 9.6013,
+          "90daysAgo": 9.5528
+        },
+        "+1y": {
+          "current": 10.5991,
+          "7daysAgo": 10.5794,
+          "30daysAgo": 10.842,
+          "60daysAgo": 10.8346,
+          "90daysAgo": 10.7505
+        }
+      },
+      "eps_revisions": {
+        "0q": {
+          "upLast7days": 10.0,
+          "upLast30days": 11.0,
+          "downLast30days": 4.0
+        },
+        "+1q": {
+          "upLast7days": 1.0,
+          "upLast30days": 2.0,
+          "downLast30days": 13.0
+        },
+        "0y": {
+          "upLast7days": 6.0,
+          "upLast30days": 7.0,
+          "downLast30days": 23.0
+        },
+        "+1y": {
+          "upLast7days": 3.0,
+          "upLast30days": 3.0,
+          "downLast30days": 10.0
+        }
+      },
+      "revision_summary": {
+        "period": "+1y",
+        "signal": "downward",
+        "trend_signal": "downward",
+        "breadth_signal": "downward",
+        "eps_current": 10.5991,
+        "eps_30d_ago": 10.842,
+        "eps_trend_pct_30d": -2.24,
+        "up_30d": 3,
+        "down_30d": 10,
+        "net_30d": -7
+      }
+    }
+  },
+  "pricing": {
+    "classification": "matched",
+    "label": "预期与股价基本匹配",
+    "tone": "muted",
+    "confidence": "high",
+    "anchor_count": 4,
+    "anchors": [
+      {
+        "key": "analyst_target",
+        "label": "分析师目标均值",
+        "implied_price": 345.63,
+        "gap_pct": 0.9
+      },
+      {
+        "key": "pe_hold",
+        "label": "前瞻 EPS × 当前估值",
+        "implied_price": 403.32,
+        "gap_pct": 17.7
+      },
+      {
+        "key": "historical_pe",
+        "label": "前瞻 EPS × 五年 PE 中位",
+        "implied_price": 381.89,
+        "gap_pct": 11.5
+      },
+      {
+        "key": "peer_pe",
+        "label": "前瞻 EPS × 同行 PE 中位",
+        "implied_price": 201.3,
+        "gap_pct": -41.2
+      }
+    ],
+    "median_gap_pct": 6.2,
+    "revision_signal": "downward",
+    "required_eps_growth_pct": 5.6,
+    "consensus_eps_growth_pct": 17.7,
+    "growth_cushion_pct": 12.1,
+    "rationale": [
+      "多口径隐含价中位数高于现价 6.2%",
+      "近 30 天 EPS 共识下修",
+      "历史 PE 口径要求 EPS 增长 +5.6%，共识为 +17.7%"
+    ]
+  },
+  "official_guidance_status": "not_connected",
+  "fetched_at": "2026-11-21T12:33:20.965727+00:00",
+  "source": "yfinance analyst aggregation",
+  "_meta": {
+    "cached_at": "2026-11-21T21:33:20.966244",
+    "age_sec": 21599,
+    "stale": false,
+    "refreshing": false
+  },
+  "ticker": "AAPL",
+  "is_proxy": false
+}
