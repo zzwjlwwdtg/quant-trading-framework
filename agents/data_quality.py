@@ -52,6 +52,36 @@ def _parse_time(value, now: datetime) -> datetime | None:
     return parsed
 
 
+def assess_field_freshness(
+    source_ts,
+    *,
+    now: datetime | None = None,
+    max_age_hours: float = 36.0,
+) -> dict:
+    """诊断字段时间戳，仅供审计；未知时间不推断为新鲜。
+
+    阈值默认沿用行情快照的 36 小时；调用方可按已知来源明确指定。
+    """
+    now = now or datetime.now(timezone.utc).astimezone()
+    if now.tzinfo is None:
+        now = now.astimezone()
+    observed = _parse_time(source_ts, now)
+    if observed is None:
+        return {"source_ts": source_ts, "age_seconds": None,
+                "data_quality_tag": "unknown", "reason": "missing_or_invalid_timestamp"}
+    age = (now - observed.astimezone(now.tzinfo)).total_seconds()
+    if age < -180:
+        return {"source_ts": source_ts, "age_seconds": age,
+                "data_quality_tag": "unknown", "reason": "future_timestamp"}
+    age = max(0.0, age)
+    return {
+        "source_ts": source_ts,
+        "age_seconds": age,
+        "data_quality_tag": "critical" if age > max_age_hours * 3600 else "ok",
+        "reason": "stale" if age > max_age_hours * 3600 else None,
+    }
+
+
 def assess_market_snapshot(
     market: dict,
     *,
