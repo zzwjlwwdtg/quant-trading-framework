@@ -108,3 +108,34 @@ def list_verdicts_needing_review() -> list[dict]:
         except Exception:
             continue
     return stale
+
+
+def update_live_followup(name: str, live_followup: dict) -> Path:
+    """原子更新 verdict 的 live_followup 字段, 不改 verdict/metrics 等主体.
+
+    若 verdict 文件不存在则先建占位 (verdict="inconclusive") 再写入.
+    EVO-20261122-1: 供 _probe_veto_live_tracker 落盘 live 偏离检验结果用.
+    """
+    _VERDICTS_DIR.mkdir(parents=True, exist_ok=True)
+    p = _path(name)
+    existing: dict = {}
+    if p.exists():
+        try:
+            existing = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            existing = {}
+    if not existing:
+        existing = {
+            "name":             name,
+            "verdict":          "inconclusive",
+            "run_at":           datetime.now(timezone.utc).isoformat(),
+            "conclusion":       "预注册 OOS verdict 待更新",
+            "metrics":          {},
+            "params":           {},
+            "next_review_days": 30,
+            "should_integrate": False,
+            "recommendation":   "",
+        }
+    existing["live_followup"] = live_followup
+    atomic_write_json(p, existing)
+    return p
