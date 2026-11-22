@@ -64,7 +64,7 @@ class CollectNewsStructured(unittest.TestCase):
         self.assertEqual(len(res["items"]), 2)
         self.assertEqual(res["items"][0]["symbol"], "MULL")
         self.assertEqual(res["items"][0]["event_type"], "BREAKING")
-        self.assertEqual(res["items"][0]["pub_utc"], "2026-10-06 14:00")
+        self.assertEqual(res["items"][0]["pub_utc"], "2026-10-06T14:00:00+00:00")
         self.assertEqual(res["items"][1]["symbol"], "QQQ")
         self.assertFalse(res["fallback"])
 

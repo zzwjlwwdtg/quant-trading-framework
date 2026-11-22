@@ -335,9 +335,58 @@ def classify_evidence_gaps(limitations: list) -> list[dict]:
     return result
 
 
+# ── 证据等级统计 (EVO-20261029-2) ─────────────────────────────────────────────
+def news_evidence_summary(news_structured: dict | None) -> dict:
+    """按证据类别统计 news_structured 条目, 供复盘报告与提示词约束.
+
+    纯只读统计, 不影响决策, 不写归档.
+    证据类别 (由 news_analyzer.collect_news_structured 标注):
+      direct_at_decision   — 目标标的直接新闻, 卖出前可得
+      proxy_at_decision    — 代理资产新闻, 卖出前可得
+      post_event_background — pub_utc ≥ 卖出时间, 事后背景
+      price_description_only — 仅价格描述, 无独立新催化剂
+    """
+    items = (news_structured or {}).get("items") or []
+    by_cat: dict[str, list] = {}
+    for it in items:
+        cat = it.get("evidence_category") or "unknown"
+        by_cat.setdefault(cat, []).append(it)
+    proxy_syms = sorted({it.get("symbol", "") for it in items if it.get("is_proxy")})
+    return {
+        "total": len(items),
+        "by_category": {k: len(v) for k, v in by_cat.items()},
+        "proxy_symbols": proxy_syms,
+        "constraints": {
+            "post_event_cannot_be_trigger": True,
+            "proxy_requires_mapping_disclaimer": bool(proxy_syms),
+            "price_only_has_no_new_catalyst": bool(by_cat.get("price_description_only")),
+            "entered_decision": False,
+        },
+    }
+
+
 # ── AI ───────────────────────────────────────────────────────────────────────
 def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: list[str], after_closes: list[dict],
-                 *, research_evidence: dict | None = None) -> str:
+                 *, research_evidence: dict | None = None,
+                 news_structured: dict | None = None) -> str:
+    # EVO-20261029-2: 生成证据等级约束文字
+    _ev = news_evidence_summary(news_structured)
+    _by_cat = _ev.get("by_category") or {}
+    _proxy_syms = _ev.get("proxy_symbols") or []
+    _bare = sell.get("ticker", "").replace("US.", "")
+    _ev_lines = []
+    if _by_cat.get("post_event_background"):
+        _ev_lines.append(
+            f"   · {_by_cat['post_event_background']} 条事后背景 (pub_utc ≥ 卖出时间): 不得作为当时卖出理由")
+    if _proxy_syms:
+        _ev_lines.append(
+            f"   · {_by_cat.get('proxy_at_decision', 0)} 条代理资产新闻 ({'/'.join(_proxy_syms)}): "
+            f"不能视为 {_bare} 直接催化剂; 引用须注明映射限制")
+    if _by_cat.get("price_description_only"):
+        _ev_lines.append(
+            f"   · {_by_cat['price_description_only']} 条仅价格描述: 无新增催化剂")
+    _ev_lines.append("   · 候选结构化新闻均 entered_decision=False, 不得写为系统触发原因")
+    _ev_text = "\n".join(_ev_lines)
     return f"""你是交易复盘分析师。下面是一个自动交易系统的一笔**卖出**和当时的原始材料。
 只依据这些材料作答, 不要编造材料里没有的新闻或数字; 材料不足就明确写"材料不足".
 
@@ -365,9 +414,11 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 5. 不要建议把这只标的拉黑、永久禁止交易或"以后别碰": 亏损本身不是拉黑的理由 (交易是反人性的, 亏得多恰恰容易情绪化).
 6. 超卖仅为复盘分组标签，不得作为暂停止损的理由。没有同期可得买卖报价，不得把价格差称为精确执行滑点；止损线到成交价的偏离不能全部归因于窗口检查、跳空或执行。
 7. 超卖研究证据: {json.dumps(research_evidence or oversold_review_evidence(), ensure_ascii=False)}
-   未通过或证据不足时，任何“高概率反弹”“局部底部”“卖在底部”等结论必须明确标为“未验证假设”。
+   未通过或证据不足时，任何”高概率反弹””局部底部””卖在底部”等结论必须明确标为”未验证假设”。
    即便研究通过，也只可引用相应样本、收益均值差和置信区间；均值差不证明反弹概率很高或个别卖出错误。
    必须区分统计反弹与含报价、费用、再入场成本的可执行卖出改进；不得据此建议放松或暂停止损。
+8. 证据等级约束 (EVO-20261029-2):
+{_ev_text}
 只输出 JSON, 不要任何其他文字:
 {{"context": {{"technical": "...", "news": "..."}},
  "reasons": [{{"type": "技术面|消息面", "reason": "...", "evidence": "..."}}],
@@ -429,7 +480,8 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
                          "skipped": "live_fetch=False"})
     research_evidence = oversold_review_evidence(oversold_research)
     prompt = build_prompt(sell, excerpt, news, after_log, after_closes,
-                          research_evidence=research_evidence)
+                          research_evidence=research_evidence,
+                          news_structured=news_structured)
     if ai is None:
         from ai_prompt import query_ai_cli
         ai = lambda p: query_ai_cli(p, timeout=300, complexity="complex",
@@ -449,6 +501,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             "evidence_gaps": classify_evidence_gaps(parsed.get("limitations", [])) if parsed else [],
             "material": {"excerpt_lines": len(excerpt), "news_items": len(news), "after_closes": after_closes},
             "news_structured": news_structured,
+            "news_evidence_summary": news_evidence_summary(news_structured),  # EVO-20261029-2
             "oversold_research": research_evidence,
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 
