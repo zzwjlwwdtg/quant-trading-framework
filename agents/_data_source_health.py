@@ -226,6 +226,36 @@ def mark_many(
     return out
 
 
+def record_routing_error(
+    symbol: str,
+    source_attempted: str = "yahoo",
+    *,
+    reason: str = "",
+    now: Optional[datetime] = None,
+    path: Optional[Path] = None,
+) -> dict:
+    """非美市场符号意外路由到 Yahoo quoteSummary → 升级为 data_quality 事件。
+
+    EVO-20261122-2: 把"3688.T / 6488.TW 盲目走 Yahoo 返回 404"的隐患
+    从静默日志噪声升级为可追踪的 data_quality 事件。
+    threshold_days=1 —— 一次就告警，不等连续 N 天。
+    """
+    _logger.warning(
+        "[routing_error] %s 被路由到 %s，非美市场符号不应调用 Yahoo quoteSummary; reason=%s",
+        symbol, source_attempted, reason or "non_us_market",
+    )
+    # 始终带 routing_error: 前缀，确保 reason 字段可被 assertIn("routing_error") 检测
+    stored_reason = f"routing_error:{reason}" if reason else f"routing_error:non_us_to_{source_attempted}"
+    return record_fetch_result(
+        symbol,
+        ok=False,
+        reason=stored_reason,
+        threshold_days=1,
+        now=now,
+        path=path,
+    )
+
+
 def check_yfinance() -> tuple[bool, str]:
     try:
         import yfinance as yf

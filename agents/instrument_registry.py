@@ -169,15 +169,29 @@ _REGISTRY: dict[str, Instrument] = {
 def normalize(ticker: str) -> str:
     """Return canonical form. Accepts SOXL / US.SOXL / soxl → 'US.SOXL'.
 
-    未在 registry 里也返回 US.-prefixed uppercase; caller 可以再 get() 判是否已知.
+    未在 registry 里也返回带市场前缀的大写; caller 可以再 get() 判是否已知.
+
+    EVO-20261122-2: 增加 yfinance 市场后缀 → openD 前缀的推断规则，
+    防止 6488.TW / 3688.T 等非美符号被默认归类为 US 市场。
     """
     t = (ticker or "").upper().strip()
     if not t:
         return ""
     # 已经有市场前缀就保留
-    for pfx in ("US.", "HK.", "JP."):
+    for pfx in ("US.", "HK.", "JP.", "TW.", "SH.", "SZ."):
         if t.startswith(pfx):
             return t
+    # 从 yfinance 格式后缀推断市场前缀
+    if t.endswith(".T"):
+        return f"JP.{t[:-2]}"
+    if t.endswith(".TW"):
+        return f"TW.{t[:-3]}"
+    if t.endswith(".HK"):
+        return f"HK.{t[:-3]}"
+    if t.endswith(".SS"):
+        return f"SH.{t[:-3]}"
+    if t.endswith(".SZ"):
+        return f"SZ.{t[:-3]}"
     # 否则默认 US.
     return f"US.{t}"
 

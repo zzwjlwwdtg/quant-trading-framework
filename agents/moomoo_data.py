@@ -105,22 +105,65 @@ def to_openD_code(ticker: str) -> Optional[str]:
       "NVDA"      → "US.NVDA"
       "6762.T"    → "JP.6762"
       "285A.T"    → "JP.285A"
+      "6488.TW"   → "TW.6488"
+      "3688.T"    → "JP.3688"
+      "00700.HK"  → "HK.00700"
+      "600000.SS" → "SH.600000"
+      "000001.SZ" → "SZ.000001"
       "US.NVDA"   → "US.NVDA" (已是 openD 格式)
       "JP.6762"   → "JP.6762"
+
+    EVO-20261122-2: 补充 .TW / .SS / .SZ 转换规则。
+    之前 .TW 符号因缺少分支而落入默认 US 处理，生成错误的 US.xxx.TW 代码，
+    并可能被意外传给 Yahoo quoteSummary 导致 404。
     """
     if not ticker:
         return None
     tk = ticker.strip().upper()
-    if "." in tk and tk.split(".")[0] in ("US", "JP", "HK", "SH", "SZ"):
+    # 已经是 openD 格式（市场前缀.代码）
+    if "." in tk and tk.split(".")[0] in ("US", "JP", "HK", "SH", "SZ", "TW"):
         return tk
+    # 东京证券交易所 (日本)
     if tk.endswith(".T"):
         return f"JP.{tk[:-2]}"
+    # 台湾证券交易所
+    if tk.endswith(".TW"):
+        return f"TW.{tk[:-3]}"
+    # 香港交易所
     if tk.endswith(".HK"):
         return f"HK.{tk[:-3]}"
-    # 默认按 US 处理
-    if tk.replace(".", "").isalnum():
+    # 上海证券交易所 (A股)
+    if tk.endswith(".SS"):
+        return f"SH.{tk[:-3]}"
+    # 深圳证券交易所 (A股)
+    if tk.endswith(".SZ"):
+        return f"SZ.{tk[:-3]}"
+    # 默认按 US 处理（纯字母数字，无市场后缀）
+    if tk.replace(".", "").isalnum() and "." not in tk:
         return f"US.{tk}"
     return None
+
+
+def is_non_us_market(ticker: str) -> bool:
+    """返回 True 表示该符号属于非美市场，不应盲目传给 Yahoo quoteSummary。
+
+    EVO-20261122-2: 供调用方在调用 Yahoo API 前快速判断。
+    """
+    if not ticker:
+        return False
+    tk = ticker.strip().upper()
+    # 已是 openD 格式且非 US
+    if "." in tk:
+        pfx = tk.split(".")[0]
+        if pfx in ("JP", "HK", "SH", "SZ", "TW"):
+            return True
+        if pfx == "US":
+            return False
+    # yfinance 格式后缀
+    for sfx in (".T", ".TW", ".HK", ".SS", ".SZ", ".KS", ".KQ", ".AX"):
+        if tk.endswith(sfx):
+            return True
+    return False
 
 
 def get_kline_via_openD(ticker: str, days: int = 180) -> Optional["pd.DataFrame"]:
