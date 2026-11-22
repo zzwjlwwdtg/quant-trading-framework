@@ -305,6 +305,29 @@ def report(trades: list[dict]):
             print(f"      {et:<16} n={c}")
 
 
+def report_probe_veto_live(trades: list[dict]) -> None:
+    """EVO-20261122-1: sim_active_probe_after_claude_veto live tracker 分位展示.
+
+    从 trades (pair_trades 结果) 里抽出 WATCH_BUY_PROBE 子集作为快速核对,
+    同时调用 _probe_veto_live_tracker.run_tracker() 获取完整 live 分布
+    (含 cohort_ledger + trade_log 两源合并 + 偏离检验).
+    只读, 不改交易路径.
+    """
+    probe_trades = [t for t in trades
+                    if t.get("entry_action") == "WATCH_BUY_PROBE"]
+    if probe_trades:
+        n     = len(probe_trades)
+        n_stp = sum(1 for t in probe_trades if "STOP" in t.get("exit_tag", "").upper())
+        avg_p = sum(t["pnl_pct"] for t in probe_trades) / n
+        print(f"\n  ── probe_veto 本 postmortem 子集 (trade_log FIFO, n={n}) ──")
+        print(f"    hit-stop={n_stp/n:.1%}  avg_pnl={avg_p:+.2f}%")
+    try:
+        from _probe_veto_live_tracker import run_tracker as _pvt
+        _pvt(verbose=True)
+    except Exception as _exc:
+        print(f"\n  ── probe_veto live tracker: 加载失败 ({type(_exc).__name__}) ──")
+
+
 def report_execution_evidence():
     """独立展示权威成交指标；不使用FIFO配对量价代替真实成交。"""
     from trade_postmortem import replay_execution_evidence_metrics
@@ -331,6 +354,7 @@ def main():
         return 1
     trades = pair_trades(events)
     report(trades)
+    report_probe_veto_live(trades)
     report_execution_evidence()
     return 0
 
