@@ -411,10 +411,12 @@ def collect_news_structured(symbols: list[str], t: datetime, *,
             if not (start <= pub <= end):
                 continue
             seen_titles.add(title)
+            pub_utc_dt = pub.astimezone(timezone.utc)
             candidates.append({
                 "title":   title,
                 "desc":    it.get("desc") or "",
-                "pub_utc": pub.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M"),
+                "pub_utc": pub_utc_dt.isoformat(),   # EVO-20261029-2: 完整 ISO UTC
+                "_pub_dt": pub_utc_dt,                # 内部用, merge 时判断时序
                 "symbol":  sym,
             })
     if not candidates:
@@ -426,14 +428,31 @@ def collect_news_structured(symbols: list[str], t: datetime, *,
                                 watched_tickers=list(symbols)[:6],
                                 cli_timeout=cli_timeout)
     items = parsed.get("items") or []
-    # 回挂 pub_utc / symbol / 原标题, 复盘人能顺着查原文
+    # 回挂 pub_utc / symbol / 原标题 + 证据等级字段 (EVO-20261029-2)
+    primary_ticker = symbols[0] if symbols else ""
     merged = []
     for i, it in enumerate(items):
         meta = candidates[i] if i < len(candidates) else {}
+        sym = meta.get("symbol", "")
+        is_proxy = bool(sym and sym != primary_ticker)
+        pub_dt = meta.get("_pub_dt")
+        # 以卖出时间 t 为基准判断证据类别 (优先级: 时序 > 信息质量 > 来源)
+        if pub_dt is not None and pub_dt >= t:
+            ev_cat = "post_event_background"
+        elif it.get("event_type") == "NOISE":
+            # NOISE 条目无新催化剂, 无论是否代理标的 (is_proxy 字段仍记录来源)
+            ev_cat = "price_description_only"
+        elif is_proxy:
+            ev_cat = "proxy_at_decision"
+        else:
+            ev_cat = "direct_at_decision"
         merged.append(dict(it,
                            pub_utc=meta.get("pub_utc", ""),
-                           symbol=meta.get("symbol", ""),
-                           title=meta.get("title", "")))
+                           symbol=sym,
+                           title=meta.get("title", ""),
+                           is_proxy=is_proxy,
+                           entered_decision=False,   # 结构化新闻仅供复盘, 不参与当时决策
+                           evidence_category=ev_cat))
     return {"items":        merged,
             "fetched":      len(candidates),
             "window_hours": window_hours,
