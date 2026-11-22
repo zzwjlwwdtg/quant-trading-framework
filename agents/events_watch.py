@@ -343,6 +343,136 @@ GOLD_CALENDAR = [
 ]
 del _gold_seen
 
+# ── EVO-20261115-1: 事件→资产历史方向只读查表 ────────────────────────────────
+# 用途: news_analyzer 生成 banner 时附 "历史同类事件对该资产 T+1 方向" 分布;
+#       trade_postmortem 在 limitation 处引用, 让 '难判断' 事件至少有历史参照.
+# 规则: 只读, 不回传 decision_agent, 不改 banner 以外的行为.
+#       未通过 OOS 校验 (validation.passed_both=false) 的类别不出现在 distributions,
+#       lookup 直接返回 None, 不假装有参照.
+# 详见 agents/event_direction_table.json
+_EVENT_DIR_TABLE_PATH = Path(__file__).resolve().parent / "event_direction_table.json"
+_EVENT_DIR_TABLE: dict | None = None
+
+
+def _load_event_direction_table() -> dict:
+    """懒加载事件方向表; 文件不可读 → 返回空表, lookup 全部返回 None."""
+    global _EVENT_DIR_TABLE
+    if _EVENT_DIR_TABLE is None:
+        try:
+            _EVENT_DIR_TABLE = json.loads(
+                _EVENT_DIR_TABLE_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            _EVENT_DIR_TABLE = {
+                "metadata": {}, "validation": {"passed_both": False},
+                "event_category_classifiers": {}, "distributions": {},
+                "ticker_to_asset": {},
+            }
+    return _EVENT_DIR_TABLE
+
+
+def ticker_to_asset_category(ticker: str) -> str | None:
+    """把下单标的 (如 TQQQ, USO, GLD) 映射到查表口径的资产 (SPY/WTI/GLD/...)."""
+    if not ticker:
+        return None
+    bare = str(ticker).replace("US.", "").upper().strip()
+    return (_load_event_direction_table().get("ticker_to_asset") or {}).get(bare)
+
+
+def classify_event_category(event_type: str, text: str) -> str | None:
+    """按 (event_type 枚举, 原文关键词) 把一条新闻归入 10 类历史事件之一.
+
+    event_type 必须是 news_analyzer 规范化后的枚举 (CPI_RELEASE/FOMC/BREAKING...).
+    classifier.applies_when_event_type_in 限制适用的父事件; 关键词 OR 命中即判定.
+    无 classifier 命中 → 返回 None (banner 层会跳过该条).
+    """
+    table = _load_event_direction_table()
+    classifiers = table.get("event_category_classifiers") or {}
+    text_lo = (text or "").lower()
+    et = (event_type or "").upper().strip()
+    for cat, meta in classifiers.items():
+        allowed = [a.upper() for a in (meta.get("applies_when_event_type_in") or [])]
+        if allowed and et not in allowed:
+            continue
+        kws = meta.get("keywords_any") or []
+        if any(kw.lower() in text_lo for kw in kws if kw):
+            return cat
+    return None
+
+
+def lookup_historical_direction(category: str, asset: str,
+                                 horizon: str = "T1") -> dict | None:
+    """查 (类别, 资产, 窗口) 的历史方向分布, 只在 OOS 通过时才返回数据.
+
+    返回样例: {"up_pct": 0.62, "down_pct": 0.28, "flat_pct": 0.10, "n": 21,
+              "modal_direction": "up", "note": "..."}
+    """
+    if not category or not asset:
+        return None
+    table = _load_event_direction_table()
+    if not (table.get("validation") or {}).get("passed_both"):
+        return None
+    dist = ((table.get("distributions") or {}).get(category) or {}).get(asset) or {}
+    hit = dist.get(horizon)
+    return dict(hit) if isinstance(hit, dict) else None
+
+
+def event_direction_banner(event_type: str, text: str,
+                            tickers: list[str],
+                            news_direction: str = "") -> dict | None:
+    """为一条新闻生成 '事件→资产历史方向' banner (只读, 不入决策).
+
+    参数:
+      event_type   — news_analyzer 规范化后的父类事件 (BREAKING/FOMC/CPI_RELEASE/...)
+      text         — 用于关键词命中的原文 (verbatim_evidence 或标题)
+      tickers      — tickers_affected, 逐一映射到查表资产
+      news_direction — 新闻层本次打的 bullish/bearish/neutral, 便于复盘做反向对照
+    返回:
+      None                     — 没有类别命中, 或类别无可映射资产, 或 OOS 未通过
+      {"category", "label", "per_ticker", "news_direction",
+       "mismatch_tickers", "disclaimer"}
+    per_ticker 条目: {"<ticker>": {"asset": "WTI", "T1": {...}}}
+    mismatch_tickers: 新闻层方向 vs 历史 modal_direction 相反的 ticker 列表
+                     (用于复盘校准 '新闻标错方向' 的占比).
+    """
+    category = classify_event_category(event_type, text)
+    if not category:
+        return None
+    table = _load_event_direction_table()
+    label = ((table.get("event_category_classifiers") or {}).get(category) or {}).get("label") or category
+    per_ticker: dict[str, dict] = {}
+    mismatch: list[str] = []
+    seen: set[str] = set()
+    nd = (news_direction or "").lower().strip()
+    for tk in tickers or []:
+        tk_u = str(tk).replace("US.", "").upper().strip()
+        if not tk_u or tk_u in seen:
+            continue
+        seen.add(tk_u)
+        asset = ticker_to_asset_category(tk_u)
+        if not asset:
+            continue
+        info = lookup_historical_direction(category, asset)
+        if not info:
+            continue
+        per_ticker[tk_u] = {"asset": asset, "T1": info}
+        modal = (info.get("modal_direction") or "").lower()
+        if nd in ("bullish", "bearish") and modal in ("up", "down"):
+            modal_dir = "bullish" if modal == "up" else "bearish"
+            if nd != modal_dir:
+                mismatch.append(tk_u)
+    if not per_ticker:
+        return None
+    return {
+        "category":        category,
+        "label":           label,
+        "per_ticker":      per_ticker,
+        "news_direction":  nd or "",
+        "mismatch_tickers": mismatch,
+        "disclaimer":      ("历史同类事件 T+1 方向分布, 仅供 postmortem/verdict 校准, "
+                             "不回传决策 (EVO-20261115-1; TECHNICAL_ONLY 保持生效)"),
+    }
+
+
 # ── Breaking news keywords ─────────────────────────────────────────────────────
 EQUITY_BREAKING = [
     "crash", "circuit breaker", "emergency", "rate hike", "tariff",

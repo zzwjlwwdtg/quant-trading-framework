@@ -335,6 +335,52 @@ def classify_evidence_gaps(limitations: list) -> list[dict]:
     return result
 
 
+# ── 事件→资产历史方向 banner (EVO-20261115-1) ─────────────────────────────────
+def event_direction_banners(news_structured: dict | None,
+                              primary_ticker: str = "") -> list[dict]:
+    """从 news_structured 抽出各条 item 已挂载的 historical_direction banner.
+
+    纯只读汇总, 不回传决策. 只有 classifier 命中且 OOS 通过的类别才会有 banner.
+    每条返回条目包含对应新闻的最小上下文, 便于复盘里引用 verdict 校准证据.
+
+    返回 list (可能为空): [
+      {"news_symbol": "USO", "news_title": "...", "news_direction": "bearish",
+       "event_type": "BREAKING", "evidence_category": "proxy_at_decision",
+       "category": "IRAN_GEOPOLITICAL", "label": "伊朗地缘冲击",
+       "per_ticker": {"WTI": {"asset": "WTI", "T1": {...}}},
+       "mismatch_tickers": ["USO"], "note_for_primary": "..."}, ...
+    ]
+    """
+    items = (news_structured or {}).get("items") or []
+    primary = (primary_ticker or "").replace("US.", "").upper().strip()
+    out: list[dict] = []
+    for it in items:
+        banner = it.get("historical_direction") if isinstance(it, dict) else None
+        if not isinstance(banner, dict) or not banner.get("per_ticker"):
+            continue
+        row = {
+            "news_symbol":   (it.get("symbol") or "")[:16],
+            "news_title":    (it.get("title") or "")[:200],
+            "news_direction": it.get("direction"),
+            "event_type":    it.get("event_type"),
+            "evidence_category": it.get("evidence_category"),
+            "category":      banner.get("category"),
+            "label":         banner.get("label"),
+            "per_ticker":    banner.get("per_ticker") or {},
+            "mismatch_tickers": banner.get("mismatch_tickers") or [],
+            "disclaimer":    banner.get("disclaimer"),
+        }
+        if primary and primary in row["per_ticker"]:
+            t1 = (row["per_ticker"][primary] or {}).get("T1") or {}
+            modal = (t1.get("modal_direction") or "").lower()
+            if modal in ("up", "down", "flat"):
+                row["note_for_primary"] = (
+                    f"{primary}: 历史 T+1 modal={modal}; up={t1.get('up_pct')} "
+                    f"down={t1.get('down_pct')} flat={t1.get('flat_pct')} n={t1.get('n')}")
+        out.append(row)
+    return out
+
+
 # ── 证据等级统计 (EVO-20261029-2) ─────────────────────────────────────────────
 def news_evidence_summary(news_structured: dict | None) -> dict:
     """按证据类别统计 news_structured 条目, 供复盘报告与提示词约束.
@@ -387,6 +433,19 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
             f"   · {_by_cat['price_description_only']} 条仅价格描述: 无新增催化剂")
     _ev_lines.append("   · 候选结构化新闻均 entered_decision=False, 不得写为系统触发原因")
     _ev_text = "\n".join(_ev_lines)
+    # EVO-20261115-1: 事件→资产历史 T+1 方向 banner
+    _banners = event_direction_banners(news_structured, sell.get("ticker", ""))
+    if _banners:
+        _banner_json = json.dumps(_banners, ensure_ascii=False)
+        _hist_section = (
+            "\n## 历史同类事件 T+1 方向参考 (EVO-20261115-1, 只读校准, 不作为当时卖出理由)\n"
+            + _banner_json
+            + "\n说明: 该分布来自 10 年训练+OOS 校验的事件→资产历史方向表 "
+              "(agents/event_direction_table.json); 新闻层 bullish/bearish 与 modal_direction "
+              "相反的 ticker 列在 mismatch_tickers, 请在 '局限性' 中显式提示 "
+              "'新闻层方向可能与历史分布相反, 请人工再判断', 并据此校准 hindsight.verdict.")
+    else:
+        _hist_section = ""
     return f"""你是交易复盘分析师。下面是一个自动交易系统的一笔**卖出**和当时的原始材料。
 只依据这些材料作答, 不要编造材料里没有的新闻或数字; 材料不足就明确写"材料不足".
 
@@ -405,6 +464,7 @@ def build_prompt(sell: dict, excerpt: list[str], news: list[dict], after_log: li
 ## 事后 (只用于"事后走势"一栏, 不得当作当时的卖出理由)
 日收盘 (D-1 = 卖出前一天, D0 = 卖出当天, D+1 = 之后一天): {json.dumps(after_closes, ensure_ascii=False)}
 注意: log 里"【标的】价格"是日线参考价 (常是前一交易日收盘), 不是卖出时的实时价.
+{_hist_section}
 
 ## 要求
 1. 概括卖出那个时段的技术面和消息面 (各 1-3 句).
@@ -494,6 +554,8 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             (OUT_DIR / f"raw_failed_{sell['order_id']}.txt").write_text(out, encoding="utf-8")
         except OSError:
             pass
+    # EVO-20261115-1: 事件→资产历史方向 banner, '难判断' 复盘必备参照; 无命中仍记空列表
+    banners = event_direction_banners(news_structured, sell.get("ticker", ""))
     return {"order_id": sell["order_id"], "ticker": sell["ticker"], "qty": sell["qty"], "price": sell["price"],
             "ts": sell["decision_ts"], "tag": sell["tag"], "nature": classify_sell(sell["tag"], sell.get("decision")),
             "provider": provider, "status": status,
@@ -502,6 +564,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             "material": {"excerpt_lines": len(excerpt), "news_items": len(news), "after_closes": after_closes},
             "news_structured": news_structured,
             "news_evidence_summary": news_evidence_summary(news_structured),  # EVO-20261029-2
+            "event_direction_banner": banners,                                # EVO-20261115-1
             "oversold_research": research_evidence,
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 
