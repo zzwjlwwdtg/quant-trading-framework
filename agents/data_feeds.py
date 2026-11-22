@@ -1,11 +1,89 @@
 """
 DataFeeds — 公开 API 数据聚合，零 API Key 要求。
 数据源: Yahoo Finance (yfinance) + CNN Fear & Greed
+
+EVO-20261122-2: 增加 symbol 市场前缀路由表。
+非美市场符号 (.T/.TW/.HK/.SS/.SZ 等) 应优先走 moomoo_data，
+Yahoo Finance（尤其 quoteSummary）对这些市场符号静默返回 404。
 """
 
 import urllib.request
 import json
 import yfinance as yf
+
+# ── 非美市场符号格式白名单 ──────────────────────────────────────────────────
+# 后缀 → 市场标识（供路由决策使用）
+_NON_US_SUFFIX_MARKET: dict[str, str] = {
+    ".T":   "JP",    # 东京证券交易所 (日本)
+    ".TW":  "TW",    # 台湾证券交易所
+    ".HK":  "HK",    # 香港交易所
+    ".SS":  "SH",    # 上海证券交易所 (A股)
+    ".SZ":  "SZ",    # 深圳证券交易所 (A股)
+    ".KS":  "KR",    # 韩国证券交易所
+    ".KQ":  "KR",    # 韩国 KOSDAQ
+    ".AX":  "AU",    # 澳大利亚证券交易所
+}
+# 已经带 openD 市场前缀的格式不走 Yahoo
+_OPEND_PREFIXES = ("JP.", "HK.", "SH.", "SZ.", "TW.", "KR.", "AU.")
+
+
+def is_yahoo_safe(ticker: str) -> bool:
+    """返回 False 表示该符号不应请求 Yahoo quoteSummary / download。
+
+    非美市场符号（.T/.TW/.HK/.SS 等）对 Yahoo quoteSummary 会静默 404，
+    这类符号应走 moomoo_data 或明确的异常路径。
+    """
+    if not ticker:
+        return True
+    t = ticker.strip().upper()
+    for sfx in _NON_US_SUFFIX_MARKET:
+        if t.endswith(sfx):
+            return False
+    for pfx in _OPEND_PREFIXES:
+        if t.startswith(pfx):
+            return False
+    return True
+
+
+def get_datasource_for(ticker: str) -> str:
+    """返回符号应使用的数据源名称。
+
+    "yahoo"   — 美股/指数/期货，可用 yfinance 拉取
+    "moomoo"  — 非美市场已知符号格式，应走 moomoo_data
+    "unknown" — 格式不在白名单，应走明确异常路径并记录 data_quality 事件
+    """
+    if not ticker:
+        return "unknown"
+    t = ticker.strip().upper()
+    for sfx in _NON_US_SUFFIX_MARKET:
+        if t.endswith(sfx):
+            return "moomoo"
+    for pfx in _OPEND_PREFIXES:
+        if t.startswith(pfx):
+            return "moomoo"
+    # 美股/指数/期货/美元格式（字母+数字, 允许 ^ = - . 等特殊字符）
+    # 长度超 20 通常意味着格式异常
+    if len(t) <= 20:
+        return "yahoo"
+    return "unknown"
+
+
+def infer_market(ticker: str) -> str | None:
+    """推断 ticker 所属市场，未知返回 None。
+
+    "US" / "JP" / "TW" / "HK" / "SH" / "SZ" / ...
+    """
+    if not ticker:
+        return None
+    t = ticker.strip().upper()
+    for pfx in _OPEND_PREFIXES:
+        if t.startswith(pfx):
+            return pfx.rstrip(".")
+    for sfx, mkt in _NON_US_SUFFIX_MARKET.items():
+        if t.endswith(sfx):
+            return mkt
+    return "US"
+
 
 WATCHLIST = {
     "TQQQ":      "3x纳指",
