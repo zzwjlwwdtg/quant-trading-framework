@@ -173,6 +173,21 @@ def _extract_json_from_cli_output(text: str) -> dict | None:
     return None
 
 
+def _attach_historical_direction(event_type: str, evidence: str,
+                                   tickers: list[str], direction: str) -> dict | None:
+    """EVO-20261115-1: 给 item 附 '事件→资产历史 T+1 方向分布' banner (只读).
+
+    封装对 events_watch.event_direction_banner 的调用, 失败/未命中都返回 None,
+    绝不抛出或污染正常的 _normalize_item 流程.
+    """
+    try:
+        from events_watch import event_direction_banner
+        return event_direction_banner(event_type, evidence, tickers,
+                                       news_direction=direction)
+    except Exception:
+        return None
+
+
 def _normalize_item(raw: dict, source: str, radar_mode: bool = False) -> dict:
     """把 CLI 返回的单条 item 规范化 + 校验枚举值。非法字段用安全默认。"""
     et = (raw.get("event_type") or "NOISE").upper().strip()
@@ -215,6 +230,9 @@ def _normalize_item(raw: dict, source: str, radar_mode: bool = False) -> dict:
         "confidence": conf,
         "raw_source": (raw.get("raw_source") or source).strip()[:40],
         "verbatim_evidence": evidence,
+        # EVO-20261115-1: 事件→资产历史 T+1 方向 banner (只读, 不入决策)
+        "historical_direction": _attach_historical_direction(
+            et, evidence, tickers, direction),
     }
     if radar_mode:
         result["institution"] = str(raw.get("institution") or "")[:80]

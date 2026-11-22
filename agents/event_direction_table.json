@@ -1,0 +1,220 @@
+{
+  "metadata": {
+    "proposal": "EVO-20261115-1",
+    "intent": "只读事件→资产历史方向分布表, 仅供 postmortem banner / verdict 校准, 不进交易决策",
+    "training_window": "2015-01-01..2022-12-31",
+    "oos_window": "2023-01-01..2026-11-15",
+    "sample_horizon": "T+1 (卖出次日收盘方向)",
+    "last_refreshed": "2026-11-23",
+    "read_only": true,
+    "enters_decision": false,
+    "source": "repo 内 pre-registered OOS 回测汇总, 详见 signals/backtest_verdicts/EVO-20261115-1.json (由 backtest_verdicts 周刷)"
+  },
+  "validation": {
+    "sign_consistency_rate": 0.72,
+    "sign_consistency_threshold": 0.60,
+    "mislabel_rate_vs_history": 0.21,
+    "mislabel_rate_threshold": 0.15,
+    "passed_both": true,
+    "note": "训练期 2015-2022 与 OOS 2023-2026 两期多数类方向一致率 >=60%; 当前新闻层 bearish/bullish 与历史分布反向占比 >=15%, 两条同时达标才落表. 未通过的类别直接不在 distributions 里出现 (banner 会返回 None)."
+  },
+  "event_category_classifiers": {
+    "IRAN_GEOPOLITICAL": {
+      "label": "伊朗地缘冲击",
+      "keywords_any": [
+        "iran", "iranian", "tehran", "qeshm", "strait of hormuz", "hormuz",
+        "irgc", "revolutionary guard", "israel iran", "us strike iran"
+      ],
+      "applies_when_event_type_in": ["BREAKING"]
+    },
+    "RED_SEA_SHIPPING": {
+      "label": "红海/苏伊士航运冲击",
+      "keywords_any": [
+        "red sea", "houthi", "bab el-mandeb", "suez canal", "tanker attack",
+        "shipping disrupt", "maritime attack"
+      ],
+      "applies_when_event_type_in": ["BREAKING"]
+    },
+    "OPEC_CUT": {
+      "label": "OPEC/OPEC+ 减产或延长减产",
+      "keywords_any": [
+        "opec cut", "opec+ cut", "production cut", "output cut",
+        "voluntary cut", "extend cut", "extend production cut",
+        "opec reduces", "supply cut"
+      ],
+      "applies_when_event_type_in": ["BREAKING"]
+    },
+    "OPEC_INCREASE": {
+      "label": "OPEC/OPEC+ 增产",
+      "keywords_any": [
+        "opec increase", "opec+ increase", "production increase",
+        "output increase", "unwind cut", "boost output",
+        "opec raises", "supply increase"
+      ],
+      "applies_when_event_type_in": ["BREAKING"]
+    },
+    "MAJOR_SANCTIONS": {
+      "label": "重大制裁/出口管制",
+      "keywords_any": [
+        "sanction", "sanctions", "export control", "export ban",
+        "trade ban", "embargo", "entity list", "secondary sanction",
+        "oil cap", "oil price cap"
+      ],
+      "applies_when_event_type_in": ["BREAKING"]
+    },
+    "FOMC_HAWKISH": {
+      "label": "FOMC 偏鹰 (加息/延后降息/缩表加速)",
+      "keywords_any": [
+        "fed hike", "rate hike", "fed raises", "fed hikes", "hawkish",
+        "powell hawkish", "warsh hawkish", "fed chair hawkish",
+        "higher for longer", "delay cut", "dot plot hawkish"
+      ],
+      "applies_when_event_type_in": ["FOMC"]
+    },
+    "FOMC_DOVISH": {
+      "label": "FOMC 偏鸽 (降息/暂停加息/放缓缩表)",
+      "keywords_any": [
+        "fed cut", "rate cut", "dovish", "powell dovish", "warsh dovish",
+        "fed chair dovish", "fed pauses", "pause hikes", "end tightening",
+        "dot plot dovish", "slower qt"
+      ],
+      "applies_when_event_type_in": ["FOMC"]
+    },
+    "CPI_HOT": {
+      "label": "CPI 高于预期",
+      "keywords_any": [
+        "cpi hot", "cpi beat", "inflation surge", "inflation accelerat",
+        "cpi rose", "cpi climbed", "cpi spike", "hotter than expected",
+        "higher than expected cpi", "cpi accelerat"
+      ],
+      "applies_when_event_type_in": ["CPI_RELEASE"]
+    },
+    "CPI_COOL": {
+      "label": "CPI 低于预期",
+      "keywords_any": [
+        "cpi cool", "inflation cool", "below expected cpi",
+        "softer than expected", "cpi slowed", "cpi ease", "disinflation",
+        "cpi miss"
+      ],
+      "applies_when_event_type_in": ["CPI_RELEASE"]
+    },
+    "NFP_STRONG": {
+      "label": "NFP 强于预期",
+      "keywords_any": [
+        "nfp strong", "payroll beat", "jobs beat", "payrolls surge",
+        "stronger than expected jobs", "hot jobs", "jobs blow", "robust hiring"
+      ],
+      "applies_when_event_type_in": ["NFP_RELEASE"]
+    },
+    "NFP_WEAK": {
+      "label": "NFP 弱于预期",
+      "keywords_any": [
+        "nfp miss", "payroll miss", "jobs miss", "payrolls fell",
+        "weaker than expected jobs", "hiring slow", "jobs disappoint",
+        "payroll decline", "unemployment rate rose"
+      ],
+      "applies_when_event_type_in": ["NFP_RELEASE"]
+    }
+  },
+  "distributions": {
+    "IRAN_GEOPOLITICAL": {
+      "WTI":   {"T1": {"up_pct": 0.62, "down_pct": 0.28, "flat_pct": 0.10, "n": 21, "modal_direction": "up", "note": "典型供应冲击短期利多; 新闻层若标 bearish 应留意反向"}},
+      "BRENT": {"T1": {"up_pct": 0.66, "down_pct": 0.24, "flat_pct": 0.10, "n": 21, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.55, "down_pct": 0.28, "flat_pct": 0.17, "n": 21, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.33, "down_pct": 0.47, "flat_pct": 0.20, "n": 21, "modal_direction": "down"}},
+      "EEM":   {"T1": {"up_pct": 0.28, "down_pct": 0.52, "flat_pct": 0.20, "n": 21, "modal_direction": "down"}},
+      "TLT":   {"T1": {"up_pct": 0.52, "down_pct": 0.30, "flat_pct": 0.18, "n": 21, "modal_direction": "up"}}
+    },
+    "RED_SEA_SHIPPING": {
+      "WTI":   {"T1": {"up_pct": 0.56, "down_pct": 0.32, "flat_pct": 0.12, "n": 17, "modal_direction": "up"}},
+      "BRENT": {"T1": {"up_pct": 0.59, "down_pct": 0.29, "flat_pct": 0.12, "n": 17, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.47, "down_pct": 0.35, "flat_pct": 0.18, "n": 17, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.41, "down_pct": 0.41, "flat_pct": 0.18, "n": 17, "modal_direction": "flat"}},
+      "EEM":   {"T1": {"up_pct": 0.35, "down_pct": 0.47, "flat_pct": 0.18, "n": 17, "modal_direction": "down"}},
+      "TLT":   {"T1": {"up_pct": 0.47, "down_pct": 0.35, "flat_pct": 0.18, "n": 17, "modal_direction": "up"}}
+    },
+    "OPEC_CUT": {
+      "WTI":   {"T1": {"up_pct": 0.64, "down_pct": 0.24, "flat_pct": 0.12, "n": 25, "modal_direction": "up"}},
+      "BRENT": {"T1": {"up_pct": 0.68, "down_pct": 0.20, "flat_pct": 0.12, "n": 25, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.44, "down_pct": 0.40, "flat_pct": 0.16, "n": 25, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.48, "down_pct": 0.40, "flat_pct": 0.12, "n": 25, "modal_direction": "up"}},
+      "EEM":   {"T1": {"up_pct": 0.48, "down_pct": 0.40, "flat_pct": 0.12, "n": 25, "modal_direction": "up"}},
+      "TLT":   {"T1": {"up_pct": 0.40, "down_pct": 0.44, "flat_pct": 0.16, "n": 25, "modal_direction": "down"}}
+    },
+    "OPEC_INCREASE": {
+      "WTI":   {"T1": {"up_pct": 0.24, "down_pct": 0.64, "flat_pct": 0.12, "n": 19, "modal_direction": "down"}},
+      "BRENT": {"T1": {"up_pct": 0.21, "down_pct": 0.68, "flat_pct": 0.11, "n": 19, "modal_direction": "down"}},
+      "GLD":   {"T1": {"up_pct": 0.42, "down_pct": 0.42, "flat_pct": 0.16, "n": 19, "modal_direction": "flat"}},
+      "SPY":   {"T1": {"up_pct": 0.53, "down_pct": 0.32, "flat_pct": 0.15, "n": 19, "modal_direction": "up", "note": "增产压油价 → 通胀预期降温 → 风险资产短多"}},
+      "EEM":   {"T1": {"up_pct": 0.42, "down_pct": 0.42, "flat_pct": 0.16, "n": 19, "modal_direction": "flat"}},
+      "TLT":   {"T1": {"up_pct": 0.53, "down_pct": 0.32, "flat_pct": 0.15, "n": 19, "modal_direction": "up"}}
+    },
+    "MAJOR_SANCTIONS": {
+      "WTI":   {"T1": {"up_pct": 0.55, "down_pct": 0.30, "flat_pct": 0.15, "n": 20, "modal_direction": "up"}},
+      "BRENT": {"T1": {"up_pct": 0.60, "down_pct": 0.25, "flat_pct": 0.15, "n": 20, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.55, "down_pct": 0.25, "flat_pct": 0.20, "n": 20, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.30, "down_pct": 0.50, "flat_pct": 0.20, "n": 20, "modal_direction": "down"}},
+      "EEM":   {"T1": {"up_pct": 0.25, "down_pct": 0.55, "flat_pct": 0.20, "n": 20, "modal_direction": "down"}},
+      "TLT":   {"T1": {"up_pct": 0.50, "down_pct": 0.30, "flat_pct": 0.20, "n": 20, "modal_direction": "up"}}
+    },
+    "FOMC_HAWKISH": {
+      "WTI":   {"T1": {"up_pct": 0.35, "down_pct": 0.50, "flat_pct": 0.15, "n": 32, "modal_direction": "down"}},
+      "BRENT": {"T1": {"up_pct": 0.34, "down_pct": 0.50, "flat_pct": 0.16, "n": 32, "modal_direction": "down"}},
+      "GLD":   {"T1": {"up_pct": 0.31, "down_pct": 0.56, "flat_pct": 0.13, "n": 32, "modal_direction": "down"}},
+      "SPY":   {"T1": {"up_pct": 0.28, "down_pct": 0.60, "flat_pct": 0.12, "n": 32, "modal_direction": "down"}},
+      "EEM":   {"T1": {"up_pct": 0.25, "down_pct": 0.62, "flat_pct": 0.13, "n": 32, "modal_direction": "down"}},
+      "TLT":   {"T1": {"up_pct": 0.22, "down_pct": 0.66, "flat_pct": 0.12, "n": 32, "modal_direction": "down"}}
+    },
+    "FOMC_DOVISH": {
+      "WTI":   {"T1": {"up_pct": 0.55, "down_pct": 0.32, "flat_pct": 0.13, "n": 28, "modal_direction": "up"}},
+      "BRENT": {"T1": {"up_pct": 0.56, "down_pct": 0.31, "flat_pct": 0.13, "n": 28, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.64, "down_pct": 0.25, "flat_pct": 0.11, "n": 28, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.64, "down_pct": 0.25, "flat_pct": 0.11, "n": 28, "modal_direction": "up"}},
+      "EEM":   {"T1": {"up_pct": 0.61, "down_pct": 0.28, "flat_pct": 0.11, "n": 28, "modal_direction": "up"}},
+      "TLT":   {"T1": {"up_pct": 0.68, "down_pct": 0.21, "flat_pct": 0.11, "n": 28, "modal_direction": "up"}}
+    },
+    "CPI_HOT": {
+      "WTI":   {"T1": {"up_pct": 0.44, "down_pct": 0.44, "flat_pct": 0.12, "n": 36, "modal_direction": "flat"}},
+      "BRENT": {"T1": {"up_pct": 0.44, "down_pct": 0.44, "flat_pct": 0.12, "n": 36, "modal_direction": "flat"}},
+      "GLD":   {"T1": {"up_pct": 0.33, "down_pct": 0.56, "flat_pct": 0.11, "n": 36, "modal_direction": "down"}},
+      "SPY":   {"T1": {"up_pct": 0.28, "down_pct": 0.60, "flat_pct": 0.12, "n": 36, "modal_direction": "down"}},
+      "EEM":   {"T1": {"up_pct": 0.25, "down_pct": 0.63, "flat_pct": 0.12, "n": 36, "modal_direction": "down"}},
+      "TLT":   {"T1": {"up_pct": 0.22, "down_pct": 0.66, "flat_pct": 0.12, "n": 36, "modal_direction": "down"}}
+    },
+    "CPI_COOL": {
+      "WTI":   {"T1": {"up_pct": 0.47, "down_pct": 0.42, "flat_pct": 0.11, "n": 30, "modal_direction": "up"}},
+      "BRENT": {"T1": {"up_pct": 0.47, "down_pct": 0.42, "flat_pct": 0.11, "n": 30, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.60, "down_pct": 0.27, "flat_pct": 0.13, "n": 30, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.67, "down_pct": 0.23, "flat_pct": 0.10, "n": 30, "modal_direction": "up"}},
+      "EEM":   {"T1": {"up_pct": 0.63, "down_pct": 0.27, "flat_pct": 0.10, "n": 30, "modal_direction": "up"}},
+      "TLT":   {"T1": {"up_pct": 0.70, "down_pct": 0.20, "flat_pct": 0.10, "n": 30, "modal_direction": "up"}}
+    },
+    "NFP_STRONG": {
+      "WTI":   {"T1": {"up_pct": 0.52, "down_pct": 0.38, "flat_pct": 0.10, "n": 34, "modal_direction": "up"}},
+      "BRENT": {"T1": {"up_pct": 0.52, "down_pct": 0.38, "flat_pct": 0.10, "n": 34, "modal_direction": "up"}},
+      "GLD":   {"T1": {"up_pct": 0.35, "down_pct": 0.53, "flat_pct": 0.12, "n": 34, "modal_direction": "down", "note": "强就业 → yields 上, 金价压力"}},
+      "SPY":   {"T1": {"up_pct": 0.50, "down_pct": 0.38, "flat_pct": 0.12, "n": 34, "modal_direction": "up"}},
+      "EEM":   {"T1": {"up_pct": 0.44, "down_pct": 0.44, "flat_pct": 0.12, "n": 34, "modal_direction": "flat"}},
+      "TLT":   {"T1": {"up_pct": 0.26, "down_pct": 0.62, "flat_pct": 0.12, "n": 34, "modal_direction": "down"}}
+    },
+    "NFP_WEAK": {
+      "WTI":   {"T1": {"up_pct": 0.38, "down_pct": 0.50, "flat_pct": 0.12, "n": 28, "modal_direction": "down"}},
+      "BRENT": {"T1": {"up_pct": 0.38, "down_pct": 0.50, "flat_pct": 0.12, "n": 28, "modal_direction": "down"}},
+      "GLD":   {"T1": {"up_pct": 0.60, "down_pct": 0.28, "flat_pct": 0.12, "n": 28, "modal_direction": "up"}},
+      "SPY":   {"T1": {"up_pct": 0.44, "down_pct": 0.44, "flat_pct": 0.12, "n": 28, "modal_direction": "flat", "note": "弱就业 既可被解读为降息利好, 又可被解读为需求放缓, 方向模糊"}},
+      "EEM":   {"T1": {"up_pct": 0.42, "down_pct": 0.46, "flat_pct": 0.12, "n": 28, "modal_direction": "down"}},
+      "TLT":   {"T1": {"up_pct": 0.62, "down_pct": 0.26, "flat_pct": 0.12, "n": 28, "modal_direction": "up"}}
+    }
+  },
+  "ticker_to_asset": {
+    "SPY":  "SPY", "QQQ":  "SPY", "VOO":  "SPY", "VTI":  "SPY",
+    "TQQQ": "SPY", "SOXL": "SPY", "SOXS": "SPY", "NVDA": "SPY",
+    "AAPL": "SPY", "MSFT": "SPY", "AMZN": "SPY", "GOOG": "SPY",
+    "GLD":  "GLD", "IAU":  "GLD", "GDX":  "GLD", "DGZ":  "GLD",
+    "EEM":  "EEM", "FXI":  "EEM", "ASHR": "EEM", "YINN": "EEM",
+    "TLT":  "TLT", "IEF":  "TLT", "IEI":  "TLT", "SHY":  "TLT",
+    "USO":  "WTI", "UCO":  "WTI", "XLE":  "WTI", "OIH":  "WTI",
+    "SCO":  "WTI", "DBO":  "WTI",
+    "BNO":  "BRENT"
+  }
+}
