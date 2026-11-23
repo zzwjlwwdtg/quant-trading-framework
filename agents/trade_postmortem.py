@@ -41,6 +41,9 @@ MARKET_PATTERNS = ("REGIME =", "SPY 今日", "[宏观]", "期货", "解读:", "[
                    "risk-monitor", "VIX", "盘前", "breaking", "Trump", "事件:")
 _LOG_TS = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ")
 
+# EVO-20261119-1 建仓快照文件 (该提案合并后存在, 未合并时静默降级到 trade_log 路径)
+_ENTRY_SNAPSHOT_PATH = SIGNALS / "entry_snapshots.jsonl"
+
 
 # ── 材料收集 (纯函数尽量多, 便于测试) ─────────────────────────────────────────
 def parse_log(path: Path) -> list[tuple[datetime | None, str]]:
@@ -185,6 +188,214 @@ def closes_after(ticker: str, t: datetime, n: int = 3) -> list[dict]:
     et_date = (t - timedelta(hours=4)).date().isoformat()   # 美东日期 (夏令时近似)
     labeled = label_closes(rows, et_date)
     return [r for r in labeled if r["rel"] in ("D-1", "D0") or r["rel"].startswith("D+")][: n + 2]
+
+
+def _find_entry_buy_event(sell_order_id: str, ticker: str) -> dict | None:
+    """FIFO 配对 trade_log, 返回该 SELL 对应的建仓 BUY 事件; 未找到返回 None.
+
+    EVO-20261123-1: 只读, 不改 trade_log.
+    逐笔重放 trade_log 的 BUY/SELL, 维护 per-ticker FIFO 队列;
+    遇到目标 sell_order_id 时返回队首 BUY 事件 (入场首笔).
+    """
+    try:
+        text = (SIGNALS / "trade_log.jsonl").read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    events = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            ev = json.loads(line)
+            if not ev.get("dry_run", False):
+                events.append(ev)
+        except json.JSONDecodeError:
+            continue
+
+    open_q: dict[str, list[dict]] = {}
+
+    for ev in events:
+        tk = ev.get("ticker", "")
+        side = (ev.get("side") or "").upper()
+
+        if side == "BUY":
+            q = open_q.setdefault(tk, [])
+            q.append({"ev": ev, "qty": float(ev.get("qty") or 0)})
+
+        elif side in ("SELL", "SELL_ALL", "REDUCE"):
+            q = open_q.get(tk) or []
+            if not q:
+                continue
+            if str(ev.get("order_id")) == str(sell_order_id) and tk == ticker:
+                return q[0]["ev"]
+            # 消耗 FIFO (不是目标 SELL, 继续正常消耗)
+            remaining = float(ev.get("qty") or 0)
+            while remaining > 1e-9 and q:
+                pos = q[0]
+                close_qty = min(remaining, pos["qty"])
+                pos["qty"] -= close_qty
+                if pos["qty"] <= 1e-9:
+                    q.pop(0)
+                remaining -= close_qty
+
+    return None
+
+
+def _load_entry_snapshot(entry_order_id: str) -> dict | None:
+    """读取 EVO-20261119-1 建仓快照 (文件不存在时静默返回 None).
+
+    EVO-20261123-1: 只读, 不改快照文件.
+    快照文件在 EVO-20261119-1 合并前不存在, 此时降级到 trade_log 路径.
+    """
+    path = SIGNALS / "entry_snapshots.jsonl"
+    if not path.exists():
+        return None
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+                if str(ev.get("order_id")) == str(entry_order_id):
+                    return ev
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        return None
+    return None
+
+
+def load_entry_chain(sell: dict) -> dict:
+    """EVO-20261123-1: 只读入场链条 cross-link.
+
+    对每笔 SELL postmortem 回溯:
+      1. 通过 trade_log FIFO 配对找到建仓 BUY 事件 (order_id + 决策上下文)
+      2. 若 EVO-20261119-1 建仓快照文件已存在, 优先用快照数据
+      3. 若触发规则为 sim_active_probe_after_claude_veto, 额外拼接
+         EVO-20261122-1 tracker 当前偏离状态
+    整块 read_only=True, 不进 verdict 打分.
+    任何字段缺失时显式写 "missing", 不做插值.
+    """
+    sell_order_id = str(sell.get("order_id") or "")
+    ticker = sell.get("ticker", "")
+
+    # 1. FIFO 配对, 找建仓 BUY
+    buy_ev = _find_entry_buy_event(sell_order_id, ticker)
+    if buy_ev is None:
+        return {
+            "read_only":        True,
+            "proposal":         "EVO-20261123-1",
+            "snapshot_source":  "missing",
+            "missing_reason":   "trade_log 中未找到 FIFO 配对建仓记录",
+            "entry_order_id":   "missing",
+            "entry_ts":         "missing",
+            "entry_price":      "missing",
+            "ai_gate_decision": "missing",
+            "ai_gate_reason":   "missing",
+            "confidence":       "missing",
+            "regime":           "missing",
+            "trigger_rule":     "missing",
+            "confluence":       "missing",
+            "market_at_entry":  "missing",
+        }
+
+    entry_order_id = str(buy_ev.get("order_id") or "missing")
+
+    # 2. 尝试 EVO-20261119-1 建仓快照 (快照优先, 未合并时降级 trade_log)
+    snapshot = _load_entry_snapshot(entry_order_id)
+    snapshot_source = "entry_snapshot_file" if snapshot else "trade_log"
+
+    data_src = snapshot or buy_ev
+    decision = data_src.get("decision") or {}
+    market   = data_src.get("market")  or {}
+
+    ai_gate_action = decision.get("action") or "missing"
+    ai_gate_reason = decision.get("reason") or "missing"
+    confidence     = decision.get("confidence")
+    regime         = decision.get("regime") or "missing"
+
+    # 判断触发规则类型
+    if ai_gate_action == "WATCH_BUY_PROBE":
+        trigger_rule = "sim_active_probe_after_claude_veto"
+    elif ai_gate_action not in ("missing", None, ""):
+        trigger_rule = "normal"
+    else:
+        trigger_rule = "missing"
+
+    # score_breakdown → confluence (入场时得分分解)
+    score_bd = decision.get("score_breakdown")
+    if isinstance(score_bd, dict):
+        confluence: dict | str = {
+            "tech_score":    score_bd.get("tech",          "missing"),
+            "tech_weighted": score_bd.get("tech_weighted", "missing"),
+            "macro_score":   score_bd.get("macro",         "missing"),
+            "event_score":   score_bd.get("event",         "missing"),
+            "quant_score":   score_bd.get("quant",         "missing"),
+            "boost":         score_bd.get("boost",         "missing"),
+            "raw_total":     score_bd.get("raw",           "missing"),
+        }
+    else:
+        confluence = "missing"
+
+    # 市场状态 (入场时)
+    if market:
+        market_at_entry: dict | str = {
+            "rsi":       market.get("rsi"),
+            "cci":       market.get("cci"),
+            "trend":     market.get("trend"),
+            "vol_ratio": market.get("vol_ratio"),
+            "ma_stack":  market.get("ma_stack"),
+            "pct_chg":   market.get("pct_chg"),
+            "cum_5d":    market.get("cum_5d"),
+        }
+    else:
+        market_at_entry = "missing"
+
+    chain: dict = {
+        "read_only":        True,
+        "proposal":         "EVO-20261123-1",
+        "snapshot_source":  snapshot_source,
+        "entry_order_id":   entry_order_id,
+        "entry_ts":         buy_ev.get("ts")    or "missing",
+        "entry_price":      buy_ev.get("price") if buy_ev.get("price") is not None else "missing",
+        "entry_window":     buy_ev.get("window") or "missing",
+        "ai_gate_decision": ai_gate_action,
+        "ai_gate_reason":   ai_gate_reason,
+        "confidence":       confidence if confidence is not None else "missing",
+        "regime":           regime,
+        "trigger_rule":     trigger_rule,
+        "confluence":       confluence,
+        "market_at_entry":  market_at_entry,
+    }
+
+    # 3. probe tracker 偏离状态 (仅 probe 规则, EVO-20261122-1)
+    if trigger_rule == "sim_active_probe_after_claude_veto":
+        try:
+            from _probe_veto_live_tracker import run_tracker as _pvt
+            tracker_result = _pvt(verbose=False)
+            dev = tracker_result.get("deviation") or {}
+            chain["probe_tracker_at_postmortem"] = {
+                "read_only":          True,
+                "proposal":           "EVO-20261122-1",
+                "samples_n":          tracker_result.get("samples_n"),
+                "hit_stop_rate":      (tracker_result.get("live_stats") or {}).get("hit_stop_rate"),
+                "z_score":            dev.get("z_score"),
+                "triggered":          dev.get("triggered"),
+                "min_n_met":          dev.get("min_n_met"),
+                "threshold_hit_stop": dev.get("threshold_hit_stop"),
+                "alert_message":      dev.get("alert_message"),
+            }
+        except Exception as exc:
+            chain["probe_tracker_at_postmortem"] = {
+                "read_only": True,
+                "proposal":  "EVO-20261122-1",
+                "error":     f"tracker 读取失败: {type(exc).__name__}: {str(exc)[:200]}",
+            }
+
+    return chain
 
 
 def collect_sells(days: int = LOOKBACK_DAYS) -> list[dict]:
@@ -556,6 +767,8 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             pass
     # EVO-20261115-1: 事件→资产历史方向 banner, '难判断' 复盘必备参照; 无命中仍记空列表
     banners = event_direction_banners(news_structured, sell.get("ticker", ""))
+    # EVO-20261123-1: 只读入场链条 (不进 verdict 打分)
+    entry_chain = load_entry_chain(sell)
     return {"order_id": sell["order_id"], "ticker": sell["ticker"], "qty": sell["qty"], "price": sell["price"],
             "ts": sell["decision_ts"], "tag": sell["tag"], "nature": classify_sell(sell["tag"], sell.get("decision")),
             "provider": provider, "status": status,
@@ -565,6 +778,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             "news_structured": news_structured,
             "news_evidence_summary": news_evidence_summary(news_structured),  # EVO-20261029-2
             "event_direction_banner": banners,                                # EVO-20261115-1
+            "entry_chain": entry_chain,                                       # EVO-20261123-1
             "oversold_research": research_evidence,
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 

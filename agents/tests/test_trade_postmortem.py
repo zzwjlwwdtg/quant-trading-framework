@@ -181,6 +181,208 @@ class Postmortem(unittest.TestCase):
         self.assertIn('AI_CLI_PRIMARY=claude', bat)
 
 
+class TestEntryChain(unittest.TestCase):
+    """EVO-20261123-1: 只读入场链条 cross-link 测试."""
+
+    def setUp(self):
+        self.td = Path(tempfile.mkdtemp())
+        # probe 规则建仓的 BUY + SELL 对
+        buy_probe = {
+            "ts": "2026-10-05T12:00:00+00:00", "ticker": "US.INTC", "side": "BUY",
+            "qty": 200, "price": 25.0, "order_id": "101", "dry_run": False,
+            "tag": "[WATCH_BUY_PROBE conf=4 win=pre-market sat]",
+            "decision": {
+                "action": "WATCH_BUY_PROBE", "confidence": 4,
+                "reason": "sim_active_probe_after_claude_veto: weak signal",
+                "regime": "neutral",
+                "score_breakdown": {
+                    "tech": 3, "tech_weighted": 1.2,
+                    "macro": 0, "event": 1, "quant": 0, "boost": 1, "raw": 4,
+                },
+            },
+            "market": {"rsi": 45.0, "cci": -20.0, "trend": "up",
+                       "vol_ratio": 0.5, "ma_stack": "bull",
+                       "pct_chg": -1.5, "cum_5d": -5.0},
+        }
+        sell_probe = {
+            "ts": "2026-10-10T14:00:00+00:00", "ticker": "US.INTC", "side": "SELL",
+            "qty": 200, "price": 22.0, "order_id": "205", "dry_run": False,
+            "tag": "[TRAILING-STOP from high $26.00 → $22.10 (-15%)]",
+            "decision": {"action": None, "confidence": None, "reason": "", "regime": None},
+        }
+        # 普通规则建仓的 BUY + SELL 对
+        buy_normal = {
+            "ts": "2026-10-06T12:00:00+00:00", "ticker": "US.TQQQ", "side": "BUY",
+            "qty": 100, "price": 50.0, "order_id": "301", "dry_run": False,
+            "tag": "[WATCH_BUY conf=5 win=pre-market]",
+            "decision": {
+                "action": "WATCH_BUY", "confidence": 5, "reason": "uptrend + oversold",
+                "regime": "bull_trending",
+                "score_breakdown": {
+                    "tech": 5, "tech_weighted": 2.5,
+                    "macro": 0, "event": 0, "quant": 0, "boost": 0, "raw": 5,
+                },
+            },
+            "market": {"rsi": 30.0, "cci": -120.0, "trend": "up",
+                       "vol_ratio": 1.5, "ma_stack": "bull",
+                       "pct_chg": 1.0, "cum_5d": -8.0},
+        }
+        sell_normal = {
+            "ts": "2026-10-09T12:00:00+00:00", "ticker": "US.TQQQ", "side": "SELL",
+            "qty": 100, "price": 45.0, "order_id": "402", "dry_run": False,
+            "tag": "[TRAILING-STOP ...]",
+            "decision": {"action": None, "reason": "", "regime": None, "confidence": None},
+        }
+        (self.td / "trade_log.jsonl").write_text(
+            "\n".join(json.dumps(e) for e in [
+                buy_probe, sell_probe, buy_normal, sell_normal,
+            ]) + "\n",
+            encoding="utf-8",
+        )
+
+    # ── _find_entry_buy_event ────────────────────────────────────────────────
+
+    def test_find_entry_buy_event_fifo_match(self):
+        """probe BUY 101 → SELL 205 の FIFO 配对."""
+        with patch.object(tp, "SIGNALS", self.td):
+            result = tp._find_entry_buy_event("205", "US.INTC")
+        self.assertIsNotNone(result)
+        self.assertEqual(str(result["order_id"]), "101")
+        self.assertEqual(result["decision"]["action"], "WATCH_BUY_PROBE")
+
+    def test_find_entry_buy_event_no_match(self):
+        """找不到时返回 None."""
+        with patch.object(tp, "SIGNALS", self.td):
+            result = tp._find_entry_buy_event("999", "US.INTC")
+        self.assertIsNone(result)
+
+    def test_find_entry_buy_event_fifo_consumes_prior_sells(self):
+        """TQQQ BUY 301 → SELL 402 (INTC BUY/SELL 消耗后 TQQQ 仍可配对)."""
+        with patch.object(tp, "SIGNALS", self.td):
+            result = tp._find_entry_buy_event("402", "US.TQQQ")
+        self.assertIsNotNone(result)
+        self.assertEqual(str(result["order_id"]), "301")
+        self.assertEqual(result["decision"]["action"], "WATCH_BUY")
+
+    # ── load_entry_chain ─────────────────────────────────────────────────────
+
+    def test_load_entry_chain_probe_rule(self):
+        """probe 规则建仓: 必须有 trigger_rule + probe_tracker_at_postmortem."""
+        sell = {"order_id": "205", "ticker": "US.INTC",
+                "qty": 200, "price": 22.0,
+                "decision_ts": "2026-10-10T14:00:00+00:00",
+                "tag": "[TRAILING-STOP ...]", "decision": {}}
+        with patch.object(tp, "SIGNALS", self.td):
+            chain = tp.load_entry_chain(sell)
+        self.assertTrue(chain["read_only"])
+        self.assertEqual(chain["proposal"], "EVO-20261123-1")
+        self.assertEqual(str(chain["entry_order_id"]), "101")
+        self.assertEqual(chain["ai_gate_decision"], "WATCH_BUY_PROBE")
+        self.assertEqual(chain["trigger_rule"], "sim_active_probe_after_claude_veto")
+        self.assertEqual(chain["confidence"], 4)
+        self.assertEqual(chain["regime"], "neutral")
+        self.assertIsInstance(chain["confluence"], dict)
+        self.assertEqual(chain["confluence"]["raw_total"], 4)
+        self.assertIsInstance(chain["market_at_entry"], dict)
+        self.assertEqual(chain["market_at_entry"]["rsi"], 45.0)
+        # probe tracker ブロックが必ず存在
+        self.assertIn("probe_tracker_at_postmortem", chain)
+        pt = chain["probe_tracker_at_postmortem"]
+        self.assertTrue(pt["read_only"])
+        self.assertEqual(pt["proposal"], "EVO-20261122-1")
+
+    def test_load_entry_chain_normal_rule(self):
+        """正常建仓: trigger_rule=normal, probe_tracker なし."""
+        sell = {"order_id": "402", "ticker": "US.TQQQ",
+                "qty": 100, "price": 45.0,
+                "decision_ts": "2026-10-09T12:00:00+00:00",
+                "tag": "[TRAILING-STOP ...]", "decision": {}}
+        with patch.object(tp, "SIGNALS", self.td):
+            chain = tp.load_entry_chain(sell)
+        self.assertEqual(chain["trigger_rule"], "normal")
+        self.assertEqual(chain["ai_gate_decision"], "WATCH_BUY")
+        self.assertNotIn("probe_tracker_at_postmortem", chain)
+
+    def test_load_entry_chain_missing_pair(self):
+        """FIFO 配对失败时全字段显式 missing."""
+        sell = {"order_id": "999", "ticker": "US.INTC",
+                "qty": 100, "price": 20.0,
+                "decision_ts": "2026-10-15T14:00:00+00:00",
+                "tag": "[TRAILING-STOP]", "decision": {}}
+        with patch.object(tp, "SIGNALS", self.td):
+            chain = tp.load_entry_chain(sell)
+        self.assertTrue(chain["read_only"])
+        self.assertEqual(chain["entry_order_id"], "missing")
+        self.assertEqual(chain["ai_gate_decision"], "missing")
+        self.assertEqual(chain["trigger_rule"], "missing")
+        self.assertIn("missing_reason", chain)
+
+    def test_load_entry_chain_snapshot_fallback(self):
+        """entry_snapshots.jsonl がない場合は snapshot_source=trade_log."""
+        sell = {"order_id": "205", "ticker": "US.INTC",
+                "qty": 200, "price": 22.0,
+                "decision_ts": "2026-10-10T14:00:00+00:00",
+                "tag": "[TRAILING-STOP ...]", "decision": {}}
+        with patch.object(tp, "SIGNALS", self.td):
+            chain = tp.load_entry_chain(sell)
+        # 本 worktree では EVO-20261119-1 は未合并なので trade_log
+        self.assertEqual(chain["snapshot_source"], "trade_log")
+
+    def test_load_entry_chain_snapshot_preferred(self):
+        """entry_snapshots.jsonl にデータがある時は snapshot_source=entry_snapshot_file."""
+        snapshot = {
+            "order_id": "101",
+            "decision": {
+                "action": "WATCH_BUY_PROBE", "confidence": 4,
+                "reason": "snapshot_reason",
+                "regime": "bull",
+                "score_breakdown": {"tech": 3, "macro": 0, "event": 1,
+                                    "quant": 0, "boost": 1, "raw": 4,
+                                    "tech_weighted": 1.2},
+            },
+            "market": {"rsi": 50.0, "cci": 0.0, "trend": "up",
+                       "vol_ratio": 1.0, "ma_stack": "bull",
+                       "pct_chg": 0.5, "cum_5d": 2.0},
+        }
+        (self.td / "entry_snapshots.jsonl").write_text(
+            json.dumps(snapshot) + "\n", encoding="utf-8")
+        sell = {"order_id": "205", "ticker": "US.INTC",
+                "qty": 200, "price": 22.0,
+                "decision_ts": "2026-10-10T14:00:00+00:00",
+                "tag": "[TRAILING-STOP ...]", "decision": {}}
+        with patch.object(tp, "SIGNALS", self.td):
+            chain = tp.load_entry_chain(sell)
+        self.assertEqual(chain["snapshot_source"], "entry_snapshot_file")
+        # 快照里的 regime 覆盖 trade_log 的 neutral
+        self.assertEqual(chain["regime"], "bull")
+
+    # ── review_one 包含 entry_chain ─────────────────────────────────────────
+
+    def test_review_one_includes_entry_chain(self):
+        """review_one 输出里必须包含 entry_chain 块 (read_only=True)."""
+        sell = {"order_id": "205", "ticker": "US.INTC",
+                "qty": 200, "price": 22.0,
+                "ts": "2026-10-10T14:00:00+00:00",
+                "decision_ts": "2026-10-10T14:00:00+00:00",
+                "tag": "[TRAILING-STOP ...]", "decision": {}}
+        def ai(_):
+            return (json.dumps(GOOD, ensure_ascii=False), "ok", "Claude", "")
+        with patch.object(tp, "LOGS", self.td), \
+             patch.object(tp, "SIGNALS", self.td), \
+             patch.object(tp, "news_from_cache", return_value=[]), \
+             patch.object(tp, "closes_after", return_value=[]), \
+             patch.object(tp, "collect_news_structured_for",
+                          return_value={"items": [], "fetched": 0, "fallback": None}):
+            r = tp.review_one(sell, ai=ai, live_fetch=False)
+        self.assertIn("entry_chain", r)
+        chain = r["entry_chain"]
+        self.assertTrue(chain["read_only"])
+        self.assertEqual(chain["proposal"], "EVO-20261123-1")
+        # probe 建仓 → entry_order_id 101, trigger_rule = probe
+        self.assertEqual(str(chain["entry_order_id"]), "101")
+        self.assertEqual(chain["trigger_rule"], "sim_active_probe_after_claude_veto")
+
+
 if __name__ == "__main__":
     raise SystemExit(
         "Run the suite from agents/: python -m unittest discover -s tests -t . "
