@@ -1,0 +1,48 @@
+{
+  "name": "sim_active_probe_after_claude_veto",
+  "verdict": "inconclusive",
+  "run_at": "2026-11-23T21:56:15.470055+00:00",
+  "conclusion": "预注册 OOS verdict 待更新",
+  "metrics": {},
+  "params": {},
+  "next_review_days": 30,
+  "should_integrate": false,
+  "recommendation": "",
+  "live_followup": {
+    "updated_at": "2026-11-23T21:56:15.676265+00:00",
+    "live_stats": {
+      "n": 11,
+      "n_stop": 7,
+      "hit_stop_rate": 0.6364,
+      "n_winners": 2,
+      "win_rate": 0.1818,
+      "avg_pnl_pct": -3.2195,
+      "median_pnl_pct": -5.104,
+      "p25_pnl_pct": -6.542,
+      "p75_pnl_pct": -0.423,
+      "avg_hold_days": 7.4,
+      "tickers": [
+        "US.CBRS",
+        "US.DRAM",
+        "US.IEI",
+        "US.LITE",
+        "US.MSFT",
+        "US.MULL",
+        "US.QRVO",
+        "US.SHY",
+        "US.USO"
+      ]
+    },
+    "deviation": {
+      "triggered": false,
+      "min_n_met": false,
+      "z_score": null,
+      "oos_hit_stop_rate": null,
+      "live_hit_stop_rate": 0.6364,
+      "sigma": null,
+      "threshold_hit_stop": null,
+      "alpha": 0.05,
+      "alert_message": "N=11 < 预注册最小样本 20, 暂不检验"
+    }
+  }
+}

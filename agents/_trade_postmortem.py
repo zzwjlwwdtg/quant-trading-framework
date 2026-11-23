@@ -26,6 +26,34 @@ REPORT_PATH = Path(__file__).parent / "signals" / "trade_postmortem.md"
 POSTMORTEM_ARCHIVE = Path(__file__).parent / "signals" / "postmortem" / "archive.jsonl"
 
 
+def load_entry_chain_index(path: Path | None = None) -> dict:
+    """EVO-20261123-1: 按 order_id 索引 postmortem 归档里的 entry_chain.
+
+    与 load_news_structured_index 对称: 只读 archive.jsonl 中由
+    trade_postmortem.load_entry_chain 写入的入场链条块.
+    供 report() 展示 '卖出复盘里有没有入场链条' 的覆盖率统计.
+    """
+    p = Path(path or POSTMORTEM_ARCHIVE)
+    out: dict[str, dict] = {}
+    if not p.exists():
+        return out
+    try:
+        lines = p.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        chain = rec.get("entry_chain")
+        oid = str(rec.get("order_id") or "")
+        if not oid or not isinstance(chain, dict):
+            continue
+        out[oid] = chain
+    return out
+
+
 def load_news_structured_index(path: Path | None = None) -> dict:
     """EVO-20261014-2: 按 order_id 索引 postmortem 归档里的 news_structured.
 
@@ -287,9 +315,24 @@ def report(trades: list[dict]):
                       f"ref=${t['entry_ref_price']}  live=${t['entry_live_quote']}  "
                       f"div={t['entry_divergence_pct']*100:+.2f}%  pnl={t['pnl_pct']:+.2f}%")
 
+    # EVO-20261123-1: 入场链条覆盖率 (只读展示, 不参与归因)
+    ec_idx = load_entry_chain_index()
+    with_sell_id = [t for t in trades if t.get("exit_order_id")]
+    if ec_idx and with_sell_id:
+        print(f"\n  ── 入场链条覆盖 (EVO-20261123-1, postmortem archive) ──")
+        hit_ec = [t for t in with_sell_id if isinstance(ec_idx.get(t["exit_order_id"]), dict)]
+        n_probe = sum(
+            1 for t in hit_ec
+            if (ec_idx.get(t["exit_order_id"]) or {}).get("trigger_rule")
+            == "sim_active_probe_after_claude_veto"
+        )
+        total_ec = len(with_sell_id)
+        rate_ec = len(hit_ec) / total_ec * 100 if total_ec else 0.0
+        print(f"    有入场链条 {len(hit_ec)}/{total_ec} ({rate_ec:.0f}%); "
+              f"probe规则建仓 {n_probe} 笔")
+
     # EVO-20261014-2: 卖出结构化新闻覆盖率 (只是展示, 不参与归因 — 消息面不进决策)
     ns_idx = load_news_structured_index()
-    with_sell_id = [t for t in trades if t.get("exit_order_id")]
     if ns_idx and with_sell_id:
         print(f"\n  ── 卖出 ±48h 结构化新闻覆盖 (postmortem archive) ──")
         hit = [t for t in with_sell_id
