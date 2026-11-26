@@ -736,6 +736,18 @@ def collect_news_structured_for(sell: dict, t: datetime, *, window_hours: float 
                 "error": str(e)[:200]}
 
 
+def shadow_signal_coverage(sell: dict) -> dict:
+    """仅展示研究材料状态；缺少可核实历史快照时不推断信号。"""
+    return {
+        "proposal": "EVO-20261125-1",
+        "read_only": True,
+        "order_id": sell.get("order_id"),
+        "status": "missing",
+        "reason": "尚未接入可核实的历史信号快照及预注册研究材料",
+        "trading_authorized": False,
+    }
+
+
 def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
                oversold_research: dict | None = None) -> dict:
     t = datetime.fromisoformat(sell["decision_ts"].replace("Z", "+00:00"))
@@ -779,6 +791,7 @@ def review_one(sell: dict, *, ai=None, live_fetch: bool = True,
             "news_evidence_summary": news_evidence_summary(news_structured),  # EVO-20261029-2
             "event_direction_banner": banners,                                # EVO-20261115-1
             "entry_chain": entry_chain,                                       # EVO-20261123-1
+            "shadow_signal_coverage": shadow_signal_coverage(sell),            # EVO-20261125-1
             "oversold_research": research_evidence,
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 
