@@ -1,0 +1,85 @@
+{
+  "current_target_range": "3.75-4.00",
+  "meetings": [
+    {
+      "date": "2026-12-09",
+      "days_until": 15,
+      "probabilities": {
+        "hike_25": 85,
+        "hike_50": 11,
+        "hold": 4
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish"
+    },
+    {
+      "date": "2027-01-27",
+      "days_until": 64,
+      "probabilities": {
+        "hike_25": 65,
+        "hold": 25,
+        "hike_50": 10
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-03-17",
+      "days_until": 113,
+      "probabilities": {
+        "hike_25": 70,
+        "hold": 22,
+        "hike_50": 8
+      },
+      "most_likely": "hike_25",
+      "consensus_direction": "hawkish_lean"
+    },
+    {
+      "date": "2027-05-05",
+      "days_until": 162,
+      "probabilities": {
+        "hike_25": 42,
+        "hold": 46,
+        "cut_25": 12
+      },
+      "most_likely": "hold",
+      "consensus_direction": "neutral"
+    }
+  ],
+  "implied_terminal_rate": "4.50-4.75",
+  "implied_terminal_date": "2027-Q1",
+  "data_snapshot_date": "2026-11-23",
+  "recent_event_impact": "Oct CPI YoY +6.5%（3ヶ月連続 core +0.3% MoM）→ Dec 利上げ確実視; 11/18 FOMC議事録「ほぼ全員が追加利上げ適切」; PCE 11/25 発表待ち（Warsh 議長が12月決定の最終指標と明言）; Oct FOMC: Cook+Hammack が即時+25bps 支持の少数意見",
+  "commentary": "データ snapshot 2026-11-23（本日2026-11-24より1営業日以内、有効）。Oct CPI 年率+6.5%がタカ派基調を固定し、Dec 8-9会合の+25bpsはほぼ確実（85-96%、ソース間差異あり）。JPMorgan・BofA・DBが「次3会合で連続利上げ」へ予測変更。PCE（2026-11-25発表予定）が0.3%超なら50bps観測（現11%）上昇リスク。現時点でDec会合前の主要データはすべて反映済みだが、明日のPCEが最終カタリスト。",
+  "sources": [
+    {
+      "url": "https://growbeansprout.com/tools/fedwatch",
+      "type": "cme_fedwatch_mirror"
+    },
+    {
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm",
+      "type": "fomc_statement_oct2026"
+    },
+    {
+      "url": "https://fedratecalc.com/fomc-meeting-schedule/",
+      "type": "fomc_schedule"
+    },
+    {
+      "url": "https://finance.biggo.com/news/cf9bd428-94f8-4ecf-9bc8-4147c6153e08",
+      "type": "pce_preview"
+    },
+    {
+      "url": "https://www.thestreet.com/fed/fed-rate-hike-fears-december-inflation-2027",
+      "type": "market_analysis"
+    }
+  ],
+  "confidence": "medium",
+  "source_via": "claude_cli_websearch",
+  "fetched_at": "2026-11-24T10:04:39+00:00",
+  "_meta": {
+    "cached_at": "2026-11-24T19:04:39.798071",
+    "age_sec": 30503,
+    "stale": true,
+    "refreshing": true
+  }
+}

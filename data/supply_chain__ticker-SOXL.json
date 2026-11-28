@@ -1,0 +1,113 @@
+{
+  "ticker": "SOXL",
+  "sector": "半导体产业链",
+  "business": "SOXL 是杠杆 ETF，旨在实现纽约证券交易所半导体指数每日表现的 3 倍，以下关系为其追踪的半导体产业链示意，权重是战略重要度估计。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为半导体设计公司提供晶圆代工及先进封装服务。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "向晶圆制造商提供光刻设备，支持先进制程生产。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "应用材料",
+      "ticker": "AMAT",
+      "note": "提供薄膜沉积、刻蚀等半导体制造设备。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "泛林集团",
+      "ticker": "LRCX",
+      "note": "提供刻蚀、沉积和清洗设备。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "信越化学工业",
+      "ticker": "4063.T",
+      "note": "提供硅晶圆等半导体材料。",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "采购处理器、加速器及存储芯片，用于云计算和人工智能数据中心。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "采购及采用芯片，用于云服务、人工智能和服务器基础设施。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购及采用芯片，用于云计算、人工智能和数据中心。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "采购及委托制造芯片，用于手机、电脑和其他消费电子产品。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "戴尔科技",
+      "ticker": "DELL",
+      "note": "采购处理器、加速器和存储芯片，用于服务器与个人电脑。",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "iShares Semiconductor ETF",
+      "ticker": "SOXX",
+      "note": "提供美国上市半导体股票的非杠杆投资敞口。",
+      "confidence": "medium"
+    },
+    {
+      "name": "VanEck Semiconductor ETF",
+      "ticker": "SMH",
+      "note": "提供半导体产业股票的非杠杆投资敞口。",
+      "confidence": "medium"
+    },
+    {
+      "name": "ProShares Ultra Semiconductors",
+      "ticker": "USD",
+      "note": "提供半导体指数的每日两倍杠杆投资敞口。",
+      "confidence": "medium"
+    },
+    {
+      "name": "ProShares UltraPro Semiconductors",
+      "ticker": "SEMI",
+      "note": "提供半导体指数的每日三倍杠杆投资敞口。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-26T11:33:49.388023+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-26T20:33:49.388023",
+    "age_sec": 183569,
+    "stale": false,
+    "refreshing": false
+  }
+}

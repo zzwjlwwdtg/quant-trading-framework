@@ -1,0 +1,642 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-27T21:06:34.464523+00:00",
+  "session_date_et": "2026-11-27",
+  "refresh_sec": 1800,
+  "monitoring_scope": [
+    "QQQ",
+    "SMH",
+    "SOXX",
+    "MU",
+    "GLD",
+    "MSFT",
+    "GOOGL",
+    "AAPL",
+    "NVDA",
+    "TSLA",
+    "LITE",
+    "NBIS",
+    "KLAC",
+    "AMAT",
+    "SPY"
+  ],
+  "method": "small_universe_option_chain_delta",
+  "limitations": [
+    "snapshot last-vs-NBBO is a heuristic, not authoritative trade direction",
+    "multi-leg detection is conservative without exchange execution identifiers",
+    "open-interest confirmation is available on the next session",
+    "snapshot-only scores are capped at 69"
+  ],
+  "sources": {
+    "QQQ": {
+      "spot": 650.989990234375,
+      "spot_change_pct": 2.69,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-01",
+        "2026-12-02",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-03-31",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 2793,
+      "errors": []
+    },
+    "SMH": {
+      "spot": 440.05999755859375,
+      "spot_change_pct": 4.17,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1210,
+      "errors": []
+    },
+    "SOXX": {
+      "spot": 134.07000732421875,
+      "spot_change_pct": 4.76,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-12-04",
+        "2026-12-11",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-07-16",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 733,
+      "errors": []
+    },
+    "MU": {
+      "spot": 646.9500122070312,
+      "spot_change_pct": 7.6,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-07-16",
+        "2027-08-20",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 2980,
+      "errors": []
+    },
+    "GLD": {
+      "spot": 334.3999938964844,
+      "spot_change_pct": 2.12,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-01",
+        "2026-12-02",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-03-31",
+        "2027-09-17",
+        "2027-11-19",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1401,
+      "errors": []
+    },
+    "MSFT": {
+      "spot": 492.8500061035156,
+      "spot_change_pct": 0.6,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-07-16",
+        "2027-08-20",
+        "2027-09-17",
+        "2027-11-19",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1163,
+      "errors": []
+    },
+    "GOOGL": {
+      "spot": 274.9599914550781,
+      "spot_change_pct": 0.68,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-09-17",
+        "2027-11-19",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1288,
+      "errors": []
+    },
+    "AAPL": {
+      "spot": 358.5400085449219,
+      "spot_change_pct": 0.83,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-07-16",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21",
+        "2028-03-17"
+      ],
+      "contracts_seen": 1040,
+      "errors": []
+    },
+    "NVDA": {
+      "spot": 150.49000549316406,
+      "spot_change_pct": 0.8,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-09-17",
+        "2027-11-19",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1891,
+      "errors": []
+    },
+    "TSLA": {
+      "spot": 400.0,
+      "spot_change_pct": 5.22,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-02",
+        "2026-12-04",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1755,
+      "errors": []
+    },
+    "LITE": {
+      "spot": 514.6300048828125,
+      "spot_change_pct": 7.98,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-12-04",
+        "2026-12-11",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-07-16",
+        "2027-09-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 828,
+      "errors": []
+    },
+    "NBIS": {
+      "spot": 89.45999908447266,
+      "spot_change_pct": 5.26,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-12-04",
+        "2026-12-11",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-05-21",
+        "2027-07-16",
+        "2027-08-20",
+        "2027-09-17",
+        "2027-10-15",
+        "2027-11-19",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 1086,
+      "errors": []
+    },
+    "KLAC": {
+      "spot": 140.86000061035156,
+      "spot_change_pct": 4.96,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-12-04",
+        "2026-12-11",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 324,
+      "errors": []
+    },
+    "AMAT": {
+      "spot": 322.0400085449219,
+      "spot_change_pct": 3.49,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-12-04",
+        "2026-12-11",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-04-16",
+        "2027-07-16",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 752,
+      "errors": []
+    },
+    "SPY": {
+      "spot": 728.3200073242188,
+      "spot_change_pct": 1.62,
+      "data_quality": "snapshot",
+      "scanned_expiries": [
+        "2026-11-27",
+        "2026-11-30",
+        "2026-12-01",
+        "2026-12-02",
+        "2026-12-18",
+        "2026-12-31",
+        "2027-01-15",
+        "2027-02-19",
+        "2027-03-19",
+        "2027-03-31",
+        "2027-04-16",
+        "2027-09-17",
+        "2027-12-17",
+        "2028-01-21"
+      ],
+      "contracts_seen": 2786,
+      "errors": []
+    }
+  },
+  "events": [],
+  "long_dated_events": [],
+  "positions": {
+    "TQQQ": {
+      "ticker": "TQQQ",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "QQQ"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "SOXL": {
+      "ticker": "SOXL",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "SMH",
+        "SOXX"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "DRAM": {
+      "ticker": "DRAM",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "MU",
+        "SMH"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "MULL": {
+      "ticker": "MULL",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "MU"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "GLD": {
+      "ticker": "GLD",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "GLD"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "MSFT": {
+      "ticker": "MSFT",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "MSFT"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "GOOGL": {
+      "ticker": "GOOGL",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "GOOGL"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "AAPL": {
+      "ticker": "AAPL",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "AAPL"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "NVDA": {
+      "ticker": "NVDA",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "NVDA"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "TSLA": {
+      "ticker": "TSLA",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "TSLA"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "LITE": {
+      "ticker": "LITE",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "LITE"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "NBIS": {
+      "ticker": "NBIS",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "NBIS",
+        "SMH"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "KLAC": {
+      "ticker": "KLAC",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "KLAC"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    },
+    "AMAT": {
+      "ticker": "AMAT",
+      "direction": "neutral",
+      "score": 0,
+      "bullish_score": 0,
+      "bearish_score": 0,
+      "action": "watch",
+      "sources": [
+        "AMAT"
+      ],
+      "confirming_sources": [],
+      "data_quality": "snapshot",
+      "score_cap": 69,
+      "top_events": [],
+      "explanation": "snapshot chain only; buy/sell side is heuristic and cannot trigger an automatic reduction"
+    }
+  },
+  "index_watch": {
+    "criteria": {
+      "option_type": "put",
+      "min_dte": 7,
+      "otm": true,
+      "min_premium_usd": 1000000.0,
+      "exclude_complex": true
+    },
+    "caveat": "期权链快照无法区分买方/卖方: 大额 put 可能是买保护(看跌/对冲), 也可能是卖 put(看多); 次日 OI 增加只证明是新开仓. 仅作监控, 不触发交易; 预测力待历史检验.",
+    "sources": {
+      "QQQ": {
+        "n_large_otm_puts": 0,
+        "large_otm_put_premium": 0,
+        "n_oi_confirmed": 0,
+        "put_call_premium_ratio_dte7plus": null,
+        "top": []
+      },
+      "SPY": {
+        "n_large_otm_puts": 0,
+        "large_otm_put_premium": 0,
+        "n_oi_confirmed": 0,
+        "put_call_premium_ratio_dte7plus": null,
+        "top": []
+      }
+    }
+  },
+  "age_sec": 62740.2,
+  "stale": true,
+  "status": "stale"
+}

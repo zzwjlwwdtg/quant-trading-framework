@@ -1,0 +1,113 @@
+{
+  "ticker": "AAPL",
+  "sector": "消费电子与数字服务",
+  "business": "苹果设计并销售智能手机、个人电脑、平板电脑和可穿戴设备，同时提供应用商店、云服务及数字内容等服务。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为苹果设计的处理器等芯片提供晶圆代工；权重反映战略重要度估计。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "鸿海精密工业",
+      "ticker": null,
+      "note": "通过富士康等业务为 iPhone 等产品提供组装制造服务。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "提供无线连接及射频相关芯片和组件。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "立讯精密",
+      "ticker": "002475.SZ",
+      "note": "提供电子组件及部分苹果设备的组装制造服务。",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "康宁",
+      "ticker": "GLW",
+      "note": "提供用于苹果设备的特种玻璃材料。",
+      "weight": 55,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "百思买",
+      "ticker": "BBY",
+      "note": "采购苹果设备及配件，通过零售渠道销售给消费者。",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "TD SYNNEX",
+      "ticker": "SNX",
+      "note": "作为授权分销商采购苹果产品，再向零售商及商业客户渠道分销。",
+      "weight": 65,
+      "confidence": "high"
+    },
+    {
+      "name": "英迈",
+      "ticker": "INGM",
+      "note": "采购和分销苹果设备及配件，服务零售商和企业渠道。",
+      "weight": 60,
+      "confidence": "medium"
+    },
+    {
+      "name": "Verizon",
+      "ticker": "VZ",
+      "note": "通过运营商渠道销售 iPhone，并配套移动通信服务。",
+      "weight": 55,
+      "confidence": "medium"
+    },
+    {
+      "name": "AT&T",
+      "ticker": "T",
+      "note": "通过运营商渠道销售 iPhone，并配套移动通信服务。",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在智能手机、平板电脑及可穿戴设备领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过 Android、Pixel、应用商店及数字服务与苹果竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "在个人电脑平台、设备及云服务领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "小米集团",
+      "ticker": "1810.HK",
+      "note": "在智能手机、平板电脑及智能设备领域竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-27T09:03:49.057693+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-27T18:03:49.057693",
+    "age_sec": 106170,
+    "stale": false,
+    "refreshing": false
+  }
+}

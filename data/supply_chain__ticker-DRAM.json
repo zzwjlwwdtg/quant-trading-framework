@@ -1,0 +1,119 @@
+{
+  "ticker": "DRAM",
+  "sector": "半导体存储",
+  "business": "DRAM 是 Roundhill Memory ETF，投资于存储芯片及相关产业链公司，以下关系按其存储产业链敞口估计。",
+  "upstream": [
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "向存储芯片制造商提供光刻设备。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "泛林集团",
+      "ticker": "LRCX",
+      "note": "提供刻蚀和薄膜沉积设备，用于 DRAM 与 NAND 制造。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "应用材料",
+      "ticker": "AMAT",
+      "note": "提供沉积、离子注入及检测等半导体制造设备。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "东京电子",
+      "ticker": "8035.T",
+      "note": "提供刻蚀、涂胶显影及热处理设备。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "信越化学工业",
+      "ticker": "4063.T",
+      "note": "提供半导体硅晶圆等制造材料。",
+      "weight": 70,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "采购高带宽内存，配套 AI 加速器。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "采购移动内存及闪存，用于手机、电脑等设备。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "戴尔科技",
+      "ticker": "DELL",
+      "note": "采购 DRAM 和固态硬盘，用于服务器及个人电脑。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "惠普",
+      "ticker": "HPQ",
+      "note": "采购内存和闪存，用于个人电脑及工作站。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "超微电脑",
+      "ticker": "SMCI",
+      "note": "采购内存及固态硬盘，用于 AI 和数据中心服务器。",
+      "weight": 70,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在 DRAM、HBM 和 NAND 闪存领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "SK 海力士",
+      "ticker": null,
+      "note": "在 DRAM、HBM 和 NAND 闪存领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "在 DRAM、HBM 和 NAND 闪存领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "铠侠控股",
+      "ticker": "285A.T",
+      "note": "在 NAND 闪存和固态硬盘领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "闪迪",
+      "ticker": "SNDK",
+      "note": "在 NAND 闪存和固态硬盘领域竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-26T11:33:50.841183+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-26T20:33:50.841183",
+    "age_sec": 183568,
+    "stale": false,
+    "refreshing": false
+  }
+}

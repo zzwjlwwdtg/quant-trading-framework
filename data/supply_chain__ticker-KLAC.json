@@ -1,0 +1,105 @@
+{
+  "ticker": "KLAC",
+  "sector": "半导体检测与量测设备",
+  "business": "KLA 为半导体制造和先进封装提供缺陷检测、量测、制程控制设备及相关服务，帮助客户提升良率。",
+  "upstream": [
+    {
+      "name": "MKS Instruments",
+      "ticker": "MKSI",
+      "note": "供应光学、激光及精密仪器相关部件；具体供货型号未公开，参考：https://wafergraph.com/relationship/mks_instruments/kla/",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "NTS Group",
+      "ticker": null,
+      "note": "供应精密机电零部件及组件；其上海公司曾获 KLA 供应商奖，参考：https://www.nts-group.com/en/nts-receives-special-contribution-award/",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "Coherent",
+      "ticker": "COHR",
+      "note": "提供适用于半导体检测的激光和光学器件；与 KLA 的具体供货关系及型号有待确认。",
+      "weight": 60,
+      "confidence": "low"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "采购检测与量测设备，用于先进制程和良率管理；KLA 2026 财年年报明确列其为营收占比超过 10% 的客户，参考：https://ir.kla.com/sec-filings/annual-reports/content/0000319201-26-000027/klac-20260630.htm",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "采购制程控制设备用于存储器及晶圆代工；KLA 2025 财年年报披露其为 2023 财年营收占比超过 10% 的客户，参考：https://ir.kla.com/sec-filings/all-sec-filings/content/0000319201-25-000024/klac-20250630.htm",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "英特尔",
+      "ticker": "INTC",
+      "note": "采购检测与量测设备，用于晶圆制造和制程研发；公开信息显示 KLA 曾获其供应商奖。",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "采购检测与量测设备，用于存储器制造和良率管理。",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "SK 海力士",
+      "ticker": null,
+      "note": "采购检测与量测设备，用于 DRAM、NAND 等存储器制程控制。",
+      "weight": 60,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "应用材料",
+      "ticker": "AMAT",
+      "note": "在晶圆缺陷检测、电子束复检和量测设备方面竞争；KLA 年报列为竞争对手。",
+      "confidence": "high"
+    },
+    {
+      "name": "ASML",
+      "ticker": "ASML",
+      "note": "通过电子束检测和量测产品参与制程控制竞争；KLA 年报列为竞争对手。",
+      "confidence": "high"
+    },
+    {
+      "name": "Lasertec",
+      "ticker": "6920.T",
+      "note": "主要在光掩模及半导体检测设备方面竞争；KLA 年报列为竞争对手。",
+      "confidence": "high"
+    },
+    {
+      "name": "Onto Innovation",
+      "ticker": "ONTO",
+      "note": "在薄膜量测、关键尺寸量测及先进封装检测方面竞争；KLA 年报列为竞争对手。",
+      "confidence": "high"
+    },
+    {
+      "name": "日立高新技术",
+      "ticker": null,
+      "note": "在关键尺寸扫描电子显微镜等检测量测设备方面竞争；KLA 年报列为竞争对手。",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-24T14:33:57.822490+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-24T23:33:57.823518",
+    "age_sec": 345561,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "ticker": "MSFT",
+  "sector": "云计算与企业软件",
+  "business": "微软提供 Azure 云服务、Microsoft 365 办公软件、Windows 操作系统及人工智能和游戏产品。",
+  "upstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "提供用于 Azure 人工智能训练和推理的数据中心 GPU，来源：https://www.nvidia.com/en-us/data-center/partners/microsoft-azure/",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "AMD",
+      "ticker": "AMD",
+      "note": "提供 Azure 服务器使用的处理器及人工智能加速器。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "英特尔",
+      "ticker": "INTC",
+      "note": "提供 Azure 服务器及部分微软设备使用的处理器。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "OpenAI",
+      "ticker": null,
+      "note": "提供人工智能模型及相关技术，支持微软的人工智能产品和服务。",
+      "weight": 75,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "可口可乐",
+      "ticker": "KO",
+      "note": "使用 Azure、Microsoft 365 和 Dynamics 365 等服务开展云计算及企业数字化，来源：https://news.microsoft.com/source/2020/04/27/the-coca-cola-company-announces-strategic-partnership-with-microsoft-to-transform-global-engagement-and-experiences/",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "沃尔玛",
+      "ticker": "WMT",
+      "note": "使用 Azure 等微软服务支持零售应用和云计算工作负载，来源：https://news.microsoft.com/source/2018/07/17/walmart-establishes-strategic-partnership-with-microsoft-to-further-accelerate-digital-innovation-in-retail/",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "通用汽车",
+      "ticker": "GM",
+      "note": "使用微软云服务支持企业数字化及汽车相关业务。",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "通过 AWS 在云基础设施和人工智能服务领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过 Google Cloud 和 Workspace 在云服务及办公软件领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "甲骨文",
+      "ticker": "ORCL",
+      "note": "在云基础设施、数据库和企业应用领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "Salesforce",
+      "ticker": "CRM",
+      "note": "在客户关系管理、企业应用和人工智能工具领域竞争。",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-27T03:03:46.958697+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-27T12:03:46.958697",
+    "age_sec": 127771,
+    "stale": false,
+    "refreshing": false
+  }
+}

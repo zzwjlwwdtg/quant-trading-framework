@@ -1,0 +1,85 @@
+{
+  "ticker": "MULL",
+  "sector": "存储半导体",
+  "business": "MULL 是追踪美光科技（MU）单日股价涨跌幅两倍的杠杆 ETF；其标的美光科技主要设计、制造和销售 DRAM、NAND 等存储产品，ETF 超过一日的累计回报不保证为美光同期回报的两倍。",
+  "upstream": [
+    {
+      "name": "泛林集团",
+      "ticker": "LRCX",
+      "note": "供应刻蚀、薄膜沉积等半导体制造设备；泛林年报将美光列为主要客户。",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "应用材料",
+      "ticker": "AMAT",
+      "note": "供应薄膜沉积等晶圆制造设备，并与美光开展工艺研发合作。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "提供用于先进存储芯片制造的光刻设备。",
+      "weight": 80,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "采用美光高带宽内存等产品，用于 AI 加速器和数据中心平台。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "戴尔科技",
+      "ticker": "DELL",
+      "note": "采购存储器和固态硬盘等产品，用于服务器及个人电脑。",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "超微电脑",
+      "ticker": "SMCI",
+      "note": "服务器和 AI 系统可能使用美光内存及存储产品；具体直接采购关系需进一步核实。",
+      "weight": 45,
+      "confidence": "low"
+    }
+  ],
+  "peers": [
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "在 DRAM、NAND 和高带宽内存领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "SK 海力士",
+      "ticker": null,
+      "note": "在 DRAM、NAND 和高带宽内存领域竞争。",
+      "confidence": "high"
+    },
+    {
+      "name": "铠侠控股",
+      "ticker": "285A.T",
+      "note": "在 NAND 闪存和企业级固态硬盘领域竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "闪迪",
+      "ticker": "SNDK",
+      "note": "在 NAND 闪存及存储产品领域竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-26T11:33:55.918749+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-26T20:33:55.918750",
+    "age_sec": 183563,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "ticker": "TQQQ",
+  "sector": "纳斯达克100指数成分股供应链",
+  "business": "TQQQ力求实现纳斯达克100指数每日表现的3倍，以下关系以QQQ主要科技成分股的供应链为分析对象，权重为相对战略重要度估计。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "为苹果、英伟达等成分股公司代工先进芯片。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "英伟达",
+      "ticker": "NVDA",
+      "note": "向微软、亚马逊等云计算公司提供人工智能加速芯片及系统。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "为大型科技公司提供网络芯片及定制人工智能芯片等。",
+      "weight": 75,
+      "confidence": "medium"
+    },
+    {
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "提供用于数据中心和终端设备的存储芯片。",
+      "weight": 65,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿斯麦",
+      "ticker": "ASML",
+      "note": "向芯片制造商提供光刻设备，间接支持主要成分股的芯片供应。",
+      "weight": 60,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "采购英伟达等公司的芯片，用于云计算和人工智能服务；同时是QQQ主要成分股。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "采购芯片及数据中心设备，用于AWS云计算和人工智能服务；同时是QQQ主要成分股。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果",
+      "ticker": "AAPL",
+      "note": "采购芯片制造服务和电子零部件，用于手机、电脑等产品；同时是QQQ主要成分股。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "采购芯片和数据中心设备，用于搜索、广告、云计算及人工智能服务；同时是QQQ主要成分股。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "采购人工智能芯片和数据中心设备，用于广告推荐及人工智能服务；同时是QQQ主要成分股。",
+      "weight": 70,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Direxion",
+      "ticker": null,
+      "note": "发行QQQ杠杆ETF等产品，在纳斯达克100指数杠杆敞口方面竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "Invesco",
+      "ticker": "IVZ",
+      "note": "发行QQQ和QQQM，在纳斯达克100指数投资敞口方面竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "Vanguard",
+      "ticker": null,
+      "note": "发行覆盖大型成长股的ETF，在科技和成长股投资敞口方面竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "BlackRock",
+      "ticker": "BLK",
+      "note": "通过iShares发行科技和大型成长股ETF，争夺相关指数投资需求。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-26T11:33:48.782358+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-26T20:33:48.783367",
+    "age_sec": 183570,
+    "stale": false,
+    "refreshing": false
+  }
+}

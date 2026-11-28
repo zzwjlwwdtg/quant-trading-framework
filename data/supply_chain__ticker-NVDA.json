@@ -1,0 +1,106 @@
+{
+  "ticker": "NVDA",
+  "sector": "半导体设计与人工智能计算",
+  "business": "设计并销售用于人工智能、数据中心、游戏和专业可视化的图形处理器、计算平台及相关软件和网络产品。",
+  "upstream": [
+    {
+      "name": "台积电",
+      "ticker": "TSM",
+      "note": "提供先进制程晶圆代工及先进封装服务；权重为战略重要度估计。",
+      "weight": 100,
+      "confidence": "high"
+    },
+    {
+      "name": "SK海力士",
+      "ticker": null,
+      "note": "提供高带宽存储器等内存；权重为战略重要度估计。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "美光科技",
+      "ticker": "MU",
+      "note": "提供高带宽存储器及其他内存；权重为战略重要度估计。",
+      "weight": 70,
+      "confidence": "medium"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "提供晶圆代工及内存产品；权重为战略重要度估计。",
+      "weight": 60,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "微软",
+      "ticker": "MSFT",
+      "note": "通过直接或间接采购使用英伟达加速器，支持Azure人工智能训练与推理；权重为战略重要度估计。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "亚马逊",
+      "ticker": "AMZN",
+      "note": "通过直接或间接采购使用英伟达加速器，支持AWS人工智能云服务；权重为战略重要度估计。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过直接或间接采购使用英伟达加速器，支持谷歌云人工智能服务；权重为战略重要度估计。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "Meta Platforms",
+      "ticker": "META",
+      "note": "通过直接或间接采购使用英伟达加速器，建设人工智能训练和推理基础设施；权重为战略重要度估计。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "戴尔科技",
+      "ticker": "DELL",
+      "note": "采购英伟达加速器和网络产品，集成至企业人工智能服务器；权重为战略重要度估计。",
+      "weight": 65,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "AMD",
+      "ticker": "AMD",
+      "note": "在数据中心人工智能加速器和游戏显卡方面竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "英特尔",
+      "ticker": "INTC",
+      "note": "在人工智能加速器、数据中心计算和独立显卡方面竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "博通",
+      "ticker": "AVGO",
+      "note": "通过定制人工智能芯片和数据中心网络产品竞争。",
+      "confidence": "medium"
+    },
+    {
+      "name": "Alphabet",
+      "ticker": "GOOGL",
+      "note": "通过自研TPU及云端人工智能计算服务与英伟达部分产品竞争。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-26T11:33:56.911282+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-26T20:33:56.911283",
+    "age_sec": 183561,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "ticker": "GLD",
+  "sector": "黄金投资与贵金属",
+  "business": "SPDR Gold Trust（GLD）持有实物金条，旨在扣除费用后跟踪黄金价格表现。",
+  "upstream": [
+    {
+      "name": "纽蒙特矿业",
+      "ticker": "NEM",
+      "note": "开采黄金并向全球黄金市场供应原料金；不代表其直接向GLD供货。",
+      "weight": 90,
+      "confidence": "medium"
+    },
+    {
+      "name": "巴里克矿业",
+      "ticker": "B",
+      "note": "开采黄金并向全球黄金市场供应原料金；不代表其直接向GLD供货。",
+      "weight": 85,
+      "confidence": "medium"
+    },
+    {
+      "name": "阿格尼科伊格尔矿业",
+      "ticker": "AEM",
+      "note": "开采黄金并向全球黄金市场供应原料金；不代表其直接向GLD供货。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "紫金矿业",
+      "ticker": "2899.HK",
+      "note": "开采黄金并向全球黄金市场供应原料金；不代表其直接向GLD供货。",
+      "weight": 75,
+      "confidence": "medium"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "中国人民银行",
+      "ticker": null,
+      "note": "持有黄金作为外汇储备资产，是黄金市场的机构需求方；并非GLD的已披露直接客户。",
+      "weight": 95,
+      "confidence": "medium"
+    },
+    {
+      "name": "周大福珠宝集团",
+      "ticker": "1929.HK",
+      "note": "采购黄金用于黄金首饰和金饰产品，是实物黄金需求方；并非GLD的已披露直接客户。",
+      "weight": 80,
+      "confidence": "medium"
+    },
+    {
+      "name": "苹果公司",
+      "ticker": "AAPL",
+      "note": "通过供应链使用含黄金的电子元件，用于电子产品制造；并非GLD的已披露直接客户。",
+      "weight": 50,
+      "confidence": "medium"
+    },
+    {
+      "name": "三星电子",
+      "ticker": null,
+      "note": "通过供应链使用含黄金的电子元件，用于电子产品制造；并非GLD的已披露直接客户。",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "iShares Gold Trust",
+      "ticker": "IAU",
+      "note": "以持有实物黄金的交易所交易产品争夺黄金投资需求。",
+      "confidence": "medium"
+    },
+    {
+      "name": "SPDR Gold MiniShares Trust",
+      "ticker": "GLDM",
+      "note": "以持有实物黄金的交易所交易产品争夺黄金投资需求。",
+      "confidence": "medium"
+    },
+    {
+      "name": "abrdn Physical Gold Shares ETF",
+      "ticker": "SGOL",
+      "note": "以持有实物黄金的交易所交易产品争夺黄金投资需求。",
+      "confidence": "medium"
+    },
+    {
+      "name": "VanEck Merk Gold Trust",
+      "ticker": "OUNZ",
+      "note": "以实物黄金投资及符合条件的实物交割选择争夺投资需求。",
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-11-26T11:33:52.551359+00:00",
+  "source": "codex",
+  "_meta": {
+    "cached_at": "2026-11-26T20:33:52.552360",
+    "age_sec": 183566,
+    "stale": false,
+    "refreshing": false
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "ticker": "TLT",
+  "sector": "美国长期国债ETF",
+  "business": "iShares 20+ Year Treasury Bond ETF，追踪ICE美国20年期以上国债指数，持有剩余期限20年以上的美国国债",
+  "upstream": [
+    {
+      "name": "美国财政部",
+      "ticker": null,
+      "note": "长期国债发行方，ETF持仓的全部底层资产",
+      "weight": 95,
+      "confidence": "high"
+    },
+    {
+      "name": "BlackRock iShares",
+      "ticker": "BLK",
+      "note": "ETF发行商与管理人，负责运营和再平衡",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "美联储(FOMC)",
+      "ticker": null,
+      "note": "货币政策决定长端利率走向，直接影响TLT净值",
+      "weight": 90,
+      "confidence": "high"
+    },
+    {
+      "name": "State Street / BNY Mellon",
+      "ticker": "STT",
+      "note": "托管行/清算服务，持有底层国债资产",
+      "weight": 40,
+      "confidence": "medium"
+    },
+    {
+      "name": "一级交易商 (Primary Dealers)",
+      "ticker": null,
+      "note": "高盛/摩根等承销国债拍卖，提供做市流动性",
+      "weight": 60,
+      "confidence": "high"
+    }
+  ],
+  "downstream": [
+    {
+      "name": "养老金与保险公司",
+      "ticker": null,
+      "note": "长久期资产负债匹配(LDI)配置需求",
+      "weight": 85,
+      "confidence": "high"
+    },
+    {
+      "name": "机构资产管理人",
+      "ticker": null,
+      "note": "60/40组合中的债券端久期敞口工具",
+      "weight": 80,
+      "confidence": "high"
+    },
+    {
+      "name": "对冲基金 / CTA",
+      "ticker": null,
+      "note": "利率交易、久期对冲、曲线套利",
+      "weight": 70,
+      "confidence": "high"
+    },
+    {
+      "name": "零售投资者",
+      "ticker": null,
+      "note": "通过券商平台配置避险/降息受益资产",
+      "weight": 60,
+      "confidence": "high"
+    },
+    {
+      "name": "外国央行与主权基金",
+      "ticker": null,
+      "note": "美元储备资产配置(间接通过ETF或直接持债)",
+      "weight": 50,
+      "confidence": "medium"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Vanguard Long-Term Treasury ETF",
+      "ticker": "VGLT",
+      "note": "同类长久期美债ETF，费率竞争",
+      "confidence": "high"
+    },
+    {
+      "name": "SPDR Long Term Treasury ETF",
+      "ticker": "SPTL",
+      "note": "同类长久期美债ETF",
+      "confidence": "high"
+    },
+    {
+      "name": "iShares 10-20 Year Treasury Bond ETF",
+      "ticker": "TLH",
+      "note": "久期略短的替代品",
+      "confidence": "high"
+    },
+    {
+      "name": "PIMCO 25+ Year Zero Coupon US Treasury ETF",
+      "ticker": "ZROZ",
+      "note": "超长久期零息债ETF，久期更极端",
+      "confidence": "high"
+    },
+    {
+      "name": "Direxion Daily 20+ Year Treasury Bull 3X",
+      "ticker": "TMF",
+      "note": "TLT的3倍杠杆版本，衍生竞品",
+      "confidence": "high"
+    }
+  ],
+  "generated_at": "2026-11-22T04:33:39.553761+00:00",
+  "source": "claude",
+  "_meta": {
+    "cached_at": "2026-11-22T13:33:39.571340",
+    "age_sec": 554379,
+    "stale": false,
+    "refreshing": false
+  }
+}

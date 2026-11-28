@@ -1,0 +1,44 @@
+{
+  "exists": true,
+  "label": "crisis",
+  "prob": 1.0,
+  "state": 2,
+  "ts": "2026-11-27T23:24:20.574652",
+  "state_probs": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 1.0,
+    "3": 0.0
+  },
+  "scope": "slow_macro_background",
+  "warning": "慢周期背景，不是当前买入或加仓信号",
+  "trading": {
+    "regime": "neutral",
+    "regime_zh": "日线中性",
+    "base_regime": "neutral",
+    "style": {
+      "style": "trend_down",
+      "style_zh": "短线趋势偏弱",
+      "chop_score": 1,
+      "is_choppy": false,
+      "reason": "短期ATR放大(1.53x)",
+      "metrics": {
+        "pct_5d": -1.85,
+        "pct_20d": -7.2,
+        "dist_ma20_pct": -3.19,
+        "dist_ma50_pct": -5.43,
+        "efficiency_10": 0.399,
+        "efficiency_20": 0.266,
+        "adx_14": 24.7,
+        "reversal_count_10d": 2,
+        "ma20_crossings_10d": 0,
+        "atr_5_20_ratio": 1.528
+      },
+      "policy_note": "短线承压：等待价格与动量重新确认"
+    },
+    "date": "2026-11-27",
+    "expected_date": "2026-11-30",
+    "stale": true,
+    "ts": "2026-11-27T14:24:19.755778+00:00"
+  }
+}
